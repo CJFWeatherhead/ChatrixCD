@@ -144,6 +144,11 @@ ENV/
 env.bak/
 venv.bak/
 
+# Bot configuration and data
+config.yaml
+store/
+*.log
+
 # Spyder project settings
 .spyderproject
 .spyproject

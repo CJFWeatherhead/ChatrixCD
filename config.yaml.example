@@ -1,0 +1,52 @@
+# Example configuration for ChatrixCD bot
+
+matrix:
+  # Matrix homeserver URL
+  homeserver: "https://matrix.example.com"
+  
+  # Bot user ID (format: @username:server.com)
+  user_id: "@chatrixcd:example.com"
+  
+  # Device ID for this bot instance
+  device_id: "CHATRIXCD"
+  
+  # Human-readable device name
+  device_name: "ChatrixCD Bot"
+  
+  # Authentication type: 'password', 'token', or 'oidc'
+  auth_type: "password"
+  
+  # For password authentication
+  password: "your_bot_password_here"
+  
+  # For token authentication (pre-obtained access token)
+  # access_token: "your_access_token_here"
+  
+  # For OIDC authentication
+  # oidc_issuer: "https://auth.example.com"
+  # oidc_client_id: "your_client_id"
+  # oidc_client_secret: "your_client_secret"
+  
+  # Path to store encryption keys and sync token
+  store_path: "./store"
+
+semaphore:
+  # Semaphore UI base URL
+  url: "https://semaphore.example.com"
+  
+  # Semaphore API token
+  api_token: "your_semaphore_api_token_here"
+
+bot:
+  # Command prefix for bot commands
+  command_prefix: "!cd"
+  
+  # List of allowed room IDs (leave empty to allow all rooms)
+  allowed_rooms: []
+    # - "!roomid1:example.com"
+    # - "!roomid2:example.com"
+  
+  # List of admin user IDs (leave empty to allow all users)
+  admin_users: []
+    # - "@admin:example.com"
+    # - "@user:example.com"
