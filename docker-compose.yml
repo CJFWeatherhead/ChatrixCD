@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  chatrixcd:
+    build: .
+    container_name: chatrixcd
+    restart: unless-stopped
+    volumes:
+      # Mount store directory for encryption keys
+      - ./store:/app/store
+      # Optional: mount config file if not using env vars
+      # - ./config.yaml:/app/config.yaml:ro
+    environment:
+      # Matrix configuration
+      - MATRIX_HOMESERVER=${MATRIX_HOMESERVER}
+      - MATRIX_USER_ID=${MATRIX_USER_ID}
+      - MATRIX_DEVICE_ID=${MATRIX_DEVICE_ID:-CHATRIXCD}
+      - MATRIX_DEVICE_NAME=${MATRIX_DEVICE_NAME:-ChatrixCD Bot}
+      - MATRIX_AUTH_TYPE=${MATRIX_AUTH_TYPE:-password}
+      - MATRIX_PASSWORD=${MATRIX_PASSWORD}
+      # For token auth
+      # - MATRIX_ACCESS_TOKEN=${MATRIX_ACCESS_TOKEN}
+      # For OIDC auth
+      # - MATRIX_OIDC_ISSUER=${MATRIX_OIDC_ISSUER}
+      # - MATRIX_OIDC_CLIENT_ID=${MATRIX_OIDC_CLIENT_ID}
+      # - MATRIX_OIDC_CLIENT_SECRET=${MATRIX_OIDC_CLIENT_SECRET}
+      - MATRIX_STORE_PATH=/app/store
+      # Semaphore configuration
+      - SEMAPHORE_URL=${SEMAPHORE_URL}
+      - SEMAPHORE_API_TOKEN=${SEMAPHORE_API_TOKEN}
+      # Bot configuration
+      - BOT_COMMAND_PREFIX=${BOT_COMMAND_PREFIX:-!cd}
+      - BOT_ALLOWED_ROOMS=${BOT_ALLOWED_ROOMS}
+      - BOT_ADMIN_USERS=${BOT_ADMIN_USERS}
+    # Read environment variables from .env file
+    env_file:
+      - .env
