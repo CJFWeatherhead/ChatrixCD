@@ -1,0 +1,151 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version type (minor or patch)'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+
+jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run unit tests
+        run: |
+          python -m unittest discover -s tests -v
+
+  build-and-release:
+    name: Build and Create Release
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Calculate CalVer version
+        id: version
+        run: |
+          # Get current year and month
+          YEAR=$(date +%Y)
+          MONTH=$(date +%m)
+          
+          # Get latest tag matching CalVer pattern
+          LATEST_TAG=$(git tag -l "${YEAR}.${MONTH}.*" | sort -V | tail -n 1)
+          
+          if [ -z "$LATEST_TAG" ]; then
+            # No tag for this month yet
+            if [ "${{ github.event.inputs.version_type }}" == "minor" ]; then
+              PATCH=1
+            else
+              PATCH=0
+            fi
+          else
+            # Extract current patch version
+            CURRENT_PATCH=$(echo $LATEST_TAG | cut -d. -f3)
+            
+            if [ "${{ github.event.inputs.version_type }}" == "minor" ]; then
+              # Increment patch for minor version
+              PATCH=$((CURRENT_PATCH + 1))
+            else
+              # Increment patch for patch version
+              PATCH=$((CURRENT_PATCH + 1))
+            fi
+          fi
+          
+          VERSION="${YEAR}.${MONTH}.${PATCH}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Generated version: ${VERSION}"
+      
+      - name: Update version in files
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          # Update __init__.py
+          sed -i "s/__version__ = \".*\"/__version__ = \"${VERSION}\"/" chatrixcd/__init__.py
+          
+          # Update setup.py
+          sed -i "s/version=\".*\"/version=\"${VERSION}\"/" setup.py
+          
+          echo "Updated version to ${VERSION}"
+      
+      - name: Generate changelog
+        id: changelog
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          # Get the latest tag (if any)
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          # Generate changelog from commits
+          if [ -z "$LATEST_TAG" ]; then
+            # No previous tag, get all commits
+            COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            # Get commits since last tag
+            COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+          
+          # Create changelog content
+          cat > release_changelog.md << EOF
+          ## What's Changed
+          
+          ${COMMITS}
+          
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG}...${VERSION}
+          EOF
+          
+          echo "Generated changelog for version ${VERSION}"
+      
+      - name: Commit version updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add chatrixcd/__init__.py setup.py
+          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
+          git push
+      
+      - name: Create Git tag
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git tag -a "${VERSION}" -m "Release ${VERSION}"
+          git push origin "${VERSION}"
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          body_path: release_changelog.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

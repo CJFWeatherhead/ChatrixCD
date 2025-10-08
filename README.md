@@ -218,6 +218,30 @@ ChatrixCD/
 └── README.md
 ```
 
+## CI/CD
+
+### Automated Testing
+
+Pull requests are automatically tested using GitHub Actions. Tests run against Python 3.8, 3.9, 3.10, and 3.11.
+
+### Releases
+
+Releases are created using a calendar versioning (CalVer) system with the format `YYYY.MM.PATCH` (e.g., `2024.12.0`).
+
+To create a new release:
+
+1. Go to Actions → Build and Release workflow
+2. Click "Run workflow"
+3. Select version type:
+   - **patch**: Increment patch version (e.g., 2024.12.0 → 2024.12.1)
+   - **minor**: Increment patch version for new features (e.g., 2024.12.0 → 2024.12.1)
+4. The workflow will:
+   - Run all unit tests
+   - Calculate the new version based on current date
+   - Update version in code
+   - Generate changelog from commits
+   - Create a GitHub release with the changelog
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
