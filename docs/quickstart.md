@@ -1,0 +1,186 @@
+---
+layout: default
+title: Quick Start
+nav_order: 3
+---
+
+# Quick Start Guide
+
+Get ChatrixCD up and running in minutes.
+
+## 1. Install ChatrixCD
+
+```bash
+git clone https://github.com/CJFWeatherhead/ChatrixCD.git
+cd ChatrixCD
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pip install -e .
+```
+
+## 2. Create Configuration
+
+Create a `config.yaml` file:
+
+```yaml
+matrix:
+  homeserver: "https://matrix.example.com"
+  user_id: "@bot:example.com"
+  password: "your-secure-password"
+  # Or use access_token instead of password:
+  # access_token: "your-access-token"
+  device_name: "ChatrixCD Bot"
+  store_path: "./store"
+
+semaphore:
+  url: "https://semaphore.example.com"
+  api_token: "your-semaphore-api-token"
+
+bot:
+  command_prefix: "!cd"
+  allowed_rooms: []  # Empty list allows all rooms
+```
+
+## 3. Start the Bot
+
+```bash
+chatrixcd
+```
+
+Or from source:
+
+```bash
+python -m chatrixcd.main
+```
+
+## 4. Invite Bot to Room
+
+1. Create or open a Matrix room
+2. Invite the bot: `/invite @bot:example.com`
+3. The bot will automatically join
+
+## 5. Use Bot Commands
+
+Try these commands in your Matrix room:
+
+### Get Help
+```
+!cd help
+```
+
+### List Projects
+```
+!cd projects
+```
+
+### List Templates
+```
+!cd templates 1
+```
+
+### Start a Task
+```
+!cd run 1 5
+```
+
+Replace `1` with your project ID and `5` with your template ID.
+
+### Check Task Status
+```
+!cd status 123
+```
+
+Replace `123` with your task ID.
+
+### Stop a Task
+```
+!cd stop 123
+```
+
+### Get Task Logs
+```
+!cd logs 123
+```
+
+## Example Workflow
+
+Here's a complete workflow example:
+
+```
+User: !cd projects
+Bot: Available projects:
+     1. MyProject - Production deployment
+
+User: !cd templates 1
+Bot: Templates for project MyProject:
+     5. Deploy to Production
+     6. Run Tests
+
+User: !cd run 1 5
+Bot: ✅ Task started successfully
+     Task ID: 123
+     Project: MyProject
+     Template: Deploy to Production
+
+Bot: 🔄 Task 123 status: running
+
+Bot: ✅ Task 123 completed successfully
+```
+
+## Advanced Configuration
+
+### Using Environment Variables
+
+Instead of `config.yaml`, you can use environment variables:
+
+```bash
+export MATRIX_HOMESERVER="https://matrix.example.com"
+export MATRIX_USER_ID="@bot:example.com"
+export MATRIX_PASSWORD="your-secure-password"
+export SEMAPHORE_URL="https://semaphore.example.com"
+export SEMAPHORE_API_TOKEN="your-api-token"
+
+chatrixcd
+```
+
+### OIDC Authentication
+
+For OIDC authentication with Matrix:
+
+```yaml
+matrix:
+  homeserver: "https://matrix.example.com"
+  user_id: "@bot:example.com"
+  auth_type: "oidc"
+  oidc:
+    client_id: "your-client-id"
+    client_secret: "your-client-secret"
+    issuer: "https://auth.example.com"
+```
+
+## Next Steps
+
+- [Full Configuration Guide](configuration.html)
+- [Architecture Overview](architecture.html)
+- [Deployment Options](deployment.html)
+- [Contributing Guidelines](contributing.html)
+
+## Troubleshooting
+
+### Bot doesn't respond
+- Check bot is running: look for log output
+- Verify bot joined the room
+- Check `allowed_rooms` configuration
+
+### Authentication fails
+- Verify credentials in config.yaml
+- Check Matrix homeserver is accessible
+- Try using access_token instead of password
+
+### Can't start tasks
+- Verify Semaphore API token is valid
+- Check Semaphore URL is correct and accessible
+- Ensure project and template IDs exist
+
+For more help, see the [Support Guide](support.html).

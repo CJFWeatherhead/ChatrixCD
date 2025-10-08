@@ -159,6 +159,11 @@ store/
 # mkdocs documentation
 /site
 
+# Jekyll documentation
+_site/
+.jekyll-cache/
+.jekyll-metadata
+
 # mypy
 .mypy_cache/
 .dmypy.json
