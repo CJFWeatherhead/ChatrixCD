@@ -2,6 +2,10 @@
 
 A Matrix bot that integrates with Semaphore UI to enable CI/CD automation through chat. ChatrixCD supports end-to-end encrypted rooms and provides OIDC/token-based authentication for Matrix servers.
 
+## Documentation
+
+📚 **[Full Documentation](https://cjfweatherhead.github.io/ChatrixCD/)** - Installation guides, configuration reference, architecture overview, and more.
+
 ## Features
 
 - 🔐 **OIDC Authentication**: Support for OIDC/OAuth2 and token-based authentication with Matrix servers
