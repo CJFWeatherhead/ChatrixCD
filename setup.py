@@ -8,7 +8,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name="chatrixcd",
-    version="0.1.0",
+    version="2025.10.1",
     author="ChatrixCD Contributors",
     description="A Matrix bot for CI/CD automation with Semaphore UI",
     long_description=long_description,
