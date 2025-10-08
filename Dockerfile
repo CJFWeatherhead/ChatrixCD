@@ -3,11 +3,9 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-
-# Create virtual environment
-RUN uv venv /app/.venv
+# Create virtual environment using Python's built-in venv
+# This isolates dependencies from the system Python
+RUN python -m venv /app/.venv
 
 # Set environment variables to use the venv
 ENV PATH="/app/.venv/bin:$PATH"
@@ -20,14 +18,14 @@ COPY pyproject.toml .
 COPY setup.py .
 COPY README.md .
 
-# Install dependencies using uv
-RUN uv pip install --no-cache -r requirements.txt
+# Install dependencies in the virtual environment
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY chatrixcd/ ./chatrixcd/
 
 # Install the application in the venv
-RUN uv pip install --no-cache -e .
+RUN pip install --no-cache-dir -e .
 
 # Create store directory
 RUN mkdir -p /app/store
