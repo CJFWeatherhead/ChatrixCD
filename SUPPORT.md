@@ -1,0 +1,230 @@
+# Support
+
+Thank you for using ChatrixCD! This document provides information on how to get help with the project.
+
+## Documentation
+
+Before seeking help, please check the following documentation:
+
+- **[README.md](README.md)** - Project overview and features
+- **[INSTALL.md](INSTALL.md)** - Detailed installation and configuration guide
+- **[QUICKSTART.md](QUICKSTART.md)** - Quick start guide to get up and running
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Technical architecture details
+- **[TROUBLESHOOTING](#troubleshooting)** - Common issues and solutions (see below)
+
+## Getting Help
+
+### Asking Questions
+
+If you have questions about using ChatrixCD:
+
+1. **Check the documentation** - Many common questions are already answered
+2. **Search existing issues** - Someone may have already asked the same question
+3. **Open a Discussion** - Use [GitHub Discussions](https://github.com/CJFWeatherhead/ChatrixCD/discussions) for questions and community help
+
+### Reporting Bugs
+
+If you've found a bug:
+
+1. **Search existing issues** - Check if the bug has already been reported
+2. **Use the bug report template** - [Create a bug report](https://github.com/CJFWeatherhead/ChatrixCD/issues/new/choose)
+3. **Provide details** - Include logs, configuration (without credentials), and steps to reproduce
+
+### Requesting Features
+
+To suggest a new feature:
+
+1. **Check existing issues** - The feature may already be planned
+2. **Use the feature request template** - [Create a feature request](https://github.com/CJFWeatherhead/ChatrixCD/issues/new/choose)
+3. **Explain the use case** - Help us understand why this feature would be valuable
+
+### Security Issues
+
+For security vulnerabilities:
+
+- **Do not create public issues**
+- Follow the [Security Policy](SECURITY.md)
+- Use GitHub's private vulnerability reporting or contact maintainers directly
+
+## Troubleshooting
+
+### Common Issues
+
+#### Bot doesn't respond to commands
+
+**Symptoms**: Bot is online but doesn't respond to commands
+
+**Solutions**:
+- Verify the bot has joined the room
+- Check the command prefix in your configuration matches what you're using
+- Review logs for errors: `tail -f chatrixcd.log`
+- Ensure the bot account has permission to read messages
+- If using `allowed_rooms`, verify the room is in the list
+
+#### Authentication fails
+
+**Symptoms**: Bot can't log in to Matrix homeserver
+
+**Solutions**:
+- Verify credentials are correct (username, password, or token)
+- Check homeserver URL is correct and accessible
+- For OIDC: Ensure the OIDC provider URL is correct
+- For OIDC: Verify client ID and secret are valid
+- Check network connectivity to homeserver
+- Review authentication logs for specific errors
+
+#### Can't connect to Semaphore
+
+**Symptoms**: Bot connects to Matrix but can't communicate with Semaphore UI
+
+**Solutions**:
+- Verify Semaphore URL is correct and accessible
+- Check Semaphore API token is valid
+- Ensure the bot has network access to Semaphore
+- Test Semaphore API manually: `curl -H "Authorization: Bearer YOUR_TOKEN" https://semaphore.example.com/api/ping`
+- Check Semaphore logs for API errors
+
+#### E2E Encryption issues
+
+**Symptoms**: Bot can't read encrypted messages or fails to send encrypted messages
+
+**Solutions**:
+- Ensure the `store` directory persists between restarts
+- Check file permissions on the store directory: `ls -la store/`
+- Verify the bot account has verified its device
+- Clear the store and re-verify (last resort - loses encrypted message history)
+- Check that `store_path` in configuration points to a writable location
+
+#### Task doesn't start
+
+**Symptoms**: `!cd run` command fails or task doesn't appear in Semaphore
+
+**Solutions**:
+- Verify project ID and template ID are correct
+- Check that the Semaphore user (API token owner) has access to the project
+- Ensure the template is configured correctly in Semaphore
+- Review Semaphore UI task history for errors
+- Check Semaphore logs for API errors
+
+#### Bot crashes or exits unexpectedly
+
+**Symptoms**: Bot process terminates without warning
+
+**Solutions**:
+- Check bot logs for error messages
+- Verify Python version is 3.8 or higher
+- Ensure all dependencies are installed: `uv pip install -r requirements.txt`
+- Check system resources (memory, disk space)
+- Review systemd journal if using systemd: `journalctl -u chatrixcd -n 100`
+
+### Debugging
+
+#### Enable verbose logging
+
+Add to your configuration or environment:
+
+```yaml
+# config.yaml
+logging:
+  level: DEBUG
+```
+
+Or:
+```bash
+export LOG_LEVEL=DEBUG
+```
+
+#### Check logs
+
+**Direct execution**:
+```bash
+tail -f chatrixcd.log
+```
+
+**Docker**:
+```bash
+docker-compose logs -f chatrixcd
+```
+
+**Systemd**:
+```bash
+journalctl -u chatrixcd -f
+```
+
+#### Test connectivity
+
+**Test Matrix homeserver**:
+```bash
+curl https://your-homeserver.com/.well-known/matrix/client
+```
+
+**Test Semaphore API**:
+```bash
+curl -H "Authorization: Bearer YOUR_TOKEN" https://semaphore.example.com/api/ping
+```
+
+#### Verify configuration
+
+```bash
+# Check configuration loading
+python -c "from chatrixcd.config import Config; c = Config(); print(c.get_matrix_config())"
+```
+
+### Getting More Help
+
+If you're still stuck after trying the above:
+
+1. **Gather information**:
+   - Exact error messages
+   - Relevant logs (with credentials removed)
+   - Configuration details (with credentials removed)
+   - Environment details (OS, Python version, deployment method)
+
+2. **Create a detailed issue**:
+   - Use the bug report template
+   - Include all gathered information
+   - Describe what you've already tried
+
+3. **Be patient**:
+   - This is an open-source project maintained by volunteers
+   - Response times may vary
+   - Consider contributing fixes if you solve the issue!
+
+## Community
+
+### Contributing
+
+If you'd like to contribute to the project:
+
+- Read the [Contributing Guide](CONTRIBUTING.md)
+- Check the [Code of Conduct](CODE_OF_CONDUCT.md)
+- Look for issues labeled "good first issue" or "help wanted"
+
+### Staying Updated
+
+- **Watch the repository** for notifications about new releases and discussions
+- **Star the repository** to bookmark it
+- **Follow releases** to be notified of new versions
+
+## Commercial Support
+
+This is a community-driven open-source project. Commercial support is not currently available, but contributions and sponsorships are welcome!
+
+## Response Times
+
+This is an open-source project maintained by volunteers:
+
+- **Bug reports**: We aim to respond within a week
+- **Feature requests**: We'll review and provide feedback when possible
+- **Security issues**: We aim to respond within 48 hours
+- **Pull requests**: We'll review as time permits
+
+Thank you for your patience and understanding!
+
+## Useful Links
+
+- [GitHub Repository](https://github.com/CJFWeatherhead/ChatrixCD)
+- [Issue Tracker](https://github.com/CJFWeatherhead/ChatrixCD/issues)
+- [Discussions](https://github.com/CJFWeatherhead/ChatrixCD/discussions)
+- [Matrix.org](https://matrix.org/) - Learn about Matrix
+- [Semaphore UI](https://github.com/ansible-semaphore/semaphore) - Learn about Semaphore UI
