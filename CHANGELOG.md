@@ -3,7 +3,18 @@
 All notable changes to ChatrixCD will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to [Calendar Versioning](https://calver.org/) with format YYYY.MM.PATCH.
+
+## [Unreleased]
+
+### Added
+
+#### CI/CD
+- GitHub Actions workflow for running unit tests on pull requests
+- GitHub Actions workflow for creating releases with calendar versioning
+- Automated version bumping in `__init__.py` and `setup.py`
+- Automated changelog generation from git commits
+- Automated GitHub releases with changelog
 
 ## [0.1.0] - 2024-01-08
 
