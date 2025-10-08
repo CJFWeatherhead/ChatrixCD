@@ -1,0 +1,38 @@
+[Unit]
+Description=ChatrixCD - Matrix bot for CI/CD automation
+Documentation=https://github.com/CJFWeatherhead/ChatrixCD
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=chatrixcd
+Group=chatrixcd
+WorkingDirectory=/opt/chatrixcd
+Environment="PATH=/opt/chatrixcd/.venv/bin"
+ExecStart=/opt/chatrixcd/.venv/bin/chatrixcd
+Restart=always
+RestartSec=10
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/chatrixcd/store
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=false
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=chatrixcd
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,37 @@
+#!/sbin/openrc-run
+
+name="ChatrixCD"
+description="Matrix bot for CI/CD automation with Semaphore UI"
+
+# Configuration
+: ${chatrixcd_user:="chatrixcd"}
+: ${chatrixcd_group:="chatrixcd"}
+: ${chatrixcd_home:="/opt/chatrixcd"}
+: ${chatrixcd_config:="/opt/chatrixcd/config.yaml"}
+: ${chatrixcd_venv:="/opt/chatrixcd/.venv"}
+
+command="${chatrixcd_venv}/bin/chatrixcd"
+command_background="yes"
+pidfile="/run/${RC_SVCNAME}.pid"
+command_user="${chatrixcd_user}:${chatrixcd_group}"
+directory="${chatrixcd_home}"
+
+# Output logs
+output_log="/var/log/chatrixcd/chatrixcd.log"
+error_log="/var/log/chatrixcd/chatrixcd.err"
+
+depend() {
+    need net
+    use dns
+    after firewall
+}
+
+start_pre() {
+    # Create log directory if it doesn't exist
+    checkpath --directory --owner ${chatrixcd_user}:${chatrixcd_group} --mode 0755 \
+        /var/log/chatrixcd
+    
+    # Ensure store directory exists
+    checkpath --directory --owner ${chatrixcd_user}:${chatrixcd_group} --mode 0755 \
+        ${chatrixcd_home}/store
+}
