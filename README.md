@@ -159,6 +159,40 @@ Once the bot is running and invited to a room, you can use the following command
    ```
 5. The bot will automatically report status updates as the task runs
 
+## Deployment
+
+ChatrixCD supports multiple deployment options:
+
+### Docker Deployment
+
+**Debian-based (default)**:
+```bash
+docker build -t chatrixcd .
+docker run -d --name chatrixcd \
+  -v $(pwd)/store:/app/store \
+  -e MATRIX_HOMESERVER=https://matrix.example.com \
+  -e MATRIX_USER_ID=@chatrixcd:example.com \
+  -e MATRIX_PASSWORD=your_password \
+  chatrixcd
+```
+
+**Alpine Linux (minimal)**:
+```bash
+docker build -f Dockerfile.alpine -t chatrixcd:alpine .
+docker run -d --name chatrixcd \
+  -v $(pwd)/store:/app/store \
+  -e MATRIX_HOMESERVER=https://matrix.example.com \
+  chatrixcd:alpine
+```
+
+### Native Deployment
+
+- **Debian/Ubuntu**: Use `chatrixcd-debian.service` with systemd
+- **RHEL/CentOS/Fedora**: Use `chatrixcd.service` with systemd
+- **Alpine Linux**: Use `chatrixcd.initd` with OpenRC
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed comparison and [INSTALL.md](INSTALL.md) for complete instructions.
+
 ## Architecture
 
 ChatrixCD is built with the following components:
@@ -192,12 +226,27 @@ uv venv
 source .venv/bin/activate  # On Linux/macOS
 # .venv\Scripts\activate    # On Windows
 
-# Install test dependencies
+# Install dependencies and test tools
 uv pip install -r requirements.txt
+uv pip install pytest pytest-cov pytest-asyncio
 
-# Run tests (when available)
-pytest
+# Run tests with coverage
+pytest tests/ --cov=chatrixcd --cov-report=term-missing
 ```
+
+#### Test Coverage
+
+Current test coverage:
+- **config.py**: 89% - Configuration loading and management
+- **auth.py**: 38% - Authentication methods (password, token, OIDC)
+- **semaphore.py**: 23% - Semaphore API client basics
+- **Overall**: 16% - Basic unit tests for core modules
+
+Tests cover:
+- Configuration from YAML and environment variables
+- Password, token, and OIDC authentication flows
+- Semaphore client initialization
+- Error handling for missing configurations
 
 ### Project Structure
 

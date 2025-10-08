@@ -146,7 +146,7 @@ docker run -d \
 
 ## Systemd Service (Linux)
 
-For production deployments on Linux:
+For production deployments on Linux using systemd (Ubuntu, Debian, RHEL, CentOS, Fedora, etc.):
 
 1. Create a user for the bot:
    ```bash
@@ -195,6 +195,142 @@ For production deployments on Linux:
    ```bash
    sudo systemctl status chatrixcd
    sudo journalctl -u chatrixcd -f
+   ```
+
+## Debian-Specific Deployment
+
+For Debian systems with enhanced security:
+
+1. Install required packages:
+   ```bash
+   sudo apt update
+   sudo apt install -y python3 python3-venv git curl
+   ```
+
+2. Create a dedicated user:
+   ```bash
+   sudo useradd -r -m -d /opt/chatrixcd -s /bin/false chatrixcd
+   ```
+
+3. Install ChatrixCD:
+   ```bash
+   sudo -u chatrixcd git clone https://github.com/CJFWeatherhead/ChatrixCD.git /opt/chatrixcd/app
+   cd /opt/chatrixcd/app
+   
+   # Create virtual environment
+   sudo -u chatrixcd python3 -m venv /opt/chatrixcd/.venv
+   
+   # Install dependencies
+   sudo -u chatrixcd /opt/chatrixcd/.venv/bin/pip install -r requirements.txt
+   sudo -u chatrixcd /opt/chatrixcd/.venv/bin/pip install -e .
+   ```
+
+4. Configure the bot:
+   ```bash
+   sudo -u chatrixcd cp /opt/chatrixcd/app/config.yaml.example /opt/chatrixcd/config.yaml
+   sudo -u chatrixcd nano /opt/chatrixcd/config.yaml
+   ```
+
+5. Create store directory:
+   ```bash
+   sudo -u chatrixcd mkdir -p /opt/chatrixcd/store
+   ```
+
+6. Install and enable systemd service:
+   ```bash
+   sudo cp /opt/chatrixcd/app/chatrixcd-debian.service /etc/systemd/system/chatrixcd.service
+   sudo systemctl daemon-reload
+   sudo systemctl enable chatrixcd
+   sudo systemctl start chatrixcd
+   ```
+
+7. Verify the service:
+   ```bash
+   sudo systemctl status chatrixcd
+   sudo journalctl -u chatrixcd -f
+   ```
+
+## Alpine Linux Deployment
+
+Alpine Linux uses OpenRC instead of systemd. This is a lightweight deployment option.
+
+### Using Docker on Alpine (Recommended)
+
+1. Install Docker:
+   ```bash
+   apk add docker docker-compose
+   rc-update add docker default
+   rc-service docker start
+   ```
+
+2. Build Alpine-optimized image:
+   ```bash
+   docker build -f Dockerfile.alpine -t chatrixcd:alpine .
+   ```
+
+3. Run the container:
+   ```bash
+   docker run -d \
+     --name chatrixcd \
+     -v /opt/chatrixcd/store:/app/store \
+     -e MATRIX_HOMESERVER=https://matrix.example.com \
+     -e MATRIX_USER_ID=@chatrixcd:example.com \
+     -e MATRIX_PASSWORD=your_password \
+     -e SEMAPHORE_URL=https://semaphore.example.com \
+     -e SEMAPHORE_API_TOKEN=your_token \
+     --restart unless-stopped \
+     chatrixcd:alpine
+   ```
+
+### Native Alpine Installation with OpenRC
+
+1. Install required packages:
+   ```bash
+   apk add python3 py3-pip py3-virtualenv git gcc musl-dev libffi-dev openssl-dev
+   ```
+
+2. Create a dedicated user:
+   ```bash
+   adduser -D -h /opt/chatrixcd -s /sbin/nologin chatrixcd
+   ```
+
+3. Install ChatrixCD:
+   ```bash
+   su - chatrixcd -s /bin/sh -c "cd /opt/chatrixcd && git clone https://github.com/CJFWeatherhead/ChatrixCD.git app"
+   cd /opt/chatrixcd/app
+   
+   # Create virtual environment
+   su - chatrixcd -s /bin/sh -c "python3 -m venv /opt/chatrixcd/.venv"
+   
+   # Install dependencies
+   su - chatrixcd -s /bin/sh -c "/opt/chatrixcd/.venv/bin/pip install -r /opt/chatrixcd/app/requirements.txt"
+   su - chatrixcd -s /bin/sh -c "/opt/chatrixcd/.venv/bin/pip install -e /opt/chatrixcd/app"
+   ```
+
+4. Configure the bot:
+   ```bash
+   su - chatrixcd -s /bin/sh -c "cp /opt/chatrixcd/app/config.yaml.example /opt/chatrixcd/config.yaml"
+   su - chatrixcd -s /bin/sh -c "vi /opt/chatrixcd/config.yaml"
+   ```
+
+5. Create log directory:
+   ```bash
+   mkdir -p /var/log/chatrixcd
+   chown chatrixcd:chatrixcd /var/log/chatrixcd
+   ```
+
+6. Install and enable OpenRC service:
+   ```bash
+   cp /opt/chatrixcd/app/chatrixcd.initd /etc/init.d/chatrixcd
+   chmod +x /etc/init.d/chatrixcd
+   rc-update add chatrixcd default
+   rc-service chatrixcd start
+   ```
+
+7. Check service status:
+   ```bash
+   rc-service chatrixcd status
+   tail -f /var/log/chatrixcd/chatrixcd.log
    ```
 
 ## Semaphore UI Setup

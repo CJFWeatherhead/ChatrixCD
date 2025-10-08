@@ -1,0 +1,46 @@
+FROM python:3.11-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Install build dependencies needed for Python packages
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    libffi-dev \
+    openssl-dev \
+    cargo \
+    rust
+
+# Create virtual environment using Python's built-in venv
+# This isolates dependencies from the system Python
+RUN python -m venv /app/.venv
+
+# Set environment variables to use the venv
+ENV PATH="/app/.venv/bin:$PATH"
+ENV VIRTUAL_ENV="/app/.venv"
+ENV PYTHONUNBUFFERED=1
+
+# Copy dependency files
+COPY requirements.txt .
+COPY pyproject.toml .
+COPY setup.py .
+COPY README.md .
+
+# Install dependencies in the virtual environment
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY chatrixcd/ ./chatrixcd/
+
+# Install the application in the venv
+RUN pip install --no-cache-dir -e .
+
+# Remove build dependencies to reduce image size
+RUN apk del gcc musl-dev libffi-dev openssl-dev cargo rust
+
+# Create store directory
+RUN mkdir -p /app/store
+
+# Run the bot
+CMD ["chatrixcd"]
