@@ -4,13 +4,36 @@ This guide provides detailed instructions for installing and running ChatrixCD.
 
 ## Quick Start
 
-### 1. Install Python Dependencies
+### 1. Install uv (if not already installed)
 
 ```bash
-pip install -r requirements.txt
+# On Linux/macOS:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# On Windows:
+# powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-### 2. Configure the Bot
+### 2. Create Virtual Environment and Install Dependencies
+
+```bash
+# Create a virtual environment
+uv venv
+
+# Activate the virtual environment
+# On Linux/macOS:
+source .venv/bin/activate
+# On Windows:
+# .venv\Scripts\activate
+
+# Install dependencies
+uv pip install -r requirements.txt
+
+# Install the application
+uv pip install -e .
+```
+
+### 3. Configure the Bot
 
 Choose one of the following configuration methods:
 
@@ -30,17 +53,17 @@ cp config.yaml.example config.yaml
 nano config.yaml
 ```
 
-### 3. Run the Bot
+### 4. Run the Bot
+
+```bash
+# Make sure your virtual environment is activated
+chatrixcd
+```
+
+Or run directly:
 
 ```bash
 python -m chatrixcd.main
-```
-
-Or install and use the command:
-
-```bash
-pip install -e .
-chatrixcd
 ```
 
 ## Authentication Setup
@@ -130,13 +153,21 @@ For production deployments on Linux:
    sudo useradd -r -s /bin/false chatrixcd
    ```
 
-2. Install the bot:
+2. Install uv and the bot:
    ```bash
    sudo mkdir -p /opt/chatrixcd
    sudo cp -r . /opt/chatrixcd/
-   sudo python3 -m venv /opt/chatrixcd/venv
-   sudo /opt/chatrixcd/venv/bin/pip install -r /opt/chatrixcd/requirements.txt
-   sudo /opt/chatrixcd/venv/bin/pip install -e /opt/chatrixcd
+   
+   # Install uv as the chatrixcd user
+   sudo -u chatrixcd curl -LsSf https://astral.sh/uv/install.sh | sudo -u chatrixcd sh
+   
+   # Create virtual environment using uv
+   cd /opt/chatrixcd
+   sudo -u chatrixcd ~/.cargo/bin/uv venv .venv
+   
+   # Install dependencies
+   sudo -u chatrixcd ~/.cargo/bin/uv pip install -r /opt/chatrixcd/requirements.txt
+   sudo -u chatrixcd ~/.cargo/bin/uv pip install -e /opt/chatrixcd
    ```
 
 3. Create configuration:
@@ -226,8 +257,16 @@ For production deployments on Linux:
 To upgrade ChatrixCD:
 
 ```bash
+# Pull latest changes
 git pull
-pip install -r requirements.txt --upgrade
+
+# Activate virtual environment if not already activated
+source .venv/bin/activate  # On Linux/macOS
+# .venv\Scripts\activate    # On Windows
+
+# Upgrade dependencies
+uv pip install -r requirements.txt --upgrade
+
 # Restart the bot
 ```
 
@@ -241,6 +280,6 @@ For systemd:
 ```bash
 cd /opt/chatrixcd
 sudo -u chatrixcd git pull
-sudo -u chatrixcd /opt/chatrixcd/venv/bin/pip install -r requirements.txt --upgrade
+sudo -u chatrixcd ~/.cargo/bin/uv pip install -r requirements.txt --upgrade
 sudo systemctl restart chatrixcd
 ```

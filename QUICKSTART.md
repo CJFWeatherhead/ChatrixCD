@@ -5,21 +5,35 @@ Get ChatrixCD up and running in 5 minutes!
 ## Prerequisites
 
 - Python 3.8+
+- [uv](https://docs.astral.sh/uv/) - Fast Python package installer
 - A Matrix account for the bot
 - Access to a Semaphore UI instance
 
 ## Installation
 
 ```bash
+# Install uv (if not already installed)
+# On Linux/macOS:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
 # Clone the repository
 git clone https://github.com/CJFWeatherhead/ChatrixCD.git
 cd ChatrixCD
 
+# Create a virtual environment
+uv venv
+
+# Activate the virtual environment
+# On Linux/macOS:
+source .venv/bin/activate
+# On Windows:
+# .venv\Scripts\activate
+
 # Install dependencies
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 
 # Install the bot
-pip install -e .
+uv pip install -e .
 ```
 
 ## Configuration
@@ -65,6 +79,12 @@ EOF
 ## Running the Bot
 
 ```bash
+# Make sure your virtual environment is activated
+# If not, activate it first:
+source .venv/bin/activate  # On Linux/macOS
+# .venv\Scripts\activate    # On Windows
+
+# Run the bot
 chatrixcd
 ```
 
@@ -128,6 +148,8 @@ docker-compose logs -f chatrixcd
 
 Check your configuration:
 ```bash
+# Make sure virtual environment is activated
+source .venv/bin/activate  # On Linux/macOS
 python -c "from chatrixcd.config import Config; c = Config(); print(c.get_matrix_config())"
 ```
 

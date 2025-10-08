@@ -16,16 +16,31 @@ A Matrix bot that integrates with Semaphore UI to enable CI/CD automation throug
 ### Prerequisites
 
 - Python 3.8 or higher
+- [uv](https://docs.astral.sh/uv/) - Fast Python package installer
 - Access to a Matrix homeserver
 - Access to a Semaphore UI instance with API access
 
 ### Install from source
 
 ```bash
+# Clone the repository
 git clone https://github.com/CJFWeatherhead/ChatrixCD.git
 cd ChatrixCD
-pip install -r requirements.txt
-pip install -e .
+
+# Create a virtual environment
+uv venv
+
+# Activate the virtual environment
+# On Linux/macOS:
+source .venv/bin/activate
+# On Windows:
+# .venv\Scripts\activate
+
+# Install dependencies
+uv pip install -r requirements.txt
+
+# Install the application
+uv pip install -e .
 ```
 
 ## Configuration
@@ -172,8 +187,13 @@ ChatrixCD is built with the following components:
 ### Running Tests
 
 ```bash
+# Create and activate virtual environment
+uv venv
+source .venv/bin/activate  # On Linux/macOS
+# .venv\Scripts\activate    # On Windows
+
 # Install test dependencies
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 
 # Run tests (when available)
 pytest
