@@ -1,0 +1,114 @@
+name: Documentation Improvement
+description: Suggest improvements or report issues with documentation
+title: "[Docs]: "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve our documentation!
+
+  - type: textarea
+    id: issue-description
+    attributes:
+      label: Documentation Issue
+      description: Describe what's wrong, missing, or could be improved in the documentation
+      placeholder: Describe the documentation issue
+    validations:
+      required: true
+
+  - type: dropdown
+    id: doc-type
+    attributes:
+      label: Documentation Type
+      description: Which type of documentation needs improvement?
+      options:
+        - README.md
+        - INSTALL.md
+        - QUICKSTART.md
+        - ARCHITECTURE.md
+        - CONTRIBUTING.md
+        - SECURITY.md
+        - Code comments/docstrings
+        - Example configuration
+        - GitHub workflows
+        - Other (please specify below)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What kind of documentation issue is this?
+      options:
+        - Missing information
+        - Incorrect/outdated information
+        - Unclear/confusing explanation
+        - Broken link or reference
+        - Formatting issue
+        - Typo or grammar
+        - Code example doesn't work
+        - Missing code example
+        - Other (please specify below)
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-content
+    attributes:
+      label: Current Content
+      description: Quote the current documentation content (if applicable)
+      placeholder: |
+        "Current text from the documentation..."
+      render: markdown
+    validations:
+      required: false
+
+  - type: textarea
+    id: suggested-improvement
+    attributes:
+      label: Suggested Improvement
+      description: How should the documentation be improved?
+      placeholder: |
+        Describe what should be added, changed, or removed
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or examples
+      placeholder: Any additional information that might help
+    validations:
+      required: false
+
+  - type: input
+    id: doc-location
+    attributes:
+      label: Documentation Location
+      description: Provide the file path or URL to the documentation that needs improvement
+      placeholder: "docs/INSTALL.md or https://github.com/..."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be willing to contribute to fixing this documentation issue?
+      options:
+        - label: I would be willing to submit a pull request to fix this documentation issue
+          required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following before submitting
+      options:
+        - label: I have searched for similar documentation issues and didn't find any duplicates
+          required: true
+        - label: I have checked that this documentation issue exists in the latest version
+          required: false

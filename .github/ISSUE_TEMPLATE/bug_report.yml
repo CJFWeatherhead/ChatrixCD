@@ -1,0 +1,136 @@
+name: Bug Report
+description: File a bug report to help us improve
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Describe the expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Configure bot with '...'
+        2. Send command '....'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Log Output
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+    validations:
+      required: false
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment Method
+      description: How are you running ChatrixCD?
+      options:
+        - Direct Python execution
+        - Docker
+        - Docker Compose
+        - Systemd service
+        - Other (please specify in additional context)
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python Version
+      description: What version of Python are you using?
+      placeholder: "3.11.0"
+    validations:
+      required: true
+
+  - type: input
+    id: bot-version
+    attributes:
+      label: ChatrixCD Version
+      description: What version of ChatrixCD are you using?
+      placeholder: "2024.12.0"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: auth-type
+    attributes:
+      label: Authentication Type
+      description: What authentication method are you using?
+      options:
+        - Password
+        - Token
+        - OIDC
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: What operating system are you running on?
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other (please specify in additional context)
+    validations:
+      required: true
+
+  - type: input
+    id: homeserver
+    attributes:
+      label: Matrix Homeserver Type
+      description: What type of Matrix homeserver are you using?
+      placeholder: "Synapse, Dendrite, Conduit, etc."
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here. Include configuration details (without credentials), error messages, or screenshots.
+      placeholder: Any additional information that might help
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following before submitting
+      options:
+        - label: I have searched for similar issues and didn't find any duplicates
+          required: true
+        - label: I have removed any sensitive information (passwords, tokens, etc.) from logs and configuration examples
+          required: true
+        - label: I am using the latest version of ChatrixCD (or have specified my version above)
+          required: false
