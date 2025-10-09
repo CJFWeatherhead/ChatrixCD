@@ -7,6 +7,8 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
 
 ## [Unreleased]
 
+## [2025.10.6] - 2025-10-09
+
 ### Breaking Changes
 - **Removed YAML Configuration Support**: Configuration files must now be in JSON format
   - YAML support has been completely removed to simplify the codebase and reduce dependencies
@@ -242,4 +244,6 @@ ChatrixCD/
 
 ## Version History
 
+
+- **2025.10.6** (2025-10-09)
 - **0.1.0** (2024-01-08) - Initial release with OIDC support
