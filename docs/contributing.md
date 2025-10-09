@@ -137,6 +137,7 @@ def function_name(param1: str, param2: int) -> bool:
 - [ ] All tests pass
 - [ ] CHANGELOG.md updated
 - [ ] No new warnings
+- [ ] Branding guidelines followed (if visual changes)
 
 ## Testing Guidelines
 
@@ -155,6 +156,24 @@ Current coverage goals:
 - Semaphore: 70%
 - Bot: 40%
 
+## Branding Guidelines
+
+ChatrixCD maintains consistent visual branding. When contributing visual elements:
+
+### Brand Colors
+
+- **ChatrixCD Green**: `#4A9B7F` (primary)
+- **Dark Background**: `#2D3238`
+- **White**: `#FFFFFF`
+
+### Logo Usage
+
+- Use approved logos from `assets/` directory
+- Follow placement and sizing guidelines
+- Don't modify or distort logos
+
+See [BRANDING.md](https://github.com/CJFWeatherhead/ChatrixCD/blob/main/BRANDING.md) for complete guidelines.
+
 ## Documentation
 
 ### Types of Documentation
@@ -162,7 +181,8 @@ Current coverage goals:
 1. **Code Documentation**: Docstrings
 2. **User Documentation**: README, INSTALL, QUICKSTART
 3. **Developer Documentation**: ARCHITECTURE, CONTRIBUTING
-4. **API Documentation**: Docstrings
+4. **Brand Documentation**: BRANDING (visual identity)
+5. **API Documentation**: Docstrings
 
 ### Documentation Updates
 
