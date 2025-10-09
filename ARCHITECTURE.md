@@ -112,8 +112,10 @@ ChatrixCD is a Matrix bot that bridges Matrix chat with Semaphore UI for CI/CD a
 ```python
 if auth_type == 'password':
     await client.login(password=...)
+    # login() automatically loads the store
 elif auth_type in ('token', 'oidc'):
     token = await auth.get_access_token()
+    await client.load_store()  # Required for E2E encryption
     client.access_token = token
     await client.sync()  # Verify token
 ```

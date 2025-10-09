@@ -108,6 +108,11 @@ class ChatrixBot:
                     logger.error("Failed to get access token")
                     return False
                 
+                # Load the encryption store before setting token
+                # This is required for E2E encryption to work
+                await self.client.load_store()
+                logger.info("Loaded encryption store")
+                
                 # Set the access token directly
                 self.client.access_token = access_token
                 
