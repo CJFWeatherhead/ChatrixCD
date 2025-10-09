@@ -47,7 +47,7 @@ ChatrixCD is built with a modular, asynchronous architecture for reliable Matrix
 
 ### Configuration (`config.py`)
 
-- YAML configuration file parsing
+- JSON configuration file parsing
 - Environment variable handling
 - Configuration validation
 - Default value management
@@ -112,7 +112,6 @@ ChatrixCD is built with a modular, asynchronous architecture for reliable Matrix
 - **matrix-nio**: Matrix protocol client with E2E encryption
 - **aiohttp**: Async HTTP client for API requests
 - **authlib**: OAuth2/OIDC authentication
-- **PyYAML**: Configuration file parsing
 
 ### Python Version Support
 

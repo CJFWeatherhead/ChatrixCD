@@ -203,8 +203,8 @@ For production deployments on Linux using systemd (Ubuntu, Debian, RHEL, CentOS,
 
 3. Create configuration:
    ```bash
-   sudo cp config.yaml.example /opt/chatrixcd/config.yaml
-   sudo nano /opt/chatrixcd/config.yaml
+   sudo cp config.json.example /opt/chatrixcd/config.json
+   sudo nano /opt/chatrixcd/config.json
    ```
 
 4. Set permissions:
@@ -258,8 +258,8 @@ For Debian systems with enhanced security:
 
 4. Configure the bot:
    ```bash
-   sudo -u chatrixcd cp /opt/chatrixcd/app/config.yaml.example /opt/chatrixcd/config.yaml
-   sudo -u chatrixcd nano /opt/chatrixcd/config.yaml
+   sudo -u chatrixcd cp /opt/chatrixcd/app/config.json.example /opt/chatrixcd/config.json
+   sudo -u chatrixcd nano /opt/chatrixcd/config.json
    ```
 
 5. Create store directory:
@@ -340,8 +340,8 @@ Alpine Linux uses OpenRC instead of systemd. This is a lightweight deployment op
 
 4. Configure the bot:
    ```bash
-   su - chatrixcd -s /bin/sh -c "cp /opt/chatrixcd/app/config.yaml.example /opt/chatrixcd/config.yaml"
-   su - chatrixcd -s /bin/sh -c "vi /opt/chatrixcd/config.yaml"
+   su - chatrixcd -s /bin/sh -c "cp /opt/chatrixcd/app/config.json.example /opt/chatrixcd/config.json"
+   su - chatrixcd -s /bin/sh -c "vi /opt/chatrixcd/config.json"
    ```
 
 5. Create log directory:
@@ -411,7 +411,7 @@ Alpine Linux uses OpenRC instead of systemd. This is a lightweight deployment op
 
 ## Security Best Practices
 
-1. **Protect credentials**: Never commit config.yaml or .env files with real credentials
+1. **Protect credentials**: Never commit config.json or .env files with real credentials
 2. **Use restricted tokens**: Create Semaphore API tokens with minimal required permissions
 3. **Secure the store**: The store directory contains encryption keys - keep it secure
 4. **Access control**: Use `allowed_rooms` and `admin_users` to restrict bot access

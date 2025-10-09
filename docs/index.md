@@ -15,7 +15,7 @@ A Matrix bot that integrates with Semaphore UI to enable CI/CD automation throug
 - 🚀 **Semaphore UI Integration**: Start and monitor CI/CD tasks via chat commands
 - 📊 **Real-time Updates**: Automatic status updates for running tasks
 - 🎯 **Command-based Interface**: Easy-to-use command system for task management
-- 🔧 **Flexible Configuration**: Support for both YAML config files and environment variables
+- 🔧 **Flexible Configuration**: Support for both JSON config files and environment variables
 
 ## Quick Links
 

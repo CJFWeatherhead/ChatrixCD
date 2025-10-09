@@ -56,7 +56,7 @@ pytest tests/ --cov=chatrixcd --cov-report=html
 #### Configuration Module (`tests/test_config.py`)
 - ✅ Default values loading
 - ✅ Environment variable configuration
-- ✅ YAML file configuration
+- ✅ JSON file configuration
 - ✅ Fallback and default value handling
 
 #### Authentication Module (`tests/test_auth.py`)

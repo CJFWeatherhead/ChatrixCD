@@ -51,13 +51,13 @@ ChatrixCD is a Matrix bot that bridges Matrix chat with Semaphore UI for CI/CD a
 **Purpose**: Centralized configuration management
 
 **Features**:
-- YAML file support
+- JSON file support
 - Environment variable fallback
 - Hierarchical key access with dot notation
 - Separate getters for Matrix, Semaphore, and bot configs
 
 **Configuration Sources** (in order of precedence):
-1. YAML configuration file
+1. JSON configuration file
 2. Environment variables
 3. Default values
 
@@ -389,7 +389,6 @@ docker-compose.yml → Orchestration
 
 - **matrix-nio**: Matrix protocol implementation
 - **aiohttp**: Async HTTP client
-- **PyYAML**: Configuration file parsing
 
 ### Platform
 

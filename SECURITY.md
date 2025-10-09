@@ -47,11 +47,11 @@ When deploying ChatrixCD, follow these security best practices:
 
 ### Credentials and Secrets
 
-1. **Never commit credentials**: Don't commit `config.yaml` or `.env` files with real credentials to version control
+1. **Never commit credentials**: Don't commit `config.json` or `.env` files with real credentials to version control
 2. **Use environment variables**: Prefer environment variables for production deployments
 3. **Restrict file permissions**: Ensure configuration files are readable only by the bot user
    ```bash
-   chmod 600 config.yaml
+   chmod 600 config.json
    chmod 600 .env
    ```
 4. **Rotate credentials regularly**: Change bot passwords and API tokens periodically
