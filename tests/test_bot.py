@@ -273,6 +273,192 @@ class TestChatrixBot(unittest.TestCase):
         # Verify load_store was NOT called
         bot.client.load_store.assert_not_called()
 
+    def test_send_startup_message_greetings_disabled(self):
+        """Test that startup message is skipped when greetings are disabled."""
+        self.config.get_bot_config.return_value = {
+            'command_prefix': '!cd',
+            'allowed_rooms': [],
+            'admin_users': [],
+            'greetings_enabled': False,
+            'greeting_rooms': ['!test:example.com']
+        }
+        
+        bot = ChatrixBot(self.config)
+        bot.send_message = AsyncMock()
+        
+        self.loop.run_until_complete(bot.send_startup_message())
+        
+        # Should not send any messages
+        bot.send_message.assert_not_called()
+
+    def test_send_startup_message_no_greeting_rooms(self):
+        """Test that startup message is skipped when no greeting rooms configured."""
+        self.config.get_bot_config.return_value = {
+            'command_prefix': '!cd',
+            'allowed_rooms': [],
+            'admin_users': [],
+            'greetings_enabled': True,
+            'greeting_rooms': []
+        }
+        
+        bot = ChatrixBot(self.config)
+        bot.send_message = AsyncMock()
+        
+        self.loop.run_until_complete(bot.send_startup_message())
+        
+        # Should not send any messages
+        bot.send_message.assert_not_called()
+
+    def test_send_startup_message_success(self):
+        """Test successful startup message sending."""
+        self.config.get_bot_config.return_value = {
+            'command_prefix': '!cd',
+            'allowed_rooms': [],
+            'admin_users': [],
+            'greetings_enabled': True,
+            'greeting_rooms': ['!room1:example.com', '!room2:example.com'],
+            'startup_message': 'Bot starting!'
+        }
+        
+        bot = ChatrixBot(self.config)
+        bot.send_message = AsyncMock()
+        
+        self.loop.run_until_complete(bot.send_startup_message())
+        
+        # Should send messages to both rooms
+        self.assertEqual(bot.send_message.call_count, 2)
+        
+        # Verify the message content
+        calls = bot.send_message.call_args_list
+        self.assertEqual(calls[0][0][0], '!room1:example.com')
+        self.assertEqual(calls[0][0][1], 'Bot starting!')
+        self.assertEqual(calls[1][0][0], '!room2:example.com')
+        self.assertEqual(calls[1][0][1], 'Bot starting!')
+
+    def test_send_startup_message_with_failure(self):
+        """Test startup message with one room failing."""
+        self.config.get_bot_config.return_value = {
+            'command_prefix': '!cd',
+            'allowed_rooms': [],
+            'admin_users': [],
+            'greetings_enabled': True,
+            'greeting_rooms': ['!room1:example.com', '!room2:example.com'],
+            'startup_message': 'Bot starting!'
+        }
+        
+        bot = ChatrixBot(self.config)
+        
+        # Make first call fail, second succeed
+        bot.send_message = AsyncMock(side_effect=[
+            Exception("Network error"),
+            None
+        ])
+        
+        # Should not raise exception
+        self.loop.run_until_complete(bot.send_startup_message())
+        
+        # Should have tried to send to both rooms
+        self.assertEqual(bot.send_message.call_count, 2)
+
+    def test_send_shutdown_message_greetings_disabled(self):
+        """Test that shutdown message is skipped when greetings are disabled."""
+        self.config.get_bot_config.return_value = {
+            'command_prefix': '!cd',
+            'allowed_rooms': [],
+            'admin_users': [],
+            'greetings_enabled': False,
+            'greeting_rooms': ['!test:example.com']
+        }
+        
+        bot = ChatrixBot(self.config)
+        bot.send_message = AsyncMock()
+        
+        self.loop.run_until_complete(bot.send_shutdown_message())
+        
+        # Should not send any messages
+        bot.send_message.assert_not_called()
+
+    def test_send_shutdown_message_success(self):
+        """Test successful shutdown message sending."""
+        self.config.get_bot_config.return_value = {
+            'command_prefix': '!cd',
+            'allowed_rooms': [],
+            'admin_users': [],
+            'greetings_enabled': True,
+            'greeting_rooms': ['!room1:example.com', '!room2:example.com'],
+            'shutdown_message': 'Bot stopping!'
+        }
+        
+        bot = ChatrixBot(self.config)
+        bot.send_message = AsyncMock()
+        
+        self.loop.run_until_complete(bot.send_shutdown_message())
+        
+        # Should send messages to both rooms
+        self.assertEqual(bot.send_message.call_count, 2)
+        
+        # Verify the message content
+        calls = bot.send_message.call_args_list
+        self.assertEqual(calls[0][0][0], '!room1:example.com')
+        self.assertEqual(calls[0][0][1], 'Bot stopping!')
+
+    def test_invite_callback(self):
+        """Test that bot accepts room invites."""
+        bot = ChatrixBot(self.config)
+        bot.client.join = AsyncMock()
+        
+        room = MagicMock(spec=MatrixRoom)
+        room.room_id = '!newroom:example.com'
+        room.display_name = 'New Room'
+        
+        event = MagicMock()
+        event.sender = '@inviter:example.com'
+        
+        self.loop.run_until_complete(bot.invite_callback(room, event))
+        
+        # Should join the room
+        bot.client.join.assert_called_once_with('!newroom:example.com')
+
+    def test_send_message_plain_text(self):
+        """Test sending plain text message."""
+        bot = ChatrixBot(self.config)
+        bot.client.room_send = AsyncMock()
+        
+        self.loop.run_until_complete(
+            bot.send_message('!test:example.com', 'Hello world')
+        )
+        
+        # Verify message was sent
+        bot.client.room_send.assert_called_once()
+        call_args = bot.client.room_send.call_args
+        
+        self.assertEqual(call_args[1]['room_id'], '!test:example.com')
+        self.assertEqual(call_args[1]['message_type'], 'm.room.message')
+        self.assertEqual(call_args[1]['content']['body'], 'Hello world')
+        self.assertEqual(call_args[1]['content']['msgtype'], 'm.text')
+
+    def test_send_message_with_formatting(self):
+        """Test sending message with HTML formatting."""
+        bot = ChatrixBot(self.config)
+        bot.client.room_send = AsyncMock()
+        
+        self.loop.run_until_complete(
+            bot.send_message(
+                '!test:example.com',
+                'Hello world',
+                '<b>Hello world</b>'
+            )
+        )
+        
+        # Verify formatted message was sent
+        bot.client.room_send.assert_called_once()
+        call_args = bot.client.room_send.call_args
+        
+        content = call_args[1]['content']
+        self.assertEqual(content['body'], 'Hello world')
+        self.assertEqual(content['formatted_body'], '<b>Hello world</b>')
+        self.assertEqual(content['format'], 'org.matrix.custom.html')
+
 
 if __name__ == '__main__':
     unittest.main()
