@@ -100,12 +100,13 @@ ChatrixCD is a Matrix bot that bridges Matrix chat with Semaphore UI for CI/CD a
 
 - **AsyncClient Integration**: Uses matrix-nio for Matrix protocol
 - **E2E Encryption**: Automatic encryption key management via store
-- **Event Handling**: Callbacks for messages and invites
+- **Event Handling**: Callbacks for messages, invites, and encrypted messages
 - **Auto-Join**: Automatically joins rooms when invited
 
 **Event Callbacks**:
-- `message_callback()`: Process incoming messages
+- `message_callback()`: Process incoming messages (decrypted messages)
 - `invite_callback()`: Handle room invitations
+- `decryption_failure_callback()`: Handle encrypted messages that couldn't be decrypted and request encryption keys
 
 **Authentication Flow**:
 ```python
@@ -225,6 +226,7 @@ Bot ready to receive messages
 - **E2E Encryption**: Full support via matrix-nio
 - **Key Storage**: Encrypted keys stored in configurable directory
 - **Device Verification**: Supports device verification workflows
+- **Automatic Key Requests**: When the bot receives an encrypted message it cannot decrypt (MegolmEvent), it automatically requests the encryption key from other devices in the room. Once the key is received, the message will be decrypted on the next sync and processed normally.
 
 ### Authentication
 

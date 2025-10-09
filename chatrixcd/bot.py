@@ -9,6 +9,7 @@ from nio import (
     MatrixRoom,
     RoomMessageText,
     InviteMemberEvent,
+    MegolmEvent,
     LoginResponse,
     SyncResponse,
 )
@@ -69,6 +70,7 @@ class ChatrixBot:
         # Setup event callbacks
         self.client.add_event_callback(self.message_callback, RoomMessageText)
         self.client.add_event_callback(self.invite_callback, InviteMemberEvent)
+        self.client.add_event_callback(self.decryption_failure_callback, MegolmEvent)
 
     async def login(self) -> bool:
         """Login to Matrix server.
@@ -154,6 +156,29 @@ class ChatrixBot:
         await self.client.join(room.room_id)
         logger.info(f"Joined room {room.room_id}")
 
+    async def decryption_failure_callback(self, room: MatrixRoom, event: MegolmEvent):
+        """Handle encrypted messages that couldn't be decrypted.
+        
+        This callback is triggered when the bot receives an encrypted message
+        but doesn't have the decryption key. It will request the key from
+        other devices in the room.
+        
+        Args:
+            room: The room the encrypted message was sent in
+            event: The undecrypted Megolm event
+        """
+        logger.warning(
+            f"Unable to decrypt message in {room.display_name} ({room.room_id}) "
+            f"from {event.sender}. Requesting room key..."
+        )
+        
+        try:
+            # Request the room key from other devices
+            await self.client.request_room_key(event)
+            logger.info(f"Requested room key for session {event.session_id}")
+        except Exception as e:
+            logger.error(f"Failed to request room key: {e}")
+
     async def send_message(self, room_id: str, message: str, 
                           formatted_message: Optional[str] = None):
         """Send a message to a room.
@@ -178,6 +203,52 @@ class ChatrixBot:
             content=content
         )
 
+    async def send_startup_message(self):
+        """Send startup message to configured greeting rooms."""
+        bot_config = self.config.get_bot_config()
+        greetings_enabled = bot_config.get('greetings_enabled', True)
+        greeting_rooms = bot_config.get('greeting_rooms', [])
+        startup_message = bot_config.get('startup_message', '🤖 ChatrixCD bot is now online and ready to help with CI/CD tasks!')
+        
+        if not greetings_enabled:
+            logger.info("Greetings are disabled, skipping startup message")
+            return
+        
+        if not greeting_rooms:
+            logger.info("No greeting rooms configured, skipping startup message")
+            return
+        
+        logger.info(f"Sending startup message to {len(greeting_rooms)} room(s)")
+        for room_id in greeting_rooms:
+            try:
+                await self.send_message(room_id, startup_message)
+                logger.info(f"Sent startup message to room {room_id}")
+            except Exception as e:
+                logger.error(f"Failed to send startup message to room {room_id}: {e}")
+
+    async def send_shutdown_message(self):
+        """Send shutdown message to configured greeting rooms."""
+        bot_config = self.config.get_bot_config()
+        greetings_enabled = bot_config.get('greetings_enabled', True)
+        greeting_rooms = bot_config.get('greeting_rooms', [])
+        shutdown_message = bot_config.get('shutdown_message', '👋 ChatrixCD bot is shutting down. See you later!')
+        
+        if not greetings_enabled:
+            logger.info("Greetings are disabled, skipping shutdown message")
+            return
+        
+        if not greeting_rooms:
+            logger.info("No greeting rooms configured, skipping shutdown message")
+            return
+        
+        logger.info(f"Sending shutdown message to {len(greeting_rooms)} room(s)")
+        for room_id in greeting_rooms:
+            try:
+                await self.send_message(room_id, shutdown_message)
+                logger.info(f"Sent shutdown message to room {room_id}")
+            except Exception as e:
+                logger.error(f"Failed to send shutdown message to room {room_id}: {e}")
+
     async def run(self):
         """Run the bot."""
         logger.info("Starting ChatrixCD bot...")
@@ -186,6 +257,9 @@ class ChatrixBot:
         if not await self.login():
             logger.error("Failed to login, exiting")
             return
+        
+        # Send startup message
+        await self.send_startup_message()
             
         # Start sync loop
         logger.info("Starting sync loop...")
@@ -199,5 +273,9 @@ class ChatrixBot:
     async def close(self):
         """Clean up resources."""
         logger.info("Shutting down bot...")
+        
+        # Send shutdown message before closing
+        await self.send_shutdown_message()
+        
         await self.semaphore.close()
         await self.client.close()

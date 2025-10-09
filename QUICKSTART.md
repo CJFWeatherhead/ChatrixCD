@@ -93,6 +93,36 @@ The bot will:
 2. Authenticate using your configured method
 3. Start listening for commands
 
+### Command-Line Options
+
+For more control over the bot's behavior, use command-line options:
+
+```bash
+# Show help
+chatrixcd --help
+
+# Show version
+chatrixcd --version
+
+# Run with verbose logging (helpful for debugging)
+chatrixcd -v
+
+# Run with very verbose logging
+chatrixcd -vv
+
+# Use a custom config file
+chatrixcd -c /path/to/config.yaml
+
+# Run in daemon mode (background process, Unix/Linux only)
+chatrixcd -D
+
+# Display current configuration (credentials are hidden)
+chatrixcd -s
+
+# Override admin users and allowed rooms
+chatrixcd -a @admin:matrix.org -r !room:matrix.org
+```
+
 ## Using the Bot
 
 1. **Invite the bot to a room**

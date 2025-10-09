@@ -50,3 +50,17 @@ bot:
   admin_users: []
     # - "@admin:example.com"
     # - "@user:example.com"
+  
+  # Enable/disable startup and shutdown greeting messages
+  greetings_enabled: true
+  
+  # List of room IDs to send greeting messages to (leave empty to disable)
+  greeting_rooms: []
+    # - "!roomid1:example.com"
+    # - "!roomid2:example.com"
+  
+  # Customizable startup message
+  startup_message: "🤖 ChatrixCD bot is now online and ready to help with CI/CD tasks!"
+  
+  # Customizable shutdown message
+  shutdown_message: "👋 ChatrixCD bot is shutting down. See you later!"

@@ -9,6 +9,20 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
 
 ### Added
 
+#### Command-Line Interface
+- Command-line argument parsing with argparse
+- `-V` / `--version` flag to display version information
+- `-v` / `-vv` / `-vvv` flags for increasing verbosity levels (INFO, DEBUG, detailed DEBUG with library logs)
+- `-h` / `--help` flag for displaying help message (automatically provided by argparse)
+- `-c` / `--config` option for specifying alternative configuration file location
+- `-C` / `--color` flag for enabling colored logging output (requires colorlog package)
+- `-D` / `--daemon` flag for running in daemon mode (background process on Unix/Linux)
+- `-s` / `--show-config` flag to display current configuration with redacted credentials
+- `-a` / `--admin` option for specifying admin users on command line (can be used multiple times)
+- `-r` / `--room` option for specifying allowed rooms on command line (can be used multiple times)
+- Configuration overrides via command-line arguments
+- Comprehensive tests for CLI argument parsing
+
 #### CI/CD
 - GitHub Actions workflow for running unit tests on pull requests
 - GitHub Actions workflow for creating releases with calendar versioning
@@ -22,6 +36,13 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
   - Detailed problem description and context for YAML parsing errors
   - Proper error messages for file permission issues
   - Bot exits with status code 1 on configuration errors instead of crashing with stack trace
+
+### Fixed
+
+#### Encrypted Rooms
+- Bot now properly handles encrypted messages by requesting decryption keys when needed
+- Added MegolmEvent callback to automatically request room keys for encrypted messages that couldn't be decrypted
+- Bot will now respond to commands in encrypted rooms once encryption keys are received
 
 ## [0.1.0] - 2024-01-08
 

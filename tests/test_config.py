@@ -188,6 +188,61 @@ matrix:
             os.chmod(temp_file, 0o644)
             os.unlink(temp_file)
 
+    def test_greeting_config_defaults(self):
+        """Test default values for greeting configuration."""
+        config = Config('nonexistent.yaml')
+        
+        # Test default greeting configuration
+        self.assertTrue(config.get('bot.greetings_enabled'))
+        self.assertEqual(config.get('bot.greeting_rooms'), [])
+        self.assertIsNotNone(config.get('bot.startup_message'))
+        self.assertIsNotNone(config.get('bot.shutdown_message'))
+
+    def test_greeting_config_from_yaml(self):
+        """Test greeting configuration from YAML file."""
+        yaml_content = """
+bot:
+  greetings_enabled: false
+  greeting_rooms:
+    - "!room1:example.com"
+    - "!room2:example.com"
+  startup_message: "Custom startup message"
+  shutdown_message: "Custom shutdown message"
+"""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            f.write(yaml_content)
+            temp_file = f.name
+        
+        try:
+            config = Config(temp_file)
+            
+            self.assertFalse(config.get('bot.greetings_enabled'))
+            self.assertEqual(config.get('bot.greeting_rooms'), ['!room1:example.com', '!room2:example.com'])
+            self.assertEqual(config.get('bot.startup_message'), 'Custom startup message')
+            self.assertEqual(config.get('bot.shutdown_message'), 'Custom shutdown message')
+        finally:
+            os.unlink(temp_file)
+
+    def test_greeting_config_from_env(self):
+        """Test greeting configuration from environment variables."""
+        os.environ['BOT_GREETINGS_ENABLED'] = 'false'
+        os.environ['BOT_GREETING_ROOMS'] = '!room1:example.com,!room2:example.com'
+        os.environ['BOT_STARTUP_MESSAGE'] = 'Env startup message'
+        os.environ['BOT_SHUTDOWN_MESSAGE'] = 'Env shutdown message'
+        
+        config = Config('nonexistent.yaml')
+        
+        self.assertFalse(config.get('bot.greetings_enabled'))
+        self.assertEqual(config.get('bot.greeting_rooms'), ['!room1:example.com', '!room2:example.com'])
+        self.assertEqual(config.get('bot.startup_message'), 'Env startup message')
+        self.assertEqual(config.get('bot.shutdown_message'), 'Env shutdown message')
+        
+        # Clean up
+        del os.environ['BOT_GREETINGS_ENABLED']
+        del os.environ['BOT_GREETING_ROOMS']
+        del os.environ['BOT_STARTUP_MESSAGE']
+        del os.environ['BOT_SHUTDOWN_MESSAGE']
+
 
 if __name__ == '__main__':
     unittest.main()

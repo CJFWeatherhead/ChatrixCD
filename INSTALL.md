@@ -66,6 +66,28 @@ Or run directly:
 python -m chatrixcd.main
 ```
 
+For more control, use command-line options:
+
+```bash
+# Show help
+chatrixcd --help
+
+# Show version
+chatrixcd --version
+
+# Run with verbose logging
+chatrixcd -v
+
+# Use custom config file
+chatrixcd -c /path/to/config.yaml
+
+# Run in daemon mode (Unix/Linux only)
+chatrixcd -D
+
+# Display configuration (credentials redacted)
+chatrixcd -s
+```
+
 ## Authentication Setup
 
 ### Password Authentication
