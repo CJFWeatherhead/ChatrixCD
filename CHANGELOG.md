@@ -7,6 +7,15 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
 
 ## [Unreleased]
 
+### Fixed
+- **E2E Encryption Session Management**: Fixed issues with encrypted message decryption
+  - Bot now automatically uploads device keys and one-time keys after login
+  - Bot queries device keys from other users to establish Olm sessions
+  - Prevents duplicate room key requests by tracking requested session IDs
+  - Automatic key management after each sync to maintain encryption state
+  - Resolves "A key sharing request is already sent out" error
+  - Improves reliability of encryption in encrypted rooms
+
 ## [2025.10.7] - 2025-10-09
 
 ### Breaking Changes
