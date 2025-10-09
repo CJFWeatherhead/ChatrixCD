@@ -4,9 +4,18 @@ title: Home
 nav_order: 1
 ---
 
-# ChatrixCD Documentation
+<div align="center" style="margin-bottom: 2em;">
 
-A Matrix bot that integrates with Semaphore UI to enable CI/CD automation through chat.
+<!-- Logo will be added here once assets are created -->
+<!-- <img src="assets/logo-horizontal.png" alt="ChatrixCD Logo" width="400"> -->
+
+# ChatrixCD
+
+**Matrix bot for CI/CD automation through chat**
+
+</div>
+
+---
 
 ## Features
 

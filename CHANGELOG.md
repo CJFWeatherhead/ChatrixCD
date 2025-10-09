@@ -8,6 +8,15 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
 ## [Unreleased]
 
 ### Added
+- **Branding and Visual Identity**: Comprehensive branding guidelines and styling
+  - Added `BRANDING.md` with complete brand guidelines and color palette
+  - Created `assets/` directory for logo files and branding assets
+  - Added custom CSS for GitHub Pages with ChatrixCD brand colors (#4A9B7F green)
+  - Updated README.md with centered header, badges, and branding elements
+  - Updated documentation index page with consistent branding
+  - Added README files in asset directories with logo specifications
+  - Brand colors: ChatrixCD Green (#4A9B7F), Dark Background (#2D3238)
+  - Prepared structure for logo integration (awaiting asset creation)
 - **HJSON Support**: Configuration files now support HJSON (Human JSON) format
   - Add comments to configuration files using `//`, `/* */`, or `#`
   - Trailing commas are now allowed in configuration files

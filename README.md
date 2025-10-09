@@ -1,6 +1,21 @@
+<div align="center">
+
+<!-- Logo will be added here once assets are created -->
+<!-- ![ChatrixCD Logo](assets/logo-horizontal.png) -->
+
 # ChatrixCD
 
-A Matrix bot that integrates with Semaphore UI to enable CI/CD automation through chat. ChatrixCD supports end-to-end encrypted rooms and provides OIDC/token-based authentication for Matrix servers.
+**Matrix bot for CI/CD automation through chat**
+
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-4A9B7F)](https://cjfweatherhead.github.io/ChatrixCD/)
+
+---
+
+</div>
+
+ChatrixCD integrates with Semaphore UI to enable CI/CD automation through chat. It supports end-to-end encrypted Matrix rooms and provides OIDC/token-based authentication for Matrix servers.
 
 ## Documentation
 

@@ -1,0 +1,116 @@
+/* ChatrixCD Custom Branding Styles */
+
+/* Brand Colors */
+:root {
+  --chatrixcd-green: #4A9B7F;
+  --chatrixcd-dark-bg: #2D3238;
+  --chatrixcd-light-bg: #F6F8FA;
+  --chatrixcd-white: #FFFFFF;
+  --chatrixcd-success: #28A745;
+  --chatrixcd-warning: #FFC107;
+  --chatrixcd-error: #DC3545;
+  --chatrixcd-info: #17A2B8;
+}
+
+/* Apply brand color to links */
+a {
+  color: var(--chatrixcd-green);
+}
+
+a:hover {
+  color: #5CB593; /* Lighter shade of brand green */
+}
+
+/* Style code blocks with brand colors */
+code {
+  background-color: rgba(74, 155, 127, 0.1);
+  border: 1px solid rgba(74, 155, 127, 0.2);
+}
+
+/* Brand accent for navigation active states */
+.nav-list-link.active,
+.nav-list-link.active:hover {
+  color: var(--chatrixcd-green);
+  border-left-color: var(--chatrixcd-green);
+}
+
+/* Brand accent for buttons */
+.btn-primary {
+  background-color: var(--chatrixcd-green);
+  border-color: var(--chatrixcd-green);
+}
+
+.btn-primary:hover {
+  background-color: #5CB593;
+  border-color: #5CB593;
+}
+
+/* Header branding */
+.site-header {
+  border-bottom: 2px solid var(--chatrixcd-green);
+}
+
+/* Footer branding */
+.site-footer {
+  border-top: 2px solid var(--chatrixcd-green);
+}
+
+/* Table styling with brand colors */
+table {
+  border-color: rgba(74, 155, 127, 0.2);
+}
+
+th {
+  background-color: rgba(74, 155, 127, 0.1);
+  border-color: rgba(74, 155, 127, 0.3);
+}
+
+/* Blockquote styling */
+blockquote {
+  border-left: 4px solid var(--chatrixcd-green);
+  background-color: rgba(74, 155, 127, 0.05);
+}
+
+/* Search results highlighting */
+mark,
+.search-result-highlight {
+  background-color: rgba(74, 155, 127, 0.3);
+  color: inherit;
+}
+
+/* Logo centering and spacing */
+div[align="center"] {
+  margin: 2em 0;
+}
+
+/* Horizontal rule with brand color */
+hr {
+  border-color: rgba(74, 155, 127, 0.3);
+}
+
+/* Badge styling for consistent branding */
+.badge {
+  background-color: var(--chatrixcd-green);
+  color: var(--chatrixcd-white);
+  padding: 0.25em 0.6em;
+  border-radius: 0.25em;
+  font-size: 0.875em;
+  font-weight: 600;
+}
+
+/* Status indicators */
+.status-success {
+  color: var(--chatrixcd-success);
+}
+
+.status-warning {
+  color: var(--chatrixcd-warning);
+}
+
+.status-error {
+  color: var(--chatrixcd-error);
+}
+
+.status-info {
+  color: var(--chatrixcd-info);
+}
