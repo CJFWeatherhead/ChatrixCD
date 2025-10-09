@@ -203,7 +203,7 @@ class TestChatrixBot(unittest.TestCase):
         bot = ChatrixBot(self.config)
         
         # Mock the client methods
-        bot.client.load_store = AsyncMock()
+        bot.client.load_store = MagicMock()  # load_store is sync, not async
         bot.client.sync = AsyncMock()
         from nio import SyncResponse, Rooms
         # Create a properly initialized SyncResponse with all required arguments
@@ -273,7 +273,7 @@ class TestChatrixBot(unittest.TestCase):
         bot = ChatrixBot(self.config)
         
         # Mock client methods - these should NOT be called
-        bot.client.load_store = AsyncMock()
+        bot.client.load_store = MagicMock()  # load_store is sync, not async
         bot.auth.get_access_token = AsyncMock(return_value='test_token_12345')
         
         # Call login - should fail before calling load_store

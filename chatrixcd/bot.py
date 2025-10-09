@@ -120,7 +120,7 @@ class ChatrixBot:
                 # Load the encryption store before setting token
                 # This is required for E2E encryption to work
                 # Note: load_store() requires user_id to be set, which we validated above
-                await self.client.load_store()
+                self.client.load_store()
                 logger.info("Loaded encryption store")
                 
                 # Set the access token directly
