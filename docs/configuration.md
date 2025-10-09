@@ -235,7 +235,10 @@ export SEMAPHORE_API_TOKEN="$(cat /secrets/semaphore_token)"
 
 ### Configuration not loaded
 - Check file name is exactly `config.yaml`
-- Verify YAML syntax is valid
+- Verify YAML syntax is valid - the bot will display detailed error messages if the YAML is malformed, including:
+  - Line and column number of the error
+  - Description of the problem (e.g., missing quote, invalid indentation)
+  - Context of where the error occurred
 - Check file permissions
 
 ### Environment variables not working

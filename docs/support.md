@@ -54,6 +54,28 @@ python3.11 -m venv .venv
 #### Bot Won't Start
 
 1. **Check configuration file**
+   
+   If the bot fails to start due to configuration errors, it will display a clear error message indicating the problem. Common YAML errors include:
+   
+   - Missing closing quotes: `password: "unclosed`
+   - Invalid indentation
+   - Unclosed brackets or braces
+   - Invalid YAML syntax
+   
+   The error message will show:
+   - The configuration file path
+   - Line and column number where the error occurred
+   - A description of the problem
+   
+   Example error:
+   ```
+   ERROR: Failed to parse YAML configuration file 'config.yaml'
+     Error at line 5, column 15
+     Problem: expected <block end>, but found '<scalar>'
+     Context: while parsing a block mapping
+   ```
+   
+   You can also manually validate YAML syntax:
    ```bash
    # Validate YAML syntax
    python -c "import yaml; yaml.safe_load(open('config.yaml'))"

@@ -30,6 +30,13 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
 - Automated changelog generation from git commits
 - Automated GitHub releases with changelog
 
+### Improved
+- **Configuration Error Handling**: Added graceful handling of malformed YAML configuration files
+  - Clear error messages showing filename, line number, and column where error occurred
+  - Detailed problem description and context for YAML parsing errors
+  - Proper error messages for file permission issues
+  - Bot exits with status code 1 on configuration errors instead of crashing with stack trace
+
 ### Fixed
 
 #### Encrypted Rooms
