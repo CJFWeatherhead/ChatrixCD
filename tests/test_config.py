@@ -243,6 +243,74 @@ bot:
         del os.environ['BOT_STARTUP_MESSAGE']
         del os.environ['BOT_SHUTDOWN_MESSAGE']
 
+    def test_yaml_config_with_missing_fields_uses_defaults(self):
+        """Test that YAML config without all fields still gets defaults."""
+        yaml_content = """
+matrix:
+  homeserver: "https://matrix.example.com"
+  user_id: "@bot:example.com"
+  access_token: "test_token"
+"""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            f.write(yaml_content)
+            temp_file = f.name
+        
+        try:
+            config = Config(temp_file)
+            matrix_config = config.get_matrix_config()
+            
+            # YAML values should be present
+            self.assertEqual(matrix_config.get('homeserver'), 'https://matrix.example.com')
+            self.assertEqual(matrix_config.get('user_id'), '@bot:example.com')
+            self.assertEqual(matrix_config.get('access_token'), 'test_token')
+            
+            # Missing fields should have defaults
+            self.assertEqual(matrix_config.get('device_id'), 'CHATRIXCD')
+            self.assertEqual(matrix_config.get('device_name'), 'ChatrixCD Bot')
+            self.assertEqual(matrix_config.get('store_path'), './store')
+            self.assertEqual(matrix_config.get('auth_type'), 'password')
+            
+            # Verify all required fields are present (not None)
+            self.assertIsNotNone(matrix_config.get('device_id'))
+            self.assertIsNotNone(matrix_config.get('device_name'))
+            self.assertIsNotNone(matrix_config.get('store_path'))
+            self.assertIsNotNone(matrix_config.get('auth_type'))
+        finally:
+            os.unlink(temp_file)
+
+    def test_token_auth_config_from_yaml(self):
+        """Test token authentication configuration from YAML (reproduces issue #X)."""
+        yaml_content = """
+matrix:
+  homeserver: "https://mymatrixserver.com"
+  user_id: "@auser:mymatrixserver"
+  access_token: "secret_access_token_abcdefg"
+"""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            f.write(yaml_content)
+            temp_file = f.name
+        
+        try:
+            config = Config(temp_file)
+            matrix_config = config.get_matrix_config()
+            
+            # User specified values
+            self.assertEqual(matrix_config.get('homeserver'), 'https://mymatrixserver.com')
+            self.assertEqual(matrix_config.get('user_id'), '@auser:mymatrixserver')
+            self.assertEqual(matrix_config.get('access_token'), 'secret_access_token_abcdefg')
+            
+            # Defaults for unspecified values (these were missing before the fix)
+            self.assertEqual(matrix_config.get('device_id'), 'CHATRIXCD')
+            self.assertEqual(matrix_config.get('device_name'), 'ChatrixCD Bot')
+            self.assertEqual(matrix_config.get('store_path'), './store')
+            self.assertEqual(matrix_config.get('auth_type'), 'password')
+            
+            # Ensure user_id is not None or empty
+            self.assertIsNotNone(matrix_config.get('user_id'))
+            self.assertTrue(matrix_config.get('user_id'))
+        finally:
+            os.unlink(temp_file)
+
 
 if __name__ == '__main__':
     unittest.main()
