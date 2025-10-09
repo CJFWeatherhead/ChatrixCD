@@ -21,25 +21,27 @@ pip install -e .
 
 ## 2. Create Configuration
 
-Create a `config.yaml` file:
+Create a `config.json` file:
 
-```yaml
-matrix:
-  homeserver: "https://matrix.example.com"
-  user_id: "@bot:example.com"
-  password: "your-secure-password"
-  # Or use access_token instead of password:
-  # access_token: "your-access-token"
-  device_name: "ChatrixCD Bot"
-  store_path: "./store"
-
-semaphore:
-  url: "https://semaphore.example.com"
-  api_token: "your-semaphore-api-token"
-
-bot:
-  command_prefix: "!cd"
-  allowed_rooms: []  # Empty list allows all rooms
+```json
+{
+  "matrix": {
+    "homeserver": "https://matrix.example.com",
+    "user_id": "@bot:example.com",
+    "auth_type": "password",
+    "password": "your-secure-password",
+    "device_name": "ChatrixCD Bot",
+    "store_path": "./store"
+  },
+  "semaphore": {
+    "url": "https://semaphore.example.com",
+    "api_token": "your-semaphore-api-token"
+  },
+  "bot": {
+    "command_prefix": "!cd",
+    "allowed_rooms": []
+  }
+}
 ```
 
 ## 3. Start the Bot
@@ -132,7 +134,7 @@ Bot: ✅ Task 123 completed successfully
 
 ### Using Environment Variables
 
-Instead of `config.yaml`, you can use environment variables:
+Instead of `config.json`, you can use environment variables:
 
 ```bash
 export MATRIX_HOMESERVER="https://matrix.example.com"
@@ -148,15 +150,17 @@ chatrixcd
 
 For OIDC authentication with Matrix:
 
-```yaml
-matrix:
-  homeserver: "https://matrix.example.com"
-  user_id: "@bot:example.com"
-  auth_type: "oidc"
-  oidc:
-    client_id: "your-client-id"
-    client_secret: "your-client-secret"
-    issuer: "https://auth.example.com"
+```json
+{
+  "matrix": {
+    "homeserver": "https://matrix.example.com",
+    "user_id": "@bot:example.com",
+    "auth_type": "oidc",
+    "oidc_issuer": "https://auth.example.com",
+    "oidc_client_id": "your-client-id",
+    "oidc_client_secret": "your-client-secret"
+  }
+}
 ```
 
 ## Next Steps
@@ -174,7 +178,7 @@ matrix:
 - Check `allowed_rooms` configuration
 
 ### Authentication fails
-- Verify credentials in config.yaml
+- Verify credentials in config.json
 - Check Matrix homeserver is accessible
 - Try using access_token instead of password
 

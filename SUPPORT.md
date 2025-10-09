@@ -130,10 +130,12 @@ For security vulnerabilities:
 
 Add to your configuration or environment:
 
-```yaml
-# config.yaml
-logging:
-  level: DEBUG
+```json
+{
+  "logging": {
+    "level": "DEBUG"
+  }
+}
 ```
 
 Or:

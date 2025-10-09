@@ -7,7 +7,7 @@ description="Matrix bot for CI/CD automation with Semaphore UI"
 : ${chatrixcd_user:="chatrixcd"}
 : ${chatrixcd_group:="chatrixcd"}
 : ${chatrixcd_home:="/opt/chatrixcd"}
-: ${chatrixcd_config:="/opt/chatrixcd/config.yaml"}
+: ${chatrixcd_config:="/opt/chatrixcd/config.json"}
 : ${chatrixcd_venv:="/opt/chatrixcd/.venv"}
 
 command="${chatrixcd_venv}/bin/chatrixcd"

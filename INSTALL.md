@@ -45,12 +45,12 @@ cp .env.example .env
 nano .env
 ```
 
-#### Option B: Using YAML Configuration
+#### Option B: Using JSON Configuration
 
 ```bash
-cp config.yaml.example config.yaml
-# Edit config.yaml with your settings
-nano config.yaml
+cp config.json.example config.json
+# Edit config.json with your settings
+nano config.json
 ```
 
 ### 4. Run the Bot
@@ -79,7 +79,7 @@ chatrixcd --version
 chatrixcd -v
 
 # Use custom config file
-chatrixcd -c /path/to/config.yaml
+chatrixcd -c /path/to/config.json
 
 # Run in daemon mode (Unix/Linux only)
 chatrixcd -D
@@ -96,11 +96,14 @@ This is the simplest method for traditional Matrix servers:
 
 1. Create a bot account on your Matrix server
 2. Configure the credentials:
-   ```yaml
-   matrix:
-     auth_type: "password"
-     user_id: "@chatrixcd:example.com"
-     password: "your_password"
+   ```json
+   {
+     "matrix": {
+       "auth_type": "password",
+       "user_id": "@chatrixcd:example.com",
+       "password": "your_password"
+     }
+   }
    ```
 
 ### Token Authentication
@@ -109,11 +112,14 @@ If you have a pre-obtained access token:
 
 1. Obtain an access token from your Matrix server
 2. Configure the token:
-   ```yaml
-   matrix:
-     auth_type: "token"
-     user_id: "@chatrixcd:example.com"
-     access_token: "your_access_token"
+   ```json
+   {
+     "matrix": {
+       "auth_type": "token",
+       "user_id": "@chatrixcd:example.com",
+       "access_token": "your_access_token"
+     }
+   }
    ```
 
 ### OIDC Authentication
@@ -122,13 +128,16 @@ For Matrix servers that use OIDC/OAuth2:
 
 1. Register an OAuth2 client with your OIDC provider
 2. Configure OIDC settings:
-   ```yaml
-   matrix:
-     auth_type: "oidc"
-     user_id: "@chatrixcd:example.com"
-     oidc_issuer: "https://auth.example.com"
-     oidc_client_id: "your_client_id"
-     oidc_client_secret: "your_client_secret"
+   ```json
+   {
+     "matrix": {
+       "auth_type": "oidc",
+       "user_id": "@chatrixcd:example.com",
+       "oidc_issuer": "https://auth.example.com",
+       "oidc_client_id": "your_client_id",
+       "oidc_client_secret": "your_client_secret"
+     }
+   }
    ```
 
 ## Docker Deployment
@@ -194,8 +203,8 @@ For production deployments on Linux using systemd (Ubuntu, Debian, RHEL, CentOS,
 
 3. Create configuration:
    ```bash
-   sudo cp config.yaml.example /opt/chatrixcd/config.yaml
-   sudo nano /opt/chatrixcd/config.yaml
+   sudo cp config.json.example /opt/chatrixcd/config.json
+   sudo nano /opt/chatrixcd/config.json
    ```
 
 4. Set permissions:
@@ -249,8 +258,8 @@ For Debian systems with enhanced security:
 
 4. Configure the bot:
    ```bash
-   sudo -u chatrixcd cp /opt/chatrixcd/app/config.yaml.example /opt/chatrixcd/config.yaml
-   sudo -u chatrixcd nano /opt/chatrixcd/config.yaml
+   sudo -u chatrixcd cp /opt/chatrixcd/app/config.json.example /opt/chatrixcd/config.json
+   sudo -u chatrixcd nano /opt/chatrixcd/config.json
    ```
 
 5. Create store directory:
@@ -331,8 +340,8 @@ Alpine Linux uses OpenRC instead of systemd. This is a lightweight deployment op
 
 4. Configure the bot:
    ```bash
-   su - chatrixcd -s /bin/sh -c "cp /opt/chatrixcd/app/config.yaml.example /opt/chatrixcd/config.yaml"
-   su - chatrixcd -s /bin/sh -c "vi /opt/chatrixcd/config.yaml"
+   su - chatrixcd -s /bin/sh -c "cp /opt/chatrixcd/app/config.json.example /opt/chatrixcd/config.json"
+   su - chatrixcd -s /bin/sh -c "vi /opt/chatrixcd/config.json"
    ```
 
 5. Create log directory:
@@ -402,7 +411,7 @@ Alpine Linux uses OpenRC instead of systemd. This is a lightweight deployment op
 
 ## Security Best Practices
 
-1. **Protect credentials**: Never commit config.yaml or .env files with real credentials
+1. **Protect credentials**: Never commit config.json or .env files with real credentials
 2. **Use restricted tokens**: Create Semaphore API tokens with minimal required permissions
 3. **Secure the store**: The store directory contains encryption keys - keep it secure
 4. **Access control**: Use `allowed_rooms` and `admin_users` to restrict bot access

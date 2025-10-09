@@ -48,7 +48,7 @@ Report vulnerabilities via GitHub's private vulnerability reporting:
 ### Credentials and Secrets
 
 1. **Never commit credentials**
-   - Don't commit `config.yaml` with real credentials
+   - Don't commit `config.json` with real credentials
    - Don't commit `.env` files with secrets
    - Use `.gitignore` to exclude sensitive files
 
@@ -60,7 +60,7 @@ Report vulnerabilities via GitHub's private vulnerability reporting:
 
 3. **Restrict file permissions**
    ```bash
-   chmod 600 config.yaml
+   chmod 600 config.json
    chmod 600 .env
    chmod 700 store/
    ```

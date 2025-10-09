@@ -55,12 +55,12 @@ python3.11 -m venv .venv
 
 1. **Check configuration file**
    
-   If the bot fails to start due to configuration errors, it will display a clear error message indicating the problem. Common YAML errors include:
+   If the bot fails to start due to configuration errors, it will display a clear error message indicating the problem. Common JSON errors include:
    
-   - Missing closing quotes: `password: "unclosed`
-   - Invalid indentation
+   - Missing closing quotes: `"password": "unclosed`
+   - Missing commas between properties
    - Unclosed brackets or braces
-   - Invalid YAML syntax
+   - Invalid JSON syntax
    
    The error message will show:
    - The configuration file path
@@ -69,16 +69,15 @@ python3.11 -m venv .venv
    
    Example error:
    ```
-   ERROR: Failed to parse YAML configuration file 'config.yaml'
+   ERROR: Failed to parse JSON configuration file 'config.json'
      Error at line 5, column 15
-     Problem: expected <block end>, but found '<scalar>'
-     Context: while parsing a block mapping
+     Problem: Expecting ',' delimiter
    ```
    
-   You can also manually validate YAML syntax:
+   You can also manually validate JSON syntax:
    ```bash
-   # Validate YAML syntax
-   python -c "import yaml; yaml.safe_load(open('config.yaml'))"
+   # Validate JSON syntax
+   python -c "import json; json.load(open('config.json'))"
    ```
 
 2. **Check environment variables**
@@ -89,7 +88,7 @@ python3.11 -m venv .venv
 
 3. **Check file permissions**
    ```bash
-   ls -la config.yaml
+   ls -la config.json
    ls -la store/
    ```
 
@@ -258,7 +257,7 @@ When reporting issues, include:
 
 2. **Configuration** (remove secrets!)
    ```bash
-   cat config.yaml | sed 's/password:.*/password: REDACTED/'
+   cat config.json | sed 's/"password": ".*"/"password": "REDACTED"/'
    ```
 
 3. **Logs**
