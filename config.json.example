@@ -40,7 +40,24 @@
     "url": "https://semaphore.example.com",
     
     // Semaphore API token (get this from Semaphore UI user settings)
-    "api_token": "your_semaphore_api_token_here"
+    "api_token": "your_semaphore_api_token_here",
+    
+    // SSL/TLS Configuration (optional)
+    // ===================================
+    
+    // Enable/disable SSL certificate verification (default: true)
+    // Set to false for self-signed certificates (NOT recommended for production)
+    // "ssl_verify": false,
+    
+    // Path to custom CA certificate bundle for SSL verification
+    // Use this when Semaphore has a certificate signed by a custom CA
+    // "ssl_ca_cert": "/path/to/custom-ca.crt",
+    
+    // Path to client certificate for mutual TLS (mTLS) authentication
+    // "ssl_client_cert": "/path/to/client.crt",
+    
+    // Path to client certificate private key (required if ssl_client_cert is set)
+    // "ssl_client_key": "/path/to/client.key"
   },
   
   // Bot behavior settings

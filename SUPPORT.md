@@ -84,6 +84,12 @@ For security vulnerabilities:
 - Test Semaphore API manually: `curl -H "Authorization: Bearer YOUR_TOKEN" https://semaphore.example.com/api/ping`
 - Check Semaphore logs for API errors
 
+**SSL Certificate Errors**: If you see `SSLCertVerificationError` or `certificate verify failed`:
+- For self-signed certificates: Set `"ssl_verify": false` in the semaphore configuration
+- For custom CA: Set `"ssl_ca_cert": "/path/to/ca.crt"` in the semaphore configuration
+- For mutual TLS: Configure both `"ssl_client_cert"` and `"ssl_client_key"` in the semaphore configuration
+- See the [SSL/TLS Configuration](docs/configuration.md#ssltls-configuration-for-semaphore) section in the documentation for more details
+
 #### E2E Encryption issues
 
 **Symptoms**: Bot can't read encrypted messages or fails to send encrypted messages
