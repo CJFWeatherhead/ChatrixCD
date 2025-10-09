@@ -16,6 +16,13 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
 - Automated changelog generation from git commits
 - Automated GitHub releases with changelog
 
+### Fixed
+
+#### Encrypted Rooms
+- Bot now properly handles encrypted messages by requesting decryption keys when needed
+- Added MegolmEvent callback to automatically request room keys for encrypted messages that couldn't be decrypted
+- Bot will now respond to commands in encrypted rooms once encryption keys are received
+
 ## [0.1.0] - 2024-01-08
 
 ### Added
