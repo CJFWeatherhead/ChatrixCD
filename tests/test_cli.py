@@ -198,6 +198,46 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(args.admin_users, ['@admin1:matrix.org', '@admin2:matrix.org'])
         self.assertEqual(args.allowed_rooms, ['!room1:matrix.org'])
 
+    def test_config_validation_on_startup(self):
+        """Test that configuration is validated on startup."""
+        import json
+        
+        # Create a config file with missing required fields
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump({
+                "matrix": {
+                    "homeserver": "",
+                    "user_id": ""
+                },
+                "semaphore": {
+                    "url": "",
+                    "api_token": ""
+                }
+            }, f)
+            temp_config = f.name
+        
+        try:
+            # Mock sys.argv to simulate CLI invocation
+            with patch('sys.argv', ['chatrixcd', '-c', temp_config]):
+                # Mock sys.stderr to capture error output
+                with patch('sys.stderr', new=StringIO()) as mock_stderr:
+                    # Import and run main
+                    from chatrixcd.main import main
+                    
+                    # Should exit with error due to validation failure
+                    with self.assertRaises(SystemExit) as cm:
+                        main()
+                    
+                    # Should exit with code 1
+                    self.assertEqual(cm.exception.code, 1)
+                    
+                    # Check error message mentions validation
+                    error_output = mock_stderr.getvalue()
+                    self.assertIn('Configuration validation failed', error_output)
+                    self.assertIn('user_id is required', error_output)
+        finally:
+            os.unlink(temp_config)
+
 
 if __name__ == '__main__':
     unittest.main()

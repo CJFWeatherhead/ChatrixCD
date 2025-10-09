@@ -238,6 +238,19 @@ def main():
     # Load configuration with CLI overrides
     config = Config(config_file=args.config)
     
+    # Validate configuration before starting
+    validation_errors = config.validate_schema()
+    if validation_errors and not args.show_config:
+        logger.error("Configuration validation failed:")
+        for error in validation_errors:
+            logger.error(f"  - {error}")
+        print("\nERROR: Configuration validation failed:", file=sys.stderr)
+        for error in validation_errors:
+            print(f"  - {error}", file=sys.stderr)
+        print(f"\nPlease check your configuration file: {args.config}", file=sys.stderr)
+        print("You can view your current configuration with: chatrixcd -s", file=sys.stderr)
+        sys.exit(1)
+    
     # Apply command-line overrides
     if args.admin_users:
         bot_config = config.config.get('bot', {})

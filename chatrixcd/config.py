@@ -113,7 +113,7 @@ class Config:
             # Merge file config (file values override defaults)
             self.config = self._deep_merge(self.config, file_config)
         else:
-            logger.debug(f"Configuration file '{self.config_file}' not found, using defaults only")
+            logger.warning(f"Configuration file '{self.config_file}' not found, using defaults only")
     
     def _get_default_config(self) -> Dict[str, Any]:
         """Get hardcoded default configuration (no environment variables).
