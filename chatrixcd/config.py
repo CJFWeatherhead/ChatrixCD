@@ -43,6 +43,10 @@ class Config:
                     'command_prefix': os.getenv('BOT_COMMAND_PREFIX', '!cd'),
                     'allowed_rooms': os.getenv('BOT_ALLOWED_ROOMS', '').split(',') if os.getenv('BOT_ALLOWED_ROOMS') else [],
                     'admin_users': os.getenv('BOT_ADMIN_USERS', '').split(',') if os.getenv('BOT_ADMIN_USERS') else [],
+                    'greetings_enabled': os.getenv('BOT_GREETINGS_ENABLED', 'true').lower() in ('true', '1', 'yes'),
+                    'greeting_rooms': os.getenv('BOT_GREETING_ROOMS', '').split(',') if os.getenv('BOT_GREETING_ROOMS') else [],
+                    'startup_message': os.getenv('BOT_STARTUP_MESSAGE', '🤖 ChatrixCD bot is now online and ready to help with CI/CD tasks!'),
+                    'shutdown_message': os.getenv('BOT_SHUTDOWN_MESSAGE', '👋 ChatrixCD bot is shutting down. See you later!'),
                 },
             }
 
