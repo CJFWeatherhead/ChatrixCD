@@ -83,8 +83,10 @@ class TestChatrixBot(unittest.TestCase):
         """Test that decryption failure callback requests room keys."""
         bot = ChatrixBot(self.config)
         
-        # Mock the request_room_key method
+        # Mock the request_room_key method and store/olm
         bot.client.request_room_key = AsyncMock()
+        bot.client.store = MagicMock()  # Mock store to simulate it's loaded
+        bot.client.olm = MagicMock()    # Mock olm to simulate it's loaded
         
         # Create mock room and event
         room = MagicMock(spec=MatrixRoom)
@@ -102,6 +104,34 @@ class TestChatrixBot(unittest.TestCase):
         
         # Verify request_room_key was called
         bot.client.request_room_key.assert_called_once_with(event)
+
+    def test_decryption_failure_callback_without_store(self):
+        """Test that decryption failure callback handles missing store gracefully."""
+        bot = ChatrixBot(self.config)
+        
+        # Mock the request_room_key method
+        bot.client.request_room_key = AsyncMock()
+        
+        # Simulate store not loaded (store and olm are None)
+        bot.client.store = None
+        bot.client.olm = None
+        
+        # Create mock room and event
+        room = MagicMock(spec=MatrixRoom)
+        room.display_name = "Test Room"
+        room.room_id = "!test:example.com"
+        
+        event = MagicMock(spec=MegolmEvent)
+        event.sender = "@user:example.com"
+        event.session_id = "test_session_id"
+        
+        # Call the callback - should not raise an exception
+        self.loop.run_until_complete(
+            bot.decryption_failure_callback(room, event)
+        )
+        
+        # Verify request_room_key was NOT called since store is not loaded
+        bot.client.request_room_key.assert_not_called()
 
     def test_message_callback_ignores_own_messages(self):
         """Test that message callback ignores messages from the bot itself."""
@@ -187,6 +217,61 @@ class TestChatrixBot(unittest.TestCase):
         
         # Verify access token was set
         self.assertEqual(bot.client.access_token, 'test_token_12345')
+
+    def test_login_fails_with_empty_user_id(self):
+        """Test that login fails gracefully when user_id is not set."""
+        # Configure with empty user_id
+        self.config.get_matrix_config.return_value = {
+            'homeserver': 'https://matrix.example.com',
+            'user_id': '',  # Empty user_id
+            'device_id': 'TESTDEVICE',
+            'device_name': 'Test Bot',
+            'store_path': self.temp_dir,
+            'auth_type': 'token',
+            'access_token': 'test_token_12345'
+        }
+        
+        bot = ChatrixBot(self.config)
+        
+        # Mock the auth handler
+        bot.auth.get_access_token = AsyncMock(return_value='test_token_12345')
+        
+        # Call login - should fail
+        result = self.loop.run_until_complete(bot.login())
+        
+        # Verify login failed
+        self.assertFalse(result, "Login should fail with empty user_id")
+        
+        # Verify load_store was NOT called since we fail early
+        # (we can't easily assert this without mocking, but the test will fail if it tries)
+
+    def test_login_token_validates_user_id_before_load_store(self):
+        """Test that user_id is validated before attempting to load store."""
+        # Configure with missing user_id
+        self.config.get_matrix_config.return_value = {
+            'homeserver': 'https://matrix.example.com',
+            'user_id': None,  # None user_id
+            'device_id': 'TESTDEVICE',
+            'device_name': 'Test Bot',
+            'store_path': self.temp_dir,
+            'auth_type': 'token',
+            'access_token': 'test_token_12345'
+        }
+        
+        bot = ChatrixBot(self.config)
+        
+        # Mock client methods - these should NOT be called
+        bot.client.load_store = AsyncMock()
+        bot.auth.get_access_token = AsyncMock(return_value='test_token_12345')
+        
+        # Call login - should fail before calling load_store
+        result = self.loop.run_until_complete(bot.login())
+        
+        # Verify login failed
+        self.assertFalse(result, "Login should fail with None user_id")
+        
+        # Verify load_store was NOT called
+        bot.client.load_store.assert_not_called()
 
 
 if __name__ == '__main__':
