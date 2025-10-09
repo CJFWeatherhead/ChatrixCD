@@ -7,6 +7,9 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
 
 ## [Unreleased]
 
+### Fixed
+- Fixed configuration loading to properly apply default values when YAML config file exists but doesn't specify all fields. Previously, missing fields would be `None` instead of using defaults, causing "User id is not set" errors with token authentication.
+
 ### Added
 
 #### Command-Line Interface

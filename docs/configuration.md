@@ -10,11 +10,16 @@ ChatrixCD can be configured using YAML files or environment variables.
 
 ## Configuration Priority
 
-Configuration is loaded in this order (later sources override earlier ones):
+Configuration values are determined using the following priority (highest to lowest):
 
-1. Default values (hardcoded)
-2. YAML configuration file (`config.yaml`)
-3. Environment variables
+1. **YAML configuration file** (`config.yaml`) - explicit values in the YAML file take highest priority
+2. **Environment variables** - used as defaults when YAML doesn't specify a value
+3. **Default values** (hardcoded) - used when neither YAML nor environment variables specify a value
+
+**Example:** If your `config.yaml` has `user_id` but not `device_id`, and you set the `MATRIX_DEVICE_ID` environment variable, then:
+- `user_id` will come from the YAML file
+- `device_id` will come from the environment variable
+- Other unspecified fields (like `device_name`) will use hardcoded defaults
 
 ## YAML Configuration
 
