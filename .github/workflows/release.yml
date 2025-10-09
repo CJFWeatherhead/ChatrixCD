@@ -117,12 +117,12 @@ jobs:
               content = f.read()
           
           # Find the Unreleased section
-          # Pattern: ## [Unreleased] ... ## [version] or ## Unreleased ... ---
-          unreleased_pattern = r'(## \[Unreleased\]\s*\n)(.*?)(?=\n## \[|\n---|\Z)'
+          # Pattern: ## [Unreleased] followed by content until next ## heading
+          unreleased_pattern = r'## \[Unreleased\]\n(.*?)(?=\n## |\Z)'
           match = re.search(unreleased_pattern, content, re.DOTALL)
           
           if match:
-              unreleased_content = match.group(2).strip()
+              unreleased_content = match.group(1).strip()
               
               # If there's no content, add a placeholder
               if not unreleased_content:
@@ -132,7 +132,15 @@ jobs:
               new_version_section = f"\n## [{version}] - {release_date}\n\n{unreleased_content}\n"
               
               # Replace the Unreleased section with an empty one and add the new version
-              new_content = content[:match.start()] + f"## [Unreleased]\n{new_version_section}" + content[match.end():]
+              # Find position where to insert: after ## [Unreleased] line
+              unreleased_header_end = match.start() + len("## [Unreleased]\n")
+              next_section_start = match.end()
+              
+              new_content = (
+                  content[:unreleased_header_end] + 
+                  new_version_section + 
+                  content[next_section_start:]
+              )
               
               # Update Version History section if it exists
               version_history_pattern = r'(## Version History\s*\n)'
