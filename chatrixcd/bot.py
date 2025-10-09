@@ -82,6 +82,11 @@ class ChatrixBot:
         auth_type = matrix_config.get('auth_type', 'password')
         
         try:
+            # Validate that user_id is set for all authentication types
+            if not self.user_id:
+                logger.error("user_id is not set in configuration. Please set MATRIX_USER_ID or add 'user_id' to config.yaml")
+                return False
+            
             if auth_type == 'password':
                 # Traditional password login
                 password = matrix_config.get('password')
@@ -110,6 +115,7 @@ class ChatrixBot:
                 
                 # Load the encryption store before setting token
                 # This is required for E2E encryption to work
+                # Note: load_store() requires user_id to be set, which we validated above
                 await self.client.load_store()
                 logger.info("Loaded encryption store")
                 
@@ -176,6 +182,14 @@ class ChatrixBot:
             f"Unable to decrypt message in {room.display_name} ({room.room_id}) "
             f"from {event.sender}. Requesting room key..."
         )
+        
+        # Check if encryption store is loaded before trying to request keys
+        if not self.client.store or not self.client.olm:
+            logger.error(
+                "Cannot request room key: encryption store is not loaded. "
+                "Make sure user_id is set correctly and the bot has logged in with encryption support."
+            )
+            return
         
         try:
             # Request the room key from other devices
