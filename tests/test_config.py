@@ -3,6 +3,8 @@
 import os
 import tempfile
 import unittest
+import sys
+from io import StringIO
 from chatrixcd.config import Config
 
 
@@ -71,6 +73,120 @@ bot:
         
         self.assertEqual(config.get('nonexistent.key', 'default'), 'default')
         self.assertIsNone(config.get('nonexistent.key'))
+
+    def test_malformed_yaml_missing_quote(self):
+        """Test graceful handling of malformed YAML with missing quote."""
+        yaml_content = """
+matrix:
+  homeserver: "https://matrix.org"
+  password: "unclosed
+"""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            f.write(yaml_content)
+            temp_file = f.name
+        
+        try:
+            # Capture stderr to check error message
+            old_stderr = sys.stderr
+            sys.stderr = StringIO()
+            
+            # This should exit with code 1
+            with self.assertRaises(SystemExit) as cm:
+                Config(temp_file)
+            
+            self.assertEqual(cm.exception.code, 1)
+            
+            # Check that error message contains useful information
+            error_output = sys.stderr.getvalue()
+            self.assertIn('Failed to parse YAML', error_output)
+            self.assertIn(temp_file, error_output)
+            self.assertIn('line', error_output.lower())
+            
+            sys.stderr = old_stderr
+        finally:
+            os.unlink(temp_file)
+
+    def test_malformed_yaml_unclosed_bracket(self):
+        """Test graceful handling of malformed YAML with unclosed bracket."""
+        yaml_content = """
+matrix:
+  homeserver: "https://matrix.org"
+  list: [item1, item2
+"""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            f.write(yaml_content)
+            temp_file = f.name
+        
+        try:
+            old_stderr = sys.stderr
+            sys.stderr = StringIO()
+            
+            with self.assertRaises(SystemExit) as cm:
+                Config(temp_file)
+            
+            self.assertEqual(cm.exception.code, 1)
+            
+            error_output = sys.stderr.getvalue()
+            self.assertIn('Failed to parse YAML', error_output)
+            self.assertIn(temp_file, error_output)
+            
+            sys.stderr = old_stderr
+        finally:
+            os.unlink(temp_file)
+
+    def test_malformed_yaml_invalid_indentation(self):
+        """Test graceful handling of malformed YAML with invalid indentation."""
+        yaml_content = """
+matrix:
+  homeserver: "https://matrix.org"
+ user_id: "@bot:matrix.org"
+"""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            f.write(yaml_content)
+            temp_file = f.name
+        
+        try:
+            old_stderr = sys.stderr
+            sys.stderr = StringIO()
+            
+            with self.assertRaises(SystemExit) as cm:
+                Config(temp_file)
+            
+            self.assertEqual(cm.exception.code, 1)
+            
+            error_output = sys.stderr.getvalue()
+            self.assertIn('Failed to parse YAML', error_output)
+            
+            sys.stderr = old_stderr
+        finally:
+            os.unlink(temp_file)
+
+    def test_unreadable_config_file(self):
+        """Test graceful handling of unreadable config file."""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            f.write("matrix:\n  homeserver: test\n")
+            temp_file = f.name
+        
+        try:
+            # Make file unreadable
+            os.chmod(temp_file, 0o000)
+            
+            old_stderr = sys.stderr
+            sys.stderr = StringIO()
+            
+            with self.assertRaises(SystemExit) as cm:
+                Config(temp_file)
+            
+            self.assertEqual(cm.exception.code, 1)
+            
+            error_output = sys.stderr.getvalue()
+            self.assertIn('Failed to read configuration file', error_output)
+            self.assertIn(temp_file, error_output)
+            
+            sys.stderr = old_stderr
+        finally:
+            os.chmod(temp_file, 0o644)
+            os.unlink(temp_file)
 
 
 if __name__ == '__main__':
