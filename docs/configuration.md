@@ -69,6 +69,10 @@ For OIDC authentication:
 
 - `BOT_COMMAND_PREFIX` - Command prefix (default: "!cd")
 - `BOT_ALLOWED_ROOMS` - Comma-separated list of allowed room IDs (empty = all rooms)
+- `BOT_GREETINGS_ENABLED` - Enable/disable startup and shutdown messages (default: "true")
+- `BOT_GREETING_ROOMS` - Comma-separated list of room IDs to send greetings to (empty = no greetings)
+- `BOT_STARTUP_MESSAGE` - Custom startup message (default: "🤖 ChatrixCD bot is now online and ready to help with CI/CD tasks!")
+- `BOT_SHUTDOWN_MESSAGE` - Custom shutdown message (default: "👋 ChatrixCD bot is shutting down. See you later!")
 
 ## Authentication Methods
 
@@ -167,7 +171,41 @@ bot:
   allowed_rooms:
     - "!devops:company.com"
     - "!ci-alerts:company.com"
+  greetings_enabled: true
+  greeting_rooms:
+    - "!devops:company.com"
+  startup_message: "🚀 CI/CD Bot online!"
+  shutdown_message: "🛑 CI/CD Bot going offline for maintenance"
 ```
+
+### Greeting Messages Configuration
+
+You can configure the bot to send startup and shutdown messages to specific rooms:
+
+```yaml
+bot:
+  # Enable or disable greeting messages globally
+  greetings_enabled: true
+  
+  # Specify which rooms should receive greeting messages
+  # Leave empty to disable greetings
+  greeting_rooms:
+    - "!roomid1:example.com"
+    - "!roomid2:example.com"
+  
+  # Customize startup message
+  startup_message: "🤖 ChatrixCD bot is now online and ready to help with CI/CD tasks!"
+  
+  # Customize shutdown message
+  shutdown_message: "👋 ChatrixCD bot is shutting down. See you later!"
+```
+
+**Note:** Greeting messages are only sent to rooms explicitly listed in `greeting_rooms`. This allows you to control which rooms receive these notifications, which is especially useful if the bot is in many rooms but you only want status updates in specific ones.
+
+To disable greetings entirely, either:
+- Set `greetings_enabled: false`, or
+- Leave `greeting_rooms` empty, or
+- Set environment variable `BOT_GREETINGS_ENABLED=false`
 
 ## Security Best Practices
 
