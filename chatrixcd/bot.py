@@ -9,6 +9,7 @@ from nio import (
     MatrixRoom,
     RoomMessageText,
     InviteMemberEvent,
+    MegolmEvent,
     LoginResponse,
     SyncResponse,
 )
@@ -69,6 +70,7 @@ class ChatrixBot:
         # Setup event callbacks
         self.client.add_event_callback(self.message_callback, RoomMessageText)
         self.client.add_event_callback(self.invite_callback, InviteMemberEvent)
+        self.client.add_event_callback(self.decryption_failure_callback, MegolmEvent)
 
     async def login(self) -> bool:
         """Login to Matrix server.
@@ -153,6 +155,29 @@ class ChatrixBot:
         # Auto-join all rooms for now (could add whitelist later)
         await self.client.join(room.room_id)
         logger.info(f"Joined room {room.room_id}")
+
+    async def decryption_failure_callback(self, room: MatrixRoom, event: MegolmEvent):
+        """Handle encrypted messages that couldn't be decrypted.
+        
+        This callback is triggered when the bot receives an encrypted message
+        but doesn't have the decryption key. It will request the key from
+        other devices in the room.
+        
+        Args:
+            room: The room the encrypted message was sent in
+            event: The undecrypted Megolm event
+        """
+        logger.warning(
+            f"Unable to decrypt message in {room.display_name} ({room.room_id}) "
+            f"from {event.sender}. Requesting room key..."
+        )
+        
+        try:
+            # Request the room key from other devices
+            await self.client.request_room_key(event)
+            logger.info(f"Requested room key for session {event.session_id}")
+        except Exception as e:
+            logger.error(f"Failed to request room key: {e}")
 
     async def send_message(self, room_id: str, message: str, 
                           formatted_message: Optional[str] = None):
