@@ -1,4 +1,6 @@
 # Example configuration for ChatrixCD bot
+# Configuration version (for automatic migration)
+_config_version: 2
 
 matrix:
   # Matrix homeserver URL

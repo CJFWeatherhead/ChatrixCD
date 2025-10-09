@@ -7,6 +7,39 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
 
 ## [Unreleased]
 
+### Added
+
+#### Configuration System Improvements
+- **JSON Configuration Support**: Added support for JSON configuration files (`.json`) as a more robust alternative to YAML
+  - Automatic format detection based on file extension
+  - Better error messages with exact line and column numbers for JSON parse errors
+  - Less prone to syntax errors compared to YAML (no indentation issues)
+- **Configuration Versioning**: Implemented configuration schema versioning system
+  - Current version: 2
+  - Automatic detection of configuration version
+  - Backward compatibility with version 1 (implicit) configurations
+- **Automatic Configuration Migration**: Old configurations are automatically migrated to the current version
+  - Preserves all existing settings during migration
+  - Creates backup of original file (`.backup` extension)
+  - Saves migrated configuration back to disk
+  - Seamless upgrade path for new features
+- **Configuration Validation**: Added schema validation with detailed error reporting
+  - Validates required fields (homeserver, user_id, semaphore URL, etc.)
+  - Checks authentication configuration completeness
+  - Validates auth_type values
+  - Returns clear error messages for missing or invalid fields
+- **Configuration Version API**: Added `get_config_version()` method to query current config version
+- **JSON Example**: Added `config.json.example` with fully documented JSON configuration format
+
+### Improved
+- **Configuration Documentation**: Enhanced documentation with:
+  - JSON vs YAML comparison
+  - Configuration versioning explanation
+  - Migration process documentation
+  - Validation documentation
+  - Troubleshooting for both YAML and JSON formats
+- **Error Handling**: JSON parse errors now show exact line and column numbers like YAML errors
+
 ### Fixed
 - Fixed configuration loading to properly apply default values when YAML config file exists but doesn't specify all fields. Previously, missing fields would be `None` instead of using defaults, causing "User id is not set" errors with token authentication.
 

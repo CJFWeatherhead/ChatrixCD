@@ -4,8 +4,9 @@ import os
 import tempfile
 import unittest
 import sys
+import json
 from io import StringIO
-from chatrixcd.config import Config
+from chatrixcd.config import Config, ConfigMigrator, CURRENT_CONFIG_VERSION
 
 
 class TestConfig(unittest.TestCase):
@@ -308,6 +309,250 @@ matrix:
             # Ensure user_id is not None or empty
             self.assertIsNotNone(matrix_config.get('user_id'))
             self.assertTrue(matrix_config.get('user_id'))
+        finally:
+            os.unlink(temp_file)
+
+
+    def test_json_config(self):
+        """Test configuration from JSON file."""
+        json_content = {
+            "matrix": {
+                "homeserver": "https://json.matrix.org",
+                "user_id": "@jsonbot:json.matrix.org",
+                "auth_type": "token",
+                "access_token": "jsontoken"
+            },
+            "semaphore": {
+                "url": "https://json.semaphore.com",
+                "api_token": "jsontoken123"
+            },
+            "bot": {
+                "command_prefix": "!json"
+            }
+        }
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(json_content, f)
+            temp_file = f.name
+        
+        try:
+            config = Config(temp_file)
+            
+            self.assertEqual(config.get('matrix.homeserver'), 'https://json.matrix.org')
+            self.assertEqual(config.get('matrix.user_id'), '@jsonbot:json.matrix.org')
+            self.assertEqual(config.get('matrix.auth_type'), 'token')
+            self.assertEqual(config.get('matrix.access_token'), 'jsontoken')
+            self.assertEqual(config.get('semaphore.url'), 'https://json.semaphore.com')
+            self.assertEqual(config.get('bot.command_prefix'), '!json')
+            
+            # Check that defaults are still applied
+            self.assertEqual(config.get('matrix.device_id'), 'CHATRIXCD')
+        finally:
+            os.unlink(temp_file)
+    
+    def test_malformed_json(self):
+        """Test graceful handling of malformed JSON."""
+        json_content = '{"matrix": {"homeserver": "test", "unclosed": }'
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            f.write(json_content)
+            temp_file = f.name
+        
+        try:
+            old_stderr = sys.stderr
+            sys.stderr = StringIO()
+            
+            with self.assertRaises(SystemExit) as cm:
+                Config(temp_file)
+            
+            self.assertEqual(cm.exception.code, 1)
+            
+            error_output = sys.stderr.getvalue()
+            self.assertIn('Failed to parse JSON', error_output)
+            self.assertIn(temp_file, error_output)
+            self.assertIn('line', error_output.lower())
+            
+            sys.stderr = old_stderr
+        finally:
+            os.unlink(temp_file)
+    
+    def test_config_version_detection(self):
+        """Test configuration version detection."""
+        # Test v2 config
+        yaml_content = """
+_config_version: 2
+matrix:
+  homeserver: "https://matrix.org"
+  user_id: "@bot:matrix.org"
+"""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            f.write(yaml_content)
+            temp_file = f.name
+        
+        try:
+            config = Config(temp_file)
+            self.assertEqual(config.get_config_version(), 2)
+        finally:
+            os.unlink(temp_file)
+    
+    def test_config_migration_v1_to_v2(self):
+        """Test migration from v1 (no version) to v2."""
+        # Old config without version field
+        yaml_content = """
+matrix:
+  homeserver: "https://matrix.org"
+  user_id: "@bot:matrix.org"
+  password: "test"
+semaphore:
+  url: "https://semaphore.test"
+  api_token: "token"
+"""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            f.write(yaml_content)
+            temp_file = f.name
+        
+        try:
+            config = Config(temp_file)
+            
+            # Should have been migrated to current version
+            self.assertEqual(config.get_config_version(), CURRENT_CONFIG_VERSION)
+            
+            # Original data should be preserved
+            self.assertEqual(config.get('matrix.homeserver'), 'https://matrix.org')
+            self.assertEqual(config.get('matrix.user_id'), '@bot:matrix.org')
+            
+            # v2 fields should have defaults
+            self.assertTrue(config.get('bot.greetings_enabled'))
+            self.assertEqual(config.get('bot.greeting_rooms'), [])
+            self.assertIsNotNone(config.get('bot.startup_message'))
+            self.assertIsNotNone(config.get('bot.shutdown_message'))
+        finally:
+            os.unlink(temp_file)
+            # Clean up backup file if created
+            backup_file = temp_file + '.backup'
+            if os.path.exists(backup_file):
+                os.unlink(backup_file)
+    
+    def test_config_validation_success(self):
+        """Test configuration validation with valid config."""
+        yaml_content = """
+matrix:
+  homeserver: "https://matrix.org"
+  user_id: "@bot:matrix.org"
+  password: "testpass"
+semaphore:
+  url: "https://semaphore.test"
+  api_token: "token"
+bot:
+  command_prefix: "!cd"
+"""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            f.write(yaml_content)
+            temp_file = f.name
+        
+        try:
+            config = Config(temp_file)
+            errors = config.validate_schema()
+            self.assertEqual(errors, [])
+        finally:
+            os.unlink(temp_file)
+    
+    def test_config_validation_missing_required_fields(self):
+        """Test configuration validation with missing required fields."""
+        yaml_content = """
+matrix:
+  homeserver: ""
+  user_id: ""
+semaphore:
+  url: ""
+  api_token: ""
+"""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            f.write(yaml_content)
+            temp_file = f.name
+        
+        try:
+            config = Config(temp_file)
+            errors = config.validate_schema()
+            
+            # Should have multiple validation errors
+            self.assertGreater(len(errors), 0)
+            self.assertTrue(any('homeserver' in e for e in errors))
+            self.assertTrue(any('user_id' in e for e in errors))
+            self.assertTrue(any('semaphore.url' in e for e in errors))
+            self.assertTrue(any('api_token' in e for e in errors))
+        finally:
+            os.unlink(temp_file)
+    
+    def test_config_validation_token_auth_missing_token(self):
+        """Test validation fails when token auth is used but token is missing."""
+        yaml_content = """
+matrix:
+  homeserver: "https://matrix.org"
+  user_id: "@bot:matrix.org"
+  auth_type: "token"
+semaphore:
+  url: "https://semaphore.test"
+  api_token: "token"
+"""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            f.write(yaml_content)
+            temp_file = f.name
+        
+        try:
+            config = Config(temp_file)
+            errors = config.validate_schema()
+            
+            self.assertTrue(any('access_token' in e for e in errors))
+        finally:
+            os.unlink(temp_file)
+    
+    def test_config_validation_invalid_auth_type(self):
+        """Test validation fails with invalid auth type."""
+        yaml_content = """
+matrix:
+  homeserver: "https://matrix.org"
+  user_id: "@bot:matrix.org"
+  auth_type: "invalid"
+semaphore:
+  url: "https://semaphore.test"
+  api_token: "token"
+"""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            f.write(yaml_content)
+            temp_file = f.name
+        
+        try:
+            config = Config(temp_file)
+            errors = config.validate_schema()
+            
+            self.assertTrue(any('auth_type' in e and 'invalid' in e for e in errors))
+        finally:
+            os.unlink(temp_file)
+    
+    def test_json_with_version(self):
+        """Test JSON config with version field."""
+        json_content = {
+            "_config_version": 2,
+            "matrix": {
+                "homeserver": "https://matrix.org",
+                "user_id": "@bot:matrix.org",
+                "password": "test"
+            },
+            "semaphore": {
+                "url": "https://semaphore.test",
+                "api_token": "token"
+            }
+        }
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(json_content, f)
+            temp_file = f.name
+        
+        try:
+            config = Config(temp_file)
+            self.assertEqual(config.get_config_version(), 2)
+            self.assertEqual(config.get('matrix.homeserver'), 'https://matrix.org')
         finally:
             os.unlink(temp_file)
 

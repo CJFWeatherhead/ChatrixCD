@@ -13,7 +13,9 @@ A Matrix bot that integrates with Semaphore UI to enable CI/CD automation throug
 - 🚀 **Semaphore UI Integration**: Start and monitor CI/CD tasks via chat commands
 - 📊 **Real-time Updates**: Automatic status updates for running tasks
 - 🎯 **Command-based Interface**: Easy-to-use command system for task management
-- 🔧 **Flexible Configuration**: Support for both YAML config files and environment variables
+- 🔧 **Flexible Configuration**: Support for YAML, JSON config files, and environment variables with automatic migration
+- ✅ **Configuration Validation**: Built-in schema validation with clear error messages
+- 🔄 **Auto-Migration**: Automatic upgrade of configuration files when new features are added
 
 ## Installation
 
@@ -49,9 +51,11 @@ uv pip install -e .
 
 ## Configuration
 
-ChatrixCD can be configured using either a YAML configuration file or environment variables.
+ChatrixCD can be configured using YAML, JSON configuration files, or environment variables.
 
-### Using YAML Configuration
+### Using Configuration Files
+
+**Option 1: YAML Configuration (Traditional)**
 
 1. Copy the example configuration file:
    ```bash
@@ -60,6 +64,8 @@ ChatrixCD can be configured using either a YAML configuration file or environmen
 
 2. Edit `config.yaml` with your settings:
    ```yaml
+   _config_version: 2  # For automatic migration
+   
    matrix:
      homeserver: "https://matrix.example.com"
      user_id: "@chatrixcd:example.com"
@@ -73,6 +79,19 @@ ChatrixCD can be configured using either a YAML configuration file or environmen
    bot:
      command_prefix: "!cd"
    ```
+
+**Option 2: JSON Configuration (Recommended for Production)**
+
+JSON format is more robust and less prone to syntax errors:
+
+1. Copy the example JSON configuration file:
+   ```bash
+   cp config.json.example config.json
+   ```
+
+2. Edit `config.json` with your settings - JSON provides better error messages and is less fragile than YAML.
+
+**Configuration Migration**: Old configuration files are automatically migrated to the current version. A backup is created before migration.
 
 ### Using Environment Variables
 

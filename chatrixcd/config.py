@@ -1,27 +1,92 @@
 """Configuration management for ChatrixCD bot."""
 
 import yaml
+import json
 import os
 import logging
 import sys
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
+from pathlib import Path
+
+
+# Current configuration schema version
+CURRENT_CONFIG_VERSION = 2
+
+
+class ConfigMigrator:
+    """Handles migration of configuration files between versions."""
+    
+    @staticmethod
+    def migrate(config: Dict[str, Any], from_version: int) -> Dict[str, Any]:
+        """Migrate configuration from one version to another.
+        
+        Args:
+            config: Configuration dictionary to migrate
+            from_version: Current version of the configuration
+            
+        Returns:
+            Migrated configuration dictionary
+        """
+        logger = logging.getLogger(__name__)
+        
+        # Apply migrations sequentially
+        current_version = from_version
+        while current_version < CURRENT_CONFIG_VERSION:
+            next_version = current_version + 1
+            migration_method = getattr(
+                ConfigMigrator, 
+                f'_migrate_v{current_version}_to_v{next_version}',
+                None
+            )
+            
+            if migration_method:
+                logger.info(f"Migrating configuration from v{current_version} to v{next_version}")
+                config = migration_method(config)
+            else:
+                logger.warning(f"No migration method found for v{current_version} to v{next_version}")
+            
+            current_version = next_version
+        
+        # Set the version in the config
+        config['_config_version'] = CURRENT_CONFIG_VERSION
+        return config
+    
+    @staticmethod
+    def _migrate_v1_to_v2(config: Dict[str, Any]) -> Dict[str, Any]:
+        """Migrate from version 1 (no version) to version 2.
+        
+        Changes in v2:
+        - Added _config_version field
+        - Added bot.greetings_enabled (default: true)
+        - Added bot.greeting_rooms (default: [])
+        - Added bot.startup_message and bot.shutdown_message
+        """
+        # These fields are already handled by defaults in load_config
+        # This migration exists primarily to set the version number
+        # and document the changes between versions
+        return config
 
 
 class Config:
     """Configuration class for the bot."""
 
     def __init__(self, config_file: str = "config.yaml"):
-        """Initialize configuration from file or environment variables."""
+        """Initialize configuration from file or environment variables.
+        
+        Supports both YAML and JSON configuration files. The format is determined
+        by the file extension (.yaml, .yml, or .json).
+        """
         self.config_file = config_file
         self.config: Dict[str, Any] = {}
         self.load_config()
 
     def load_config(self):
-        """Load configuration from YAML file."""
+        """Load configuration from YAML or JSON file with version migration."""
         logger = logging.getLogger(__name__)
         
         # Start with defaults - always use these as base
         defaults = {
+            '_config_version': CURRENT_CONFIG_VERSION,
             'matrix': {
                 'homeserver': os.getenv('MATRIX_HOMESERVER', 'https://matrix.org'),
                 'user_id': os.getenv('MATRIX_USER_ID', ''),
@@ -51,38 +116,123 @@ class Config:
         }
         
         if os.path.exists(self.config_file):
-            try:
-                with open(self.config_file, 'r') as f:
-                    yaml_config = yaml.safe_load(f) or {}
+            file_config = self._load_config_file()
+            
+            # Check version and migrate if necessary
+            config_version = file_config.get('_config_version', 1)  # Default to v1 if no version
+            
+            if config_version < CURRENT_CONFIG_VERSION:
+                logger.info(f"Configuration version {config_version} is older than current version {CURRENT_CONFIG_VERSION}")
+                file_config = ConfigMigrator.migrate(file_config, config_version)
                 
-                # Merge YAML config with defaults
-                # YAML values override defaults, but defaults fill in missing values
-                self.config = self._merge_configs(defaults, yaml_config)
-            except yaml.YAMLError as e:
-                error_msg = f"Failed to parse YAML configuration file '{self.config_file}'"
-                
-                # Extract detailed error information
-                if hasattr(e, 'problem_mark'):
-                    mark = e.problem_mark
-                    error_msg += f"\n  Error at line {mark.line + 1}, column {mark.column + 1}"
-                
-                if hasattr(e, 'problem'):
-                    error_msg += f"\n  Problem: {e.problem}"
-                
-                if hasattr(e, 'context'):
-                    error_msg += f"\n  Context: {e.context}"
-                
-                logger.error(error_msg)
-                print(f"\nERROR: {error_msg}\n", file=sys.stderr)
-                sys.exit(1)
-            except Exception as e:
-                error_msg = f"Failed to read configuration file '{self.config_file}': {e}"
-                logger.error(error_msg)
-                print(f"\nERROR: {error_msg}\n", file=sys.stderr)
-                sys.exit(1)
+                # Optionally save the migrated config back to disk
+                self._save_migrated_config(file_config)
+            elif config_version > CURRENT_CONFIG_VERSION:
+                logger.warning(
+                    f"Configuration version {config_version} is newer than supported version {CURRENT_CONFIG_VERSION}. "
+                    "Some features may not work correctly."
+                )
+            
+            # Merge file config with defaults
+            # File values override defaults, but defaults fill in missing values
+            self.config = self._merge_configs(defaults, file_config)
         else:
             # No config file, use defaults (which include environment variables)
             self.config = defaults
+    
+    def _load_config_file(self) -> Dict[str, Any]:
+        """Load configuration file (YAML or JSON).
+        
+        Returns:
+            Configuration dictionary from file
+            
+        Raises:
+            SystemExit: If file cannot be parsed or read
+        """
+        logger = logging.getLogger(__name__)
+        file_path = Path(self.config_file)
+        file_ext = file_path.suffix.lower()
+        
+        try:
+            with open(self.config_file, 'r') as f:
+                if file_ext == '.json':
+                    # Load JSON configuration
+                    try:
+                        config = json.load(f)
+                        logger.debug(f"Loaded JSON configuration from '{self.config_file}'")
+                        return config or {}
+                    except json.JSONDecodeError as e:
+                        error_msg = f"Failed to parse JSON configuration file '{self.config_file}'"
+                        error_msg += f"\n  Error at line {e.lineno}, column {e.colno}"
+                        error_msg += f"\n  Problem: {e.msg}"
+                        logger.error(error_msg)
+                        print(f"\nERROR: {error_msg}\n", file=sys.stderr)
+                        sys.exit(1)
+                else:
+                    # Load YAML configuration (default)
+                    try:
+                        config = yaml.safe_load(f)
+                        logger.debug(f"Loaded YAML configuration from '{self.config_file}'")
+                        return config or {}
+                    except yaml.YAMLError as e:
+                        error_msg = f"Failed to parse YAML configuration file '{self.config_file}'"
+                        
+                        # Extract detailed error information
+                        if hasattr(e, 'problem_mark'):
+                            mark = e.problem_mark
+                            error_msg += f"\n  Error at line {mark.line + 1}, column {mark.column + 1}"
+                        
+                        if hasattr(e, 'problem'):
+                            error_msg += f"\n  Problem: {e.problem}"
+                        
+                        if hasattr(e, 'context'):
+                            error_msg += f"\n  Context: {e.context}"
+                        
+                        logger.error(error_msg)
+                        print(f"\nERROR: {error_msg}\n", file=sys.stderr)
+                        sys.exit(1)
+        except Exception as e:
+            error_msg = f"Failed to read configuration file '{self.config_file}': {e}"
+            logger.error(error_msg)
+            print(f"\nERROR: {error_msg}\n", file=sys.stderr)
+            sys.exit(1)
+    
+    def _save_migrated_config(self, config: Dict[str, Any]) -> None:
+        """Save migrated configuration back to disk.
+        
+        Args:
+            config: Migrated configuration to save
+        """
+        logger = logging.getLogger(__name__)
+        file_path = Path(self.config_file)
+        file_ext = file_path.suffix.lower()
+        
+        # Create backup of original file
+        backup_path = file_path.with_suffix(file_ext + '.backup')
+        
+        try:
+            if backup_path.exists():
+                # If backup already exists, append timestamp
+                import time
+                timestamp = int(time.time())
+                backup_path = file_path.with_suffix(f'{file_ext}.backup.{timestamp}')
+            
+            # Copy original to backup
+            import shutil
+            shutil.copy2(self.config_file, backup_path)
+            logger.info(f"Created backup of original configuration at '{backup_path}'")
+            
+            # Save migrated config
+            with open(self.config_file, 'w') as f:
+                if file_ext == '.json':
+                    json.dump(config, f, indent=2)
+                else:
+                    yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
+            
+            logger.info(f"Saved migrated configuration to '{self.config_file}'")
+        except Exception as e:
+            logger.warning(f"Failed to save migrated configuration: {e}")
+            # Non-fatal - we can continue with the in-memory migrated config
     
     def _merge_configs(self, defaults: Dict[str, Any], overrides: Dict[str, Any]) -> Dict[str, Any]:
         """Merge two configuration dictionaries, with overrides taking precedence.
@@ -97,6 +247,10 @@ class Config:
         result = defaults.copy()
         
         for key, value in overrides.items():
+            # Skip None values from overrides - use defaults instead
+            if value is None:
+                continue
+            
             if key in result and isinstance(result[key], dict) and isinstance(value, dict):
                 # Recursively merge nested dictionaries
                 result[key] = self._merge_configs(result[key], value)
@@ -128,3 +282,56 @@ class Config:
     def get_bot_config(self) -> Dict[str, Any]:
         """Get bot configuration."""
         return self.config.get('bot', {})
+    
+    def validate_schema(self) -> List[str]:
+        """Validate configuration schema and return list of errors.
+        
+        Returns:
+            List of validation error messages (empty if valid)
+        """
+        errors = []
+        
+        # Check required matrix fields
+        matrix_config = self.get_matrix_config()
+        if not matrix_config.get('homeserver'):
+            errors.append("matrix.homeserver is required")
+        if not matrix_config.get('user_id'):
+            errors.append("matrix.user_id is required")
+        
+        # Check authentication configuration
+        auth_type = matrix_config.get('auth_type', 'password')
+        if auth_type == 'password' and not matrix_config.get('password'):
+            errors.append("matrix.password is required when auth_type is 'password'")
+        elif auth_type == 'token' and not matrix_config.get('access_token'):
+            errors.append("matrix.access_token is required when auth_type is 'token'")
+        elif auth_type == 'oidc':
+            if not matrix_config.get('oidc_issuer'):
+                errors.append("matrix.oidc_issuer is required when auth_type is 'oidc'")
+            if not matrix_config.get('oidc_client_id'):
+                errors.append("matrix.oidc_client_id is required when auth_type is 'oidc'")
+            if not matrix_config.get('oidc_client_secret'):
+                errors.append("matrix.oidc_client_secret is required when auth_type is 'oidc'")
+        elif auth_type not in ['password', 'token', 'oidc']:
+            errors.append(f"matrix.auth_type must be 'password', 'token', or 'oidc', got '{auth_type}'")
+        
+        # Check required semaphore fields
+        semaphore_config = self.get_semaphore_config()
+        if not semaphore_config.get('url'):
+            errors.append("semaphore.url is required")
+        if not semaphore_config.get('api_token'):
+            errors.append("semaphore.api_token is required")
+        
+        # Check bot configuration
+        bot_config = self.get_bot_config()
+        if not bot_config.get('command_prefix'):
+            errors.append("bot.command_prefix is required")
+        
+        return errors
+    
+    def get_config_version(self) -> int:
+        """Get the configuration version.
+        
+        Returns:
+            Configuration version number
+        """
+        return self.config.get('_config_version', 1)

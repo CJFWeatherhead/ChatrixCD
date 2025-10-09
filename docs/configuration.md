@@ -6,7 +6,31 @@ nav_order: 4
 
 # Configuration Guide
 
-ChatrixCD can be configured using YAML files or environment variables.
+ChatrixCD can be configured using YAML files, JSON files, or environment variables.
+
+## Supported Configuration Formats
+
+ChatrixCD supports two configuration file formats:
+
+1. **YAML** (`.yaml` or `.yml`) - Human-readable, but syntax-sensitive
+2. **JSON** (`.json`) - More robust parsing, less prone to syntax errors
+
+The format is automatically detected based on the file extension. JSON is recommended for production deployments due to its more robust parsing and better error detection.
+
+## Configuration Versioning
+
+Configuration files support versioning to enable automatic migration when new features are added. The current configuration version is **2**.
+
+When you load an older configuration file:
+- It will be automatically migrated to the current version
+- A backup of the original file is created (with `.backup` extension)
+- The migrated configuration is saved back to the original file
+- All your settings are preserved during migration
+
+### Version History
+
+- **Version 1** (implicit): Original configuration format
+- **Version 2**: Added greeting messages support (`greetings_enabled`, `greeting_rooms`, `startup_message`, `shutdown_message`)
 
 ## Configuration Priority
 
@@ -26,6 +50,9 @@ Configuration values are determined using the following priority (highest to low
 Create a `config.yaml` file in your working directory:
 
 ```yaml
+# Configuration version (optional, for automatic migration)
+_config_version: 2
+
 matrix:
   homeserver: "https://matrix.example.com"
   user_id: "@bot:example.com"
@@ -41,6 +68,37 @@ bot:
   command_prefix: "!cd"
   allowed_rooms: []
 ```
+
+## JSON Configuration
+
+Alternatively, create a `config.json` file for more robust parsing:
+
+```json
+{
+  "_config_version": 2,
+  "matrix": {
+    "homeserver": "https://matrix.example.com",
+    "user_id": "@bot:example.com",
+    "password": "your-secure-password",
+    "device_name": "ChatrixCD Bot",
+    "store_path": "./store"
+  },
+  "semaphore": {
+    "url": "https://semaphore.example.com",
+    "api_token": "your-semaphore-api-token"
+  },
+  "bot": {
+    "command_prefix": "!cd",
+    "allowed_rooms": []
+  }
+}
+```
+
+**Benefits of JSON:**
+- More robust syntax (no indentation issues)
+- Better error messages with line and column numbers
+- Easier to generate programmatically
+- Less prone to quoting and escaping errors
 
 ## Environment Variables
 
@@ -236,15 +294,28 @@ export SEMAPHORE_API_TOKEN="$(cat /secrets/semaphore_token)"
 - Regenerate API tokens regularly
 - Update access tokens when needed
 
+## Configuration Validation
+
+ChatrixCD includes built-in configuration validation to catch errors early. The validation checks:
+
+- Required fields are present (homeserver, user_id, etc.)
+- Authentication configuration is complete for the chosen auth_type
+- Semaphore URL and API token are set
+- Bot command prefix is configured
+
+Validation errors will be reported with clear messages indicating which fields need attention.
+
 ## Troubleshooting
 
 ### Configuration not loaded
-- Check file name is exactly `config.yaml`
-- Verify YAML syntax is valid - the bot will display detailed error messages if the YAML is malformed, including:
+- Check file name is exactly `config.yaml` or `config.json`
+- For YAML: Verify YAML syntax is valid - the bot will display detailed error messages if the YAML is malformed, including:
   - Line and column number of the error
   - Description of the problem (e.g., missing quote, invalid indentation)
   - Context of where the error occurred
+- For JSON: Verify JSON syntax is valid - parse errors will show exact line and column numbers
 - Check file permissions
+- Consider using JSON format if you have recurring YAML syntax issues
 
 ### Environment variables not working
 - Ensure variables are exported
