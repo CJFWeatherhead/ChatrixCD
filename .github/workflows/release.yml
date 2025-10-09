@@ -100,8 +100,8 @@ jobs:
       
       - name: Update CHANGELOG.md
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          RELEASE_DATE=$(date +%Y-%m-%d)
+          export VERSION="${{ steps.version.outputs.version }}"
+          export RELEASE_DATE=$(date +%Y-%m-%d)
           
           # Use Python to update the changelog in a more reliable way
           python3 << 'PYTHON_SCRIPT'
