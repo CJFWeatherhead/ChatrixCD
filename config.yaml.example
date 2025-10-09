@@ -5,6 +5,7 @@ matrix:
   homeserver: "https://matrix.example.com"
   
   # Bot user ID (format: @username:server.com)
+  # REQUIRED: This must be set for all authentication types
   user_id: "@chatrixcd:example.com"
   
   # Device ID for this bot instance

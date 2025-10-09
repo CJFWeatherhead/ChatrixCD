@@ -250,5 +250,26 @@ export SEMAPHORE_API_TOKEN="$(cat /secrets/semaphore_token)"
 - Verify credentials are correct
 - Check homeserver URL is accessible
 - For OIDC, verify client credentials
+- **Important:** `user_id` must be set for all authentication types (password, token, OIDC)
+  - For token/OIDC: user_id is required to load the encryption store
+  - Error message: "user_id is not set in configuration" indicates missing or empty user_id
+  - Set via `MATRIX_USER_ID` environment variable or `matrix.user_id` in config.yaml
+
+### Bot doesn't respond to commands in encrypted rooms
+- Ensure `user_id` is properly configured (see above)
+- Check that the encryption store is loaded successfully
+  - Look for "Loaded encryption store" in logs for token/OIDC auth
+- Verify the bot has been invited and joined the room
+- For encrypted rooms, the bot needs:
+  - Valid user_id to load encryption keys
+  - Proper encryption setup during login
+  - Room keys shared with the bot's device
+- If you see "Unable to decrypt message" warnings:
+  - The bot may not have received the encryption keys for that room
+  - Try reinviting the bot or sending it a message in an unencrypted room first
+- If you see "Matrix store and olm account is not loaded" errors:
+  - This indicates the encryption store wasn't loaded during login
+  - Verify user_id is set correctly
+  - Check the bot logged in successfully with encryption support
 
 For more help, see the [Support Guide](support.html).
