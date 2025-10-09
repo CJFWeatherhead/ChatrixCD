@@ -98,6 +98,68 @@ jobs:
           
           echo "Updated version to ${VERSION}"
       
+      - name: Update CHANGELOG.md
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          RELEASE_DATE=$(date +%Y-%m-%d)
+          
+          # Use Python to update the changelog in a more reliable way
+          python3 << 'PYTHON_SCRIPT'
+          import re
+          from datetime import datetime
+          import os
+          
+          version = os.environ['VERSION']
+          release_date = os.environ['RELEASE_DATE']
+          
+          # Read the current CHANGELOG.md
+          with open('CHANGELOG.md', 'r') as f:
+              content = f.read()
+          
+          # Find the Unreleased section
+          # Pattern: ## [Unreleased] followed by content until next ## heading
+          unreleased_pattern = r'## \[Unreleased\]\n(.*?)(?=\n## |\Z)'
+          match = re.search(unreleased_pattern, content, re.DOTALL)
+          
+          if match:
+              unreleased_content = match.group(1).strip()
+              
+              # If there's no content, add a placeholder
+              if not unreleased_content:
+                  unreleased_content = "No changes recorded."
+              
+              # Create the new version section
+              new_version_section = f"\n## [{version}] - {release_date}\n\n{unreleased_content}\n"
+              
+              # Replace the Unreleased section with an empty one and add the new version
+              # Find position where to insert: after ## [Unreleased] line
+              unreleased_header_end = match.start() + len("## [Unreleased]\n")
+              next_section_start = match.end()
+              
+              new_content = (
+                  content[:unreleased_header_end] + 
+                  new_version_section + 
+                  content[next_section_start:]
+              )
+              
+              # Update Version History section if it exists
+              version_history_pattern = r'(## Version History\s*\n)'
+              if re.search(version_history_pattern, new_content):
+                  new_content = re.sub(
+                      version_history_pattern,
+                      f'\\1\n- **{version}** ({release_date})\n',
+                      new_content
+                  )
+              
+              # Write the updated content
+              with open('CHANGELOG.md', 'w') as f:
+                  f.write(new_content)
+              
+              print(f"Updated CHANGELOG.md with version {version}")
+          else:
+              print("Warning: Could not find Unreleased section in CHANGELOG.md")
+          PYTHON_SCRIPT
+      
       - name: Generate changelog
         id: changelog
         run: |
@@ -130,7 +192,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add chatrixcd/__init__.py setup.py
+          git add chatrixcd/__init__.py setup.py CHANGELOG.md
           git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
           git push
       

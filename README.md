@@ -352,9 +352,13 @@ To create a new release:
 4. The workflow will:
    - Run all unit tests
    - Calculate the new version based on current date
-   - Update version in code
+   - Update version in code (`__init__.py` and `setup.py`)
+   - Update `CHANGELOG.md` (move Unreleased content to new version section)
    - Generate changelog from commits
+   - Commit all changes
    - Create a GitHub release with the changelog
+
+**Note**: Make sure to document changes in the `[Unreleased]` section of `CHANGELOG.md` as you develop. The release workflow will automatically move these changes to a versioned section.
 
 ## Contributing
 
