@@ -13,7 +13,7 @@ A Matrix bot that integrates with Semaphore UI to enable CI/CD automation throug
 - 🚀 **Semaphore UI Integration**: Start and monitor CI/CD tasks via chat commands
 - 📊 **Real-time Updates**: Automatic status updates for running tasks
 - 🎯 **Command-based Interface**: Easy-to-use command system for task management
-- 🔧 **Flexible Configuration**: Support for JSON config files and environment variables with automatic migration
+- 🔧 **Flexible Configuration**: Support for HJSON config files (JSON with comments) and environment variables with automatic migration
 - ✅ **Configuration Validation**: Built-in schema validation with clear error messages
 - 🔄 **Auto-Migration**: Automatic upgrade of configuration files when new features are added
 
@@ -51,38 +51,47 @@ uv pip install -e .
 
 ## Configuration
 
-ChatrixCD can be configured using JSON configuration files or environment variables.
+ChatrixCD can be configured using configuration files or environment variables.
 
 ### Using Configuration Files
 
-**JSON Configuration**
+**HJSON Configuration (JSON with Comments)**
 
-JSON format is robust and provides clear error messages:
+Configuration files support HJSON format, which allows comments and trailing commas for better documentation:
 
-1. Copy the example JSON configuration file:
+1. Copy the example configuration file:
    ```bash
    cp config.json.example config.json
    ```
 
-2. Edit `config.json` with your settings:
-   ```json
+2. Edit `config.json` with your settings (comments are supported):
+   ```hjson
    {
+     // Configuration file version
      "_config_version": 2,
+     
+     // Matrix homeserver settings
      "matrix": {
-       "homeserver": "https://matrix.example.com",
-       "user_id": "@chatrixcd:example.com",
-       "auth_type": "password",
+       "homeserver": "https://matrix.example.com",  // Your Matrix server
+       "user_id": "@chatrixcd:example.com",         // Bot user ID
+       "auth_type": "password",                      // or "token" or "oidc"
        "password": "your_password"
      },
+     
+     // Semaphore UI settings
      "semaphore": {
        "url": "https://semaphore.example.com",
        "api_token": "your_semaphore_api_token"
      },
+     
+     // Bot behavior
      "bot": {
        "command_prefix": "!cd"
      }
    }
    ```
+
+**Configuration Priority**: Configuration file values have highest priority, followed by environment variables, then hardcoded defaults.
 
 **Configuration Migration**: Old configuration files are automatically migrated to the current version. A backup is created before migration.
 

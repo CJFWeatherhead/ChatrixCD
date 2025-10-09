@@ -1,25 +1,71 @@
 {
+  // Configuration file version - do not modify
   "_config_version": 2,
+  
+  // Matrix homeserver connection settings
   "matrix": {
+    // Matrix homeserver URL (e.g., https://matrix.org or https://your-server.com)
     "homeserver": "https://matrix.example.com",
+    
+    // Bot user ID (e.g., @bot:example.com)
     "user_id": "@chatrixcd:example.com",
+    
+    // Device ID for this bot instance (optional, defaults to CHATRIXCD)
     "device_id": "CHATRIXCD",
+    
+    // Human-readable device name
     "device_name": "ChatrixCD Bot",
+    
+    // Authentication type: "password", "token", or "oidc"
     "auth_type": "password",
+    
+    // Password for password authentication (required if auth_type is "password")
     "password": "your_bot_password_here",
+    
+    // Access token for token authentication (required if auth_type is "token")
+    // "access_token": "your_access_token_here",
+    
+    // OIDC settings (required if auth_type is "oidc")
+    // "oidc_issuer": "https://id.example.com",
+    // "oidc_client_id": "your_client_id",
+    // "oidc_client_secret": "your_client_secret",
+    
+    // Path to store encryption keys and session data
     "store_path": "./store"
   },
+  
+  // Semaphore UI connection settings
   "semaphore": {
+    // Semaphore UI server URL
     "url": "https://semaphore.example.com",
+    
+    // Semaphore API token (get this from Semaphore UI user settings)
     "api_token": "your_semaphore_api_token_here"
   },
+  
+  // Bot behavior settings
   "bot": {
+    // Command prefix for bot commands (e.g., "!cd help")
     "command_prefix": "!cd",
+    
+    // List of allowed room IDs (empty = all rooms allowed)
+    // Example: ["!roomid1:example.com", "!roomid2:example.com"]
     "allowed_rooms": [],
+    
+    // List of admin user IDs (empty = no admins)
+    // Example: ["@admin1:example.com", "@admin2:example.com"]
     "admin_users": [],
+    
+    // Enable automatic greeting messages in specified rooms
     "greetings_enabled": true,
+    
+    // Rooms where greeting messages should be sent (empty = all allowed rooms)
     "greeting_rooms": [],
+    
+    // Message sent when bot starts
     "startup_message": "🤖 ChatrixCD bot is now online and ready to help with CI/CD tasks!",
+    
+    // Message sent when bot shuts down
     "shutdown_message": "👋 ChatrixCD bot is shutting down. See you later!"
   }
 }

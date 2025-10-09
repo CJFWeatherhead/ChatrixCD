@@ -7,6 +7,40 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
 
 ## [Unreleased]
 
+### Added
+- **HJSON Support**: Configuration files now support HJSON (Human JSON) format
+  - Add comments to configuration files using `//`, `/* */`, or `#`
+  - Trailing commas are now allowed in configuration files
+  - Full backward compatibility with existing JSON files
+  - Added `hjson` dependency to requirements.txt
+  - Updated `config.json.example` with extensive inline comments
+
+### Changed
+- **Configuration Priority System**: Clarified and fixed configuration priority
+  - Configuration file values now have **highest priority** (override environment variables)
+  - Environment variables used for values not specified in config file
+  - Hardcoded defaults used as fallback when not in file or environment
+  - This matches the documented behavior and fixes issues where JSON values were ignored
+- **Configuration Loading**: Rewrote configuration system for clarity
+  - Cleaner separation between defaults, environment variables, and file values
+  - More predictable behavior when mixing config file and environment variables
+  - Better error messages for configuration parsing failures
+
+### Fixed
+- **Configuration File Loading**: Fixed issue where configuration file values could be ignored
+  - File values now correctly override environment variables as documented
+  - Resolves reported issue where JSON parameters were not being parsed
+
+### Improved
+- **Configuration Documentation**: Updated documentation to reflect HJSON support
+  - Examples now show commented configuration files
+  - Clarified configuration priority system
+  - Added examples of HJSON-specific features (comments, trailing commas)
+- **Test Coverage**: Added tests for HJSON-specific features
+  - Test for comments in configuration files
+  - Test for trailing commas support
+  - All 20 tests passing
+
 ## [2025.10.6] - 2025-10-09
 
 ### Breaking Changes

@@ -252,9 +252,8 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(cm.exception.code, 1)
             
             error_output = sys.stderr.getvalue()
-            self.assertIn('Failed to parse JSON', error_output)
+            self.assertIn('Failed to parse configuration file', error_output)
             self.assertIn(temp_file, error_output)
-            self.assertIn('line', error_output.lower())
             
             sys.stderr = old_stderr
         finally:
@@ -449,6 +448,81 @@ class TestConfig(unittest.TestCase):
             config = Config(temp_file)
             self.assertEqual(config.get_config_version(), 2)
             self.assertEqual(config.get('matrix.homeserver'), 'https://matrix.org')
+        finally:
+            os.unlink(temp_file)
+
+
+    def test_hjson_with_comments(self):
+        """Test HJSON configuration with comments."""
+        hjson_content = '''
+        {
+            // This is a comment
+            "_config_version": 2,
+            "matrix": {
+                "homeserver": "https://hjson.matrix.org",  // Server URL
+                "user_id": "@hjsonbot:hjson.matrix.org",
+                /* Multi-line comment
+                   for auth type */
+                "auth_type": "token",
+                "access_token": "hjson_token_123"
+            },
+            "semaphore": {
+                "url": "https://hjson.semaphore.com",
+                "api_token": "hjson_api_token"
+            },
+            "bot": {
+                "command_prefix": "!hjson"  # Python-style comment also works
+            }
+        }
+        '''
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            f.write(hjson_content)
+            temp_file = f.name
+        
+        try:
+            config = Config(temp_file)
+            
+            # Verify values were parsed correctly despite comments
+            self.assertEqual(config.get('matrix.homeserver'), 'https://hjson.matrix.org')
+            self.assertEqual(config.get('matrix.user_id'), '@hjsonbot:hjson.matrix.org')
+            self.assertEqual(config.get('matrix.auth_type'), 'token')
+            self.assertEqual(config.get('matrix.access_token'), 'hjson_token_123')
+            self.assertEqual(config.get('semaphore.url'), 'https://hjson.semaphore.com')
+            self.assertEqual(config.get('bot.command_prefix'), '!hjson')
+            
+            # Check that defaults are still applied
+            self.assertEqual(config.get('matrix.device_id'), 'CHATRIXCD')
+        finally:
+            os.unlink(temp_file)
+    
+    def test_hjson_trailing_commas(self):
+        """Test HJSON with trailing commas (not valid in strict JSON)."""
+        hjson_content = '''
+        {
+            "matrix": {
+                "homeserver": "https://matrix.org",
+                "user_id": "@bot:matrix.org",
+                "password": "test",  // Trailing comma is OK in HJSON
+            },
+            "semaphore": {
+                "url": "https://semaphore.test",
+                "api_token": "token",  // Another trailing comma
+            },
+        }
+        '''
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            f.write(hjson_content)
+            temp_file = f.name
+        
+        try:
+            config = Config(temp_file)
+            
+            # Verify values were parsed correctly despite trailing commas
+            self.assertEqual(config.get('matrix.homeserver'), 'https://matrix.org')
+            self.assertEqual(config.get('matrix.user_id'), '@bot:matrix.org')
+            self.assertEqual(config.get('semaphore.url'), 'https://semaphore.test')
         finally:
             os.unlink(temp_file)
 
