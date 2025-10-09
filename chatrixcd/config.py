@@ -1,6 +1,6 @@
 """Configuration management for ChatrixCD bot."""
 
-import json
+import hjson
 import os
 import logging
 import sys
@@ -67,79 +67,158 @@ class ConfigMigrator:
 
 
 class Config:
-    """Configuration class for the bot."""
+    """Configuration class for the bot.
+    
+    Configuration priority (highest to lowest):
+    1. Configuration file values (highest priority - explicit values in JSON/HJSON file)
+    2. Environment variables (used for values not in config file)
+    3. Hardcoded defaults (lowest priority - used when not in config file or env vars)
+    
+    This means configuration file values take precedence over environment variables,
+    but environment variables can be used to provide values for keys not specified
+    in the configuration file.
+    """
 
     def __init__(self, config_file: str = "config.json"):
         """Initialize configuration from file or environment variables.
         
-        Only JSON configuration files are supported (.json extension).
+        Supports JSON and HJSON (Human JSON with comments) configuration files.
         """
         self.config_file = config_file
         self.config: Dict[str, Any] = {}
         self.load_config()
 
     def load_config(self):
-        """Load configuration from JSON file with version migration."""
+        """Load configuration with clear priority: hardcoded defaults < env vars < file."""
         logger = logging.getLogger(__name__)
         
-        # Start with defaults - always use these as base
-        defaults = {
-            '_config_version': CURRENT_CONFIG_VERSION,
-            'matrix': {
-                'homeserver': os.getenv('MATRIX_HOMESERVER', 'https://matrix.org'),
-                'user_id': os.getenv('MATRIX_USER_ID', ''),
-                'device_id': os.getenv('MATRIX_DEVICE_ID', 'CHATRIXCD'),
-                'device_name': os.getenv('MATRIX_DEVICE_NAME', 'ChatrixCD Bot'),
-                'auth_type': os.getenv('MATRIX_AUTH_TYPE', 'password'),  # 'password' or 'token'
-                'password': os.getenv('MATRIX_PASSWORD', ''),
-                'access_token': os.getenv('MATRIX_ACCESS_TOKEN', ''),
-                'oidc_issuer': os.getenv('MATRIX_OIDC_ISSUER', ''),
-                'oidc_client_id': os.getenv('MATRIX_OIDC_CLIENT_ID', ''),
-                'oidc_client_secret': os.getenv('MATRIX_OIDC_CLIENT_SECRET', ''),
-                'store_path': os.getenv('MATRIX_STORE_PATH', './store'),
-            },
-            'semaphore': {
-                'url': os.getenv('SEMAPHORE_URL', ''),
-                'api_token': os.getenv('SEMAPHORE_API_TOKEN', ''),
-            },
-            'bot': {
-                'command_prefix': os.getenv('BOT_COMMAND_PREFIX', '!cd'),
-                'allowed_rooms': os.getenv('BOT_ALLOWED_ROOMS', '').split(',') if os.getenv('BOT_ALLOWED_ROOMS') else [],
-                'admin_users': os.getenv('BOT_ADMIN_USERS', '').split(',') if os.getenv('BOT_ADMIN_USERS') else [],
-                'greetings_enabled': os.getenv('BOT_GREETINGS_ENABLED', 'true').lower() in ('true', '1', 'yes'),
-                'greeting_rooms': os.getenv('BOT_GREETING_ROOMS', '').split(',') if os.getenv('BOT_GREETING_ROOMS') else [],
-                'startup_message': os.getenv('BOT_STARTUP_MESSAGE', '🤖 ChatrixCD bot is now online and ready to help with CI/CD tasks!'),
-                'shutdown_message': os.getenv('BOT_SHUTDOWN_MESSAGE', '👋 ChatrixCD bot is shutting down. See you later!'),
-            },
-        }
+        # Step 1: Start with hardcoded defaults
+        self.config = self._get_default_config()
         
+        # Step 2: Apply environment variables (override defaults)
+        self._apply_env_overrides()
+        
+        # Step 3: Load and merge configuration file if it exists (highest priority)
         if os.path.exists(self.config_file):
             file_config = self._load_config_file()
             
             # Check version and migrate if necessary
-            config_version = file_config.get('_config_version', 1)  # Default to v1 if no version
+            config_version = file_config.get('_config_version', 1)
             
             if config_version < CURRENT_CONFIG_VERSION:
-                logger.info(f"Configuration version {config_version} is older than current version {CURRENT_CONFIG_VERSION}")
+                logger.info(f"Migrating configuration from v{config_version} to v{CURRENT_CONFIG_VERSION}")
                 file_config = ConfigMigrator.migrate(file_config, config_version)
-                
-                # Optionally save the migrated config back to disk
                 self._save_migrated_config(file_config)
             elif config_version > CURRENT_CONFIG_VERSION:
                 logger.warning(
-                    f"Configuration version {config_version} is newer than supported version {CURRENT_CONFIG_VERSION}. "
+                    f"Configuration version {config_version} is newer than supported v{CURRENT_CONFIG_VERSION}. "
                     "Some features may not work correctly."
                 )
             
-            # Merge file config with defaults
-            # File values override defaults, but defaults fill in missing values
-            self.config = self._merge_configs(defaults, file_config)
+            # Merge file config (file values override everything)
+            self.config = self._deep_merge(self.config, file_config)
         else:
-            # No config file, use defaults (which include environment variables)
-            self.config = defaults
+            logger.debug(f"Configuration file '{self.config_file}' not found, using defaults and environment variables")
+    
+    def _get_default_config(self) -> Dict[str, Any]:
+        """Get hardcoded default configuration (no environment variables).
+        
+        Returns:
+            Dictionary with default configuration values
+        """
+        return {
+            '_config_version': CURRENT_CONFIG_VERSION,
+            'matrix': {
+                'homeserver': 'https://matrix.org',
+                'user_id': '',
+                'device_id': 'CHATRIXCD',
+                'device_name': 'ChatrixCD Bot',
+                'auth_type': 'password',
+                'password': '',
+                'access_token': '',
+                'oidc_issuer': '',
+                'oidc_client_id': '',
+                'oidc_client_secret': '',
+                'store_path': './store',
+            },
+            'semaphore': {
+                'url': '',
+                'api_token': '',
+            },
+            'bot': {
+                'command_prefix': '!cd',
+                'allowed_rooms': [],
+                'admin_users': [],
+                'greetings_enabled': True,
+                'greeting_rooms': [],
+                'startup_message': '🤖 ChatrixCD bot is now online and ready to help with CI/CD tasks!',
+                'shutdown_message': '👋 ChatrixCD bot is shutting down. See you later!',
+            },
+        }
+    
+    def _apply_env_overrides(self):
+        """Apply environment variable overrides to configuration.
+        
+        Environment variables have the highest priority and will override
+        values from the configuration file.
+        """
+        logger = logging.getLogger(__name__)
+        
+        # Matrix configuration overrides
+        env_mappings = {
+            'MATRIX_HOMESERVER': ('matrix', 'homeserver'),
+            'MATRIX_USER_ID': ('matrix', 'user_id'),
+            'MATRIX_DEVICE_ID': ('matrix', 'device_id'),
+            'MATRIX_DEVICE_NAME': ('matrix', 'device_name'),
+            'MATRIX_AUTH_TYPE': ('matrix', 'auth_type'),
+            'MATRIX_PASSWORD': ('matrix', 'password'),
+            'MATRIX_ACCESS_TOKEN': ('matrix', 'access_token'),
+            'MATRIX_OIDC_ISSUER': ('matrix', 'oidc_issuer'),
+            'MATRIX_OIDC_CLIENT_ID': ('matrix', 'oidc_client_id'),
+            'MATRIX_OIDC_CLIENT_SECRET': ('matrix', 'oidc_client_secret'),
+            'MATRIX_STORE_PATH': ('matrix', 'store_path'),
+            
+            # Semaphore configuration overrides
+            'SEMAPHORE_URL': ('semaphore', 'url'),
+            'SEMAPHORE_API_TOKEN': ('semaphore', 'api_token'),
+            
+            # Bot configuration overrides
+            'BOT_COMMAND_PREFIX': ('bot', 'command_prefix'),
+            'BOT_STARTUP_MESSAGE': ('bot', 'startup_message'),
+            'BOT_SHUTDOWN_MESSAGE': ('bot', 'shutdown_message'),
+        }
+        
+        # Apply simple string overrides
+        for env_var, (section, key) in env_mappings.items():
+            value = os.getenv(env_var)
+            if value is not None:
+                self.config[section][key] = value
+                logger.debug(f"Applied environment override: {env_var} -> {section}.{key}")
+        
+        # Handle list-type environment variables
+        allowed_rooms = os.getenv('BOT_ALLOWED_ROOMS')
+        if allowed_rooms is not None:
+            self.config['bot']['allowed_rooms'] = [r.strip() for r in allowed_rooms.split(',') if r.strip()]
+            logger.debug(f"Applied environment override: BOT_ALLOWED_ROOMS")
+        
+        admin_users = os.getenv('BOT_ADMIN_USERS')
+        if admin_users is not None:
+            self.config['bot']['admin_users'] = [u.strip() for u in admin_users.split(',') if u.strip()]
+            logger.debug(f"Applied environment override: BOT_ADMIN_USERS")
+        
+        greeting_rooms = os.getenv('BOT_GREETING_ROOMS')
+        if greeting_rooms is not None:
+            self.config['bot']['greeting_rooms'] = [r.strip() for r in greeting_rooms.split(',') if r.strip()]
+            logger.debug(f"Applied environment override: BOT_GREETING_ROOMS")
+        
+        # Handle boolean environment variable
+        greetings_enabled = os.getenv('BOT_GREETINGS_ENABLED')
+        if greetings_enabled is not None:
+            self.config['bot']['greetings_enabled'] = greetings_enabled.lower() in ('true', '1', 'yes')
+            logger.debug(f"Applied environment override: BOT_GREETINGS_ENABLED")
     
     def _load_config_file(self) -> Dict[str, Any]:
-        """Load configuration file (JSON only).
+        """Load configuration file (JSON or HJSON with comments).
         
         Returns:
             Configuration dictionary from file
@@ -150,15 +229,22 @@ class Config:
         logger = logging.getLogger(__name__)
         
         try:
-            with open(self.config_file, 'r') as f:
+            with open(self.config_file, 'r', encoding='utf-8') as f:
+                content = f.read()
                 try:
-                    config = json.load(f)
-                    logger.debug(f"Loaded JSON configuration from '{self.config_file}'")
-                    return config or {}
-                except json.JSONDecodeError as e:
-                    error_msg = f"Failed to parse JSON configuration file '{self.config_file}'"
-                    error_msg += f"\n  Error at line {e.lineno}, column {e.colno}"
-                    error_msg += f"\n  Problem: {e.msg}"
+                    # Use hjson which supports both JSON and HJSON (JSON with comments)
+                    config = hjson.loads(content)
+                    logger.debug(f"Loaded configuration from '{self.config_file}'")
+                    return dict(config) if config else {}
+                except hjson.HjsonDecodeError as e:
+                    error_msg = f"Failed to parse configuration file '{self.config_file}'"
+                    error_msg += f"\n  Error: {e}"
+                    logger.error(error_msg)
+                    print(f"\nERROR: {error_msg}\n", file=sys.stderr)
+                    sys.exit(1)
+                except Exception as e:
+                    error_msg = f"Failed to parse configuration file '{self.config_file}'"
+                    error_msg += f"\n  Error: {e}"
                     logger.error(error_msg)
                     print(f"\nERROR: {error_msg}\n", file=sys.stderr)
                     sys.exit(1)
@@ -183,52 +269,52 @@ class Config:
         file_path = Path(self.config_file)
         
         # Create backup of original file
-        backup_path = file_path.with_suffix('.json.backup')
+        backup_path = file_path.with_suffix('.backup')
         
         try:
             if backup_path.exists():
                 # If backup already exists, append timestamp
                 import time
                 timestamp = int(time.time())
-                backup_path = file_path.with_suffix(f'.json.backup.{timestamp}')
+                backup_path = Path(str(file_path) + f'.backup.{timestamp}')
             
             # Copy original to backup
             import shutil
             shutil.copy2(self.config_file, backup_path)
             logger.info(f"Created backup of original configuration at '{backup_path}'")
             
-            # Save migrated config as JSON
-            with open(self.config_file, 'w') as f:
-                json.dump(config, f, indent=2)
+            # Save migrated config as HJSON (more human-readable with comments support)
+            with open(self.config_file, 'w', encoding='utf-8') as f:
+                f.write(hjson.dumps(config, indent=2))
             
             logger.info(f"Saved migrated configuration to '{self.config_file}'")
         except Exception as e:
             logger.warning(f"Failed to save migrated configuration: {e}")
             # Non-fatal - we can continue with the in-memory migrated config
     
-    def _merge_configs(self, defaults: Dict[str, Any], overrides: Dict[str, Any]) -> Dict[str, Any]:
-        """Merge two configuration dictionaries, with overrides taking precedence.
+    def _deep_merge(self, base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+        """Deep merge two dictionaries, with override values taking precedence.
         
         Args:
-            defaults: Default configuration values
-            overrides: Override values from JSON file
+            base: Base configuration dictionary
+            override: Override configuration dictionary
             
         Returns:
             Merged configuration dictionary
         """
         import copy
-        result = copy.deepcopy(defaults)
+        result = copy.deepcopy(base)
         
-        for key, value in overrides.items():
-            # Skip None values from overrides - use defaults instead
+        for key, value in override.items():
             if value is None:
+                # Skip None values - keep base value
                 continue
             
             if key in result and isinstance(result[key], dict) and isinstance(value, dict):
                 # Recursively merge nested dictionaries
-                result[key] = self._merge_configs(result[key], value)
+                result[key] = self._deep_merge(result[key], value)
             else:
-                # Override the value
+                # Override the value (including empty strings)
                 result[key] = value
         
         return result

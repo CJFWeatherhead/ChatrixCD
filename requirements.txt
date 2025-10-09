@@ -4,4 +4,7 @@ matrix-nio[e2e]>=0.24.0
 # HTTP client for REST API calls
 aiohttp>=3.9.0
 
+# Human JSON (JSON with comments) for configuration files
+hjson>=3.1.0
+
 
