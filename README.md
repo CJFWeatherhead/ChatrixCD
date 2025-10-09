@@ -134,6 +134,48 @@ Or if running from source:
 python -m chatrixcd.main
 ```
 
+### Command-Line Options
+
+ChatrixCD supports various command-line options for configuration and control:
+
+```bash
+chatrixcd [OPTIONS]
+```
+
+**Options:**
+
+- `-h, --help` - Show help message and exit
+- `-V, --version` - Show version number and exit
+- `-v, --verbose` - Increase verbosity (use `-v` for DEBUG, `-vv` for detailed DEBUG with library logs)
+- `-c FILE, --config FILE` - Path to configuration file (default: config.yaml)
+- `-C, --color` - Enable colored logging output (requires colorlog package)
+- `-D, --daemon` - Run in daemon mode (background process, Unix/Linux only)
+- `-s, --show-config` - Display current configuration with redacted credentials and exit
+- `-a USER, --admin USER` - Add admin user (can be specified multiple times)
+- `-r ROOM, --room ROOM` - Add allowed room (can be specified multiple times)
+
+**Examples:**
+
+```bash
+# Show version
+chatrixcd --version
+
+# Use custom config file with verbose logging
+chatrixcd -c /etc/chatrixcd/config.yaml -v
+
+# Run in daemon mode with colored output
+chatrixcd -D -C
+
+# Show current configuration
+chatrixcd -s
+
+# Override admin users and allowed rooms
+chatrixcd -a @admin1:matrix.org -a @admin2:matrix.org -r !room1:matrix.org
+
+# Combine multiple options
+chatrixcd -vv -C -c custom.yaml -a @admin:matrix.org
+```
+
 ### Bot Commands
 
 Once the bot is running and invited to a room, you can use the following commands:
