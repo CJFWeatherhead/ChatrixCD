@@ -50,6 +50,18 @@ class TestChatrixBot(unittest.TestCase):
             shutil.rmtree(self.temp_dir)
         self.loop.close()
 
+    def test_init_sets_client_user_id(self):
+        """Test that bot initialization sets client.user_id from config."""
+        bot = ChatrixBot(self.config)
+        
+        # Verify that both bot.user_id and client.user_id are set
+        self.assertEqual(bot.user_id, '@bot:example.com')
+        self.assertEqual(bot.client.user_id, '@bot:example.com')
+        self.assertEqual(bot.client.user, '@bot:example.com')
+        
+        # Ensure user_id is not empty (important for load_store())
+        self.assertTrue(bot.client.user_id)
+    
     def test_init_registers_callbacks(self):
         """Test that bot initialization registers event callbacks."""
         bot = ChatrixBot(self.config)

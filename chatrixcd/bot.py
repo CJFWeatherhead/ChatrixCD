@@ -50,6 +50,10 @@ class ChatrixBot:
             store_path=self.store_path,
         )
         
+        # Explicitly set user_id on the client to ensure it's available for load_store()
+        # In matrix-nio 0.25.x, user_id is not automatically populated from the user parameter
+        self.client.user_id = self.user_id
+        
         # Initialize authentication handler
         self.auth = MatrixAuth(matrix_config)
         
