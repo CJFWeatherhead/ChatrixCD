@@ -71,10 +71,49 @@ class ChatrixBot:
             semaphore=self.semaphore
         )
         
+        # Track session IDs for which we've already requested keys
+        # This prevents duplicate key requests
+        self.requested_session_ids = set()
+        
         # Setup event callbacks
         self.client.add_event_callback(self.message_callback, RoomMessageText)
         self.client.add_event_callback(self.invite_callback, InviteMemberEvent)
         self.client.add_event_callback(self.decryption_failure_callback, MegolmEvent)
+
+    async def setup_encryption(self) -> bool:
+        """Setup encryption keys after successful login.
+        
+        This uploads device keys and one-time keys if needed, and queries
+        device keys from other users to establish Olm sessions.
+        
+        Returns:
+            True if setup successful, False otherwise
+        """
+        if not self.client.olm:
+            logger.warning("Encryption not enabled, skipping encryption setup")
+            return True
+            
+        try:
+            # Upload encryption keys if needed
+            if self.client.should_upload_keys:
+                logger.info("Uploading encryption keys...")
+                response = await self.client.keys_upload()
+                if hasattr(response, 'one_time_key_counts'):
+                    logger.info(f"Uploaded keys. One-time key counts: {response.one_time_key_counts}")
+                else:
+                    logger.info("Uploaded encryption keys")
+            
+            # Query device keys for users we share rooms with
+            if self.client.should_query_keys:
+                logger.info("Querying device keys for room members...")
+                response = await self.client.keys_query()
+                logger.info(f"Device key query completed")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Encryption setup error: {e}")
+            return False
 
     async def login(self) -> bool:
         """Login to Matrix server.
@@ -105,6 +144,8 @@ class ChatrixBot:
                 
                 if isinstance(response, LoginResponse):
                     logger.info(f"Logged in as {self.user_id}")
+                    # Setup encryption keys after successful login
+                    await self.setup_encryption()
                     return True
                 else:
                     logger.error(f"Login failed: {response}")
@@ -130,6 +171,8 @@ class ChatrixBot:
                 sync_response = await self.client.sync(timeout=30000)
                 if isinstance(sync_response, SyncResponse):
                     logger.info(f"Authenticated with token as {self.user_id}")
+                    # Setup encryption keys after successful authentication
+                    await self.setup_encryption()
                     return True
                 else:
                     logger.error(f"Token authentication failed: {sync_response}")
@@ -195,9 +238,16 @@ class ChatrixBot:
             )
             return
         
+        # Check if we've already requested this session key to avoid duplicate requests
+        if event.session_id in self.requested_session_ids:
+            logger.debug(f"Already requested key for session {event.session_id}, skipping duplicate request")
+            return
+        
         try:
             # Request the room key from other devices
             await self.client.request_room_key(event)
+            # Track that we've requested this session ID
+            self.requested_session_ids.add(event.session_id)
             logger.info(f"Requested room key for session {event.session_id}")
         except Exception as e:
             logger.error(f"Failed to request room key: {e}")
@@ -272,6 +322,27 @@ class ChatrixBot:
             except Exception as e:
                 logger.error(f"Failed to send shutdown message to room {room_id}: {e}")
 
+    async def sync_callback(self, response: SyncResponse):
+        """Handle sync responses and manage encryption keys.
+        
+        This callback is called after each sync to handle encryption-related tasks
+        like uploading keys, querying device keys, and claiming one-time keys.
+        
+        Args:
+            response: The sync response from the server
+        """
+        # Handle encryption key management after each sync
+        if self.client.olm:
+            # Upload keys if needed
+            if self.client.should_upload_keys:
+                logger.debug("Uploading keys after sync...")
+                await self.client.keys_upload()
+            
+            # Query device keys if needed
+            if self.client.should_query_keys:
+                logger.debug("Querying device keys after sync...")
+                await self.client.keys_query()
+
     async def run(self):
         """Run the bot."""
         logger.info("Starting ChatrixCD bot...")
@@ -283,6 +354,9 @@ class ChatrixBot:
         
         # Send startup message
         await self.send_startup_message()
+        
+        # Register sync callback for encryption key management
+        self.client.add_response_callback(self.sync_callback, SyncResponse)
             
         # Start sync loop
         logger.info("Starting sync loop...")

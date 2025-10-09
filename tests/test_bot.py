@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch, call
 import asyncio
 import os
 import tempfile
-from nio import MegolmEvent, MatrixRoom, RoomMessageText
+from nio import MegolmEvent, MatrixRoom, RoomMessageText, SyncResponse, Rooms
 from chatrixcd.bot import ChatrixBot
 from chatrixcd.config import Config
 
@@ -470,6 +470,181 @@ class TestChatrixBot(unittest.TestCase):
         self.assertEqual(content['body'], 'Hello world')
         self.assertEqual(content['formatted_body'], '<b>Hello world</b>')
         self.assertEqual(content['format'], 'org.matrix.custom.html')
+
+    def test_setup_encryption_uploads_keys(self):
+        """Test that encryption setup uploads keys when needed."""
+        bot = ChatrixBot(self.config)
+        
+        # Mock encryption support
+        bot.client.olm = MagicMock()
+        # Use PropertyMock for read-only properties
+        type(bot.client).should_upload_keys = unittest.mock.PropertyMock(return_value=True)
+        type(bot.client).should_query_keys = unittest.mock.PropertyMock(return_value=False)
+        bot.client.keys_upload = AsyncMock()
+        
+        # Setup encryption
+        result = self.loop.run_until_complete(bot.setup_encryption())
+        
+        # Verify success and keys_upload was called
+        self.assertTrue(result)
+        bot.client.keys_upload.assert_called_once()
+
+    def test_setup_encryption_queries_device_keys(self):
+        """Test that encryption setup queries device keys when needed."""
+        bot = ChatrixBot(self.config)
+        
+        # Mock encryption support
+        bot.client.olm = MagicMock()
+        # Use PropertyMock for read-only properties
+        type(bot.client).should_upload_keys = unittest.mock.PropertyMock(return_value=False)
+        type(bot.client).should_query_keys = unittest.mock.PropertyMock(return_value=True)
+        bot.client.keys_query = AsyncMock()
+        
+        # Setup encryption
+        result = self.loop.run_until_complete(bot.setup_encryption())
+        
+        # Verify success and keys_query was called
+        self.assertTrue(result)
+        bot.client.keys_query.assert_called_once()
+
+    def test_setup_encryption_skips_when_not_enabled(self):
+        """Test that encryption setup is skipped when encryption is not enabled."""
+        bot = ChatrixBot(self.config)
+        
+        # Mock no encryption support
+        bot.client.olm = None
+        bot.client.keys_upload = AsyncMock()
+        
+        # Setup encryption
+        result = self.loop.run_until_complete(bot.setup_encryption())
+        
+        # Verify it returns True but doesn't upload keys
+        self.assertTrue(result)
+        bot.client.keys_upload.assert_not_called()
+
+    def test_decryption_failure_prevents_duplicate_requests(self):
+        """Test that decryption failure callback prevents duplicate key requests."""
+        bot = ChatrixBot(self.config)
+        
+        # Mock the request_room_key method and store/olm
+        bot.client.request_room_key = AsyncMock()
+        bot.client.store = MagicMock()
+        bot.client.olm = MagicMock()
+        
+        # Create mock room and event
+        room = MagicMock(spec=MatrixRoom)
+        room.display_name = "Test Room"
+        room.room_id = "!test:example.com"
+        
+        event = MagicMock(spec=MegolmEvent)
+        event.sender = "@user:example.com"
+        event.session_id = "test_session_id_123"
+        
+        # Call the callback twice with the same session_id
+        self.loop.run_until_complete(
+            bot.decryption_failure_callback(room, event)
+        )
+        self.loop.run_until_complete(
+            bot.decryption_failure_callback(room, event)
+        )
+        
+        # Verify request_room_key was only called once
+        bot.client.request_room_key.assert_called_once_with(event)
+        
+        # Verify the session_id was tracked
+        self.assertIn("test_session_id_123", bot.requested_session_ids)
+
+    def test_decryption_failure_allows_different_sessions(self):
+        """Test that different session IDs are each requested once."""
+        bot = ChatrixBot(self.config)
+        
+        # Mock the request_room_key method and store/olm
+        bot.client.request_room_key = AsyncMock()
+        bot.client.store = MagicMock()
+        bot.client.olm = MagicMock()
+        
+        # Create mock room
+        room = MagicMock(spec=MatrixRoom)
+        room.display_name = "Test Room"
+        room.room_id = "!test:example.com"
+        
+        # Create two events with different session IDs
+        event1 = MagicMock(spec=MegolmEvent)
+        event1.sender = "@user:example.com"
+        event1.session_id = "session_1"
+        
+        event2 = MagicMock(spec=MegolmEvent)
+        event2.sender = "@user:example.com"
+        event2.session_id = "session_2"
+        
+        # Call the callback with both events
+        self.loop.run_until_complete(
+            bot.decryption_failure_callback(room, event1)
+        )
+        self.loop.run_until_complete(
+            bot.decryption_failure_callback(room, event2)
+        )
+        
+        # Verify request_room_key was called twice (once for each session)
+        self.assertEqual(bot.client.request_room_key.call_count, 2)
+        
+        # Verify both session IDs were tracked
+        self.assertIn("session_1", bot.requested_session_ids)
+        self.assertIn("session_2", bot.requested_session_ids)
+
+    def test_sync_callback_uploads_keys(self):
+        """Test that sync callback uploads keys when needed."""
+        bot = ChatrixBot(self.config)
+        
+        # Mock encryption support
+        bot.client.olm = MagicMock()
+        # Use PropertyMock for read-only properties
+        type(bot.client).should_upload_keys = unittest.mock.PropertyMock(return_value=True)
+        type(bot.client).should_query_keys = unittest.mock.PropertyMock(return_value=False)
+        bot.client.keys_upload = AsyncMock()
+        
+        # Create mock sync response
+        response = SyncResponse(
+            next_batch="s123456",
+            rooms=Rooms({}, {}, {}),
+            device_key_count={},
+            device_list={},
+            to_device_events=[],
+            presence_events=[]
+        )
+        
+        # Call sync callback
+        self.loop.run_until_complete(bot.sync_callback(response))
+        
+        # Verify keys_upload was called
+        bot.client.keys_upload.assert_called_once()
+
+    def test_sync_callback_queries_keys(self):
+        """Test that sync callback queries device keys when needed."""
+        bot = ChatrixBot(self.config)
+        
+        # Mock encryption support
+        bot.client.olm = MagicMock()
+        # Use PropertyMock for read-only properties
+        type(bot.client).should_upload_keys = unittest.mock.PropertyMock(return_value=False)
+        type(bot.client).should_query_keys = unittest.mock.PropertyMock(return_value=True)
+        bot.client.keys_query = AsyncMock()
+        
+        # Create mock sync response
+        response = SyncResponse(
+            next_batch="s123456",
+            rooms=Rooms({}, {}, {}),
+            device_key_count={},
+            device_list={},
+            to_device_events=[],
+            presence_events=[]
+        )
+        
+        # Call sync callback
+        self.loop.run_until_complete(bot.sync_callback(response))
+        
+        # Verify keys_query was called
+        bot.client.keys_query.assert_called_once()
 
 
 if __name__ == '__main__':
