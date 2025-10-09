@@ -236,6 +236,7 @@ Use descriptive branch names:
 - [ ] All tests pass locally
 - [ ] CHANGELOG.md updated
 - [ ] No new warnings introduced
+- [ ] Branding guidelines followed (if visual changes, see BRANDING.md)
 
 ## Testing Guidelines
 
@@ -273,6 +274,34 @@ For changes that affect the bot's behavior:
 3. Check log output
 4. Test error conditions
 
+## Branding Guidelines
+
+ChatrixCD has established brand guidelines to maintain a consistent visual identity across documentation, website, and related materials.
+
+### Brand Colors
+
+- **ChatrixCD Green**: `#4A9B7F` - Primary brand color
+- **Dark Background**: `#2D3238` - For backgrounds and headers
+- **White**: `#FFFFFF` - For text on dark backgrounds
+
+### Using Brand Assets
+
+When contributing visual elements:
+
+1. Follow the color palette defined in [BRANDING.md](BRANDING.md)
+2. Use approved logo files from the `assets/` directory
+3. Maintain consistent styling in documentation
+4. Apply brand colors to badges, buttons, and accent elements
+
+### Logo Usage
+
+- Logo files are located in `assets/` and `docs/assets/`
+- Use the horizontal logo for headers and primary placements
+- Use the icon-only logo for small spaces and favicons
+- Do not modify or distort the logo
+
+For complete branding guidelines, see [BRANDING.md](BRANDING.md).
+
 ## Documentation
 
 ### Types of Documentation
@@ -281,6 +310,7 @@ For changes that affect the bot's behavior:
 2. **User Documentation**: README.md, INSTALL.md, QUICKSTART.md
 3. **Developer Documentation**: ARCHITECTURE.md, this file
 4. **API Documentation**: Docstrings in source code
+5. **Brand Documentation**: BRANDING.md for visual identity
 
 ### Documentation Updates
 
@@ -291,6 +321,7 @@ When making changes, consider updating:
 - **QUICKSTART.md**: Getting started guide
 - **ARCHITECTURE.md**: Technical architecture details
 - **CHANGELOG.md**: Record of changes
+- **BRANDING.md**: Branding and visual identity guidelines
 
 ## Project Structure
 
@@ -310,7 +341,9 @@ ChatrixCD/
 ├── tests/               # Test suite
 │   ├── __init__.py
 │   └── test_*.py        # Test files
+├── assets/              # Branding assets (logos, images)
 ├── ARCHITECTURE.md      # Architecture documentation
+├── BRANDING.md          # Branding and visual identity guide
 ├── CHANGELOG.md         # Project changelog
 ├── CODE_OF_CONDUCT.md   # Code of conduct
 ├── CONTRIBUTING.md      # This file

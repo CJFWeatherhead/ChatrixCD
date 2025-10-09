@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300">
+  <!-- Dark background -->
+  <rect width="1200" height="300" fill="#2D3238"/>
+  
+  <!-- Robot icon with chat bubble -->
+  <g transform="translate(100, 75)">
+    <!-- Main robot body (rounded square) -->
+    <rect x="0" y="20" width="150" height="150" rx="30" ry="30" fill="#4A9B7F"/>
+    
+    <!-- Antenna -->
+    <line x1="75" y1="20" x2="75" x2="0" stroke="#4A9B7F" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="75" cy="0" r="12" fill="#4A9B7F"/>
+    
+    <!-- Robot eyes -->
+    <circle cx="55" cy="80" r="12" fill="#2D3238"/>
+    <circle cx="95" cy="80" r="12" fill="#2D3238"/>
+    
+    <!-- Chat bubble inside robot -->
+    <path d="M 35 110 Q 35 100 45 100 L 105 100 Q 115 100 115 110 L 115 135 Q 115 145 105 145 L 60 145 L 45 155 L 50 145 L 45 145 Q 35 145 35 135 Z" 
+          fill="#2D3238" stroke="#2D3238" stroke-width="2"/>
+  </g>
+  
+  <!-- ChatrixCD text -->
+  <text x="300" y="190" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" 
+        font-size="120" font-weight="700" fill="#FFFFFF">ChatrixCD</text>
+</svg>
