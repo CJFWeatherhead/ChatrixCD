@@ -49,23 +49,16 @@ Report vulnerabilities via GitHub's private vulnerability reporting:
 
 1. **Never commit credentials**
    - Don't commit `config.json` with real credentials
-   - Don't commit `.env` files with secrets
    - Use `.gitignore` to exclude sensitive files
+   - Use secret management systems to generate config.json at deployment time
 
-2. **Use environment variables**
-   ```bash
-   export MATRIX_PASSWORD="$(cat /secrets/password)"
-   export SEMAPHORE_API_TOKEN="$(cat /secrets/token)"
-   ```
-
-3. **Restrict file permissions**
+2. **Restrict file permissions**
    ```bash
    chmod 600 config.json
-   chmod 600 .env
    chmod 700 store/
    ```
 
-4. **Rotate credentials regularly**
+3. **Rotate credentials regularly**
    - Change bot passwords periodically
    - Regenerate API tokens regularly
    - Update access tokens when needed

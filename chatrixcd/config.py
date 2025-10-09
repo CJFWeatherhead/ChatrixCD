@@ -71,16 +71,14 @@ class Config:
     
     Configuration priority (highest to lowest):
     1. Configuration file values (highest priority - explicit values in JSON/HJSON file)
-    2. Environment variables (used for values not in config file)
-    3. Hardcoded defaults (lowest priority - used when not in config file or env vars)
+    2. Hardcoded defaults (lowest priority - used when not in config file)
     
-    This means configuration file values take precedence over environment variables,
-    but environment variables can be used to provide values for keys not specified
-    in the configuration file.
+    Configuration is loaded only from the configuration file (config.json by default).
+    Environment variables are no longer supported to simplify configuration management.
     """
 
     def __init__(self, config_file: str = "config.json"):
-        """Initialize configuration from file or environment variables.
+        """Initialize configuration from file.
         
         Supports JSON and HJSON (Human JSON with comments) configuration files.
         """
@@ -89,16 +87,13 @@ class Config:
         self.load_config()
 
     def load_config(self):
-        """Load configuration with clear priority: hardcoded defaults < env vars < file."""
+        """Load configuration with clear priority: hardcoded defaults < file."""
         logger = logging.getLogger(__name__)
         
         # Step 1: Start with hardcoded defaults
         self.config = self._get_default_config()
         
-        # Step 2: Apply environment variables (override defaults)
-        self._apply_env_overrides()
-        
-        # Step 3: Load and merge configuration file if it exists (highest priority)
+        # Step 2: Load and merge configuration file if it exists (highest priority)
         if os.path.exists(self.config_file):
             file_config = self._load_config_file()
             
@@ -115,10 +110,10 @@ class Config:
                     "Some features may not work correctly."
                 )
             
-            # Merge file config (file values override everything)
+            # Merge file config (file values override defaults)
             self.config = self._deep_merge(self.config, file_config)
         else:
-            logger.debug(f"Configuration file '{self.config_file}' not found, using defaults and environment variables")
+            logger.debug(f"Configuration file '{self.config_file}' not found, using defaults only")
     
     def _get_default_config(self) -> Dict[str, Any]:
         """Get hardcoded default configuration (no environment variables).
@@ -156,66 +151,7 @@ class Config:
             },
         }
     
-    def _apply_env_overrides(self):
-        """Apply environment variable overrides to configuration.
-        
-        Environment variables have the highest priority and will override
-        values from the configuration file.
-        """
-        logger = logging.getLogger(__name__)
-        
-        # Matrix configuration overrides
-        env_mappings = {
-            'MATRIX_HOMESERVER': ('matrix', 'homeserver'),
-            'MATRIX_USER_ID': ('matrix', 'user_id'),
-            'MATRIX_DEVICE_ID': ('matrix', 'device_id'),
-            'MATRIX_DEVICE_NAME': ('matrix', 'device_name'),
-            'MATRIX_AUTH_TYPE': ('matrix', 'auth_type'),
-            'MATRIX_PASSWORD': ('matrix', 'password'),
-            'MATRIX_ACCESS_TOKEN': ('matrix', 'access_token'),
-            'MATRIX_OIDC_ISSUER': ('matrix', 'oidc_issuer'),
-            'MATRIX_OIDC_CLIENT_ID': ('matrix', 'oidc_client_id'),
-            'MATRIX_OIDC_CLIENT_SECRET': ('matrix', 'oidc_client_secret'),
-            'MATRIX_STORE_PATH': ('matrix', 'store_path'),
-            
-            # Semaphore configuration overrides
-            'SEMAPHORE_URL': ('semaphore', 'url'),
-            'SEMAPHORE_API_TOKEN': ('semaphore', 'api_token'),
-            
-            # Bot configuration overrides
-            'BOT_COMMAND_PREFIX': ('bot', 'command_prefix'),
-            'BOT_STARTUP_MESSAGE': ('bot', 'startup_message'),
-            'BOT_SHUTDOWN_MESSAGE': ('bot', 'shutdown_message'),
-        }
-        
-        # Apply simple string overrides
-        for env_var, (section, key) in env_mappings.items():
-            value = os.getenv(env_var)
-            if value is not None:
-                self.config[section][key] = value
-                logger.debug(f"Applied environment override: {env_var} -> {section}.{key}")
-        
-        # Handle list-type environment variables
-        allowed_rooms = os.getenv('BOT_ALLOWED_ROOMS')
-        if allowed_rooms is not None:
-            self.config['bot']['allowed_rooms'] = [r.strip() for r in allowed_rooms.split(',') if r.strip()]
-            logger.debug(f"Applied environment override: BOT_ALLOWED_ROOMS")
-        
-        admin_users = os.getenv('BOT_ADMIN_USERS')
-        if admin_users is not None:
-            self.config['bot']['admin_users'] = [u.strip() for u in admin_users.split(',') if u.strip()]
-            logger.debug(f"Applied environment override: BOT_ADMIN_USERS")
-        
-        greeting_rooms = os.getenv('BOT_GREETING_ROOMS')
-        if greeting_rooms is not None:
-            self.config['bot']['greeting_rooms'] = [r.strip() for r in greeting_rooms.split(',') if r.strip()]
-            logger.debug(f"Applied environment override: BOT_GREETING_ROOMS")
-        
-        # Handle boolean environment variable
-        greetings_enabled = os.getenv('BOT_GREETINGS_ENABLED')
-        if greetings_enabled is not None:
-            self.config['bot']['greetings_enabled'] = greetings_enabled.lower() in ('true', '1', 'yes')
-            logger.debug(f"Applied environment override: BOT_GREETINGS_ENABLED")
+
     
     def _load_config_file(self) -> Dict[str, Any]:
         """Load configuration file (JSON or HJSON with comments).

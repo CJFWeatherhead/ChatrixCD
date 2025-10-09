@@ -13,7 +13,7 @@ A Matrix bot that integrates with Semaphore UI to enable CI/CD automation throug
 - 🚀 **Semaphore UI Integration**: Start and monitor CI/CD tasks via chat commands
 - 📊 **Real-time Updates**: Automatic status updates for running tasks
 - 🎯 **Command-based Interface**: Easy-to-use command system for task management
-- 🔧 **Flexible Configuration**: Support for HJSON config files (JSON with comments) and environment variables with automatic migration
+- 🔧 **Flexible Configuration**: Support for HJSON config files (JSON with comments) with automatic migration
 - ✅ **Configuration Validation**: Built-in schema validation with clear error messages
 - 🔄 **Auto-Migration**: Automatic upgrade of configuration files when new features are added
 
@@ -51,9 +51,7 @@ uv pip install -e .
 
 ## Configuration
 
-ChatrixCD can be configured using configuration files or environment variables.
-
-### Using Configuration Files
+ChatrixCD is configured using JSON configuration files with HJSON support.
 
 **HJSON Configuration (JSON with Comments)**
 
@@ -91,18 +89,9 @@ Configuration files support HJSON format, which allows comments and trailing com
    }
    ```
 
-**Configuration Priority**: Configuration file values have highest priority, followed by environment variables, then hardcoded defaults.
+**Configuration Priority**: Configuration file values have highest priority, followed by hardcoded defaults.
 
 **Configuration Migration**: Old configuration files are automatically migrated to the current version. A backup is created before migration.
-
-### Using Environment Variables
-
-1. Copy the example .env file:
-   ```bash
-   cp .env.example .env
-   ```
-
-2. Edit `.env` with your settings
 
 ## Authentication Methods
 

@@ -80,13 +80,7 @@ python3.11 -m venv .venv
    python -c "import json; json.load(open('config.json'))"
    ```
 
-2. **Check environment variables**
-   ```bash
-   # List environment variables
-   env | grep -E "(MATRIX|SEMAPHORE|BOT)_"
-   ```
-
-3. **Check file permissions**
+2. **Check file permissions**
    ```bash
    ls -la config.json
    ls -la store/

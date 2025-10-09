@@ -6,7 +6,7 @@ nav_order: 4
 
 # Configuration Guide
 
-ChatrixCD can be configured using JSON files or environment variables.
+ChatrixCD is configured using JSON files.
 
 ## Supported Configuration Format
 
@@ -43,18 +43,19 @@ When you load an older configuration file:
 Configuration values are determined using the following priority (highest to lowest):
 
 1. **Configuration file** (`config.json`) - explicit values in the configuration file take **highest priority**
-2. **Environment variables** - used for values not specified in the configuration file
-3. **Default values** (hardcoded) - used when not specified in config file or environment variables
+2. **Default values** (hardcoded) - used when not specified in config file
 
-**Example:** If your `config.json` has `user_id` set to `@bot:example.com` and you also set the `MATRIX_USER_ID` environment variable to `@env:example.com`, then:
-- `user_id` will be `@bot:example.com` (from the config file - highest priority)
-- If `device_id` is NOT in the config file but `MATRIX_DEVICE_ID` is set, it will use the environment variable
+**Note:** Environment variables are no longer supported. All configuration must be specified in the `config.json` file.
+
+**Example:** If your `config.json` has `user_id` set to `@bot:example.com`:
+- `user_id` will be `@bot:example.com` (from the config file)
+- If `device_id` is NOT in the config file, it will use the hardcoded default value
 - Other unspecified fields (like `device_name`) will use hardcoded defaults
 
-This priority system allows you to:
-- Set base configuration in the file with comments and documentation
-- Use environment variables for deployment-specific values not in the file
-- Override specific values with environment variables by omitting them from the config file
+This simplified configuration approach:
+- Eliminates confusion about configuration sources
+- Makes configuration more explicit and easier to debug
+- Centralizes all configuration in a single, documented file
 
 ## Configuration File Format
 
@@ -291,9 +292,8 @@ You can configure the bot to send startup and shutdown messages to specific room
 **Note:** Greeting messages are only sent to rooms explicitly listed in `greeting_rooms`. This allows you to control which rooms receive these notifications, which is especially useful if the bot is in many rooms but you only want status updates in specific ones.
 
 To disable greetings entirely, either:
-- Set `greetings_enabled` to `false`, or
-- Leave `greeting_rooms` as an empty array, or
-- Set environment variable `BOT_GREETINGS_ENABLED=false`
+- Set `greetings_enabled` to `false` in config.json, or
+- Leave `greeting_rooms` as an empty array
 
 ## Security Best Practices
 
@@ -304,14 +304,14 @@ chmod 600 config.json
 chmod 700 store/
 ```
 
-### Use Environment Variables in Production
+### Manage Secrets Securely
 
-Instead of storing secrets in JSON:
+To protect sensitive information in the config.json file:
 
-```bash
-export MATRIX_PASSWORD="$(cat /secrets/matrix_password)"
-export SEMAPHORE_API_TOKEN="$(cat /secrets/semaphore_token)"
-```
+- Store config.json in a secure location with restricted file permissions (chmod 600)
+- Use secret management systems (like Kubernetes secrets, Vault, etc.) to generate the config file at deployment time
+- Keep config.json out of version control (add to .gitignore)
+- Use token-based authentication instead of passwords when possible
 
 ### Rotate Credentials Regularly
 
@@ -340,11 +340,6 @@ Validation errors will be reported with clear messages indicating which fields n
 - Check file permissions
 - Ensure the file is readable by the bot user
 
-### Environment variables not working
-- Ensure variables are exported
-- Check variable names match exactly
-- Verify no typos in variable names
-
 ### Authentication fails
 - Verify credentials are correct
 - Check homeserver URL is accessible
@@ -352,7 +347,7 @@ Validation errors will be reported with clear messages indicating which fields n
 - **Important:** `user_id` must be set for all authentication types (password, token, OIDC)
   - For token/OIDC: user_id is required to load the encryption store
   - Error message: "user_id is not set in configuration" indicates missing or empty user_id
-  - Set via `MATRIX_USER_ID` environment variable or `matrix.user_id` in config.json
+  - Set via `matrix.user_id` in config.json
 
 ### Bot doesn't respond to commands in encrypted rooms
 - Ensure `user_id` is properly configured (see above)

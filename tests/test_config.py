@@ -12,8 +12,8 @@ from chatrixcd.config import Config, ConfigMigrator, CURRENT_CONFIG_VERSION
 class TestConfig(unittest.TestCase):
     """Test configuration loading and management."""
 
-    def test_environment_variables(self):
-        """Test configuration from environment variables."""
+    def test_environment_variables_ignored(self):
+        """Test that environment variables are ignored (no longer supported)."""
         os.environ['MATRIX_HOMESERVER'] = 'https://test.matrix.org'
         os.environ['MATRIX_USER_ID'] = '@testbot:test.matrix.org'
         os.environ['MATRIX_PASSWORD'] = 'testpass'
@@ -22,11 +22,19 @@ class TestConfig(unittest.TestCase):
         
         config = Config('nonexistent.json')
         
-        self.assertEqual(config.get('matrix.homeserver'), 'https://test.matrix.org')
-        self.assertEqual(config.get('matrix.user_id'), '@testbot:test.matrix.org')
-        self.assertEqual(config.get('matrix.password'), 'testpass')
-        self.assertEqual(config.get('semaphore.url'), 'https://semaphore.test.com')
-        self.assertEqual(config.get('semaphore.api_token'), 'testtoken')
+        # Environment variables should be ignored, defaults should be used
+        self.assertEqual(config.get('matrix.homeserver'), 'https://matrix.org')
+        self.assertEqual(config.get('matrix.user_id'), '')
+        self.assertEqual(config.get('matrix.password'), '')
+        self.assertEqual(config.get('semaphore.url'), '')
+        self.assertEqual(config.get('semaphore.api_token'), '')
+        
+        # Clean up
+        del os.environ['MATRIX_HOMESERVER']
+        del os.environ['MATRIX_USER_ID']
+        del os.environ['MATRIX_PASSWORD']
+        del os.environ['SEMAPHORE_URL']
+        del os.environ['SEMAPHORE_API_TOKEN']
 
     def test_default_values(self):
         """Test default configuration values."""
@@ -106,8 +114,8 @@ class TestConfig(unittest.TestCase):
         finally:
             os.unlink(temp_file)
 
-    def test_greeting_config_from_env(self):
-        """Test greeting configuration from environment variables."""
+    def test_greeting_config_from_env_ignored(self):
+        """Test that greeting configuration from environment variables is ignored."""
         os.environ['BOT_GREETINGS_ENABLED'] = 'false'
         os.environ['BOT_GREETING_ROOMS'] = '!room1:example.com,!room2:example.com'
         os.environ['BOT_STARTUP_MESSAGE'] = 'Env startup message'
@@ -115,10 +123,11 @@ class TestConfig(unittest.TestCase):
         
         config = Config('nonexistent.json')
         
-        self.assertFalse(config.get('bot.greetings_enabled'))
-        self.assertEqual(config.get('bot.greeting_rooms'), ['!room1:example.com', '!room2:example.com'])
-        self.assertEqual(config.get('bot.startup_message'), 'Env startup message')
-        self.assertEqual(config.get('bot.shutdown_message'), 'Env shutdown message')
+        # Environment variables should be ignored, defaults should be used
+        self.assertTrue(config.get('bot.greetings_enabled'))
+        self.assertEqual(config.get('bot.greeting_rooms'), [])
+        self.assertEqual(config.get('bot.startup_message'), '🤖 ChatrixCD bot is now online and ready to help with CI/CD tasks!')
+        self.assertEqual(config.get('bot.shutdown_message'), '👋 ChatrixCD bot is shutting down. See you later!')
         
         # Clean up
         del os.environ['BOT_GREETINGS_ENABLED']

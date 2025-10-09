@@ -132,20 +132,6 @@ Bot: ✅ Task 123 completed successfully
 
 ## Advanced Configuration
 
-### Using Environment Variables
-
-Instead of `config.json`, you can use environment variables:
-
-```bash
-export MATRIX_HOMESERVER="https://matrix.example.com"
-export MATRIX_USER_ID="@bot:example.com"
-export MATRIX_PASSWORD="your-secure-password"
-export SEMAPHORE_URL="https://semaphore.example.com"
-export SEMAPHORE_API_TOKEN="your-api-token"
-
-chatrixcd
-```
-
 ### OIDC Authentication
 
 For OIDC authentication with Matrix:
