@@ -95,7 +95,7 @@ We actively welcome your pull requests:
 4. **Set up test configuration**
 
    ```bash
-   cp config.yaml.example config.yaml
+   cp config.json.example config.json
    cp .env.example .env
    # Edit these files with your test credentials
    ```

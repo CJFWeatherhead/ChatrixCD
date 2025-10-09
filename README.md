@@ -13,7 +13,7 @@ A Matrix bot that integrates with Semaphore UI to enable CI/CD automation throug
 - 🚀 **Semaphore UI Integration**: Start and monitor CI/CD tasks via chat commands
 - 📊 **Real-time Updates**: Automatic status updates for running tasks
 - 🎯 **Command-based Interface**: Easy-to-use command system for task management
-- 🔧 **Flexible Configuration**: Support for YAML, JSON config files, and environment variables with automatic migration
+- 🔧 **Flexible Configuration**: Support for JSON config files and environment variables with automatic migration
 - ✅ **Configuration Validation**: Built-in schema validation with clear error messages
 - 🔄 **Auto-Migration**: Automatic upgrade of configuration files when new features are added
 
@@ -51,45 +51,38 @@ uv pip install -e .
 
 ## Configuration
 
-ChatrixCD can be configured using YAML, JSON configuration files, or environment variables.
+ChatrixCD can be configured using JSON configuration files or environment variables.
 
 ### Using Configuration Files
 
-**Option 1: YAML Configuration (Traditional)**
+**JSON Configuration**
 
-1. Copy the example configuration file:
-   ```bash
-   cp config.yaml.example config.yaml
-   ```
-
-2. Edit `config.yaml` with your settings:
-   ```yaml
-   _config_version: 2  # For automatic migration
-   
-   matrix:
-     homeserver: "https://matrix.example.com"
-     user_id: "@chatrixcd:example.com"
-     auth_type: "password"  # or "token" or "oidc"
-     password: "your_password"  # for password auth
-     
-   semaphore:
-     url: "https://semaphore.example.com"
-     api_token: "your_semaphore_api_token"
-     
-   bot:
-     command_prefix: "!cd"
-   ```
-
-**Option 2: JSON Configuration (Recommended for Production)**
-
-JSON format is more robust and less prone to syntax errors:
+JSON format is robust and provides clear error messages:
 
 1. Copy the example JSON configuration file:
    ```bash
    cp config.json.example config.json
    ```
 
-2. Edit `config.json` with your settings - JSON provides better error messages and is less fragile than YAML.
+2. Edit `config.json` with your settings:
+   ```json
+   {
+     "_config_version": 2,
+     "matrix": {
+       "homeserver": "https://matrix.example.com",
+       "user_id": "@chatrixcd:example.com",
+       "auth_type": "password",
+       "password": "your_password"
+     },
+     "semaphore": {
+       "url": "https://semaphore.example.com",
+       "api_token": "your_semaphore_api_token"
+     },
+     "bot": {
+       "command_prefix": "!cd"
+     }
+   }
+   ```
 
 **Configuration Migration**: Old configuration files are automatically migrated to the current version. A backup is created before migration.
 
@@ -108,35 +101,44 @@ ChatrixCD supports three authentication methods for Matrix:
 
 ### 1. Password Authentication (Traditional)
 
-```yaml
-matrix:
-  auth_type: "password"
-  user_id: "@chatrixcd:example.com"
-  password: "your_password"
+```json
+{
+  "matrix": {
+    "auth_type": "password",
+    "user_id": "@chatrixcd:example.com",
+    "password": "your_password"
+  }
+}
 ```
 
 ### 2. Token Authentication (Pre-obtained)
 
 If you have a pre-obtained access token:
 
-```yaml
-matrix:
-  auth_type: "token"
-  user_id: "@chatrixcd:example.com"
-  access_token: "your_access_token"
+```json
+{
+  "matrix": {
+    "auth_type": "token",
+    "user_id": "@chatrixcd:example.com",
+    "access_token": "your_access_token"
+  }
+}
 ```
 
 ### 3. OIDC Authentication (Recommended for OIDC-enabled servers)
 
 For Matrix servers using OIDC/OAuth2:
 
-```yaml
-matrix:
-  auth_type: "oidc"
-  user_id: "@chatrixcd:example.com"
-  oidc_issuer: "https://auth.example.com"
-  oidc_client_id: "your_client_id"
-  oidc_client_secret: "your_client_secret"
+```json
+{
+  "matrix": {
+    "auth_type": "oidc",
+    "user_id": "@chatrixcd:example.com",
+    "oidc_issuer": "https://auth.example.com",
+    "oidc_client_id": "your_client_id",
+    "oidc_client_secret": "your_client_secret"
+  }
+}
 ```
 
 ## Usage
@@ -166,7 +168,7 @@ chatrixcd [OPTIONS]
 - `-h, --help` - Show help message and exit
 - `-V, --version` - Show version number and exit
 - `-v, --verbose` - Increase verbosity (use `-v` for DEBUG, `-vv` for detailed DEBUG with library logs)
-- `-c FILE, --config FILE` - Path to configuration file (default: config.yaml)
+- `-c FILE, --config FILE` - Path to configuration file (default: config.json)
 - `-C, --color` - Enable colored logging output (requires colorlog package)
 - `-D, --daemon` - Run in daemon mode (background process, Unix/Linux only)
 - `-s, --show-config` - Display current configuration with redacted credentials and exit
@@ -180,7 +182,7 @@ chatrixcd [OPTIONS]
 chatrixcd --version
 
 # Use custom config file with verbose logging
-chatrixcd -c /etc/chatrixcd/config.yaml -v
+chatrixcd -c /etc/chatrixcd/config.json -v
 
 # Run in daemon mode with colored output
 chatrixcd -D -C
@@ -192,7 +194,7 @@ chatrixcd -s
 chatrixcd -a @admin1:matrix.org -a @admin2:matrix.org -r !room1:matrix.org
 
 # Combine multiple options
-chatrixcd -vv -C -c custom.yaml -a @admin:matrix.org
+chatrixcd -vv -C -c custom.json -a @admin:matrix.org
 ```
 
 ### Bot Commands
@@ -277,7 +279,7 @@ ChatrixCD is built with the following components:
 ## Security Considerations
 
 - **Encryption Keys**: The bot stores encryption keys in the configured `store_path` directory. Keep this secure.
-- **Credentials**: Never commit your `config.yaml` or `.env` file with real credentials.
+- **Credentials**: Never commit your `config.json` or `.env` file with real credentials.
 - **Access Control**: Use `allowed_rooms` and `admin_users` to restrict bot access.
 - **API Tokens**: Use Semaphore API tokens with minimal required permissions.
 
@@ -308,7 +310,7 @@ Current test coverage:
 - **Overall**: 16% - Basic unit tests for core modules
 
 Tests cover:
-- Configuration from YAML and environment variables
+- Configuration from JSON and environment variables
 - Password, token, and OIDC authentication flows
 - Semaphore client initialization
 - Error handling for missing configurations
@@ -327,7 +329,7 @@ ChatrixCD/
 │   └── semaphore.py    # Semaphore API client
 ├── requirements.txt
 ├── setup.py
-├── config.yaml.example
+├── config.json.example
 ├── .env.example
 └── README.md
 ```
