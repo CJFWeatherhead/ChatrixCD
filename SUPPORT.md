@@ -89,16 +89,19 @@ For security vulnerabilities:
 **Symptoms**: Bot can't read encrypted messages or fails to send encrypted messages
 
 **How it works**:
-- The bot automatically requests encryption keys when it receives encrypted messages it cannot decrypt
+- The bot automatically uploads encryption keys and queries device keys after login
+- The bot requests encryption keys when it receives encrypted messages it cannot decrypt
 - After keys are received, messages will be decrypted on the next sync
 - First-time messages in encrypted rooms may take a moment to decrypt as keys are exchanged
+- The bot tracks requested session IDs to avoid duplicate key requests
 
 **Solutions**:
 - Wait a few seconds after sending a command - the bot may need to request and receive encryption keys
 - Ensure the `store` directory persists between restarts
 - Check file permissions on the store directory: `ls -la store/`
-- Verify the bot account has verified its device
+- Look for "Uploading encryption keys..." or "Querying device keys..." in logs after login
 - Check logs for "Unable to decrypt message" warnings - these are normal initially
+- Verify the bot account has verified its device (not currently required but recommended)
 - If problems persist after initial key exchange, clear the store and re-verify (last resort - loses encrypted message history)
 - Check that `store_path` in configuration points to a writable location
 
