@@ -10,10 +10,18 @@ ChatrixCD can be configured using JSON files or environment variables.
 
 ## Supported Configuration Format
 
-ChatrixCD uses **JSON** (`.json`) for configuration files. JSON provides:
+ChatrixCD uses **HJSON** (Human JSON) for configuration files, which is a superset of JSON that supports:
+- **Comments**: Use `//`, `/* */`, or `#` for inline and multi-line comments
+- **Trailing commas**: Add trailing commas after the last item in objects and arrays
+- **Unquoted keys**: Use keys without quotes for cleaner syntax (optional)
+- **Multi-line strings**: Spread strings across multiple lines
+- **Full JSON compatibility**: Any valid JSON file is also valid HJSON
+
+Configuration files use the `.json` extension but support all HJSON features. This provides:
+- Better documentation through inline comments
 - Robust parsing with clear error messages
-- Less prone to syntax errors
-- Wide tooling support for validation and editing
+- Human-friendly syntax with comments and trailing commas
+- Wide JSON tooling compatibility
 
 ## Configuration Versioning
 
@@ -34,35 +42,57 @@ When you load an older configuration file:
 
 Configuration values are determined using the following priority (highest to lowest):
 
-1. **JSON configuration file** (`config.json`) - explicit values in the JSON file take highest priority
-2. **Environment variables** - used as defaults when JSON doesn't specify a value
-3. **Default values** (hardcoded) - used when neither JSON nor environment variables specify a value
+1. **Configuration file** (`config.json`) - explicit values in the configuration file take **highest priority**
+2. **Environment variables** - used for values not specified in the configuration file
+3. **Default values** (hardcoded) - used when not specified in config file or environment variables
 
-**Example:** If your `config.json` has `user_id` but not `device_id`, and you set the `MATRIX_DEVICE_ID` environment variable, then:
-- `user_id` will come from the JSON file
-- `device_id` will come from the environment variable
+**Example:** If your `config.json` has `user_id` set to `@bot:example.com` and you also set the `MATRIX_USER_ID` environment variable to `@env:example.com`, then:
+- `user_id` will be `@bot:example.com` (from the config file - highest priority)
+- If `device_id` is NOT in the config file but `MATRIX_DEVICE_ID` is set, it will use the environment variable
 - Other unspecified fields (like `device_name`) will use hardcoded defaults
 
-## JSON Configuration
+This priority system allows you to:
+- Set base configuration in the file with comments and documentation
+- Use environment variables for deployment-specific values not in the file
+- Override specific values with environment variables by omitting them from the config file
 
-Create a `config.json` file in your working directory:
+## Configuration File Format
 
-```json
+Create a `config.json` file in your working directory. The file supports HJSON format, which allows comments and trailing commas:
+
+```hjson
 {
+  // Configuration file version - do not modify
   "_config_version": 2,
-  "matrix": {
-    "homeserver": "https://matrix.example.com",
-    "user_id": "@bot:example.com",
-    "password": "your-secure-password",
-    "device_name": "ChatrixCD Bot"
-  store_path: "./store"
   
-    "store_path": "./store"
+  // Matrix homeserver connection settings
+  "matrix": {
+    // Matrix homeserver URL (e.g., https://matrix.org)
+    "homeserver": "https://matrix.example.com",
+    
+    // Bot user ID (e.g., @bot:example.com)
+    "user_id": "@bot:example.com",
+    
+    // Authentication type: "password", "token", or "oidc"
+    "auth_type": "password",
+    
+    // Password for password authentication
+    "password": "your-secure-password",
+    
+    // Device name for this bot instance
+    "device_name": "ChatrixCD Bot",
+    
+    // Path to store encryption keys
+    "store_path": "./store"  // Trailing comma is OK
   },
+  
+  // Semaphore UI connection settings
   "semaphore": {
     "url": "https://semaphore.example.com",
     "api_token": "your-semaphore-api-token"
   },
+  
+  // Bot behavior settings
   "bot": {
     "command_prefix": "!cd",
     "allowed_rooms": []
@@ -70,11 +100,12 @@ Create a `config.json` file in your working directory:
 }
 ```
 
-**Benefits of JSON:**
-- Robust syntax with clear error messages
-- Better error messages with line and column numbers
-- Easier to generate and validate programmatically
-- Wide tooling support
+**Benefits of HJSON:**
+- **Comments**: Document your configuration with inline comments
+- **Trailing commas**: No more syntax errors from trailing commas
+- **JSON compatible**: Any valid JSON is also valid HJSON
+- **Human-friendly**: More readable and maintainable configuration files
+- **Clear error messages**: Helpful error messages with line numbers when syntax is invalid
 
 ## Environment Variables
 
