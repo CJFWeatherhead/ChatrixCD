@@ -7,6 +7,8 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
 
 ## [Unreleased]
 
+## [2025.10.7] - 2025-10-09
+
 ### Breaking Changes
 - **Removed Environment Variable Support**: Configuration is now exclusively loaded from JSON files
   - Environment variables are no longer supported for configuration
@@ -286,5 +288,7 @@ ChatrixCD/
 ## Version History
 
 
+
+- **2025.10.7** (2025-10-09)
 - **2025.10.6** (2025-10-09)
 - **0.1.0** (2024-01-08) - Initial release with OIDC support
