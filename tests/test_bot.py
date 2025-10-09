@@ -163,8 +163,16 @@ class TestChatrixBot(unittest.TestCase):
         # Mock the client methods
         bot.client.load_store = AsyncMock()
         bot.client.sync = AsyncMock()
-        from nio import SyncResponse
-        bot.client.sync.return_value = SyncResponse()
+        from nio import SyncResponse, Rooms
+        # Create a properly initialized SyncResponse with all required arguments
+        bot.client.sync.return_value = SyncResponse(
+            next_batch="s123456",
+            rooms=Rooms({}, {}, {}),
+            device_key_count={},
+            device_list={},
+            to_device_events=[],
+            presence_events=[]
+        )
         
         # Mock the auth handler
         bot.auth.get_access_token = AsyncMock(return_value='test_token_12345')
