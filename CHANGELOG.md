@@ -7,6 +7,13 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
 
 ## [Unreleased]
 
+### Breaking Changes
+- **Removed Environment Variable Support**: Configuration is now exclusively loaded from JSON files
+  - Environment variables are no longer supported for configuration
+  - All configuration must be specified in `config.json`
+  - This simplifies configuration management and eliminates confusion about configuration sources
+  - Existing deployments using environment variables need to migrate to JSON configuration files
+
 ### Added
 - **HJSON Support**: Configuration files now support HJSON (Human JSON) format
   - Add comments to configuration files using `//`, `/* */`, or `#`
@@ -16,30 +23,30 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
   - Updated `config.json.example` with extensive inline comments
 
 ### Changed
-- **Configuration Priority System**: Clarified and fixed configuration priority
-  - Configuration file values now have **highest priority** (override environment variables)
-  - Environment variables used for values not specified in config file
-  - Hardcoded defaults used as fallback when not in file or environment
-  - This matches the documented behavior and fixes issues where JSON values were ignored
-- **Configuration Loading**: Rewrote configuration system for clarity
-  - Cleaner separation between defaults, environment variables, and file values
-  - More predictable behavior when mixing config file and environment variables
+- **Configuration System Simplified**: Configuration is now exclusively file-based
+  - Configuration file values have highest priority
+  - Hardcoded defaults used as fallback when not in file
+  - Environment variables no longer affect configuration
+  - More predictable and explicit configuration behavior
+- **Configuration Loading**: Simplified configuration system
+  - Removed `_apply_env_overrides()` method
+  - Cleaner separation between defaults and file values
   - Better error messages for configuration parsing failures
 
 ### Fixed
 - **Configuration File Loading**: Fixed issue where configuration file values could be ignored
-  - File values now correctly override environment variables as documented
-  - Resolves reported issue where JSON parameters were not being parsed
+  - Resolves reported issue where JSON parameters were not being parsed correctly
+  - User ID and other configuration values are now reliably loaded from config.json
 
 ### Improved
-- **Configuration Documentation**: Updated documentation to reflect HJSON support
-  - Examples now show commented configuration files
-  - Clarified configuration priority system
-  - Added examples of HJSON-specific features (comments, trailing commas)
-- **Test Coverage**: Added tests for HJSON-specific features
-  - Test for comments in configuration files
-  - Test for trailing commas support
-  - All 20 tests passing
+- **Configuration Documentation**: Updated documentation to reflect JSON-only configuration
+  - Removed references to environment variables throughout documentation
+  - Clarified configuration priority system (file > defaults)
+  - Updated examples to show JSON-only configuration
+  - Updated security best practices for managing secrets in JSON files
+- **Test Coverage**: Updated tests to verify environment variables are ignored
+  - Added tests to verify environment variables don't affect configuration
+  - All 114 tests passing
 
 ## [2025.10.6] - 2025-10-09
 
