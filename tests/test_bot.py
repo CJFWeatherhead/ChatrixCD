@@ -145,6 +145,41 @@ class TestChatrixBot(unittest.TestCase):
         # Verify handle_message WAS called
         bot.command_handler.handle_message.assert_called_once_with(room, event)
 
+    def test_login_token_loads_store(self):
+        """Test that token authentication loads the encryption store."""
+        # Configure for token authentication
+        self.config.get_matrix_config.return_value = {
+            'homeserver': 'https://matrix.example.com',
+            'user_id': '@bot:example.com',
+            'device_id': 'TESTDEVICE',
+            'device_name': 'Test Bot',
+            'store_path': self.temp_dir,
+            'auth_type': 'token',
+            'access_token': 'test_token_12345'
+        }
+        
+        bot = ChatrixBot(self.config)
+        
+        # Mock the client methods
+        bot.client.load_store = AsyncMock()
+        bot.client.sync = AsyncMock()
+        from nio import SyncResponse
+        bot.client.sync.return_value = SyncResponse()
+        
+        # Mock the auth handler
+        bot.auth.get_access_token = AsyncMock(return_value='test_token_12345')
+        
+        # Call login
+        result = self.loop.run_until_complete(bot.login())
+        
+        # Verify load_store was called before sync
+        self.assertTrue(result, "Login should succeed")
+        bot.client.load_store.assert_called_once()
+        bot.client.sync.assert_called_once()
+        
+        # Verify access token was set
+        self.assertEqual(bot.client.access_token, 'test_token_12345')
+
 
 if __name__ == '__main__':
     unittest.main()
