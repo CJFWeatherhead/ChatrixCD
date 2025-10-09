@@ -31,7 +31,7 @@ docker-compose up -d
 # Or manually
 docker build -t chatrixcd:latest .
 docker run -d \
-  -v $(pwd)/config.yaml:/app/config.yaml \
+  -v $(pwd)/config.json:/app/config.json \
   -v $(pwd)/store:/app/store \
   --name chatrixcd \
   chatrixcd:latest
@@ -57,7 +57,7 @@ docker-compose -f docker-compose.alpine.yml up -d
 # Or manually
 docker build -f Dockerfile.alpine -t chatrixcd:alpine .
 docker run -d \
-  -v $(pwd)/config.yaml:/app/config.yaml \
+  -v $(pwd)/config.json:/app/config.json \
   -v $(pwd)/store:/app/store \
   --name chatrixcd \
   chatrixcd:alpine
@@ -209,8 +209,8 @@ cat /var/log/chatrixcd.log
 
 ```bash
 # Fix config permissions
-chmod 600 config.yaml
-chown chatrixcd:chatrixcd config.yaml
+chmod 600 config.json
+chown chatrixcd:chatrixcd config.json
 
 # Fix store permissions
 chmod 700 store/
@@ -260,7 +260,7 @@ sudo rc-service chatrixcd restart # OpenRC
 
 ### What to Backup
 
-1. **Configuration**: `config.yaml` or `.env`
+1. **Configuration**: `config.json` or `.env`
 2. **Encryption Keys**: `store/` directory
 3. **Service Files**: systemd/OpenRC configurations
 
@@ -272,7 +272,7 @@ BACKUP_DIR="/backup/chatrixcd/$(date +%Y%m%d)"
 mkdir -p "$BACKUP_DIR"
 
 # Backup config
-cp config.yaml "$BACKUP_DIR/"
+cp config.json "$BACKUP_DIR/"
 
 # Backup store
 cp -r store/ "$BACKUP_DIR/"

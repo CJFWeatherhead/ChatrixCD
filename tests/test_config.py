@@ -20,7 +20,7 @@ class TestConfig(unittest.TestCase):
         os.environ['SEMAPHORE_URL'] = 'https://semaphore.test.com'
         os.environ['SEMAPHORE_API_TOKEN'] = 'testtoken'
         
-        config = Config('nonexistent.yaml')
+        config = Config('nonexistent.json')
         
         self.assertEqual(config.get('matrix.homeserver'), 'https://test.matrix.org')
         self.assertEqual(config.get('matrix.user_id'), '@testbot:test.matrix.org')
@@ -30,142 +30,25 @@ class TestConfig(unittest.TestCase):
 
     def test_default_values(self):
         """Test default configuration values."""
-        config = Config('nonexistent.yaml')
+        config = Config('nonexistent.json')
         
         self.assertEqual(config.get('matrix.device_id'), 'CHATRIXCD')
         self.assertEqual(config.get('matrix.auth_type'), 'password')
         self.assertEqual(config.get('bot.command_prefix'), '!cd')
 
-    def test_yaml_config(self):
-        """Test configuration from YAML file."""
-        yaml_content = """
-matrix:
-  homeserver: "https://yaml.matrix.org"
-  user_id: "@yamlbot:yaml.matrix.org"
-  auth_type: "token"
-  access_token: "yamltoken"
 
-semaphore:
-  url: "https://yaml.semaphore.com"
-  api_token: "yamltoken123"
-
-bot:
-  command_prefix: "!yaml"
-"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-            f.write(yaml_content)
-            temp_file = f.name
-        
-        try:
-            config = Config(temp_file)
-            
-            self.assertEqual(config.get('matrix.homeserver'), 'https://yaml.matrix.org')
-            self.assertEqual(config.get('matrix.user_id'), '@yamlbot:yaml.matrix.org')
-            self.assertEqual(config.get('matrix.auth_type'), 'token')
-            self.assertEqual(config.get('matrix.access_token'), 'yamltoken')
-            self.assertEqual(config.get('semaphore.url'), 'https://yaml.semaphore.com')
-            self.assertEqual(config.get('bot.command_prefix'), '!yaml')
-        finally:
-            os.unlink(temp_file)
 
     def test_get_with_default(self):
         """Test get method with default value."""
-        config = Config('nonexistent.yaml')
+        config = Config('nonexistent.json')
         
         self.assertEqual(config.get('nonexistent.key', 'default'), 'default')
         self.assertIsNone(config.get('nonexistent.key'))
 
-    def test_malformed_yaml_missing_quote(self):
-        """Test graceful handling of malformed YAML with missing quote."""
-        yaml_content = """
-matrix:
-  homeserver: "https://matrix.org"
-  password: "unclosed
-"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-            f.write(yaml_content)
-            temp_file = f.name
-        
-        try:
-            # Capture stderr to check error message
-            old_stderr = sys.stderr
-            sys.stderr = StringIO()
-            
-            # This should exit with code 1
-            with self.assertRaises(SystemExit) as cm:
-                Config(temp_file)
-            
-            self.assertEqual(cm.exception.code, 1)
-            
-            # Check that error message contains useful information
-            error_output = sys.stderr.getvalue()
-            self.assertIn('Failed to parse YAML', error_output)
-            self.assertIn(temp_file, error_output)
-            self.assertIn('line', error_output.lower())
-            
-            sys.stderr = old_stderr
-        finally:
-            os.unlink(temp_file)
-
-    def test_malformed_yaml_unclosed_bracket(self):
-        """Test graceful handling of malformed YAML with unclosed bracket."""
-        yaml_content = """
-matrix:
-  homeserver: "https://matrix.org"
-  list: [item1, item2
-"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-            f.write(yaml_content)
-            temp_file = f.name
-        
-        try:
-            old_stderr = sys.stderr
-            sys.stderr = StringIO()
-            
-            with self.assertRaises(SystemExit) as cm:
-                Config(temp_file)
-            
-            self.assertEqual(cm.exception.code, 1)
-            
-            error_output = sys.stderr.getvalue()
-            self.assertIn('Failed to parse YAML', error_output)
-            self.assertIn(temp_file, error_output)
-            
-            sys.stderr = old_stderr
-        finally:
-            os.unlink(temp_file)
-
-    def test_malformed_yaml_invalid_indentation(self):
-        """Test graceful handling of malformed YAML with invalid indentation."""
-        yaml_content = """
-matrix:
-  homeserver: "https://matrix.org"
- user_id: "@bot:matrix.org"
-"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-            f.write(yaml_content)
-            temp_file = f.name
-        
-        try:
-            old_stderr = sys.stderr
-            sys.stderr = StringIO()
-            
-            with self.assertRaises(SystemExit) as cm:
-                Config(temp_file)
-            
-            self.assertEqual(cm.exception.code, 1)
-            
-            error_output = sys.stderr.getvalue()
-            self.assertIn('Failed to parse YAML', error_output)
-            
-            sys.stderr = old_stderr
-        finally:
-            os.unlink(temp_file)
-
     def test_unreadable_config_file(self):
         """Test graceful handling of unreadable config file."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-            f.write("matrix:\n  homeserver: test\n")
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump({"matrix": {"homeserver": "test"}}, f)
             temp_file = f.name
         
         try:
@@ -191,7 +74,7 @@ matrix:
 
     def test_greeting_config_defaults(self):
         """Test default values for greeting configuration."""
-        config = Config('nonexistent.yaml')
+        config = Config('nonexistent.json')
         
         # Test default greeting configuration
         self.assertTrue(config.get('bot.greetings_enabled'))
@@ -199,19 +82,18 @@ matrix:
         self.assertIsNotNone(config.get('bot.startup_message'))
         self.assertIsNotNone(config.get('bot.shutdown_message'))
 
-    def test_greeting_config_from_yaml(self):
-        """Test greeting configuration from YAML file."""
-        yaml_content = """
-bot:
-  greetings_enabled: false
-  greeting_rooms:
-    - "!room1:example.com"
-    - "!room2:example.com"
-  startup_message: "Custom startup message"
-  shutdown_message: "Custom shutdown message"
-"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-            f.write(yaml_content)
+    def test_greeting_config_from_json(self):
+        """Test greeting configuration from JSON file."""
+        json_content = {
+            "bot": {
+                "greetings_enabled": False,
+                "greeting_rooms": ["!room1:example.com", "!room2:example.com"],
+                "startup_message": "Custom startup message",
+                "shutdown_message": "Custom shutdown message"
+            }
+        }
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(json_content, f)
             temp_file = f.name
         
         try:
@@ -231,7 +113,7 @@ bot:
         os.environ['BOT_STARTUP_MESSAGE'] = 'Env startup message'
         os.environ['BOT_SHUTDOWN_MESSAGE'] = 'Env shutdown message'
         
-        config = Config('nonexistent.yaml')
+        config = Config('nonexistent.json')
         
         self.assertFalse(config.get('bot.greetings_enabled'))
         self.assertEqual(config.get('bot.greeting_rooms'), ['!room1:example.com', '!room2:example.com'])
@@ -244,23 +126,24 @@ bot:
         del os.environ['BOT_STARTUP_MESSAGE']
         del os.environ['BOT_SHUTDOWN_MESSAGE']
 
-    def test_yaml_config_with_missing_fields_uses_defaults(self):
-        """Test that YAML config without all fields still gets defaults."""
-        yaml_content = """
-matrix:
-  homeserver: "https://matrix.example.com"
-  user_id: "@bot:example.com"
-  access_token: "test_token"
-"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-            f.write(yaml_content)
+    def test_json_config_with_missing_fields_uses_defaults(self):
+        """Test that JSON config without all fields still gets defaults."""
+        json_content = {
+            "matrix": {
+                "homeserver": "https://matrix.example.com",
+                "user_id": "@bot:example.com",
+                "access_token": "test_token"
+            }
+        }
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(json_content, f)
             temp_file = f.name
         
         try:
             config = Config(temp_file)
             matrix_config = config.get_matrix_config()
             
-            # YAML values should be present
+            # JSON values should be present
             self.assertEqual(matrix_config.get('homeserver'), 'https://matrix.example.com')
             self.assertEqual(matrix_config.get('user_id'), '@bot:example.com')
             self.assertEqual(matrix_config.get('access_token'), 'test_token')
@@ -279,16 +162,17 @@ matrix:
         finally:
             os.unlink(temp_file)
 
-    def test_token_auth_config_from_yaml(self):
-        """Test token authentication configuration from YAML (reproduces issue #X)."""
-        yaml_content = """
-matrix:
-  homeserver: "https://mymatrixserver.com"
-  user_id: "@auser:mymatrixserver"
-  access_token: "secret_access_token_abcdefg"
-"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-            f.write(yaml_content)
+    def test_token_auth_config_from_json(self):
+        """Test token authentication configuration from JSON."""
+        json_content = {
+            "matrix": {
+                "homeserver": "https://mymatrixserver.com",
+                "user_id": "@auser:mymatrixserver",
+                "access_token": "secret_access_token_abcdefg"
+            }
+        }
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(json_content, f)
             temp_file = f.name
         
         try:
@@ -300,7 +184,7 @@ matrix:
             self.assertEqual(matrix_config.get('user_id'), '@auser:mymatrixserver')
             self.assertEqual(matrix_config.get('access_token'), 'secret_access_token_abcdefg')
             
-            # Defaults for unspecified values (these were missing before the fix)
+            # Defaults for unspecified values
             self.assertEqual(matrix_config.get('device_id'), 'CHATRIXCD')
             self.assertEqual(matrix_config.get('device_name'), 'ChatrixCD Bot')
             self.assertEqual(matrix_config.get('store_path'), './store')
@@ -379,14 +263,15 @@ matrix:
     def test_config_version_detection(self):
         """Test configuration version detection."""
         # Test v2 config
-        yaml_content = """
-_config_version: 2
-matrix:
-  homeserver: "https://matrix.org"
-  user_id: "@bot:matrix.org"
-"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-            f.write(yaml_content)
+        json_content = {
+            "_config_version": 2,
+            "matrix": {
+                "homeserver": "https://matrix.org",
+                "user_id": "@bot:matrix.org"
+            }
+        }
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(json_content, f)
             temp_file = f.name
         
         try:
@@ -398,17 +283,19 @@ matrix:
     def test_config_migration_v1_to_v2(self):
         """Test migration from v1 (no version) to v2."""
         # Old config without version field
-        yaml_content = """
-matrix:
-  homeserver: "https://matrix.org"
-  user_id: "@bot:matrix.org"
-  password: "test"
-semaphore:
-  url: "https://semaphore.test"
-  api_token: "token"
-"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-            f.write(yaml_content)
+        json_content = {
+            "matrix": {
+                "homeserver": "https://matrix.org",
+                "user_id": "@bot:matrix.org",
+                "password": "test"
+            },
+            "semaphore": {
+                "url": "https://semaphore.test",
+                "api_token": "token"
+            }
+        }
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(json_content, f)
             temp_file = f.name
         
         try:
@@ -435,19 +322,22 @@ semaphore:
     
     def test_config_validation_success(self):
         """Test configuration validation with valid config."""
-        yaml_content = """
-matrix:
-  homeserver: "https://matrix.org"
-  user_id: "@bot:matrix.org"
-  password: "testpass"
-semaphore:
-  url: "https://semaphore.test"
-  api_token: "token"
-bot:
-  command_prefix: "!cd"
-"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-            f.write(yaml_content)
+        json_content = {
+            "matrix": {
+                "homeserver": "https://matrix.org",
+                "user_id": "@bot:matrix.org",
+                "password": "testpass"
+            },
+            "semaphore": {
+                "url": "https://semaphore.test",
+                "api_token": "token"
+            },
+            "bot": {
+                "command_prefix": "!cd"
+            }
+        }
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(json_content, f)
             temp_file = f.name
         
         try:
@@ -459,16 +349,18 @@ bot:
     
     def test_config_validation_missing_required_fields(self):
         """Test configuration validation with missing required fields."""
-        yaml_content = """
-matrix:
-  homeserver: ""
-  user_id: ""
-semaphore:
-  url: ""
-  api_token: ""
-"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-            f.write(yaml_content)
+        json_content = {
+            "matrix": {
+                "homeserver": "",
+                "user_id": ""
+            },
+            "semaphore": {
+                "url": "",
+                "api_token": ""
+            }
+        }
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(json_content, f)
             temp_file = f.name
         
         try:
@@ -486,17 +378,19 @@ semaphore:
     
     def test_config_validation_token_auth_missing_token(self):
         """Test validation fails when token auth is used but token is missing."""
-        yaml_content = """
-matrix:
-  homeserver: "https://matrix.org"
-  user_id: "@bot:matrix.org"
-  auth_type: "token"
-semaphore:
-  url: "https://semaphore.test"
-  api_token: "token"
-"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-            f.write(yaml_content)
+        json_content = {
+            "matrix": {
+                "homeserver": "https://matrix.org",
+                "user_id": "@bot:matrix.org",
+                "auth_type": "token"
+            },
+            "semaphore": {
+                "url": "https://semaphore.test",
+                "api_token": "token"
+            }
+        }
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(json_content, f)
             temp_file = f.name
         
         try:
@@ -509,17 +403,19 @@ semaphore:
     
     def test_config_validation_invalid_auth_type(self):
         """Test validation fails with invalid auth type."""
-        yaml_content = """
-matrix:
-  homeserver: "https://matrix.org"
-  user_id: "@bot:matrix.org"
-  auth_type: "invalid"
-semaphore:
-  url: "https://semaphore.test"
-  api_token: "token"
-"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-            f.write(yaml_content)
+        json_content = {
+            "matrix": {
+                "homeserver": "https://matrix.org",
+                "user_id": "@bot:matrix.org",
+                "auth_type": "invalid"
+            },
+            "semaphore": {
+                "url": "https://semaphore.test",
+                "api_token": "token"
+            }
+        }
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(json_content, f)
             temp_file = f.name
         
         try:

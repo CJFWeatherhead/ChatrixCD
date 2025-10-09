@@ -94,9 +94,9 @@ def parse_args():
     parser.add_argument(
         '-c', '--config',
         type=str,
-        default='config.yaml',
+        default='config.json',
         metavar='FILE',
-        help='Path to configuration file (default: config.yaml)'
+        help='Path to configuration file (default: config.json)'
     )
     
     parser.add_argument(

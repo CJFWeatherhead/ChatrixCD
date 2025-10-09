@@ -7,13 +7,22 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
 
 ## [Unreleased]
 
+### Breaking Changes
+- **Removed YAML Configuration Support**: Configuration files must now be in JSON format
+  - YAML support has been completely removed to simplify the codebase and reduce dependencies
+  - Existing YAML configurations need to be converted to JSON format (see `config.json.example`)
+  - PyYAML dependency removed from requirements
+  - Default configuration file changed from `config.yaml` to `config.json`
+
+### Fixed
+- **Configuration Merge Bug**: Fixed shallow copy bug in `_merge_configs()` that could cause configuration corruption
+  - Now uses `copy.deepcopy()` to properly copy nested dictionaries
+  - Ensures defaults are not modified during merge operations
+  - Prevents potential configuration state leakage between loads
+
 ### Added
 
 #### Configuration System Improvements
-- **JSON Configuration Support**: Added support for JSON configuration files (`.json`) as a more robust alternative to YAML
-  - Automatic format detection based on file extension
-  - Better error messages with exact line and column numbers for JSON parse errors
-  - Less prone to syntax errors compared to YAML (no indentation issues)
 - **Configuration Versioning**: Implemented configuration schema versioning system
   - Current version: 2
   - Automatic detection of configuration version
@@ -32,16 +41,15 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
 - **JSON Example**: Added `config.json.example` with fully documented JSON configuration format
 
 ### Improved
-- **Configuration Documentation**: Enhanced documentation with:
-  - JSON vs YAML comparison
+- **Configuration Documentation**: Enhanced documentation for JSON-only configuration
   - Configuration versioning explanation
   - Migration process documentation
   - Validation documentation
-  - Troubleshooting for both YAML and JSON formats
-- **Error Handling**: JSON parse errors now show exact line and column numbers like YAML errors
+  - JSON troubleshooting
+- **Error Handling**: JSON parse errors show exact line and column numbers for easy debugging
 
-### Fixed
-- Fixed configuration loading to properly apply default values when YAML config file exists but doesn't specify all fields. Previously, missing fields would be `None` instead of using defaults, causing "User id is not set" errors with token authentication.
+### Fixed (Historical)
+- Fixed configuration loading to properly apply default values when config file exists but doesn't specify all fields. Previously, missing fields would be `None` instead of using defaults, causing "User id is not set" errors with token authentication.
 
 ### Added
 
@@ -67,9 +75,9 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
 - Automated GitHub releases with changelog
 
 ### Improved
-- **Configuration Error Handling**: Added graceful handling of malformed YAML configuration files
+- **Configuration Error Handling**: Added graceful handling of malformed JSON configuration files
   - Clear error messages showing filename, line number, and column where error occurred
-  - Detailed problem description and context for YAML parsing errors
+  - Detailed problem description for JSON parsing errors
   - Proper error messages for file permission issues
   - Bot exits with status code 1 on configuration errors instead of crashing with stack trace
 
