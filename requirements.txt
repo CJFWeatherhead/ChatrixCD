@@ -4,7 +4,4 @@ matrix-nio[e2e]>=0.24.0
 # HTTP client for REST API calls
 aiohttp>=3.9.0
 
-# YAML for configuration
-PyYAML>=6.0
-
 

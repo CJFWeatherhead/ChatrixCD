@@ -1,6 +1,5 @@
 """Configuration management for ChatrixCD bot."""
 
-import yaml
 import json
 import os
 import logging
@@ -70,18 +69,17 @@ class ConfigMigrator:
 class Config:
     """Configuration class for the bot."""
 
-    def __init__(self, config_file: str = "config.yaml"):
+    def __init__(self, config_file: str = "config.json"):
         """Initialize configuration from file or environment variables.
         
-        Supports both YAML and JSON configuration files. The format is determined
-        by the file extension (.yaml, .yml, or .json).
+        Only JSON configuration files are supported (.json extension).
         """
         self.config_file = config_file
         self.config: Dict[str, Any] = {}
         self.load_config()
 
     def load_config(self):
-        """Load configuration from YAML or JSON file with version migration."""
+        """Load configuration from JSON file with version migration."""
         logger = logging.getLogger(__name__)
         
         # Start with defaults - always use these as base
@@ -141,7 +139,7 @@ class Config:
             self.config = defaults
     
     def _load_config_file(self) -> Dict[str, Any]:
-        """Load configuration file (YAML or JSON).
+        """Load configuration file (JSON only).
         
         Returns:
             Configuration dictionary from file
@@ -150,47 +148,25 @@ class Config:
             SystemExit: If file cannot be parsed or read
         """
         logger = logging.getLogger(__name__)
-        file_path = Path(self.config_file)
-        file_ext = file_path.suffix.lower()
         
         try:
             with open(self.config_file, 'r') as f:
-                if file_ext == '.json':
-                    # Load JSON configuration
-                    try:
-                        config = json.load(f)
-                        logger.debug(f"Loaded JSON configuration from '{self.config_file}'")
-                        return config or {}
-                    except json.JSONDecodeError as e:
-                        error_msg = f"Failed to parse JSON configuration file '{self.config_file}'"
-                        error_msg += f"\n  Error at line {e.lineno}, column {e.colno}"
-                        error_msg += f"\n  Problem: {e.msg}"
-                        logger.error(error_msg)
-                        print(f"\nERROR: {error_msg}\n", file=sys.stderr)
-                        sys.exit(1)
-                else:
-                    # Load YAML configuration (default)
-                    try:
-                        config = yaml.safe_load(f)
-                        logger.debug(f"Loaded YAML configuration from '{self.config_file}'")
-                        return config or {}
-                    except yaml.YAMLError as e:
-                        error_msg = f"Failed to parse YAML configuration file '{self.config_file}'"
-                        
-                        # Extract detailed error information
-                        if hasattr(e, 'problem_mark'):
-                            mark = e.problem_mark
-                            error_msg += f"\n  Error at line {mark.line + 1}, column {mark.column + 1}"
-                        
-                        if hasattr(e, 'problem'):
-                            error_msg += f"\n  Problem: {e.problem}"
-                        
-                        if hasattr(e, 'context'):
-                            error_msg += f"\n  Context: {e.context}"
-                        
-                        logger.error(error_msg)
-                        print(f"\nERROR: {error_msg}\n", file=sys.stderr)
-                        sys.exit(1)
+                try:
+                    config = json.load(f)
+                    logger.debug(f"Loaded JSON configuration from '{self.config_file}'")
+                    return config or {}
+                except json.JSONDecodeError as e:
+                    error_msg = f"Failed to parse JSON configuration file '{self.config_file}'"
+                    error_msg += f"\n  Error at line {e.lineno}, column {e.colno}"
+                    error_msg += f"\n  Problem: {e.msg}"
+                    logger.error(error_msg)
+                    print(f"\nERROR: {error_msg}\n", file=sys.stderr)
+                    sys.exit(1)
+        except FileNotFoundError:
+            error_msg = f"Configuration file '{self.config_file}' not found"
+            logger.error(error_msg)
+            print(f"\nERROR: {error_msg}\n", file=sys.stderr)
+            sys.exit(1)
         except Exception as e:
             error_msg = f"Failed to read configuration file '{self.config_file}': {e}"
             logger.error(error_msg)
@@ -205,29 +181,25 @@ class Config:
         """
         logger = logging.getLogger(__name__)
         file_path = Path(self.config_file)
-        file_ext = file_path.suffix.lower()
         
         # Create backup of original file
-        backup_path = file_path.with_suffix(file_ext + '.backup')
+        backup_path = file_path.with_suffix('.json.backup')
         
         try:
             if backup_path.exists():
                 # If backup already exists, append timestamp
                 import time
                 timestamp = int(time.time())
-                backup_path = file_path.with_suffix(f'{file_ext}.backup.{timestamp}')
+                backup_path = file_path.with_suffix(f'.json.backup.{timestamp}')
             
             # Copy original to backup
             import shutil
             shutil.copy2(self.config_file, backup_path)
             logger.info(f"Created backup of original configuration at '{backup_path}'")
             
-            # Save migrated config
+            # Save migrated config as JSON
             with open(self.config_file, 'w') as f:
-                if file_ext == '.json':
-                    json.dump(config, f, indent=2)
-                else:
-                    yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
+                json.dump(config, f, indent=2)
             
             logger.info(f"Saved migrated configuration to '{self.config_file}'")
         except Exception as e:
@@ -239,12 +211,13 @@ class Config:
         
         Args:
             defaults: Default configuration values
-            overrides: Override values from YAML file
+            overrides: Override values from JSON file
             
         Returns:
             Merged configuration dictionary
         """
-        result = defaults.copy()
+        import copy
+        result = copy.deepcopy(defaults)
         
         for key, value in overrides.items():
             # Skip None values from overrides - use defaults instead

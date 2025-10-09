@@ -84,7 +84,7 @@ class ChatrixBot:
         try:
             # Validate that user_id is set for all authentication types
             if not self.user_id:
-                logger.error("user_id is not set in configuration. Please set MATRIX_USER_ID or add 'user_id' to config.yaml")
+                logger.error("user_id is not set in configuration. Please set MATRIX_USER_ID or add 'user_id' to config.json")
                 return False
             
             if auth_type == 'password':
