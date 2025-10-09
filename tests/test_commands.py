@@ -1,0 +1,537 @@
+"""Tests for command handler module."""
+
+import unittest
+from unittest.mock import AsyncMock, MagicMock, patch
+import asyncio
+from nio import MatrixRoom, RoomMessageText
+from chatrixcd.commands import CommandHandler
+
+
+class TestCommandHandler(unittest.TestCase):
+    """Test CommandHandler class."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+        
+        # Mock bot
+        self.mock_bot = MagicMock()
+        self.mock_bot.send_message = AsyncMock()
+        
+        # Mock semaphore client
+        self.mock_semaphore = MagicMock()
+        
+        # Config
+        self.config = {
+            'command_prefix': '!cd',
+            'allowed_rooms': [],
+            'admin_users': []
+        }
+        
+        self.handler = CommandHandler(
+            bot=self.mock_bot,
+            config=self.config,
+            semaphore=self.mock_semaphore
+        )
+
+    def tearDown(self):
+        """Clean up after tests."""
+        self.loop.close()
+
+    def test_init(self):
+        """Test handler initialization."""
+        self.assertEqual(self.handler.command_prefix, '!cd')
+        self.assertEqual(self.handler.allowed_rooms, [])
+        self.assertEqual(self.handler.admin_users, [])
+        self.assertEqual(self.handler.active_tasks, {})
+
+    def test_is_allowed_room_no_restrictions(self):
+        """Test room permission check with no restrictions."""
+        result = self.handler.is_allowed_room('!test:example.com')
+        self.assertTrue(result)
+
+    def test_is_allowed_room_with_restrictions_allowed(self):
+        """Test room permission check when room is in allowed list."""
+        self.handler.allowed_rooms = ['!allowed:example.com']
+        result = self.handler.is_allowed_room('!allowed:example.com')
+        self.assertTrue(result)
+
+    def test_is_allowed_room_with_restrictions_denied(self):
+        """Test room permission check when room is not in allowed list."""
+        self.handler.allowed_rooms = ['!allowed:example.com']
+        result = self.handler.is_allowed_room('!denied:example.com')
+        self.assertFalse(result)
+
+    def test_is_admin_no_restrictions(self):
+        """Test admin check with no restrictions."""
+        result = self.handler.is_admin('@user:example.com')
+        self.assertTrue(result)
+
+    def test_is_admin_with_restrictions_allowed(self):
+        """Test admin check when user is in admin list."""
+        self.handler.admin_users = ['@admin:example.com']
+        result = self.handler.is_admin('@admin:example.com')
+        self.assertTrue(result)
+
+    def test_is_admin_with_restrictions_denied(self):
+        """Test admin check when user is not in admin list."""
+        self.handler.admin_users = ['@admin:example.com']
+        result = self.handler.is_admin('@user:example.com')
+        self.assertFalse(result)
+
+    def test_handle_message_ignores_non_command(self):
+        """Test that non-command messages are ignored."""
+        room = MagicMock(spec=MatrixRoom)
+        room.room_id = '!test:example.com'
+        
+        event = MagicMock(spec=RoomMessageText)
+        event.body = 'Just a regular message'
+        event.sender = '@user:example.com'
+        
+        self.loop.run_until_complete(self.handler.handle_message(room, event))
+        
+        # Should not send any response
+        self.mock_bot.send_message.assert_not_called()
+
+    def test_handle_message_in_non_allowed_room(self):
+        """Test that commands in non-allowed rooms are ignored."""
+        self.handler.allowed_rooms = ['!allowed:example.com']
+        
+        room = MagicMock(spec=MatrixRoom)
+        room.room_id = '!denied:example.com'
+        
+        event = MagicMock(spec=RoomMessageText)
+        event.body = '!cd help'
+        event.sender = '@user:example.com'
+        
+        self.loop.run_until_complete(self.handler.handle_message(room, event))
+        
+        # Should not send any response
+        self.mock_bot.send_message.assert_not_called()
+
+    def test_handle_message_empty_command(self):
+        """Test that empty command shows help."""
+        room = MagicMock(spec=MatrixRoom)
+        room.room_id = '!test:example.com'
+        
+        event = MagicMock(spec=RoomMessageText)
+        event.body = '!cd'
+        event.sender = '@user:example.com'
+        
+        self.loop.run_until_complete(self.handler.handle_message(room, event))
+        
+        # Should send help message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('ChatrixCD Bot Commands', call_args[1])
+
+    def test_handle_message_help_command(self):
+        """Test help command."""
+        room = MagicMock(spec=MatrixRoom)
+        room.room_id = '!test:example.com'
+        
+        event = MagicMock(spec=RoomMessageText)
+        event.body = '!cd help'
+        event.sender = '@user:example.com'
+        
+        self.loop.run_until_complete(self.handler.handle_message(room, event))
+        
+        # Should send help message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('ChatrixCD Bot Commands', call_args[1])
+
+    def test_handle_message_unknown_command(self):
+        """Test unknown command."""
+        room = MagicMock(spec=MatrixRoom)
+        room.room_id = '!test:example.com'
+        
+        event = MagicMock(spec=RoomMessageText)
+        event.body = '!cd invalidcmd'
+        event.sender = '@user:example.com'
+        
+        self.loop.run_until_complete(self.handler.handle_message(room, event))
+        
+        # Should send error message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Unknown command', call_args[1])
+
+    def test_list_projects_success(self):
+        """Test list projects command with successful response."""
+        # Mock semaphore response
+        self.mock_semaphore.get_projects = AsyncMock(return_value=[
+            {'id': 1, 'name': 'Project 1'},
+            {'id': 2, 'name': 'Project 2'}
+        ])
+        
+        self.loop.run_until_complete(
+            self.handler.list_projects('!test:example.com')
+        )
+        
+        # Should send projects list
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Available Projects', call_args[1])
+        self.assertIn('Project 1', call_args[1])
+        self.assertIn('Project 2', call_args[1])
+
+    def test_list_projects_empty(self):
+        """Test list projects command with no projects."""
+        self.mock_semaphore.get_projects = AsyncMock(return_value=[])
+        
+        self.loop.run_until_complete(
+            self.handler.list_projects('!test:example.com')
+        )
+        
+        # Should send empty message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('No projects found', call_args[1])
+
+    def test_list_templates_no_args(self):
+        """Test list templates without project ID."""
+        self.loop.run_until_complete(
+            self.handler.list_templates('!test:example.com', [])
+        )
+        
+        # Should send usage message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Usage', call_args[1])
+
+    def test_list_templates_invalid_project_id(self):
+        """Test list templates with invalid project ID."""
+        self.loop.run_until_complete(
+            self.handler.list_templates('!test:example.com', ['invalid'])
+        )
+        
+        # Should send error message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Invalid project ID', call_args[1])
+
+    def test_list_templates_success(self):
+        """Test list templates with successful response."""
+        self.mock_semaphore.get_project_templates = AsyncMock(return_value=[
+            {'id': 1, 'name': 'Template 1', 'description': 'Test'},
+            {'id': 2, 'name': 'Template 2'}
+        ])
+        
+        self.loop.run_until_complete(
+            self.handler.list_templates('!test:example.com', ['1'])
+        )
+        
+        # Should send templates list
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Templates for Project', call_args[1])
+        self.assertIn('Template 1', call_args[1])
+
+    def test_list_templates_empty(self):
+        """Test list templates with no templates."""
+        self.mock_semaphore.get_project_templates = AsyncMock(return_value=[])
+        
+        self.loop.run_until_complete(
+            self.handler.list_templates('!test:example.com', ['1'])
+        )
+        
+        # Should send empty message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('No templates found', call_args[1])
+
+    def test_run_task_no_args(self):
+        """Test run task without arguments."""
+        self.loop.run_until_complete(
+            self.handler.run_task('!test:example.com', '@user:example.com', [])
+        )
+        
+        # Should send usage message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Usage', call_args[1])
+
+    def test_run_task_insufficient_args(self):
+        """Test run task with insufficient arguments."""
+        self.loop.run_until_complete(
+            self.handler.run_task('!test:example.com', '@user:example.com', ['1'])
+        )
+        
+        # Should send usage message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Usage', call_args[1])
+
+    def test_run_task_invalid_ids(self):
+        """Test run task with invalid IDs."""
+        self.loop.run_until_complete(
+            self.handler.run_task('!test:example.com', '@user:example.com', ['invalid', 'ids'])
+        )
+        
+        # Should send error message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Invalid project or template ID', call_args[1])
+
+    @patch('asyncio.create_task')
+    def test_run_task_success(self, mock_create_task):
+        """Test successful task start."""
+        self.mock_semaphore.start_task = AsyncMock(return_value={
+            'id': 123,
+            'status': 'waiting'
+        })
+        
+        self.loop.run_until_complete(
+            self.handler.run_task('!test:example.com', '@user:example.com', ['1', '1'])
+        )
+        
+        # Should send starting and success messages
+        self.assertEqual(self.mock_bot.send_message.call_count, 2)
+        
+        # Check that task was added to active tasks
+        self.assertIn(123, self.handler.active_tasks)
+        
+        # Check that monitoring was started
+        mock_create_task.assert_called_once()
+
+    def test_run_task_failure(self):
+        """Test task start failure."""
+        self.mock_semaphore.start_task = AsyncMock(return_value=None)
+        
+        self.loop.run_until_complete(
+            self.handler.run_task('!test:example.com', '@user:example.com', ['1', '1'])
+        )
+        
+        # Should send starting and failure messages
+        self.assertEqual(self.mock_bot.send_message.call_count, 2)
+        last_call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Failed to start task', last_call_args[1])
+
+    def test_check_status_no_args(self):
+        """Test check status without task ID."""
+        self.loop.run_until_complete(
+            self.handler.check_status('!test:example.com', [])
+        )
+        
+        # Should send usage message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Usage', call_args[1])
+
+    def test_check_status_invalid_task_id(self):
+        """Test check status with invalid task ID."""
+        self.loop.run_until_complete(
+            self.handler.check_status('!test:example.com', ['invalid'])
+        )
+        
+        # Should send error message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Invalid task ID', call_args[1])
+
+    def test_check_status_task_not_found(self):
+        """Test check status for task not in active tasks."""
+        self.loop.run_until_complete(
+            self.handler.check_status('!test:example.com', ['999'])
+        )
+        
+        # Should send not found message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('not found in active tasks', call_args[1])
+
+    def test_check_status_success(self):
+        """Test successful status check."""
+        # Add task to active tasks
+        self.handler.active_tasks[123] = {
+            'project_id': 1,
+            'room_id': '!test:example.com'
+        }
+        
+        self.mock_semaphore.get_task_status = AsyncMock(return_value={
+            'id': 123,
+            'status': 'running',
+            'start': '2024-01-01T00:00:00Z'
+        })
+        
+        self.loop.run_until_complete(
+            self.handler.check_status('!test:example.com', ['123'])
+        )
+        
+        # Should send status message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('running', call_args[1])
+
+    def test_stop_task_no_args(self):
+        """Test stop task without task ID."""
+        self.loop.run_until_complete(
+            self.handler.stop_task('!test:example.com', '@user:example.com', [])
+        )
+        
+        # Should send usage message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Usage', call_args[1])
+
+    def test_stop_task_invalid_task_id(self):
+        """Test stop task with invalid task ID."""
+        self.loop.run_until_complete(
+            self.handler.stop_task('!test:example.com', '@user:example.com', ['invalid'])
+        )
+        
+        # Should send error message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Invalid task ID', call_args[1])
+
+    def test_stop_task_not_found(self):
+        """Test stop task not in active tasks."""
+        self.loop.run_until_complete(
+            self.handler.stop_task('!test:example.com', '@user:example.com', ['999'])
+        )
+        
+        # Should send not found message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('not found in active tasks', call_args[1])
+
+    def test_stop_task_success(self):
+        """Test successful task stop."""
+        # Add task to active tasks
+        self.handler.active_tasks[123] = {
+            'project_id': 1,
+            'room_id': '!test:example.com'
+        }
+        
+        self.mock_semaphore.stop_task = AsyncMock(return_value=True)
+        
+        self.loop.run_until_complete(
+            self.handler.stop_task('!test:example.com', '@user:example.com', ['123'])
+        )
+        
+        # Should send success message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('stopped', call_args[1])
+        
+        # Task should be removed from active tasks
+        self.assertNotIn(123, self.handler.active_tasks)
+
+    def test_stop_task_failure(self):
+        """Test task stop failure."""
+        # Add task to active tasks
+        self.handler.active_tasks[123] = {
+            'project_id': 1,
+            'room_id': '!test:example.com'
+        }
+        
+        self.mock_semaphore.stop_task = AsyncMock(return_value=False)
+        
+        self.loop.run_until_complete(
+            self.handler.stop_task('!test:example.com', '@user:example.com', ['123'])
+        )
+        
+        # Should send failure message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Failed to stop', call_args[1])
+
+    def test_get_logs_no_args(self):
+        """Test get logs without task ID."""
+        self.loop.run_until_complete(
+            self.handler.get_logs('!test:example.com', [])
+        )
+        
+        # Should send usage message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Usage', call_args[1])
+
+    def test_get_logs_invalid_task_id(self):
+        """Test get logs with invalid task ID."""
+        self.loop.run_until_complete(
+            self.handler.get_logs('!test:example.com', ['invalid'])
+        )
+        
+        # Should send error message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Invalid task ID', call_args[1])
+
+    def test_get_logs_task_not_found(self):
+        """Test get logs for task not in active tasks."""
+        self.loop.run_until_complete(
+            self.handler.get_logs('!test:example.com', ['999'])
+        )
+        
+        # Should send not found message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('not found in active tasks', call_args[1])
+
+    def test_get_logs_success(self):
+        """Test successful logs retrieval."""
+        # Add task to active tasks
+        self.handler.active_tasks[123] = {
+            'project_id': 1,
+            'room_id': '!test:example.com'
+        }
+        
+        self.mock_semaphore.get_task_output = AsyncMock(return_value='Task output logs')
+        
+        self.loop.run_until_complete(
+            self.handler.get_logs('!test:example.com', ['123'])
+        )
+        
+        # Should send logs message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Logs for Task', call_args[1])
+        self.assertIn('Task output logs', call_args[1])
+
+    def test_get_logs_empty(self):
+        """Test logs retrieval with no logs."""
+        # Add task to active tasks
+        self.handler.active_tasks[123] = {
+            'project_id': 1,
+            'room_id': '!test:example.com'
+        }
+        
+        self.mock_semaphore.get_task_output = AsyncMock(return_value=None)
+        
+        self.loop.run_until_complete(
+            self.handler.get_logs('!test:example.com', ['123'])
+        )
+        
+        # Should send no logs message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('No logs available', call_args[1])
+
+    def test_get_logs_truncation(self):
+        """Test logs truncation for very long output."""
+        # Add task to active tasks
+        self.handler.active_tasks[123] = {
+            'project_id': 1,
+            'room_id': '!test:example.com'
+        }
+        
+        # Create very long logs
+        long_logs = 'A' * 5000
+        self.mock_semaphore.get_task_output = AsyncMock(return_value=long_logs)
+        
+        self.loop.run_until_complete(
+            self.handler.get_logs('!test:example.com', ['123'])
+        )
+        
+        # Should send truncated logs
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('truncated', call_args[1])
+
+
+if __name__ == '__main__':
+    unittest.main()
