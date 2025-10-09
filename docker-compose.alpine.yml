@@ -11,7 +11,7 @@ services:
       # Mount store directory for encryption keys
       - ./store:/app/store
       # Optional: mount config file if not using env vars
-      # - ./config.yaml:/app/config.yaml:ro
+      # - ./config.json:/app/config.json:ro
     environment:
       # Matrix configuration
       - MATRIX_HOMESERVER=${MATRIX_HOMESERVER}

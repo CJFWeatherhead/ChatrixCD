@@ -45,12 +45,12 @@ cp .env.example .env
 nano .env
 ```
 
-#### Option B: Using YAML Configuration
+#### Option B: Using JSON Configuration
 
 ```bash
-cp config.yaml.example config.yaml
-# Edit config.yaml with your settings
-nano config.yaml
+cp config.json.example config.json
+# Edit config.json with your settings
+nano config.json
 ```
 
 ### 4. Run the Bot
@@ -79,7 +79,7 @@ chatrixcd --version
 chatrixcd -v
 
 # Use custom config file
-chatrixcd -c /path/to/config.yaml
+chatrixcd -c /path/to/config.json
 
 # Run in daemon mode (Unix/Linux only)
 chatrixcd -D
@@ -96,11 +96,14 @@ This is the simplest method for traditional Matrix servers:
 
 1. Create a bot account on your Matrix server
 2. Configure the credentials:
-   ```yaml
-   matrix:
-     auth_type: "password"
-     user_id: "@chatrixcd:example.com"
-     password: "your_password"
+   ```json
+   {
+     "matrix": {
+       "auth_type": "password",
+       "user_id": "@chatrixcd:example.com",
+       "password": "your_password"
+     }
+   }
    ```
 
 ### Token Authentication
@@ -109,11 +112,14 @@ If you have a pre-obtained access token:
 
 1. Obtain an access token from your Matrix server
 2. Configure the token:
-   ```yaml
-   matrix:
-     auth_type: "token"
-     user_id: "@chatrixcd:example.com"
-     access_token: "your_access_token"
+   ```json
+   {
+     "matrix": {
+       "auth_type": "token",
+       "user_id": "@chatrixcd:example.com",
+       "access_token": "your_access_token"
+     }
+   }
    ```
 
 ### OIDC Authentication
@@ -122,13 +128,16 @@ For Matrix servers that use OIDC/OAuth2:
 
 1. Register an OAuth2 client with your OIDC provider
 2. Configure OIDC settings:
-   ```yaml
-   matrix:
-     auth_type: "oidc"
-     user_id: "@chatrixcd:example.com"
-     oidc_issuer: "https://auth.example.com"
-     oidc_client_id: "your_client_id"
-     oidc_client_secret: "your_client_secret"
+   ```json
+   {
+     "matrix": {
+       "auth_type": "oidc",
+       "user_id": "@chatrixcd:example.com",
+       "oidc_issuer": "https://auth.example.com",
+       "oidc_client_id": "your_client_id",
+       "oidc_client_secret": "your_client_secret"
+     }
+   }
    ```
 
 ## Docker Deployment

@@ -64,8 +64,8 @@ git clone https://github.com/CJFWeatherhead/ChatrixCD.git
 cd ChatrixCD
 
 # Create configuration file
-cp config.yaml.example config.yaml
-# Edit config.yaml with your settings
+cp config.json.example config.json
+# Edit config.json with your settings
 
 # Start with Docker Compose
 docker-compose up -d
@@ -84,13 +84,13 @@ docker-compose -f docker-compose.alpine.yml up -d
 **Debian-based:**
 ```bash
 docker build -t chatrixcd:latest .
-docker run -v $(pwd)/config.yaml:/app/config.yaml -v $(pwd)/store:/app/store chatrixcd:latest
+docker run -v $(pwd)/config.json:/app/config.json -v $(pwd)/store:/app/store chatrixcd:latest
 ```
 
 **Alpine Linux:**
 ```bash
 docker build -f Dockerfile.alpine -t chatrixcd:alpine .
-docker run -v $(pwd)/config.yaml:/app/config.yaml -v $(pwd)/store:/app/store chatrixcd:alpine
+docker run -v $(pwd)/config.json:/app/config.json -v $(pwd)/store:/app/store chatrixcd:alpine
 ```
 
 ## Configuration

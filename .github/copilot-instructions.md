@@ -15,7 +15,7 @@ ChatrixCD is a Matrix bot that integrates with Semaphore UI to enable CI/CD auto
 ### Core Components
 
 - **main.py**: Application entry point and lifecycle management
-- **config.py**: Configuration management (YAML + environment variables)
+- **config.py**: Configuration management (JSON + environment variables)
 - **auth.py**: Matrix authentication handler (password, token, OIDC)
 - **bot.py**: Matrix client integration and event handling
 - **commands.py**: Command parser and task orchestration
@@ -26,7 +26,6 @@ ChatrixCD is a Matrix bot that integrates with Semaphore UI to enable CI/CD auto
 - **matrix-nio**: Matrix protocol client with E2E encryption
 - **aiohttp**: Async HTTP client for Semaphore API
 - **authlib**: OAuth2/OIDC authentication
-- **PyYAML**: Configuration file parsing
 
 ## Coding Standards
 
@@ -73,7 +72,7 @@ def function_name(param1: str, param2: int) -> bool:
 
 ### Configuration Priority
 
-1. YAML configuration file (`config.yaml`)
+1. JSON configuration file (`config.json`)
 2. Environment variables (uppercase, underscores)
 3. Default values
 
@@ -154,7 +153,7 @@ python -m unittest tests.test_config  # Specific test file
 - Never log credentials, tokens, or passwords
 - Use environment variables for sensitive data in production
 - Store encryption keys securely in the `store/` directory
-- Never commit `config.yaml` or `.env` files with real credentials
+- Never commit `config.json` or `.env` files with real credentials
 
 ### Access Control
 

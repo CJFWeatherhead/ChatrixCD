@@ -111,7 +111,7 @@ chatrixcd -v
 chatrixcd -vv
 
 # Use a custom config file
-chatrixcd -c /path/to/config.yaml
+chatrixcd -c /path/to/config.json
 
 # Run in daemon mode (background process, Unix/Linux only)
 chatrixcd -D

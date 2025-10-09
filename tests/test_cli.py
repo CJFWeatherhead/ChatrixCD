@@ -69,19 +69,19 @@ class TestCLI(unittest.TestCase):
         """Test --config flag."""
         import argparse
         parser = argparse.ArgumentParser(prog='chatrixcd')
-        parser.add_argument('-c', '--config', type=str, default='config.yaml')
+        parser.add_argument('-c', '--config', type=str, default='config.json')
         
         # Default config
         args = parser.parse_args([])
-        self.assertEqual(args.config, 'config.yaml')
+        self.assertEqual(args.config, 'config.json')
         
         # Custom config
-        args = parser.parse_args(['--config', '/etc/chatrixcd/config.yaml'])
-        self.assertEqual(args.config, '/etc/chatrixcd/config.yaml')
+        args = parser.parse_args(['--config', '/etc/chatrixcd/config.json'])
+        self.assertEqual(args.config, '/etc/chatrixcd/config.json')
         
         # Short form
-        args = parser.parse_args(['-c', 'custom.yaml'])
-        self.assertEqual(args.config, 'custom.yaml')
+        args = parser.parse_args(['-c', 'custom.json'])
+        self.assertEqual(args.config, 'custom.json')
 
     def test_color_flag(self):
         """Test --color flag."""
@@ -178,14 +178,14 @@ class TestCLI(unittest.TestCase):
         import argparse
         parser = argparse.ArgumentParser(prog='chatrixcd')
         parser.add_argument('-v', '--verbose', action='count', default=0, dest='verbosity')
-        parser.add_argument('-c', '--config', type=str, default='config.yaml')
+        parser.add_argument('-c', '--config', type=str, default='config.json')
         parser.add_argument('-C', '--color', action='store_true')
         parser.add_argument('-a', '--admin', action='append', dest='admin_users')
         parser.add_argument('-r', '--room', action='append', dest='allowed_rooms')
         
         args = parser.parse_args([
             '-vv',
-            '--config', 'custom.yaml',
+            '--config', 'custom.json',
             '-C',
             '-a', '@admin1:matrix.org',
             '-a', '@admin2:matrix.org',
@@ -193,7 +193,7 @@ class TestCLI(unittest.TestCase):
         ])
         
         self.assertEqual(args.verbosity, 2)
-        self.assertEqual(args.config, 'custom.yaml')
+        self.assertEqual(args.config, 'custom.json')
         self.assertTrue(args.color)
         self.assertEqual(args.admin_users, ['@admin1:matrix.org', '@admin2:matrix.org'])
         self.assertEqual(args.allowed_rooms, ['!room1:matrix.org'])
