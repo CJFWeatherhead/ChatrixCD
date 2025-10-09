@@ -1,0 +1,25 @@
+{
+  "_config_version": 2,
+  "matrix": {
+    "homeserver": "https://matrix.example.com",
+    "user_id": "@chatrixcd:example.com",
+    "device_id": "CHATRIXCD",
+    "device_name": "ChatrixCD Bot",
+    "auth_type": "password",
+    "password": "your_bot_password_here",
+    "store_path": "./store"
+  },
+  "semaphore": {
+    "url": "https://semaphore.example.com",
+    "api_token": "your_semaphore_api_token_here"
+  },
+  "bot": {
+    "command_prefix": "!cd",
+    "allowed_rooms": [],
+    "admin_users": [],
+    "greetings_enabled": true,
+    "greeting_rooms": [],
+    "startup_message": "🤖 ChatrixCD bot is now online and ready to help with CI/CD tasks!",
+    "shutdown_message": "👋 ChatrixCD bot is shutting down. See you later!"
+  }
+}
