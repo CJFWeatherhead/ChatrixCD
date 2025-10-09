@@ -6,8 +6,7 @@ nav_order: 1
 
 <div align="center" style="margin-bottom: 2em;">
 
-<!-- Logo will be added here once assets are created -->
-<!-- <img src="assets/logo-horizontal.png" alt="ChatrixCD Logo" width="400"> -->
+<img src="assets/logo-horizontal.svg" alt="ChatrixCD Logo" width="500">
 
 # ChatrixCD
 

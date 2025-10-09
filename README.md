@@ -1,7 +1,6 @@
 <div align="center">
 
-<!-- Logo will be added here once assets are created -->
-<!-- ![ChatrixCD Logo](assets/logo-horizontal.png) -->
+<img src="assets/logo-horizontal.svg" alt="ChatrixCD Logo" width="600">
 
 # ChatrixCD
 

@@ -29,12 +29,13 @@ The ChatrixCD logo consists of:
 ### Logo Files
 
 Logo files are located in the `assets/` directory:
-- `logo-horizontal.png` - Full horizontal logo (default)
-- `logo-icon.png` - Icon only
-- `logo-stacked.png` - Stacked layout
-- `logo-social.png` - Social media preview (1200x630px)
+- `logo-horizontal.svg` - Full horizontal logo (default) - SVG format for scalability
+- `logo-icon.svg` - Icon only - SVG format
+- `logo-stacked.svg` - Stacked layout - SVG format
+- `logo-social.svg` - Social media preview (1200x630px) - SVG format
+- `favicon.svg` - Favicon for web pages - SVG format
 
-**Note**: To add the actual logo files, save the branding image to these locations with appropriate sizing.
+**Note**: All logos are provided in SVG format for perfect scalability and easy programmatic manipulation. PNG versions can be generated from SVG as needed for specific use cases.
 
 ## Color Palette
 
