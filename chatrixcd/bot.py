@@ -61,7 +61,11 @@ class ChatrixBot:
         semaphore_config = config.get_semaphore_config()
         self.semaphore = SemaphoreClient(
             url=semaphore_config.get('url'),
-            api_token=semaphore_config.get('api_token')
+            api_token=semaphore_config.get('api_token'),
+            ssl_verify=semaphore_config.get('ssl_verify', True),
+            ssl_ca_cert=semaphore_config.get('ssl_ca_cert'),
+            ssl_client_cert=semaphore_config.get('ssl_client_cert'),
+            ssl_client_key=semaphore_config.get('ssl_client_key')
         )
         
         # Initialize command handler

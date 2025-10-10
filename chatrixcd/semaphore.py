@@ -2,6 +2,7 @@
 
 import logging
 import aiohttp
+import ssl
 from typing import Optional, Dict, List, Any
 
 logger = logging.getLogger(__name__)
@@ -10,16 +11,64 @@ logger = logging.getLogger(__name__)
 class SemaphoreClient:
     """Client for interacting with Semaphore UI REST API."""
 
-    def __init__(self, url: str, api_token: str):
+    def __init__(self, url: str, api_token: str, ssl_verify: bool = True,
+                 ssl_ca_cert: Optional[str] = None, ssl_client_cert: Optional[str] = None,
+                 ssl_client_key: Optional[str] = None):
         """Initialize Semaphore client.
         
         Args:
             url: Base URL of Semaphore UI instance
             api_token: API token for authentication
+            ssl_verify: Whether to verify SSL certificates (default: True)
+            ssl_ca_cert: Path to custom CA certificate bundle file
+            ssl_client_cert: Path to client certificate file
+            ssl_client_key: Path to client certificate key file
         """
         self.base_url = url.rstrip('/')
         self.api_token = api_token
+        self.ssl_verify = ssl_verify
+        self.ssl_ca_cert = ssl_ca_cert
+        self.ssl_client_cert = ssl_client_cert
+        self.ssl_client_key = ssl_client_key
         self.session: Optional[aiohttp.ClientSession] = None
+
+    def _create_ssl_context(self) -> Optional[ssl.SSLContext]:
+        """Create SSL context based on configuration.
+        
+        Returns:
+            SSL context or False to disable verification, or None for default
+        """
+        if not self.ssl_verify:
+            # Disable SSL verification
+            logger.warning("SSL certificate verification is disabled for Semaphore connection")
+            return False
+        
+        # Create SSL context for custom certificate configuration
+        if self.ssl_ca_cert or self.ssl_client_cert:
+            ssl_context = ssl.create_default_context()
+            
+            # Load custom CA certificate
+            if self.ssl_ca_cert:
+                logger.info(f"Using custom CA certificate: {self.ssl_ca_cert}")
+                ssl_context.load_verify_locations(cafile=self.ssl_ca_cert)
+            
+            # Load client certificate and key
+            if self.ssl_client_cert:
+                if self.ssl_client_key:
+                    logger.info(f"Using client certificate: {self.ssl_client_cert}")
+                    ssl_context.load_cert_chain(
+                        certfile=self.ssl_client_cert,
+                        keyfile=self.ssl_client_key
+                    )
+                else:
+                    # Assume key is in the same file as certificate
+                    logger.info(f"Using client certificate: {self.ssl_client_cert}")
+                    ssl_context.load_cert_chain(certfile=self.ssl_client_cert)
+            
+            return ssl_context
+        
+        # Use default SSL verification
+        return None
 
     async def _ensure_session(self):
         """Ensure aiohttp session exists."""
@@ -28,7 +77,14 @@ class SemaphoreClient:
                 'Authorization': f'Bearer {self.api_token}',
                 'Content-Type': 'application/json'
             }
-            self.session = aiohttp.ClientSession(headers=headers)
+            
+            # Configure SSL context
+            ssl_context = self._create_ssl_context()
+            
+            # Create connector with SSL context
+            connector = aiohttp.TCPConnector(ssl=ssl_context)
+            
+            self.session = aiohttp.ClientSession(headers=headers, connector=connector)
 
     async def close(self):
         """Close the aiohttp session."""

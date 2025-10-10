@@ -7,6 +7,18 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
 
 ## [Unreleased]
 
+### Added
+- **SSL/TLS Configuration for Semaphore**: Added flexible SSL/TLS options for Semaphore connections
+  - `ssl_verify`: Enable/disable SSL certificate verification (default: true)
+  - `ssl_ca_cert`: Path to custom CA certificate bundle for custom/internal CAs
+  - `ssl_client_cert`: Path to client certificate for mutual TLS (mTLS) authentication
+  - `ssl_client_key`: Path to client certificate private key
+  - Resolves issues connecting to Semaphore with self-signed certificates
+  - Supports enterprise environments with custom certificate authorities
+  - Enables mutual TLS authentication when required
+  - Configuration options documented in docs/configuration.md
+  - Added tests for SSL configuration options
+
 ### Fixed
 - **E2E Encryption Session Management**: Fixed issues with encrypted message decryption
   - Bot now automatically uploads device keys and one-time keys after login

@@ -139,6 +139,10 @@ class Config:
             'semaphore': {
                 'url': '',
                 'api_token': '',
+                'ssl_verify': True,
+                'ssl_ca_cert': '',
+                'ssl_client_cert': '',
+                'ssl_client_key': '',
             },
             'bot': {
                 'command_prefix': '!cd',

@@ -188,6 +188,93 @@ For OIDC authentication:
 }
 ```
 
+## SSL/TLS Configuration for Semaphore
+
+ChatrixCD provides flexible SSL/TLS configuration options for connecting to Semaphore UI, which is especially useful when Semaphore is running with self-signed certificates or custom certificate authorities.
+
+### Default Behavior (SSL Verification Enabled)
+
+By default, SSL certificate verification is enabled:
+
+```json
+{
+  "semaphore": {
+    "url": "https://semaphore.example.com",
+    "api_token": "your-api-token"
+  }
+}
+```
+
+### Disable SSL Verification (Self-Signed Certificates)
+
+**⚠️ Warning:** Only disable SSL verification in trusted development or internal environments.
+
+```json
+{
+  "semaphore": {
+    "url": "https://semaphore.example.com",
+    "api_token": "your-api-token",
+    "ssl_verify": false
+  }
+}
+```
+
+### Custom CA Certificate
+
+If Semaphore uses a certificate signed by a custom Certificate Authority:
+
+```json
+{
+  "semaphore": {
+    "url": "https://semaphore.example.com",
+    "api_token": "your-api-token",
+    "ssl_ca_cert": "/path/to/custom-ca.crt"
+  }
+}
+```
+
+### Client Certificate Authentication
+
+For mutual TLS (mTLS) authentication where the client must present a certificate:
+
+```json
+{
+  "semaphore": {
+    "url": "https://semaphore.example.com",
+    "api_token": "your-api-token",
+    "ssl_client_cert": "/path/to/client.crt",
+    "ssl_client_key": "/path/to/client.key"
+  }
+}
+```
+
+### Combined Configuration
+
+You can combine custom CA certificate with client certificate authentication:
+
+```json
+{
+  "semaphore": {
+    "url": "https://semaphore.example.com",
+    "api_token": "your-api-token",
+    "ssl_ca_cert": "/path/to/custom-ca.crt",
+    "ssl_client_cert": "/path/to/client.crt",
+    "ssl_client_key": "/path/to/client.key"
+  }
+}
+```
+
+**Note:** If the client certificate key is in the same file as the certificate, you can omit `ssl_client_key`.
+
+### SSL Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ssl_verify` | boolean | `true` | Enable/disable SSL certificate verification |
+| `ssl_ca_cert` | string | `""` | Path to custom CA certificate bundle file |
+| `ssl_client_cert` | string | `""` | Path to client certificate file for mTLS |
+| `ssl_client_key` | string | `""` | Path to client certificate private key file |
+
 ## Access Control
 
 ### Allow All Rooms

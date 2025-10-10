@@ -25,6 +25,10 @@ class TestSemaphoreClient(unittest.TestCase):
         """Test client initialization."""
         self.assertEqual(self.client.base_url, 'https://semaphore.example.com')
         self.assertEqual(self.client.api_token, 'test_token')
+        self.assertTrue(self.client.ssl_verify)
+        self.assertIsNone(self.client.ssl_ca_cert)
+        self.assertIsNone(self.client.ssl_client_cert)
+        self.assertIsNone(self.client.ssl_client_key)
         self.assertIsNone(self.client.session)
 
     def test_init_strips_trailing_slash(self):
@@ -326,6 +330,45 @@ class TestSemaphoreClient(unittest.TestCase):
         result = self.loop.run_until_complete(self.client.stop_task(1, 123))
         
         self.assertFalse(result)
+
+    def test_ssl_verify_disabled(self):
+        """Test client initialization with SSL verification disabled."""
+        client = SemaphoreClient('https://semaphore.example.com', 'token', ssl_verify=False)
+        self.assertFalse(client.ssl_verify)
+        ssl_context = client._create_ssl_context()
+        self.assertFalse(ssl_context)
+
+    def test_ssl_custom_ca_cert(self):
+        """Test client initialization with custom CA certificate."""
+        client = SemaphoreClient(
+            'https://semaphore.example.com',
+            'token',
+            ssl_ca_cert='/path/to/ca.crt'
+        )
+        self.assertEqual(client.ssl_ca_cert, '/path/to/ca.crt')
+
+    def test_ssl_client_cert(self):
+        """Test client initialization with client certificate."""
+        client = SemaphoreClient(
+            'https://semaphore.example.com',
+            'token',
+            ssl_client_cert='/path/to/cert.crt',
+            ssl_client_key='/path/to/key.key'
+        )
+        self.assertEqual(client.ssl_client_cert, '/path/to/cert.crt')
+        self.assertEqual(client.ssl_client_key, '/path/to/key.key')
+
+    def test_create_ssl_context_default(self):
+        """Test SSL context creation with default settings."""
+        client = SemaphoreClient('https://semaphore.example.com', 'token')
+        ssl_context = client._create_ssl_context()
+        self.assertIsNone(ssl_context)
+
+    def test_create_ssl_context_no_verify(self):
+        """Test SSL context creation with verification disabled."""
+        client = SemaphoreClient('https://semaphore.example.com', 'token', ssl_verify=False)
+        ssl_context = client._create_ssl_context()
+        self.assertFalse(ssl_context)
 
 
 if __name__ == '__main__':
