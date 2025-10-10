@@ -8,7 +8,7 @@
     <rect x="0" y="20" width="150" height="150" rx="30" ry="30" fill="#4A9B7F"/>
     
     <!-- Antenna -->
-    <line x1="75" y1="20" x2="75" x2="0" stroke="#4A9B7F" stroke-width="8" stroke-linecap="round"/>
+    <line x1="75" y1="20" x2="75" y2="0" stroke="#4A9B7F" stroke-width="8" stroke-linecap="round"/>
     <circle cx="75" cy="0" r="12" fill="#4A9B7F"/>
     
     <!-- Robot eyes -->
