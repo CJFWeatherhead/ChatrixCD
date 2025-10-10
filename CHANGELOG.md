@@ -7,6 +7,8 @@ and this project adheres to [Calendar Versioning](https://calver.org/) with form
 
 ## [Unreleased]
 
+## [2025.10.8] - 2025-10-10
+
 ### Added
 - **SSL/TLS Configuration for Semaphore**: Added flexible SSL/TLS options for Semaphore connections
   - `ssl_verify`: Enable/disable SSL certificate verification (default: true)
@@ -320,6 +322,8 @@ ChatrixCD/
 
 
 
+
+- **2025.10.8** (2025-10-10)
 - **2025.10.7** (2025-10-09)
 - **2025.10.6** (2025-10-09)
 - **0.1.0** (2024-01-08) - Initial release with OIDC support
