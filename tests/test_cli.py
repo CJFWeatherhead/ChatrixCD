@@ -173,6 +173,24 @@ class TestCLI(unittest.TestCase):
         args = parser.parse_args(['-r', '!room1:matrix.org', '-r', '!room2:matrix.org'])
         self.assertEqual(args.allowed_rooms, ['!room1:matrix.org', '!room2:matrix.org'])
 
+    def test_redact_flag(self):
+        """Test --redact flag."""
+        import argparse
+        parser = argparse.ArgumentParser(prog='chatrixcd')
+        parser.add_argument('-R', '--redact', action='store_true')
+        
+        # Default (no redaction)
+        args = parser.parse_args([])
+        self.assertFalse(args.redact)
+        
+        # With redaction
+        args = parser.parse_args(['--redact'])
+        self.assertTrue(args.redact)
+        
+        # Short form
+        args = parser.parse_args(['-R'])
+        self.assertTrue(args.redact)
+    
     def test_combined_flags(self):
         """Test multiple flags combined."""
         import argparse
@@ -180,6 +198,7 @@ class TestCLI(unittest.TestCase):
         parser.add_argument('-v', '--verbose', action='count', default=0, dest='verbosity')
         parser.add_argument('-c', '--config', type=str, default='config.json')
         parser.add_argument('-C', '--color', action='store_true')
+        parser.add_argument('-R', '--redact', action='store_true')
         parser.add_argument('-a', '--admin', action='append', dest='admin_users')
         parser.add_argument('-r', '--room', action='append', dest='allowed_rooms')
         
@@ -187,6 +206,7 @@ class TestCLI(unittest.TestCase):
             '-vv',
             '--config', 'custom.json',
             '-C',
+            '-R',
             '-a', '@admin1:matrix.org',
             '-a', '@admin2:matrix.org',
             '-r', '!room1:matrix.org',
@@ -195,6 +215,7 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(args.verbosity, 2)
         self.assertEqual(args.config, 'custom.json')
         self.assertTrue(args.color)
+        self.assertTrue(args.redact)
         self.assertEqual(args.admin_users, ['@admin1:matrix.org', '@admin2:matrix.org'])
         self.assertEqual(args.allowed_rooms, ['!room1:matrix.org'])
 

@@ -7,4 +7,7 @@ aiohttp>=3.9.0
 # Human JSON (JSON with comments) for configuration files
 hjson>=3.1.0
 
+# Colored logging output
+colorlog>=6.7.0
+
 

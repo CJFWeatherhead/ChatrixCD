@@ -15,6 +15,39 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Added
+
+#### Privacy and Security Features
+- **Sensitive Information Redaction**: New `-R` / `--redact` command-line flag to automatically redact sensitive information from logs
+  - Redacts Matrix room IDs (e.g., `!room:server.com` → `![ROOM_ID]:server.com`)
+  - Redacts Matrix user IDs (e.g., `@user:matrix.org` → `@[USER]:matrix.org`)
+  - Redacts IPv4 addresses (e.g., `192.168.1.100` → `192.168.xxx.xxx`)
+  - Redacts IPv6 addresses (e.g., `2001:db8::1` → `2001:db8:[IPV6_REDACTED]`)
+  - Redacts hostnames and domains (e.g., `internal.example.com` → `internal.[DOMAIN].com`)
+  - Redacts authentication tokens and API keys
+  - Redacts passwords in URLs and parameters
+  - Redacts session IDs, device IDs, and host keys
+  - Works with all verbosity levels (`-v`, `-vv`, `-vvv`)
+  - Works with `--show-config` flag to redact identifiers in configuration output
+  - When combined with `-C` (color), redacted content is highlighted in pink for easy identification
+  - New `chatrixcd.redactor` module with `SensitiveInfoRedactor` and `RedactingFilter` classes
+  - Comprehensive test coverage in `tests/test_redactor.py`
+
+#### Dependencies
+- **colorlog**: Added `colorlog>=6.7.0` to requirements.txt for colored logging support
+  - Ensures `-C` / `--color` flag works properly out of the box
+  - Provides colored console output with customizable log level colors
+  - Pink highlighting for redacted content when used with `-R` flag
+
+### Changed
+
+#### Documentation
+- **Bug Report Template**: Updated `.github/ISSUE_TEMPLATE/bug_report.yml` to recommend using `-R` flag for privacy
+- **README.md**: Added `-R` flag documentation and privacy notes
+- **INSTALL.md**: Added security best practices for log redaction
+- **SUPPORT.md**: Updated debugging section with redaction examples
+- **CONTRIBUTING.md**: Added privacy recommendations for bug reports
+
 ## [2025.10.8] - 2025-10-10
 
 ### Added
