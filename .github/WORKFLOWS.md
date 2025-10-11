@@ -45,10 +45,13 @@ The workflow runs automatically on pull requests and pushes. No manual intervent
 - Example: `2024.12.0`, `2024.12.1`, `2025.01.0`
 
 ### Version Types
-- **patch**: Increments the patch number (e.g., 2024.12.0 → 2024.12.1)
-- **minor**: Also increments the patch number (provided for semantic clarity)
+All version types increment the PATCH number in the YYYY.MM.PATCH format. The type selection indicates the nature of changes:
 
-The patch number resets to 0 when the month changes.
+- **patch**: Bug fixes and minor improvements (e.g., 2024.12.0 → 2024.12.1)
+- **minor**: New features and enhancements (e.g., 2024.12.1 → 2024.12.2)
+- **major**: Breaking changes or major milestones (e.g., 2024.12.2 → 2024.12.3)
+
+The patch number automatically resets to 0 when the month changes (e.g., 2024.12.5 → 2025.01.0).
 
 ### How to use
 1. Go to **Actions** tab in GitHub
@@ -116,5 +119,8 @@ When you run the release workflow, this content will automatically move to a ver
 
 1. **Commit Messages**: Write clear, descriptive commit messages as they will appear in the changelog
 2. **Testing**: Always ensure tests pass locally before creating a release
-3. **Version Type**: Use "patch" for bug fixes and small changes, "minor" for new features
+3. **Version Type**: Choose the appropriate version type to indicate the nature of changes:
+   - Use "patch" for bug fixes and minor improvements
+   - Use "minor" for new features and enhancements
+   - Use "major" for breaking changes or major milestones
 4. **Frequency**: Create releases regularly to keep the changelog manageable

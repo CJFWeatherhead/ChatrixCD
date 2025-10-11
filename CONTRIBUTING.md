@@ -96,8 +96,7 @@ We actively welcome your pull requests:
 
    ```bash
    cp config.json.example config.json
-   cp .env.example .env
-   # Edit these files with your test credentials
+   # Edit config.json with your test credentials
    ```
 
 ### Running Tests

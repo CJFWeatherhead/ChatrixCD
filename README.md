@@ -291,7 +291,7 @@ ChatrixCD is built with the following components:
 ## Security Considerations
 
 - **Encryption Keys**: The bot stores encryption keys in the configured `store_path` directory. Keep this secure.
-- **Credentials**: Never commit your `config.json` or `.env` file with real credentials.
+- **Credentials**: Never commit your `config.json` file with real credentials.
 - **Access Control**: Use `allowed_rooms` and `admin_users` to restrict bot access.
 - **API Tokens**: Use Semaphore API tokens with minimal required permissions.
 
@@ -342,7 +342,6 @@ ChatrixCD/
 ├── requirements.txt
 ├── setup.py
 ├── config.json.example
-├── .env.example
 └── README.md
 ```
 
@@ -361,8 +360,12 @@ To create a new release:
 1. Go to Actions → Build and Release workflow
 2. Click "Run workflow"
 3. Select version type:
-   - **patch**: Increment patch version (e.g., 2024.12.0 → 2024.12.1)
-   - **minor**: Increment patch version for new features (e.g., 2024.12.0 → 2024.12.1)
+   - **patch**: Bug fixes and minor improvements (e.g., 2024.12.0 → 2024.12.1)
+   - **minor**: New features and enhancements (e.g., 2024.12.1 → 2024.12.2)
+   - **major**: Breaking changes or major milestones (e.g., 2024.12.2 → 2024.12.3)
+
+   Note: All version types increment the PATCH number. The type selection is for semantic clarity and changelog organization. The patch number resets to 0 when the month changes.
+
 4. The workflow will:
    - Run all unit tests
    - Calculate the new version based on current date
@@ -372,7 +375,7 @@ To create a new release:
    - Commit all changes
    - Create a GitHub release with the changelog
 
-**Note**: Make sure to document changes in the `[Unreleased]` section of `CHANGELOG.md` as you develop. The release workflow will automatically move these changes to a versioned section.
+**Note**: Document changes in the `[Unreleased]` section of `CHANGELOG.md` as you develop. The release workflow will automatically move these changes to a versioned section.
 
 ## Contributing
 
