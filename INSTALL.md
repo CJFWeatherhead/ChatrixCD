@@ -35,23 +35,13 @@ uv pip install -e .
 
 ### 3. Configure the Bot
 
-Choose one of the following configuration methods:
-
-#### Option A: Using Environment Variables
-
-```bash
-cp .env.example .env
-# Edit .env with your settings
-nano .env
-```
-
-#### Option B: Using JSON Configuration
-
 ```bash
 cp config.json.example config.json
 # Edit config.json with your settings
 nano config.json
 ```
+
+Configuration is done exclusively through JSON files (with HJSON support for comments).
 
 ### 4. Run the Bot
 
@@ -144,18 +134,25 @@ For Matrix servers that use OIDC/OAuth2:
 
 ### Using Docker Compose
 
-1. Copy environment file:
+1. Create configuration file:
    ```bash
-   cp .env.example .env
-   # Edit .env with your settings
+   cp config.json.example config.json
+   # Edit config.json with your settings
    ```
 
-2. Start the bot:
+2. Update docker-compose.yml to mount the config file (uncomment the config mount line):
+   ```yaml
+   volumes:
+     - ./store:/app/store
+     - ./config.json:/app/config.json:ro  # Uncomment this line
+   ```
+
+3. Start the bot:
    ```bash
    docker-compose up -d
    ```
 
-3. View logs:
+4. View logs:
    ```bash
    docker-compose logs -f chatrixcd
    ```
@@ -411,7 +408,7 @@ Alpine Linux uses OpenRC instead of systemd. This is a lightweight deployment op
 
 ## Security Best Practices
 
-1. **Protect credentials**: Never commit config.json or .env files with real credentials
+1. **Protect credentials**: Never commit config.json with real credentials
 2. **Use restricted tokens**: Create Semaphore API tokens with minimal required permissions
 3. **Secure the store**: The store directory contains encryption keys - keep it secure
 4. **Access control**: Use `allowed_rooms` and `admin_users` to restrict bot access
