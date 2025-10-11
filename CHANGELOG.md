@@ -3,7 +3,15 @@
 All notable changes to ChatrixCD will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Calendar Versioning](https://calver.org/) with format YYYY.MM.PATCH.
+and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.MAJOR.MINOR.PATCH.
+
+**Version Format:**
+- `YYYY.MM.DD`: Release date
+- `MAJOR`: Breaking changes or major features
+- `MINOR`: New features, non-breaking
+- `PATCH`: Bug fixes and security updates
+
+**Historical Note**: Versions prior to October 2025 used format `YYYY.MM.PATCH` (e.g., `2025.10.8`).
 
 ## [Unreleased]
 

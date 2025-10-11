@@ -41,23 +41,31 @@ The workflow runs automatically on pull requests and pushes. No manual intervent
    - Creates a GitHub release with the generated changelog
 
 ### Version Format
-- **Calendar Versioning (CalVer)**: YYYY.MM.PATCH
-- Example: `2024.12.0`, `2024.12.1`, `2025.01.0`
+- **Semantic Calendar Versioning**: YYYY.MM.DD.MAJOR.MINOR.PATCH
+- Example: `2025.10.12.1.0.1`, `2025.11.15.1.1.0`, `2025.12.01.2.0.0`
+- Components:
+  - `YYYY.MM.DD`: Release date (year, month, day)
+  - `MAJOR`: Breaking changes or major features
+  - `MINOR`: New features, non-breaking changes
+  - `PATCH`: Bug fixes and security updates
+
+**Historical Note**: Versions prior to October 2025 used `YYYY.MM.PATCH` format (e.g., `2025.10.8`).
 
 ### Version Types
-All version types increment the PATCH number in the YYYY.MM.PATCH format. The type selection indicates the nature of changes:
+Version numbers (MAJOR, MINOR, PATCH) always increment from the previous version and never reset:
 
-- **patch**: Bug fixes and minor improvements (e.g., 2024.12.0 → 2024.12.1)
-- **minor**: New features and enhancements (e.g., 2024.12.1 → 2024.12.2)
-- **major**: Breaking changes or major milestones (e.g., 2024.12.2 → 2024.12.3)
-
-The patch number automatically resets to 0 when the month changes (e.g., 2024.12.5 → 2025.01.0).
+- **major**: Breaking changes or major features (increments MAJOR, resets MINOR and PATCH to 0)
+  - Example: `2025.10.12.1.5.3` → `2025.10.13.2.0.0`
+- **minor**: New features, non-breaking changes (increments MINOR, resets PATCH to 0)
+  - Example: `2025.10.12.1.5.3` → `2025.10.13.1.6.0`
+- **patch**: Bug fixes and security updates (increments PATCH)
+  - Example: `2025.10.12.1.5.3` → `2025.10.13.1.5.4`
 
 ### How to use
 1. Go to **Actions** tab in GitHub
 2. Select **Build and Release** workflow
 3. Click **Run workflow**
-4. Select **version_type** (patch or minor)
+4. Select **version_type** (major, minor, or patch)
 5. Click **Run workflow**
 
 ### Prerequisites
@@ -68,10 +76,13 @@ The patch number automatically resets to 0 when the month changes (e.g., 2024.12
 
 The release workflow automatically determines the next version:
 
-1. Gets the current year and month (e.g., 2024-12)
-2. Finds the latest tag for this month (e.g., `2024.12.2`)
-3. Increments the patch number (e.g., `2024.12.3`)
-4. If no tag exists for the current month, starts with patch 0 or 1 (depending on version type)
+1. Gets the current date (year, month, day)
+2. Finds the latest tag with the new version format (YYYY.MM.DD.MAJOR.MINOR.PATCH)
+3. Based on version type:
+   - **major**: Increments MAJOR by 1, resets MINOR and PATCH to 0
+   - **minor**: Keeps MAJOR, increments MINOR by 1, resets PATCH to 0
+   - **patch**: Keeps MAJOR and MINOR, increments PATCH by 1
+4. Combines date and version numbers to create the new version
 
 ## Changelog Management
 
@@ -120,7 +131,8 @@ When you run the release workflow, this content will automatically move to a ver
 1. **Commit Messages**: Write clear, descriptive commit messages as they will appear in the changelog
 2. **Testing**: Always ensure tests pass locally before creating a release
 3. **Version Type**: Choose the appropriate version type to indicate the nature of changes:
-   - Use "patch" for bug fixes and minor improvements
-   - Use "minor" for new features and enhancements
-   - Use "major" for breaking changes or major milestones
+   - Use "patch" for bug fixes and security updates
+   - Use "minor" for new features and enhancements (non-breaking)
+   - Use "major" for breaking changes or major feature releases
 4. **Frequency**: Create releases regularly to keep the changelog manageable
+5. **Version Numbers**: MAJOR, MINOR, and PATCH numbers always increment from the previous version and never reset, ensuring each version is unique and comparable
