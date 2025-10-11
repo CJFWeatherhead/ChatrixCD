@@ -260,7 +260,7 @@ sudo rc-service chatrixcd restart # OpenRC
 
 ### What to Backup
 
-1. **Configuration**: `config.json` or `.env`
+1. **Configuration**: `config.json`
 2. **Encryption Keys**: `store/` directory
 3. **Service Files**: systemd/OpenRC configurations
 

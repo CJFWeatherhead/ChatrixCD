@@ -38,42 +38,52 @@ uv pip install -e .
 
 ## Configuration
 
+Configuration is done through JSON files (with HJSON support for comments).
+
 ### For Password Authentication
 
-Create a `.env` file:
+Create a `config.json` file:
 
-```bash
-cat > .env << EOF
-MATRIX_HOMESERVER=https://matrix.example.com
-MATRIX_USER_ID=@chatrixcd:example.com
-MATRIX_AUTH_TYPE=password
-MATRIX_PASSWORD=your_bot_password
-
-SEMAPHORE_URL=https://semaphore.example.com
-SEMAPHORE_API_TOKEN=your_api_token
-
-BOT_COMMAND_PREFIX=!cd
-EOF
+```json
+{
+  "matrix": {
+    "homeserver": "https://matrix.example.com",
+    "user_id": "@chatrixcd:example.com",
+    "auth_type": "password",
+    "password": "your_bot_password"
+  },
+  "semaphore": {
+    "url": "https://semaphore.example.com",
+    "api_token": "your_api_token"
+  },
+  "bot": {
+    "command_prefix": "!cd"
+  }
+}
 ```
 
 ### For OIDC Authentication
 
-Create a `.env` file with OIDC settings:
+Create a `config.json` file with OIDC settings:
 
-```bash
-cat > .env << EOF
-MATRIX_HOMESERVER=https://matrix.example.com
-MATRIX_USER_ID=@chatrixcd:example.com
-MATRIX_AUTH_TYPE=oidc
-MATRIX_OIDC_ISSUER=https://auth.example.com
-MATRIX_OIDC_CLIENT_ID=your_client_id
-MATRIX_OIDC_CLIENT_SECRET=your_client_secret
-
-SEMAPHORE_URL=https://semaphore.example.com
-SEMAPHORE_API_TOKEN=your_api_token
-
-BOT_COMMAND_PREFIX=!cd
-EOF
+```json
+{
+  "matrix": {
+    "homeserver": "https://matrix.example.com",
+    "user_id": "@chatrixcd:example.com",
+    "auth_type": "oidc",
+    "oidc_issuer": "https://auth.example.com",
+    "oidc_client_id": "your_client_id",
+    "oidc_client_secret": "your_client_secret"
+  },
+  "semaphore": {
+    "url": "https://semaphore.example.com",
+    "api_token": "your_api_token"
+  },
+  "bot": {
+    "command_prefix": "!cd"
+  }
+}
 ```
 
 ## Running the Bot
@@ -161,9 +171,11 @@ chatrixcd -a @admin:matrix.org -r !room:matrix.org
 ## Docker Quick Start
 
 ```bash
-# Copy and edit environment file
-cp .env.example .env
-nano .env
+# Copy and edit configuration file
+cp config.json.example config.json
+nano config.json
+
+# Update docker-compose.yml to mount config.json (uncomment the config volume line)
 
 # Start with Docker Compose
 docker-compose up -d

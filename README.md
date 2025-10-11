@@ -291,7 +291,7 @@ ChatrixCD is built with the following components:
 ## Security Considerations
 
 - **Encryption Keys**: The bot stores encryption keys in the configured `store_path` directory. Keep this secure.
-- **Credentials**: Never commit your `config.json` or `.env` file with real credentials.
+- **Credentials**: Never commit your `config.json` file with real credentials.
 - **Access Control**: Use `allowed_rooms` and `admin_users` to restrict bot access.
 - **API Tokens**: Use Semaphore API tokens with minimal required permissions.
 
@@ -342,7 +342,6 @@ ChatrixCD/
 ├── requirements.txt
 ├── setup.py
 ├── config.json.example
-├── .env.example
 └── README.md
 ```
 
@@ -354,25 +353,37 @@ Pull requests are automatically tested using GitHub Actions. Tests run against P
 
 ### Releases
 
-Releases are created using a calendar versioning (CalVer) system with the format `YYYY.MM.PATCH` (e.g., `2024.12.0`).
+Releases use a semantic calendar versioning system with the format `YYYY.MM.DD.MAJOR.MINOR.PATCH` (e.g., `2025.10.12.1.0.1`).
+
+**Version Format:**
+- `YYYY.MM.DD`: Release date (year, month, day)
+- `MAJOR`: Breaking changes or major features
+- `MINOR`: New features, non-breaking changes
+- `PATCH`: Bug fixes and security updates
+
+**Important:** Version numbers (MAJOR, MINOR, PATCH) always increment and never reset. This ensures each version is unique and comparable.
 
 To create a new release:
 
 1. Go to Actions → Build and Release workflow
 2. Click "Run workflow"
 3. Select version type:
-   - **patch**: Increment patch version (e.g., 2024.12.0 → 2024.12.1)
-   - **minor**: Increment patch version for new features (e.g., 2024.12.0 → 2024.12.1)
+   - **major**: Breaking changes or major features (e.g., 2025.10.12.1.0.1 → 2025.10.13.2.0.0)
+   - **minor**: New features, non-breaking (e.g., 2025.10.12.1.0.1 → 2025.10.13.1.1.0)
+   - **patch**: Bug fixes and security updates (e.g., 2025.10.12.1.0.1 → 2025.10.13.1.0.2)
+
 4. The workflow will:
    - Run all unit tests
-   - Calculate the new version based on current date
+   - Calculate the new version based on current date and type
    - Update version in code (`__init__.py` and `setup.py`)
    - Update `CHANGELOG.md` (move Unreleased content to new version section)
    - Generate changelog from commits
    - Commit all changes
-   - Create a GitHub release with the changelog
+   - Create a GitHub release
 
-**Note**: Make sure to document changes in the `[Unreleased]` section of `CHANGELOG.md` as you develop. The release workflow will automatically move these changes to a versioned section.
+**Note**: Document changes in the `[Unreleased]` section of `CHANGELOG.md` as you develop. The release workflow will automatically move these changes to a versioned section.
+
+**Historical Note**: Versions prior to October 2025 used the format `YYYY.MM.PATCH` (e.g., `2025.10.8`). The new format provides better semantic versioning while maintaining date-based organization.
 
 ## Contributing
 

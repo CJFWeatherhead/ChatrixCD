@@ -38,14 +38,9 @@ Fixes #
 - [ ] Manual testing performed
 - [ ] All existing tests pass
 
-### Test Environment
+**Test Environment:** Python version, OS, Deployment method
 
-- Python version:
-- OS:
-- Deployment method:
-
-### Test Results
-
+**Test Results:**
 <!-- Describe what you tested and the results -->
 
 ## Documentation
