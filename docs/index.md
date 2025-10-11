@@ -8,11 +8,12 @@ nav_order: 1
 
 <img src="assets/logo-horizontal.svg" alt="ChatrixCD Logo" width="500">
 
+</div>
+
+
 # ChatrixCD
 
 **Matrix bot for CI/CD automation through chat**
-
-</div>
 
 ---
 
