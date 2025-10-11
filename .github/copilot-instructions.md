@@ -15,7 +15,7 @@ ChatrixCD is a Matrix bot that integrates with Semaphore UI to enable CI/CD auto
 ### Core Components
 
 - **main.py**: Application entry point and lifecycle management
-- **config.py**: Configuration management (JSON + environment variables)
+- **config.py**: Configuration management (JSON with HJSON support)
 - **auth.py**: Matrix authentication handler (password, token, OIDC)
 - **bot.py**: Matrix client integration and event handling
 - **commands.py**: Command parser and task orchestration
@@ -70,11 +70,12 @@ def function_name(param1: str, param2: int) -> bool:
 
 ## Configuration
 
-### Configuration Priority
+### Configuration
+
+Configuration is loaded exclusively from JSON files with HJSON support (JSON with comments):
 
 1. JSON configuration file (`config.json`)
-2. Environment variables (uppercase, underscores)
-3. Default values
+2. Default values
 
 ### Accessing Configuration
 
@@ -85,11 +86,11 @@ config = Config()
 matrix_config = config.get_matrix_config()
 ```
 
-### Environment Variable Naming
+### Configuration Format
 
-- Use SCREAMING_SNAKE_CASE
-- Prefix with component: `MATRIX_`, `SEMAPHORE_`, `BOT_`
-- Example: `MATRIX_HOMESERVER`, `SEMAPHORE_URL`
+- Use JSON or HJSON format (HJSON allows comments and trailing commas)
+- Supports automatic migration between config versions
+- Schema validation with clear error messages
 
 ## Testing
 
@@ -107,8 +108,8 @@ import unittest
 from chatrixcd.config import Config
 
 class TestConfig(unittest.TestCase):
-    def test_load_config_from_env(self):
-        """Test configuration loading from environment variables."""
+    def test_load_config_from_json(self):
+        """Test configuration loading from JSON file."""
         # Test implementation
         pass
 ```
@@ -151,9 +152,9 @@ python -m unittest tests.test_config  # Specific test file
 ### Credentials
 
 - Never log credentials, tokens, or passwords
-- Use environment variables for sensitive data in production
+- Store configuration files securely with proper file permissions
 - Store encryption keys securely in the `store/` directory
-- Never commit `config.json` or `.env` files with real credentials
+- Never commit `config.json` with real credentials
 
 ### Access Control
 
@@ -224,14 +225,14 @@ def start_task(self, project_id: int, template_id: int) -> dict:
 - Native deployment with systemd (Debian/Ubuntu, RHEL/CentOS, Fedora)
 - Native deployment with OpenRC (Alpine Linux)
 
-### Environment Variables for Deployment
+### Configuration for Deployment
 
-Essential environment variables:
-- `MATRIX_HOMESERVER`: Matrix homeserver URL
-- `MATRIX_USER_ID`: Bot user ID
-- `MATRIX_PASSWORD` or `MATRIX_ACCESS_TOKEN`: Authentication
-- `SEMAPHORE_URL`: Semaphore UI URL
-- `SEMAPHORE_API_TOKEN`: Semaphore API token
+Configuration is done through `config.json` file with essential settings:
+- `matrix.homeserver`: Matrix homeserver URL
+- `matrix.user_id`: Bot user ID
+- `matrix.password` or `matrix.access_token`: Authentication
+- `semaphore.url`: Semaphore UI URL
+- `semaphore.api_token`: Semaphore API token
 
 ## Common Patterns
 
