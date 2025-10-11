@@ -32,6 +32,10 @@ When you are creating a bug report, please include as many details as possible:
 - Describe the behavior you observed and what behavior you expected
 - Include logs, screenshots, or error messages if applicable
 - Note your environment (OS, Python version, Matrix homeserver type, etc.)
+- **For privacy**: Use the `-R` flag when collecting logs to automatically redact sensitive information:
+  ```bash
+  chatrixcd -vv -R  # Verbose logging with redaction
+  ```
 
 Use the bug report issue template when available.
 

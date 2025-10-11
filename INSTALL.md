@@ -389,6 +389,7 @@ Alpine Linux uses OpenRC instead of systemd. This is a lightweight deployment op
 - Verify the bot has joined the room
 - Check the command prefix matches your configuration
 - Review logs for errors
+- Enable verbose logging: `chatrixcd -vv` or `chatrixcd -vv -R` (with redaction for privacy)
 
 ### Authentication fails
 
@@ -418,6 +419,10 @@ Alpine Linux uses OpenRC instead of systemd. This is a lightweight deployment op
 5. **Regular updates**: Keep dependencies updated for security patches
 6. **Network security**: Use HTTPS for all endpoints
 7. **Monitoring**: Set up logging and monitoring for the bot
+8. **Log redaction**: When sharing logs for troubleshooting, use `-R` flag to redact sensitive information:
+   ```bash
+   chatrixcd -vv -R  # Verbose logging with automatic redaction
+   ```
 
 ## Upgrading
 

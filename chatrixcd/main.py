@@ -8,14 +8,16 @@ import sys
 from chatrixcd import __version__
 from chatrixcd.config import Config
 from chatrixcd.bot import ChatrixBot
+from chatrixcd.redactor import SensitiveInfoRedactor, RedactingFilter
 
 
-def setup_logging(verbosity: int = 0, color: bool = False):
+def setup_logging(verbosity: int = 0, color: bool = False, redact: bool = False):
     """Setup logging configuration.
     
     Args:
         verbosity: Verbosity level (0=INFO, 1=DEBUG, 2+=detailed DEBUG)
         color: Enable colored logging output
+        redact: Enable redaction of sensitive information
     """
     # Determine log level based on verbosity
     if verbosity == 0:
@@ -58,6 +60,13 @@ def setup_logging(verbosity: int = 0, color: bool = False):
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=handlers
     )
+    
+    # Add redaction filter if requested
+    if redact:
+        redactor = SensitiveInfoRedactor(enabled=True, colorize=color)
+        redacting_filter = RedactingFilter(redactor)
+        for handler in logging.root.handlers:
+            handler.addFilter(redacting_filter)
     
     # Set even more verbose logging for key modules if verbosity >= 2
     if verbosity >= 2:
@@ -134,6 +143,12 @@ def parse_args():
         help='Add allowed room (can be specified multiple times, e.g., -r !room1:matrix.org -r !room2:matrix.org)'
     )
     
+    parser.add_argument(
+        '-R', '--redact',
+        action='store_true',
+        help='Redact sensitive information from logs (room names, usernames, IPs, tokens, etc.)'
+    )
+    
     return parser.parse_args()
 
 
@@ -177,11 +192,12 @@ def daemonize():
         os.dup2(f.fileno(), sys.stderr.fileno())
 
 
-def print_config(config: Config):
+def print_config(config: Config, redact_identifiers: bool = False):
     """Print configuration with redacted credentials.
     
     Args:
         config: Configuration object to print
+        redact_identifiers: If True, also redact room IDs, user IDs, and other identifiers
     """
     import json
     import copy
@@ -192,12 +208,23 @@ def print_config(config: Config):
     # Redact sensitive fields
     sensitive_fields = ['password', 'access_token', 'api_token', 'client_secret', 'oidc_client_secret']
     
+    # Additional fields to redact when redact_identifiers is enabled
+    identifier_fields = ['user_id', 'homeserver', 'url', 'admin_users', 'allowed_rooms']
+    
     def redact_sensitive(obj, path=''):
         """Recursively redact sensitive fields."""
         if isinstance(obj, dict):
             for key, value in obj.items():
                 if key in sensitive_fields and value:
                     obj[key] = '***REDACTED***'
+                elif redact_identifiers and key in identifier_fields and value:
+                    if isinstance(value, str):
+                        # Use redactor for proper redaction
+                        redactor = SensitiveInfoRedactor(enabled=True, colorize=False)
+                        obj[key] = redactor.redact(value)
+                    elif isinstance(value, list):
+                        redactor = SensitiveInfoRedactor(enabled=True, colorize=False)
+                        obj[key] = [redactor.redact(str(v)) for v in value]
                 else:
                     redact_sensitive(value, f'{path}.{key}' if path else key)
         elif isinstance(obj, list):
@@ -218,8 +245,8 @@ def main():
     # Parse command-line arguments
     args = parse_args()
     
-    # Setup logging with verbosity and color options
-    setup_logging(verbosity=args.verbosity, color=args.color)
+    # Setup logging with verbosity, color, and redaction options
+    setup_logging(verbosity=args.verbosity, color=args.color, redact=args.redact)
     logger = logging.getLogger(__name__)
     
     # Daemonize if requested (Unix/Linux only)
@@ -230,7 +257,7 @@ def main():
         logger.info("Entering daemon mode...")
         daemonize()
         # Re-setup logging after daemonization
-        setup_logging(verbosity=args.verbosity, color=False)  # No color in daemon mode
+        setup_logging(verbosity=args.verbosity, color=False, redact=args.redact)  # No color in daemon mode
         logger = logging.getLogger(__name__)
     
     logger.info(f"ChatrixCD {__version__} starting...")
@@ -270,7 +297,7 @@ def main():
     
     # Show config and exit if requested
     if args.show_config:
-        print_config(config)
+        print_config(config, redact_identifiers=args.redact)
         sys.exit(0)
     
     # Create and run bot

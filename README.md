@@ -182,6 +182,7 @@ chatrixcd [OPTIONS]
 - `-v, --verbose` - Increase verbosity (use `-v` for DEBUG, `-vv` for detailed DEBUG with library logs)
 - `-c FILE, --config FILE` - Path to configuration file (default: config.json)
 - `-C, --color` - Enable colored logging output (requires colorlog package)
+- `-R, --redact` - Redact sensitive information from logs (room names, usernames, IPs, tokens, etc.)
 - `-D, --daemon` - Run in daemon mode (background process, Unix/Linux only)
 - `-s, --show-config` - Display current configuration with redacted credentials and exit
 - `-a USER, --admin USER` - Add admin user (can be specified multiple times)
@@ -207,7 +208,15 @@ chatrixcd -a @admin1:matrix.org -a @admin2:matrix.org -r !room1:matrix.org
 
 # Combine multiple options
 chatrixcd -vv -C -c custom.json -a @admin:matrix.org
+
+# Enable verbose logging with redaction for privacy (recommended for bug reports)
+chatrixcd -vv -R
+
+# Redaction with colored output (redacted content appears in pink)
+chatrixcd -vv -C -R
 ```
+
+**Privacy Note**: When reporting bugs or sharing logs, use the `-R` flag to automatically redact sensitive information like room IDs, usernames, IP addresses, and tokens. When combined with `-C`, redacted information will be highlighted in pink for easy identification.
 
 ### Bot Commands
 

@@ -29,6 +29,10 @@ If you've found a bug:
 1. **Search existing issues** - Check if the bug has already been reported
 2. **Use the bug report template** - [Create a bug report](https://github.com/CJFWeatherhead/ChatrixCD/issues/new/choose)
 3. **Provide details** - Include logs, configuration (without credentials), and steps to reproduce
+4. **Protect your privacy** - Use the `-R` flag when collecting logs to automatically redact sensitive information:
+   ```bash
+   chatrixcd -vv -R  # Verbose logging with redaction
+   ```
 
 ### Requesting Features
 
@@ -137,7 +141,23 @@ For security vulnerabilities:
 
 #### Enable verbose logging
 
-Add to your configuration or environment:
+Use command-line flags for verbose logging:
+
+```bash
+# Basic verbose logging
+chatrixcd -v
+
+# More verbose with library logs
+chatrixcd -vv
+
+# Verbose with redaction (recommended for sharing logs)
+chatrixcd -vv -R
+
+# Verbose with redaction and colored output (redacted parts in pink)
+chatrixcd -vv -C -R
+```
+
+Or add to your configuration:
 
 ```json
 {
@@ -145,11 +165,6 @@ Add to your configuration or environment:
     "level": "DEBUG"
   }
 }
-```
-
-Or:
-```bash
-export LOG_LEVEL=DEBUG
 ```
 
 #### Check logs

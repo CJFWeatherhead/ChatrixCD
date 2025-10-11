@@ -42,7 +42,15 @@ body:
     id: logs
     attributes:
       label: Relevant Log Output
-      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      description: |
+        Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+        
+        **For your privacy and security, consider using the `-R` flag to redact sensitive information:**
+        ```bash
+        chatrixcd -vv -R  # Verbose logging with redaction
+        ```
+        
+        This will automatically redact room names, usernames, IP addresses, tokens, and other identifying information from the logs.
       render: shell
     validations:
       required: false
