@@ -49,6 +49,14 @@ class TestSensitiveInfoRedactor(unittest.TestCase):
         self.assertIn('[IPV6_REDACTED]', result)
         self.assertNotIn('7334', result)
     
+    def test_timestamp_not_redacted(self):
+        """Test that timestamps are not redacted as IPv6 addresses."""
+        message = "2025-10-11 12:34:56 - Log entry"
+        result = self.redactor.redact(message)
+        # Should not be modified
+        self.assertIn("12:34:56", result)
+        self.assertNotIn('[IPV6_REDACTED]', result)
+    
     def test_redact_token(self):
         """Test redaction of tokens."""
         message = "Authorization: Bearer abc123xyz456"

@@ -37,8 +37,9 @@ class SensitiveInfoRedactor:
         self.ipv4_pattern = re.compile(r'\b(\d{1,3}\.\d{1,3}\.)\d{1,3}\.\d{1,3}\b')
         
         # IPv6 addresses - mask last 4 groups
+        # More specific pattern to avoid matching timestamps
         self.ipv6_pattern = re.compile(
-            r'\b([0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:)[0-9a-fA-F:]+\b'
+            r'\b([0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:)[0-9a-fA-F:]+\b'
         )
         
         # Hostnames/domains - mask middle parts (but not IP addresses)
