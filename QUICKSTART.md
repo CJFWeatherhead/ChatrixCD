@@ -88,14 +88,40 @@ Create a `config.json` file with OIDC settings:
 
 ## Running the Bot
 
+**Interactive Mode (with TUI):**
+
+By default, ChatrixCD starts with an interactive Text User Interface:
+
 ```bash
 # Make sure your virtual environment is activated
 # If not, activate it first:
 source .venv/bin/activate  # On Linux/macOS
 # .venv\Scripts\activate    # On Windows
 
-# Run the bot
+# Run the bot with TUI
 chatrixcd
+
+# Or with colored output
+chatrixcd -C
+```
+
+The TUI provides a menu-driven interface with options for:
+- **STATUS** - View bot status and metrics
+- **ADMINS** - View admin users
+- **ROOMS** - View joined rooms
+- **SESSIONS** - Manage encryption sessions
+- **SAY** - Send messages to rooms
+- **LOG** - View bot logs
+- **SET** - Change operational variables
+- **SHOW** - View current configuration
+- **QUIT** - Exit the bot
+
+**Classic Log-Only Mode:**
+
+To run without the TUI (shows only logs):
+
+```bash
+chatrixcd -L
 ```
 
 The bot will:
@@ -114,11 +140,17 @@ chatrixcd --help
 # Show version
 chatrixcd --version
 
+# Run with TUI and colored output
+chatrixcd -C
+
+# Run in classic log-only mode (no TUI)
+chatrixcd -L
+
 # Run with verbose logging (helpful for debugging)
-chatrixcd -v
+chatrixcd -v -L
 
 # Run with very verbose logging
-chatrixcd -vv
+chatrixcd -vv -L
 
 # Use a custom config file
 chatrixcd -c /path/to/config.json

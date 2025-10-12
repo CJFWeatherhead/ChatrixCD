@@ -388,7 +388,9 @@ ChatrixCD/
 │   ├── auth.py         # Authentication
 │   ├── config.py       # Configuration
 │   ├── commands.py     # Command handlers
-│   └── semaphore.py    # Semaphore API client
+│   ├── semaphore.py    # Semaphore API client
+│   ├── tui.py          # Text User Interface
+│   └── redactor.py     # Sensitive data redaction
 ├── requirements.txt
 ├── setup.py
 ├── config.json.example
