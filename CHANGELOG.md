@@ -22,21 +22,36 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Menu-driven interface with brand colors (ChatrixCD green: #4A9B7F)
   - Mouse support for easy navigation
   - Works without color support when `-C` flag is not used
+- **Real-Time Task Monitoring**: 
+  - Active tasks widget on home screen showing running Semaphore tasks
+  - Live status updates every 5 seconds
+  - Color-coded status indicators (running, success, error, stopped)
 - **TUI Menu Options**:
   - **STATUS**: View bot status (Matrix/Semaphore connections, uptime, metrics including messages processed, errors, warnings)
   - **ADMINS**: View admin users configured for the bot
   - **ROOMS**: View all rooms the bot has joined
-  - **SESSIONS**: Manage Olm encryption sessions (view sessions, reset sessions)
+  - **SESSIONS**: Comprehensive encryption session management
+    - View active encryption sessions with verification status
+    - Emoji-based device verification
+    - QR code device verification
+    - Device fingerprint display for manual verification
+    - Olm session reset instructions
   - **SAY**: Send messages to rooms from the bot
   - **LOG**: View bot logs in real-time within the TUI
-  - **SET**: Change operational variables (configuration editing)
+  - **SET**: Interactive configuration editing
+    - Edit command prefix, greetings, and messages
+    - Apply changes to runtime only or save to config.json
+    - Type validation and change preview
+    - Pending changes tracking
   - **SHOW**: View current configuration with redacted credentials
   - **QUIT**: Gracefully shutdown the bot
 - **New Command-Line Flags**:
   - `-L, --log-only`: Run in classic log-only mode (no TUI, backward compatible behavior)
   - TUI automatically disabled when running in daemon mode (`-D`) or non-interactive terminal
 - **Color Support**: TUI uses brand colors when `-C` flag is used, but remains fully functional without color support
-- **Dependencies**: Added `textual>=0.47.0` for TUI implementation
+- **Dependencies**: 
+  - Added `textual>=0.47.0` for TUI implementation
+  - Added `qrcode>=7.4.2` for QR code generation in device verification
 
 ### Fixed
 - **Encrypted Room Support**: Fixed issue where bot would not respond to commands in encrypted rooms. The bot now properly handles successfully decrypted Megolm events and processes them as normal messages

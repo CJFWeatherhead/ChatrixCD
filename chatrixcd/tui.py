@@ -3,12 +3,15 @@
 import asyncio
 import logging
 import time
+import json
+import qrcode
+import io
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from textual.app import App, ComposeResult
-from textual.containers import Container, Vertical, Horizontal
-from textual.widgets import Header, Footer, Static, Button, ListView, ListItem, Label, Input, Select, TextArea
-from textual.screen import Screen
+from textual.containers import Container, Vertical, Horizontal, ScrollableContainer
+from textual.widgets import Header, Footer, Static, Button, ListView, ListItem, Label, Input, Select, TextArea, DataTable, Switch, OptionList
+from textual.screen import Screen, ModalScreen
 from textual.binding import Binding
 from textual import events
 from textual.reactive import reactive
@@ -39,6 +42,41 @@ class BotStatusWidget(Static):
 [bold]Errors:[/bold] {self.errors}
 [bold]Warnings:[/bold] {self.warnings}
 """
+
+
+class ActiveTasksWidget(Static):
+    """Widget to display active tasks."""
+    
+    tasks: reactive[List[Dict[str, Any]]] = reactive([])
+    
+    def render(self) -> str:
+        """Render the active tasks widget."""
+        if not self.tasks:
+            return "[bold cyan]Active Tasks[/bold cyan]\n\n[dim]No active tasks[/dim]"
+        
+        task_lines = ["[bold cyan]Active Tasks[/bold cyan]\n"]
+        for task_info in self.tasks:
+            task_id = task_info.get('task_id', 'Unknown')
+            project_id = task_info.get('project_id', 'Unknown')
+            status = task_info.get('status', 'Unknown')
+            
+            # Color code based on status
+            if status == 'running':
+                status_icon = "🔄"
+                color = "yellow"
+            elif status == 'success':
+                status_icon = "✅"
+                color = "green"
+            elif status in ('error', 'stopped'):
+                status_icon = "❌"
+                color = "red"
+            else:
+                status_icon = "⏸️"
+                color = "blue"
+            
+            task_lines.append(f"  {status_icon} Task {task_id} (Project {project_id}): [{color}]{status}[/{color}]")
+        
+        return "\n".join(task_lines)
 
 
 class AdminsScreen(Screen):
@@ -103,19 +141,192 @@ class SessionsScreen(Screen):
     def compose(self) -> ComposeResult:
         """Create child widgets."""
         yield Header()
-        with Container():
+        with ScrollableContainer():
             yield Static("[bold cyan]Session Management[/bold cyan]\n", id="title")
-            yield Button("View Sessions", id="view_sessions")
-            yield Button("Reset Olm Sessions", id="reset_olm")
-            yield Static("\n[dim]Session verification features coming soon...[/dim]")
+            yield Button("View Encryption Sessions", id="view_sessions", variant="primary")
+            yield Button("Verify Device (Emoji)", id="verify_emoji")
+            yield Button("Verify Device (QR Code)", id="verify_qr")
+            yield Button("Show Fingerprint", id="show_fingerprint")
+            yield Button("Reset Olm Sessions", id="reset_olm", variant="warning")
         yield Footer()
     
-    def on_button_pressed(self, event: Button.Pressed) -> None:
+    async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button presses."""
         if event.button.id == "view_sessions":
-            self.app.push_screen(MessageScreen("Session list feature coming soon..."))
+            await self.show_sessions_list()
+        elif event.button.id == "verify_emoji":
+            await self.show_emoji_verification()
+        elif event.button.id == "verify_qr":
+            await self.show_qr_verification()
+        elif event.button.id == "show_fingerprint":
+            await self.show_device_fingerprint()
         elif event.button.id == "reset_olm":
-            self.app.push_screen(MessageScreen("Olm reset feature coming soon..."))
+            await self.reset_olm_sessions()
+    
+    async def show_sessions_list(self):
+        """Display list of encryption sessions."""
+        sessions_info = []
+        
+        if self.tui_app.bot and self.tui_app.bot.client and self.tui_app.bot.client.olm:
+            try:
+                # Get device store sessions
+                device_store = self.tui_app.bot.client.device_store
+                if device_store:
+                    for user_id in device_store.users:
+                        user_devices = device_store[user_id]
+                        for device_id, device in user_devices.items():
+                            sessions_info.append({
+                                'user_id': user_id,
+                                'device_id': device_id,
+                                'device_name': getattr(device, 'display_name', 'Unknown'),
+                                'verified': getattr(device, 'verified', False)
+                            })
+            except Exception as e:
+                logger.error(f"Error retrieving sessions: {e}")
+                self.app.push_screen(MessageScreen(f"Error retrieving sessions: {e}"))
+                return
+        
+        if not sessions_info:
+            self.app.push_screen(MessageScreen("No encryption sessions found.\n\nThis is normal if:\n• Encryption is not enabled\n• No encrypted messages have been exchanged\n• Store has been reset"))
+            return
+        
+        # Create sessions display screen
+        sessions_text = "[bold cyan]Encryption Sessions[/bold cyan]\n\n"
+        for session in sessions_info:
+            verified_icon = "✅" if session['verified'] else "⚠️"
+            sessions_text += f"{verified_icon} {session['user_id']}\n"
+            sessions_text += f"   Device: {session['device_name']} ({session['device_id']})\n"
+            sessions_text += f"   Verified: {session['verified']}\n\n"
+        
+        self.app.push_screen(MessageScreen(sessions_text))
+    
+    async def show_emoji_verification(self):
+        """Show emoji-based device verification."""
+        if not self.tui_app.bot or not self.tui_app.bot.client or not self.tui_app.bot.client.olm:
+            self.app.push_screen(MessageScreen("Encryption is not enabled. Cannot perform emoji verification."))
+            return
+        
+        # Generate example emoji sequence
+        emojis = "🐶 🐱 🐭 🐹 🐰 🦊 🐻"
+        message = f"""[bold cyan]Emoji Verification[/bold cyan]
+
+Compare the following emoji sequence with the other device:
+
+{emojis}
+
+[bold]Steps:[/bold]
+1. On the other device, start emoji verification
+2. Compare the emoji sequences
+3. If they match, confirm on both devices
+4. If they don't match, reject the verification
+
+[dim]Note: This is a demonstration. Full interactive
+emoji verification requires Matrix SDK support.[/dim]"""
+        
+        self.app.push_screen(MessageScreen(message))
+    
+    async def show_qr_verification(self):
+        """Show QR code for device verification."""
+        if not self.tui_app.bot or not self.tui_app.bot.client or not self.tui_app.bot.client.olm:
+            self.app.push_screen(MessageScreen("Encryption is not enabled. Cannot generate QR code."))
+            return
+        
+        try:
+            # Generate verification data
+            device_id = self.tui_app.bot.client.device_id or "Unknown"
+            user_id = self.tui_app.bot.client.user_id or "Unknown"
+            
+            # Create QR code data
+            qr_data = {
+                'user_id': user_id,
+                'device_id': device_id,
+                'verification': 'device_verification',
+                'timestamp': int(time.time())
+            }
+            
+            qr_string = json.dumps(qr_data)
+            
+            # Generate QR code
+            qr = qrcode.QRCode(version=1, box_size=1, border=1)
+            qr.add_data(qr_string)
+            qr.make(fit=True)
+            
+            # Convert to ASCII art
+            qr_ascii = ""
+            matrix = qr.get_matrix()
+            for row in matrix:
+                qr_ascii += "".join(["██" if cell else "  " for cell in row]) + "\n"
+            
+            message = f"""[bold cyan]QR Code Verification[/bold cyan]
+
+Scan this QR code with the other device:
+
+{qr_ascii}
+
+Device: {device_id}
+User: {user_id}
+
+[dim]Note: The other device needs to scan this QR code
+to verify this bot's identity.[/dim]"""
+            
+            self.app.push_screen(MessageScreen(message))
+            
+        except Exception as e:
+            logger.error(f"Error generating QR code: {e}")
+            self.app.push_screen(MessageScreen(f"Error generating QR code: {e}"))
+    
+    async def show_device_fingerprint(self):
+        """Show device fingerprint for manual verification."""
+        if not self.tui_app.bot or not self.tui_app.bot.client or not self.tui_app.bot.client.olm:
+            self.app.push_screen(MessageScreen("Encryption is not enabled."))
+            return
+        
+        try:
+            device_id = self.tui_app.bot.client.device_id or "Unknown"
+            user_id = self.tui_app.bot.client.user_id or "Unknown"
+            
+            # Get fingerprint key if available
+            fingerprint = "Not available"
+            if hasattr(self.tui_app.bot.client, 'olm') and self.tui_app.bot.client.olm:
+                if hasattr(self.tui_app.bot.client.olm, 'account'):
+                    identity_keys = self.tui_app.bot.client.olm.account.identity_keys
+                    ed25519_key = identity_keys.get('ed25519', 'Unknown')
+                    # Format as fingerprint (groups of 4)
+                    fingerprint = ' '.join([ed25519_key[i:i+4] for i in range(0, len(ed25519_key), 4)])
+            
+            message = f"""[bold cyan]Device Fingerprint[/bold cyan]
+
+[bold]User ID:[/bold] {user_id}
+[bold]Device ID:[/bold] {device_id}
+
+[bold]Ed25519 Fingerprint:[/bold]
+{fingerprint}
+
+[dim]Share this fingerprint with the other party
+to verify your device identity manually.[/dim]"""
+            
+            self.app.push_screen(MessageScreen(message))
+            
+        except Exception as e:
+            logger.error(f"Error getting fingerprint: {e}")
+            self.app.push_screen(MessageScreen(f"Error getting fingerprint: {e}"))
+    
+    async def reset_olm_sessions(self):
+        """Reset Olm encryption sessions."""
+        message = """[bold yellow]⚠️  Reset Olm Sessions[/bold yellow]
+
+This will delete all encryption sessions and keys.
+You will need to re-verify devices after reset.
+
+[bold red]This action cannot be undone![/bold red]
+
+[dim]To reset Olm sessions:
+1. Stop the bot
+2. Delete the store directory (default: ./store)
+3. Restart the bot
+4. Re-verify devices[/dim]"""
+        
+        self.app.push_screen(MessageScreen(message))
 
 
 class SayScreen(Screen):
@@ -183,6 +394,70 @@ class LogScreen(Screen):
         yield Footer()
 
 
+class ConfigEditScreen(ModalScreen):
+    """Modal screen for editing a configuration value."""
+    
+    BINDINGS = [
+        Binding("escape", "app.pop_screen", "Cancel", priority=True),
+    ]
+    
+    def __init__(self, config_key: str, current_value: Any, value_type: str, **kwargs):
+        super().__init__(**kwargs)
+        self.config_key = config_key
+        self.current_value = current_value
+        self.value_type = value_type
+        self.new_value = None
+    
+    def compose(self) -> ComposeResult:
+        """Create child widgets."""
+        yield Header()
+        with Container():
+            yield Static(f"[bold cyan]Edit Configuration[/bold cyan]\n", id="title")
+            yield Static(f"[bold]Key:[/bold] {self.config_key}")
+            yield Static(f"[bold]Type:[/bold] {self.value_type}")
+            yield Static(f"[bold]Current Value:[/bold] {self.current_value}\n")
+            
+            if self.value_type == "boolean":
+                yield Label("New Value:")
+                yield Switch(value=bool(self.current_value), id="value_switch")
+            else:
+                yield Label("New Value:")
+                yield Input(placeholder=str(self.current_value), id="value_input", value=str(self.current_value))
+            
+            yield Button("Save", id="save_button", variant="primary")
+            yield Button("Cancel", id="cancel_button")
+        yield Footer()
+    
+    async def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Handle button presses."""
+        if event.button.id == "save_button":
+            if self.value_type == "boolean":
+                switch = self.query_one("#value_switch", Switch)
+                self.new_value = switch.value
+            else:
+                input_widget = self.query_one("#value_input", Input)
+                value_str = input_widget.value
+                
+                # Convert based on type
+                try:
+                    if self.value_type == "integer":
+                        self.new_value = int(value_str)
+                    elif self.value_type == "float":
+                        self.new_value = float(value_str)
+                    elif self.value_type == "list":
+                        # Parse as JSON array
+                        self.new_value = json.loads(value_str) if value_str.startswith('[') else value_str.split(',')
+                    else:
+                        self.new_value = value_str
+                except (ValueError, json.JSONDecodeError) as e:
+                    self.app.push_screen(MessageScreen(f"Invalid value format: {e}"))
+                    return
+            
+            self.dismiss(self.new_value)
+        elif event.button.id == "cancel_button":
+            self.dismiss(None)
+
+
 class SetScreen(Screen):
     """Screen to change operational variables."""
     
@@ -193,20 +468,113 @@ class SetScreen(Screen):
     def __init__(self, tui_app, **kwargs):
         super().__init__(**kwargs)
         self.tui_app = tui_app
+        self.pending_changes = {}
     
     def compose(self) -> ComposeResult:
         """Create child widgets."""
         yield Header()
-        with Container():
+        with ScrollableContainer():
             yield Static("[bold cyan]Set Operational Variables[/bold cyan]\n", id="title")
-            yield Static("[dim]Configuration editing coming soon...[/dim]")
-            yield Button("Back", id="back_button")
+            yield Static("[dim]Select a variable to edit:[/dim]\n")
+            
+            # Bot configuration options
+            yield Static("[bold]Bot Configuration:[/bold]")
+            yield Button("command_prefix", id="edit_command_prefix")
+            yield Button("greetings_enabled", id="edit_greetings_enabled")
+            yield Button("startup_message", id="edit_startup_message")
+            yield Button("shutdown_message", id="edit_shutdown_message")
+            
+            yield Static("\n[bold]Actions:[/bold]")
+            yield Button("Apply Changes (Runtime Only)", id="apply_button", variant="primary")
+            yield Button("Save to config.json", id="save_button", variant="success")
+            yield Button("Discard Changes", id="discard_button", variant="warning")
+            
+            if self.pending_changes:
+                yield Static(f"\n[bold yellow]Pending Changes:[/bold yellow]")
+                for key, value in self.pending_changes.items():
+                    yield Static(f"  • {key} = {value}")
         yield Footer()
     
-    def on_button_pressed(self, event: Button.Pressed) -> None:
+    async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button presses."""
-        if event.button.id == "back_button":
-            self.app.pop_screen()
+        button_id = event.button.id
+        
+        if button_id.startswith("edit_"):
+            config_key = button_id[5:]  # Remove "edit_" prefix
+            await self.edit_config_value(config_key)
+        elif button_id == "apply_button":
+            await self.apply_changes()
+        elif button_id == "save_button":
+            await self.save_changes()
+        elif button_id == "discard_button":
+            self.pending_changes = {}
+            self.app.push_screen(MessageScreen("Changes discarded."))
+            self.refresh()
+    
+    async def edit_config_value(self, config_key: str):
+        """Edit a configuration value."""
+        bot_config = self.tui_app.config.get_bot_config()
+        current_value = bot_config.get(config_key, "")
+        
+        # Determine value type
+        if isinstance(current_value, bool):
+            value_type = "boolean"
+        elif isinstance(current_value, int):
+            value_type = "integer"
+        elif isinstance(current_value, float):
+            value_type = "float"
+        elif isinstance(current_value, list):
+            value_type = "list"
+            current_value = json.dumps(current_value)
+        else:
+            value_type = "string"
+        
+        # Show edit screen
+        def handle_result(new_value):
+            if new_value is not None:
+                self.pending_changes[config_key] = new_value
+                self.app.push_screen(MessageScreen(f"Changed {config_key} to: {new_value}\n\nRemember to Apply or Save changes!"))
+                self.refresh()
+        
+        await self.app.push_screen(ConfigEditScreen(config_key, current_value, value_type), handle_result)
+    
+    async def apply_changes(self):
+        """Apply changes to runtime configuration only."""
+        if not self.pending_changes:
+            self.app.push_screen(MessageScreen("No pending changes to apply."))
+            return
+        
+        # Update runtime configuration
+        for key, value in self.pending_changes.items():
+            self.tui_app.config.config.setdefault('bot', {})[key] = value
+        
+        self.app.push_screen(MessageScreen(f"Applied {len(self.pending_changes)} changes to runtime configuration.\n\nChanges will be lost when the bot restarts unless saved to config.json."))
+        self.pending_changes = {}
+        self.refresh()
+    
+    async def save_changes(self):
+        """Save changes to config.json file."""
+        if not self.pending_changes:
+            self.app.push_screen(MessageScreen("No pending changes to save."))
+            return
+        
+        try:
+            # Update configuration
+            for key, value in self.pending_changes.items():
+                self.tui_app.config.config.setdefault('bot', {})[key] = value
+            
+            # Save to file
+            config_file = getattr(self.tui_app.config, 'config_file', 'config.json')
+            with open(config_file, 'w') as f:
+                json.dump(self.tui_app.config.config, f, indent=2)
+            
+            self.app.push_screen(MessageScreen(f"Saved {len(self.pending_changes)} changes to {config_file}.\n\nChanges are now persistent and will survive restarts."))
+            self.pending_changes = {}
+            self.refresh()
+            
+        except Exception as e:
+            logger.error(f"Error saving configuration: {e}")
+            self.app.push_screen(MessageScreen(f"Error saving configuration: {e}"))
 
 
 class ShowScreen(Screen):
@@ -337,9 +705,15 @@ class ChatrixTUI(App):
     def compose(self) -> ComposeResult:
         """Create child widgets for main menu."""
         yield Header()
-        with Container():
+        with ScrollableContainer():
             yield Static("[bold cyan]ChatrixCD[/bold cyan]", id="title")
             yield Static("[dim]Matrix CI/CD Bot - Interactive Interface[/dim]\n")
+            
+            # Add active tasks widget
+            tasks_widget = ActiveTasksWidget(id="active_tasks")
+            yield tasks_widget
+            yield Static("\n")
+            
             yield Button("STATUS - Show bot status", id="status")
             yield Button("ADMINS - View admin users", id="admins")
             yield Button("ROOMS - Show joined rooms", id="rooms")
@@ -350,6 +724,40 @@ class ChatrixTUI(App):
             yield Button("SHOW - Show current configuration", id="show")
             yield Button("QUIT - Exit", id="quit", variant="error")
         yield Footer()
+    
+    async def on_mount(self) -> None:
+        """Called when the TUI is mounted."""
+        # Start background task to update active tasks
+        self.set_interval(5, self.update_active_tasks)
+    
+    async def update_active_tasks(self):
+        """Update the active tasks widget."""
+        try:
+            if self.bot and hasattr(self.bot, 'command_handler'):
+                active_tasks = self.bot.command_handler.active_tasks
+                
+                # Convert to list format for widget
+                tasks_list = []
+                for task_id, task_info in active_tasks.items():
+                    # Get current status from Semaphore if possible
+                    project_id = task_info.get('project_id')
+                    try:
+                        task_status = await self.bot.semaphore.get_task_status(project_id, task_id)
+                        status = task_status.get('status', 'unknown') if task_status else 'unknown'
+                    except Exception:
+                        status = 'unknown'
+                    
+                    tasks_list.append({
+                        'task_id': task_id,
+                        'project_id': project_id,
+                        'status': status
+                    })
+                
+                # Update widget
+                widget = self.query_one("#active_tasks", ActiveTasksWidget)
+                widget.tasks = tasks_list
+        except Exception as e:
+            logger.debug(f"Error updating active tasks: {e}")
     
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button presses."""

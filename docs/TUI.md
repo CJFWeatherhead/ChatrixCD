@@ -321,14 +321,226 @@ If mouse clicks don't work:
 2. Check if your terminal emulator supports mouse events
 3. Try a different terminal emulator
 
+## Advanced Features
+
+### Real-Time Task Monitoring
+
+The main menu now includes a real-time active tasks display that shows:
+
+- All currently running Semaphore tasks
+- Task IDs and project IDs
+- Current status with color-coded indicators:
+  - 🔄 **Running** (yellow)
+  - ✅ **Success** (green)
+  - ❌ **Error/Stopped** (red)
+  - ⏸️ **Unknown/Pending** (blue)
+
+The display updates automatically every 5 seconds, providing live feedback on CI/CD operations without needing to manually check task status.
+
+```
+Active Tasks
+
+  🔄 Task 123 (Project 1): running
+  ✅ Task 122 (Project 2): success
+```
+
+### Session Verification (Encryption)
+
+The TUI now includes comprehensive device verification features for end-to-end encryption:
+
+#### Emoji Verification
+
+Compare emoji sequences between devices to verify encryption keys:
+
+1. Select "Verify Device (Emoji)" from the Sessions menu
+2. Compare the displayed emoji sequence with the other device
+3. Confirm if they match to establish trust
+
+#### QR Code Verification
+
+Generate and scan QR codes for quick device verification:
+
+1. Select "Verify Device (QR Code)" from the Sessions menu
+2. A QR code is generated containing your device information
+3. Scan with another device to verify your bot's identity
+4. The QR code includes:
+   - User ID
+   - Device ID
+   - Verification timestamp
+
+#### Device Fingerprint
+
+View and share your device's Ed25519 fingerprint for manual verification:
+
+1. Select "Show Fingerprint" from the Sessions menu
+2. Share the fingerprint with trusted parties
+3. Use for out-of-band verification
+
+#### Encryption Sessions List
+
+View all active encryption sessions:
+
+- User IDs and device IDs
+- Device names
+- Verification status (✅ verified / ⚠️ unverified)
+
+### Interactive Configuration Editing
+
+The SET menu now provides full interactive configuration editing:
+
+#### Editable Variables
+
+- **command_prefix**: Change the bot's command prefix (e.g., `!cd` to `!bot`)
+- **greetings_enabled**: Enable/disable startup/shutdown messages
+- **startup_message**: Customize the bot's startup greeting
+- **shutdown_message**: Customize the bot's shutdown message
+
+#### Edit Workflow
+
+1. Select "SET - Change operational variables"
+2. Choose a variable to edit
+3. Enter the new value (with type validation)
+4. Choose action:
+   - **Apply Changes (Runtime Only)**: Changes take effect immediately but are lost on restart
+   - **Save to config.json**: Changes are persisted to disk and survive restarts
+   - **Discard Changes**: Abandon all pending modifications
+
+#### Safety Features
+
+- Type validation ensures correct data types
+- Preview pending changes before applying
+- Separate runtime and persistent save operations
+- Graceful error handling with user-friendly messages
+
+## Screenshots
+
+### Main Menu with Active Tasks
+
+```
+╔═══════════════════════════════════════════════════════════════╗
+║ ChatrixCD                                                     ║
+╚═══════════════════════════════════════════════════════════════╝
+
+                       ChatrixCD
+            Matrix CI/CD Bot - Interactive Interface
+
+Active Tasks
+
+  🔄 Task 123 (Project 1): running
+  ✅ Task 122 (Project 2): success
+
+ ┌───────────────────────────────────────────────────────────┐
+ │        STATUS - Show bot status                           │
+ └───────────────────────────────────────────────────────────┘
+ 
+ ┌───────────────────────────────────────────────────────────┐
+ │        SESSIONS - Session management                      │
+ └───────────────────────────────────────────────────────────┘
+ 
+ [Additional menu options...]
+```
+
+### Session Management Menu
+
+```
+╔═══════════════════════════════════════════════════════════════╗
+║ ChatrixCD                                                     ║
+╚═══════════════════════════════════════════════════════════════╝
+
+                   Session Management
+
+ ┌───────────────────────────────────────────────────────────┐
+ │    View Encryption Sessions                               │
+ └───────────────────────────────────────────────────────────┘
+ 
+ ┌───────────────────────────────────────────────────────────┐
+ │    Verify Device (Emoji)                                  │
+ └───────────────────────────────────────────────────────────┘
+ 
+ ┌───────────────────────────────────────────────────────────┐
+ │    Verify Device (QR Code)                                │
+ └───────────────────────────────────────────────────────────┘
+ 
+ ┌───────────────────────────────────────────────────────────┐
+ │    Show Fingerprint                                       │
+ └───────────────────────────────────────────────────────────┘
+ 
+ ┌───────────────────────────────────────────────────────────┐
+ │    Reset Olm Sessions                                     │
+ └───────────────────────────────────────────────────────────┘
+```
+
+### QR Code Verification
+
+```
+╔═══════════════════════════════════════════════════════════════╗
+║ ChatrixCD                                                     ║
+╚═══════════════════════════════════════════════════════════════╝
+
+                  QR Code Verification
+
+Scan this QR code with the other device:
+
+████████████████████████████████
+██          ██  ██  ██        ██
+██  ██████  ██  ████  ██████  ██
+██  ██████  ██      ██  ██  ████
+██  ██████  ████████████  ██  ██
+██          ██  ██  ██  ████  ██
+████████████████████████████████
+
+Device: ABCDEFGH
+User: @chatrixcd:example.com
+
+Note: The other device needs to scan this QR code
+to verify this bot's identity.
+```
+
+### Configuration Editor
+
+```
+╔═══════════════════════════════════════════════════════════════╗
+║ ChatrixCD                                                     ║
+╚═══════════════════════════════════════════════════════════════╝
+
+              Set Operational Variables
+
+Select a variable to edit:
+
+Bot Configuration:
+ ┌───────────────────────────────────────────────────────────┐
+ │    command_prefix                                         │
+ └───────────────────────────────────────────────────────────┘
+ 
+ ┌───────────────────────────────────────────────────────────┐
+ │    greetings_enabled                                      │
+ └───────────────────────────────────────────────────────────┘
+ 
+ ┌───────────────────────────────────────────────────────────┐
+ │    startup_message                                        │
+ └───────────────────────────────────────────────────────────┘
+
+Actions:
+ ┌───────────────────────────────────────────────────────────┐
+ │    Apply Changes (Runtime Only)                           │
+ └───────────────────────────────────────────────────────────┘
+ 
+ ┌───────────────────────────────────────────────────────────┐
+ │    Save to config.json                                    │
+ └───────────────────────────────────────────────────────────┘
+
+Pending Changes:
+  • command_prefix = !bot
+  • greetings_enabled = false
+```
+
 ## Future Enhancements
 
-Planned features for the TUI:
+Additional features planned for future releases:
 
-- Real-time task monitoring with status updates
-- Session verification with QR codes and emojis
-- Interactive configuration editing with validation
-- Task history and logs
+- Task history and logs viewer
 - Performance metrics and graphs
 - Dark/light theme toggle
 - Custom color schemes
+- Bulk device verification
+- Advanced encryption session management
