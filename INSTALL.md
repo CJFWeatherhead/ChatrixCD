@@ -45,9 +45,21 @@ Configuration is done exclusively through JSON files (with HJSON support for com
 
 ### 4. Run the Bot
 
+**Interactive Mode (with TUI):**
+
 ```bash
 # Make sure your virtual environment is activated
 chatrixcd
+
+# Or with colored output
+chatrixcd -C
+```
+
+**Classic Log-Only Mode:**
+
+```bash
+# Run without TUI (classic behavior)
+chatrixcd -L
 ```
 
 Or run directly:

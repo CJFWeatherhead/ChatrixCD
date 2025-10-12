@@ -119,11 +119,17 @@ python -m unittest discover -v
 ### Running the Bot Locally
 
 ```bash
-# Using the installed package
+# Using the installed package with TUI (interactive mode)
 chatrixcd
 
+# Using the installed package in log-only mode (for development/debugging)
+chatrixcd -L
+
 # Or directly with Python
-python -m chatrixcd.main
+python -m chatrixcd.main -L
+
+# With verbose logging for debugging
+chatrixcd -vv -L
 ```
 
 ## Coding Standards
@@ -340,7 +346,9 @@ ChatrixCD/
 │   ├── auth.py          # Authentication handling
 │   ├── config.py        # Configuration management
 │   ├── commands.py      # Command handlers
-│   └── semaphore.py     # Semaphore API client
+│   ├── semaphore.py     # Semaphore API client
+│   ├── tui.py           # Text User Interface (interactive mode)
+│   └── redactor.py      # Sensitive information redaction
 ├── tests/               # Test suite
 │   ├── __init__.py
 │   └── test_*.py        # Test files

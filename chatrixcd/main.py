@@ -149,6 +149,13 @@ def parse_args():
         help='Redact sensitive information from logs (room names, usernames, IPs, tokens, etc.)'
     )
     
+    parser.add_argument(
+        '-L', '--log-only',
+        action='store_true',
+        dest='log_only',
+        help='Run in classic log-only mode (no TUI, only show logs)'
+    )
+    
     return parser.parse_args()
 
 
@@ -303,13 +310,46 @@ def main():
     # Create and run bot
     bot = ChatrixBot(config)
     
+    # Determine if we should use TUI
+    # Use TUI if:
+    # - Not running in daemon mode (-D)
+    # - Not in log-only mode (-L)
+    # - Running in an interactive terminal
+    use_tui = not args.daemon and not args.log_only and sys.stdin.isatty()
+    
     try:
-        asyncio.run(bot.run())
+        if use_tui:
+            # Run with TUI interface
+            from chatrixcd.tui import run_tui
+            asyncio.run(run_tui_with_bot(bot, config, args.color))
+        else:
+            # Run in classic log-only mode
+            asyncio.run(bot.run())
     except KeyboardInterrupt:
         logger.info("Received keyboard interrupt, shutting down...")
     except Exception as e:
         logger.error(f"Fatal error: {e}", exc_info=True)
         sys.exit(1)
+
+
+async def run_tui_with_bot(bot, config, use_color: bool):
+    """Run the bot with TUI interface.
+    
+    Args:
+        bot: The ChatrixBot instance
+        config: Configuration object
+        use_color: Whether to use colors
+    """
+    from chatrixcd.tui import run_tui
+    
+    # Start the bot login in background
+    asyncio.create_task(bot.run())
+    
+    # Give bot a moment to initialize
+    await asyncio.sleep(1)
+    
+    # Run the TUI
+    await run_tui(bot, config, use_color=use_color)
 
 
 if __name__ == "__main__":

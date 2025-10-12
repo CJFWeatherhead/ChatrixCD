@@ -157,14 +157,45 @@ For Matrix servers using OIDC/OAuth2:
 
 ### Starting the Bot
 
+**Interactive Mode (TUI):**
+
+By default, when running ChatrixCD interactively in a terminal, it will launch with a Text User Interface (TUI):
+
 ```bash
 chatrixcd
+```
+
+The TUI provides a menu-driven interface with options for:
+- **STATUS** - View bot status (Matrix/Semaphore connections, uptime, metrics)
+- **ADMINS** - View admin users
+- **ROOMS** - View joined rooms
+- **SESSIONS** - Manage Olm encryption sessions
+- **SAY** - Send messages to rooms
+- **LOG** - View bot logs
+- **SET** - Change operational variables
+- **SHOW** - View current configuration
+- **QUIT** - Gracefully exit
+
+**Classic Log Mode:**
+
+To run without the TUI (classic log-only mode):
+
+```bash
+chatrixcd -L
 ```
 
 Or if running from source:
 
 ```bash
-python -m chatrixcd.main
+python -m chatrixcd.main -L
+```
+
+**Daemon Mode:**
+
+To run as a background process:
+
+```bash
+chatrixcd -D
 ```
 
 ### Command-Line Options
@@ -181,8 +212,9 @@ chatrixcd [OPTIONS]
 - `-V, --version` - Show version number and exit
 - `-v, --verbose` - Increase verbosity (use `-v` for DEBUG, `-vv` for detailed DEBUG with library logs)
 - `-c FILE, --config FILE` - Path to configuration file (default: config.json)
-- `-C, --color` - Enable colored logging output (requires colorlog package)
+- `-C, --color` - Enable colored logging output in TUI and logs (requires colorlog package)
 - `-R, --redact` - Redact sensitive information from logs (room names, usernames, IPs, tokens, etc.)
+- `-L, --log-only` - Run in classic log-only mode (no TUI, only show logs)
 - `-D, --daemon` - Run in daemon mode (background process, Unix/Linux only)
 - `-s, --show-config` - Display current configuration with redacted credentials and exit
 - `-a USER, --admin USER` - Add admin user (can be specified multiple times)
@@ -194,11 +226,20 @@ chatrixcd [OPTIONS]
 # Show version
 chatrixcd --version
 
-# Use custom config file with verbose logging
-chatrixcd -c /etc/chatrixcd/config.json -v
+# Run with interactive TUI (default)
+chatrixcd
 
-# Run in daemon mode with colored output
-chatrixcd -D -C
+# Run with interactive TUI and colored output
+chatrixcd -C
+
+# Run in classic log-only mode (no TUI)
+chatrixcd -L
+
+# Use custom config file with verbose logging
+chatrixcd -c /etc/chatrixcd/config.json -v -L
+
+# Run in daemon mode (automatically disables TUI)
+chatrixcd -D
 
 # Show current configuration
 chatrixcd -s
@@ -206,14 +247,14 @@ chatrixcd -s
 # Override admin users and allowed rooms
 chatrixcd -a @admin1:matrix.org -a @admin2:matrix.org -r !room1:matrix.org
 
-# Combine multiple options
-chatrixcd -vv -C -c custom.json -a @admin:matrix.org
+# Combine multiple options with TUI
+chatrixcd -v -C -c custom.json -a @admin:matrix.org
 
 # Enable verbose logging with redaction for privacy (recommended for bug reports)
-chatrixcd -vv -R
+chatrixcd -vv -R -L
 
 # Redaction with colored output (redacted content appears in pink)
-chatrixcd -vv -C -R
+chatrixcd -vv -C -R -L
 ```
 
 **Privacy Note**: When reporting bugs or sharing logs, use the `-R` flag to automatically redact sensitive information like room IDs, usernames, IP addresses, and tokens. When combined with `-C`, redacted information will be highlighted in pink for easy identification.
@@ -347,7 +388,9 @@ ChatrixCD/
 │   ├── auth.py         # Authentication
 │   ├── config.py       # Configuration
 │   ├── commands.py     # Command handlers
-│   └── semaphore.py    # Semaphore API client
+│   ├── semaphore.py    # Semaphore API client
+│   ├── tui.py          # Text User Interface
+│   └── redactor.py     # Sensitive data redaction
 ├── requirements.txt
 ├── setup.py
 ├── config.json.example
