@@ -15,6 +15,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+## [2025.10.12.0.0.1] - 2025-10-12
+
 ### Added
 
 #### Interactive TUI (Text User Interface)
@@ -423,6 +425,8 @@ ChatrixCD/
 
 
 
+
+- **2025.10.12.0.0.1** (2025-10-12)
 - **2025.10.8** (2025-10-10)
 - **2025.10.7** (2025-10-09)
 - **2025.10.6** (2025-10-09)
