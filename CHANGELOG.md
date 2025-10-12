@@ -17,6 +17,9 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ### Added
 
+### Fixed
+- **Bot Message Processing**: Fixed issue where bot would process old messages on reconnect or startup. The bot now ignores messages that were sent before it started, preventing execution of stale commands and tasks that may have already been processed
+
 #### Privacy and Security Features
 - **Sensitive Information Redaction**: New `-R` / `--redact` command-line flag to automatically redact sensitive information from logs
   - Redacts Matrix room IDs (e.g., `!room:server.com` → `![ROOM_ID]:server.com`)

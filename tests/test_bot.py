@@ -61,6 +61,23 @@ class TestChatrixBot(unittest.TestCase):
         
         # Ensure user_id is not empty (important for load_store())
         self.assertTrue(bot.client.user_id)
+
+    def test_init_sets_start_time(self):
+        """Test that bot initialization sets start_time to track when bot started."""
+        import time
+        
+        # Record time before creating bot
+        before_time = int(time.time() * 1000)
+        
+        bot = ChatrixBot(self.config)
+        
+        # Record time after creating bot
+        after_time = int(time.time() * 1000)
+        
+        # Verify start_time is set and within reasonable range
+        self.assertIsNotNone(bot.start_time)
+        self.assertGreaterEqual(bot.start_time, before_time)
+        self.assertLessEqual(bot.start_time, after_time)
     
     def test_init_registers_callbacks(self):
         """Test that bot initialization registers event callbacks."""
@@ -178,6 +195,7 @@ class TestChatrixBot(unittest.TestCase):
         event = MagicMock(spec=RoomMessageText)
         event.sender = "@other:example.com"  # Different user
         event.body = "!cd help"
+        event.server_timestamp = bot.start_time + 1000  # Message sent after bot started
         
         # Call the callback
         self.loop.run_until_complete(
@@ -185,6 +203,50 @@ class TestChatrixBot(unittest.TestCase):
         )
         
         # Verify handle_message WAS called
+        bot.command_handler.handle_message.assert_called_once_with(room, event)
+
+    def test_message_callback_ignores_old_messages(self):
+        """Test that message callback ignores messages sent before bot started."""
+        bot = ChatrixBot(self.config)
+        bot.command_handler.handle_message = AsyncMock()
+        
+        # Create mock room and event from another user
+        room = MagicMock(spec=MatrixRoom)
+        room.display_name = "Test Room"
+        
+        event = MagicMock(spec=RoomMessageText)
+        event.sender = "@other:example.com"  # Different user
+        event.body = "!cd help"
+        event.server_timestamp = bot.start_time - 10000  # Message sent before bot started
+        
+        # Call the callback
+        self.loop.run_until_complete(
+            bot.message_callback(room, event)
+        )
+        
+        # Verify handle_message was NOT called
+        bot.command_handler.handle_message.assert_not_called()
+
+    def test_message_callback_processes_messages_at_start_time(self):
+        """Test that message callback processes messages sent exactly at bot start time."""
+        bot = ChatrixBot(self.config)
+        bot.command_handler.handle_message = AsyncMock()
+        
+        # Create mock room and event from another user
+        room = MagicMock(spec=MatrixRoom)
+        room.display_name = "Test Room"
+        
+        event = MagicMock(spec=RoomMessageText)
+        event.sender = "@other:example.com"  # Different user
+        event.body = "!cd help"
+        event.server_timestamp = bot.start_time  # Message sent exactly at bot start time
+        
+        # Call the callback
+        self.loop.run_until_complete(
+            bot.message_callback(room, event)
+        )
+        
+        # Verify handle_message WAS called (>= comparison, not >)
         bot.command_handler.handle_message.assert_called_once_with(room, event)
 
     def test_login_token_loads_store(self):

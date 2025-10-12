@@ -3,6 +3,7 @@
 import logging
 import asyncio
 import os
+import time
 from typing import Optional, Dict, Any
 from nio import (
     AsyncClient,
@@ -78,6 +79,10 @@ class ChatrixBot:
         # Track session IDs for which we've already requested keys
         # This prevents duplicate key requests
         self.requested_session_ids = set()
+        
+        # Track bot start time to ignore old messages
+        # Using milliseconds since epoch to match Matrix server_timestamp format
+        self.start_time = int(time.time() * 1000)
         
         # Setup event callbacks
         self.client.add_event_callback(self.message_callback, RoomMessageText)
@@ -198,6 +203,15 @@ class ChatrixBot:
         """
         # Ignore messages from the bot itself
         if event.sender == self.user_id:
+            return
+        
+        # Ignore old messages that were sent before the bot started
+        # This prevents processing a backlog of messages on reconnect
+        if event.server_timestamp < self.start_time:
+            logger.debug(
+                f"Ignoring old message from {event.sender} in {room.display_name} "
+                f"(message timestamp: {event.server_timestamp}, bot start time: {self.start_time})"
+            )
             return
             
         logger.info(f"Message from {event.sender} in {room.display_name}: {event.body}")
