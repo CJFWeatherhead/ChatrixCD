@@ -139,6 +139,47 @@ class TestMatrixAuth(unittest.TestCase):
         result = self.loop.run_until_complete(auth.refresh_access_token())
         self.assertIsNone(result)
 
+    def test_token_storage(self):
+        """Test that tokens are properly stored after retrieval."""
+        config = {
+            'auth_type': 'token',
+            'access_token': 'stored_token_xyz'
+        }
+        auth = MatrixAuth(config)
+        
+        # Get token
+        result = self.loop.run_until_complete(auth.get_access_token())
+        
+        # Verify token is stored in the instance
+        self.assertEqual(result, 'stored_token_xyz')
+        self.assertEqual(auth.access_token, 'stored_token_xyz')
+
+    def test_password_auth_returns_none(self):
+        """Test that password auth returns None (delegated to matrix-nio)."""
+        config = {
+            'auth_type': 'password',
+            'user_id': '@bot:example.com',
+            'password': 'testpass'
+        }
+        auth = MatrixAuth(config)
+        
+        # Password auth should return None (handled by nio)
+        result = self.loop.run_until_complete(auth.get_access_token())
+        self.assertIsNone(result)
+        # Should not store any token
+        self.assertIsNone(auth.access_token)
+
+    def test_auth_type_determines_flow(self):
+        """Test that auth_type correctly determines the authentication flow."""
+        # Test each auth type
+        for auth_type in ['password', 'token', 'oidc', 'unknown']:
+            config = {
+                'auth_type': auth_type,
+                'access_token': 'test_token' if auth_type == 'token' else None
+            }
+            auth = MatrixAuth(config)
+            self.assertEqual(auth.auth_type, auth_type)
+
 
 if __name__ == '__main__':
     unittest.main()

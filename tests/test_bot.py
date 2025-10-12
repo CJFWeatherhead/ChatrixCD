@@ -781,6 +781,152 @@ class TestChatrixBot(unittest.TestCase):
         # Verify keys_query was called
         bot.client.keys_query.assert_called_once()
 
+    def test_login_password_with_nio_response(self):
+        """Test password login using actual nio LoginResponse object."""
+        from nio import LoginResponse
+        
+        bot = ChatrixBot(self.config)
+        
+        # Mock the login method to return a real LoginResponse
+        login_response = LoginResponse(
+            user_id='@bot:example.com',
+            device_id='TESTDEVICE',
+            access_token='test_access_token_xyz'
+        )
+        bot.client.login = AsyncMock(return_value=login_response)
+        bot.client.sync = AsyncMock()
+        
+        # Call login
+        result = self.loop.run_until_complete(bot.login())
+        
+        # Verify login succeeded
+        self.assertTrue(result)
+        bot.client.login.assert_called_once()
+
+    def test_login_handles_nio_error_response(self):
+        """Test that login handles nio ErrorResponse properly."""
+        from nio import LoginError
+        
+        bot = ChatrixBot(self.config)
+        
+        # Mock the login method to return an error
+        error_response = LoginError(
+            message='Invalid credentials',
+            status_code='M_FORBIDDEN'
+        )
+        bot.client.login = AsyncMock(return_value=error_response)
+        
+        # Call login - should handle error gracefully
+        result = self.loop.run_until_complete(bot.login())
+        
+        # Verify login failed
+        self.assertFalse(result)
+
+    def test_send_message_with_nio_error(self):
+        """Test send_message handles nio error responses."""
+        from nio import RoomSendError
+        
+        bot = ChatrixBot(self.config)
+        
+        # Mock room_send to return an error response
+        error_response = RoomSendError(
+            message='Room not found',
+            status_code='M_NOT_FOUND'
+        )
+        bot.client.room_send = AsyncMock(return_value=error_response)
+        
+        # Call send_message - should not raise exception
+        self.loop.run_until_complete(
+            bot.send_message('!nonexistent:example.com', 'Test message')
+        )
+        
+        # Verify the send was attempted
+        bot.client.room_send.assert_called_once()
+
+    def test_invite_callback_with_nio_join_response(self):
+        """Test invite callback using nio JoinResponse."""
+        from nio import JoinResponse, InviteMemberEvent
+        
+        bot = ChatrixBot(self.config)
+        
+        # Mock join to return a real JoinResponse
+        join_response = JoinResponse(room_id='!newroom:example.com')
+        bot.client.join = AsyncMock(return_value=join_response)
+        
+        room = MagicMock(spec=MatrixRoom)
+        room.room_id = '!newroom:example.com'
+        room.display_name = 'New Room'
+        
+        event = MagicMock(spec=InviteMemberEvent)
+        event.sender = '@inviter:example.com'
+        
+        # Call the callback
+        self.loop.run_until_complete(bot.invite_callback(room, event))
+        
+        # Verify join was called
+        bot.client.join.assert_called_once_with('!newroom:example.com')
+
+    def test_setup_encryption_with_nio_keys_upload_response(self):
+        """Test encryption setup with nio KeysUploadResponse."""
+        from nio import KeysUploadResponse
+        
+        bot = ChatrixBot(self.config)
+        
+        # Mock encryption support
+        bot.client.olm = MagicMock()
+        type(bot.client).should_upload_keys = unittest.mock.PropertyMock(return_value=True)
+        type(bot.client).should_query_keys = unittest.mock.PropertyMock(return_value=False)
+        
+        # Mock keys_upload to return a real response with proper signature
+        # KeysUploadResponse(curve25519_count, signed_curve25519_count)
+        keys_response = KeysUploadResponse(curve25519_count=10, signed_curve25519_count=50)
+        bot.client.keys_upload = AsyncMock(return_value=keys_response)
+        
+        # Setup encryption
+        result = self.loop.run_until_complete(bot.setup_encryption())
+        
+        # Verify success
+        self.assertTrue(result)
+        bot.client.keys_upload.assert_called_once()
+
+    def test_message_callback_with_nio_room_send_response(self):
+        """Test message processing results in nio RoomSendResponse."""
+        from nio import RoomSendResponse
+        
+        bot = ChatrixBot(self.config)
+        
+        # Mock command handler to send a response
+        async def mock_handle_message(room, event):
+            # Simulate sending a reply
+            await bot.send_message(room.room_id, 'Response message')
+        
+        bot.command_handler.handle_message = AsyncMock(side_effect=mock_handle_message)
+        
+        # Mock room_send to return a real response with proper signature
+        # RoomSendResponse(event_id, room_id)
+        send_response = RoomSendResponse(
+            event_id='$event123:example.com',
+            room_id='!test:example.com'
+        )
+        bot.client.room_send = AsyncMock(return_value=send_response)
+        
+        # Create message event
+        room = MagicMock(spec=MatrixRoom)
+        room.room_id = '!test:example.com'
+        room.display_name = 'Test Room'
+        
+        event = MagicMock(spec=RoomMessageText)
+        event.sender = '@user:example.com'
+        event.body = '!cd help'
+        event.server_timestamp = bot.start_time + 1000
+        
+        # Process the message
+        self.loop.run_until_complete(bot.message_callback(room, event))
+        
+        # Verify command was handled and response was sent
+        bot.command_handler.handle_message.assert_called_once()
+        bot.client.room_send.assert_called_once()
+
 
 if __name__ == '__main__':
     unittest.main()

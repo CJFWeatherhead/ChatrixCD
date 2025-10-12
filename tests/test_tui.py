@@ -10,30 +10,42 @@ class TestTUIImport(unittest.TestCase):
     """Test TUI module can be imported and basic functionality."""
 
     def test_import_tui_module(self):
-        """Test that TUI module can be imported."""
-        try:
-            from chatrixcd.tui import ChatrixTUI, run_tui
-            self.assertTrue(True)
-        except ImportError as e:
-            self.fail(f"Failed to import TUI module: {e}")
+        """Test that TUI module can be imported and has expected classes."""
+        from chatrixcd.tui import ChatrixTUI, run_tui
+        
+        # Verify the classes/functions are actually imported and callable
+        self.assertTrue(callable(ChatrixTUI))
+        self.assertTrue(callable(run_tui))
+        
+        # Verify ChatrixTUI has expected methods
+        self.assertTrue(hasattr(ChatrixTUI, '__init__'))
+        self.assertTrue(hasattr(ChatrixTUI, 'compose'))
     
     def test_tui_screens_import(self):
-        """Test that TUI screen classes can be imported."""
-        try:
-            from chatrixcd.tui import (
-                AdminsScreen,
-                RoomsScreen,
-                SessionsScreen,
-                SayScreen,
-                LogScreen,
-                SetScreen,
-                ShowScreen,
-                MessageScreen,
-                BotStatusWidget
-            )
-            self.assertTrue(True)
-        except ImportError as e:
-            self.fail(f"Failed to import TUI screens: {e}")
+        """Test that TUI screen classes can be imported and are valid."""
+        from chatrixcd.tui import (
+            AdminsScreen,
+            RoomsScreen,
+            SessionsScreen,
+            SayScreen,
+            LogScreen,
+            SetScreen,
+            ShowScreen,
+            MessageScreen,
+            BotStatusWidget
+        )
+        
+        # Verify all classes are callable
+        screen_classes = [
+            AdminsScreen, RoomsScreen, SessionsScreen, SayScreen,
+            LogScreen, SetScreen, ShowScreen, MessageScreen, BotStatusWidget
+        ]
+        
+        for screen_class in screen_classes:
+            self.assertTrue(callable(screen_class), 
+                          f"{screen_class.__name__} is not callable")
+            self.assertTrue(hasattr(screen_class, '__init__'),
+                          f"{screen_class.__name__} missing __init__")
 
 
 class TestTUICreation(unittest.TestCase):
