@@ -10,4 +10,7 @@ hjson>=3.1.0
 # Colored logging output
 colorlog>=6.7.0
 
+# TUI library for interactive interface
+textual>=0.47.0
+
 

@@ -17,6 +17,27 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ### Added
 
+#### Interactive TUI (Text User Interface)
+- **Interactive Mode**: New Text User Interface (TUI) when running ChatrixCD interactively
+  - Menu-driven interface with brand colors (ChatrixCD green: #4A9B7F)
+  - Mouse support for easy navigation
+  - Works without color support when `-C` flag is not used
+- **TUI Menu Options**:
+  - **STATUS**: View bot status (Matrix/Semaphore connections, uptime, metrics including messages processed, errors, warnings)
+  - **ADMINS**: View admin users configured for the bot
+  - **ROOMS**: View all rooms the bot has joined
+  - **SESSIONS**: Manage Olm encryption sessions (view sessions, reset sessions)
+  - **SAY**: Send messages to rooms from the bot
+  - **LOG**: View bot logs in real-time within the TUI
+  - **SET**: Change operational variables (configuration editing)
+  - **SHOW**: View current configuration with redacted credentials
+  - **QUIT**: Gracefully shutdown the bot
+- **New Command-Line Flags**:
+  - `-L, --log-only`: Run in classic log-only mode (no TUI, backward compatible behavior)
+  - TUI automatically disabled when running in daemon mode (`-D`) or non-interactive terminal
+- **Color Support**: TUI uses brand colors when `-C` flag is used, but remains fully functional without color support
+- **Dependencies**: Added `textual>=0.47.0` for TUI implementation
+
 ### Fixed
 - **Encrypted Room Support**: Fixed issue where bot would not respond to commands in encrypted rooms. The bot now properly handles successfully decrypted Megolm events and processes them as normal messages
 - **Bot Message Processing**: Fixed issue where bot would process old messages on reconnect or startup. The bot now ignores messages that were sent before it started, preventing execution of stale commands and tasks that may have already been processed

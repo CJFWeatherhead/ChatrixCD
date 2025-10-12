@@ -40,11 +40,18 @@ ChatrixCD is a Matrix bot that bridges Matrix chat with Semaphore UI for CI/CD a
 - Initialize logging
 - Load configuration
 - Create bot instance
+- Determine run mode (TUI, log-only, or daemon)
 - Handle graceful shutdown
 
 **Key Functions**:
 - `main()`: Entry point that orchestrates startup
 - `setup_logging()`: Configures logging to file and stdout
+- `run_tui_with_bot()`: Runs the bot with TUI interface
+
+**Run Modes**:
+- **Interactive TUI Mode**: Default when running in an interactive terminal without `-L` or `-D` flags
+- **Log-Only Mode**: Classic behavior, activated with `-L` flag
+- **Daemon Mode**: Background process, activated with `-D` flag
 
 ### 2. Configuration Manager (`config.py`)
 
@@ -170,6 +177,41 @@ elif auth_type in ('token', 'oidc'):
 - Lazy session creation
 - Automatic session cleanup
 - Persistent authentication header
+
+### 7. Text User Interface (`tui.py`)
+
+**Purpose**: Interactive terminal interface for bot management
+
+**Features**:
+- Menu-driven interface with brand colors
+- Mouse support for navigation
+- Real-time status monitoring
+- Interactive room messaging
+- Log viewing
+- Configuration display
+
+**Key Components**:
+- **ChatrixTUI**: Main TUI application class
+- **BotStatusWidget**: Real-time status display widget
+- **Screen Classes**: Individual screens for each menu option
+  - `AdminsScreen`: Display admin users
+  - `RoomsScreen`: Display joined rooms
+  - `SessionsScreen`: Manage encryption sessions
+  - `SayScreen`: Send messages to rooms
+  - `LogScreen`: View bot logs
+  - `SetScreen`: Change operational variables
+  - `ShowScreen`: Display configuration
+
+**Integration**:
+- Runs alongside the bot using asyncio
+- Shares bot instance for direct control
+- Updates in real-time based on bot state
+
+**Color Support**:
+- Uses brand colors when `-C` flag is enabled
+- Fully functional without color support
+- Brand green (#4A9B7F) for headers and primary elements
+- Dark background (#2D3238) for footer
 
 ## Data Flow
 
