@@ -56,7 +56,7 @@ body:
       required: false
 
   - type: textarea
-    id: logs
+    id: systemconf
     attributes:
       label: Relevant System Configuration
       description: |
