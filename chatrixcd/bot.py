@@ -87,7 +87,7 @@ class ChatrixBot:
         # Setup event callbacks
         self.client.add_event_callback(self.message_callback, RoomMessageText)
         self.client.add_event_callback(self.invite_callback, InviteMemberEvent)
-        self.client.add_event_callback(self.decryption_failure_callback, MegolmEvent)
+        self.client.add_event_callback(self.megolm_event_callback, MegolmEvent)
 
     async def setup_encryption(self) -> bool:
         """Setup encryption keys after successful login.
@@ -232,17 +232,37 @@ class ChatrixBot:
         await self.client.join(room.room_id)
         logger.info(f"Joined room {room.room_id}")
 
-    async def decryption_failure_callback(self, room: MatrixRoom, event: MegolmEvent):
-        """Handle encrypted messages that couldn't be decrypted.
+    async def megolm_event_callback(self, room: MatrixRoom, event: MegolmEvent):
+        """Handle Megolm encrypted messages.
         
-        This callback is triggered when the bot receives an encrypted message
-        but doesn't have the decryption key. It will request the key from
-        other devices in the room.
+        This callback is triggered for all encrypted messages (MegolmEvent).
+        If the message was successfully decrypted, it will be processed as a normal message.
+        If decryption failed, it will request the key from other devices in the room.
         
         Args:
             room: The room the encrypted message was sent in
-            event: The undecrypted Megolm event
+            event: The Megolm event (may be decrypted or undecrypted)
         """
+        # Check if the message was successfully decrypted
+        if event.decrypted:
+            # Message was successfully decrypted
+            decrypted_event = event.decrypted
+            
+            # Check if the decrypted event is a text message
+            if isinstance(decrypted_event, RoomMessageText):
+                logger.debug(
+                    f"Processing decrypted message from {event.sender} in {room.display_name}"
+                )
+                # Process the decrypted message using the regular message callback
+                await self.message_callback(room, decrypted_event)
+            else:
+                logger.debug(
+                    f"Decrypted event from {event.sender} in {room.display_name} "
+                    f"is not a text message (type: {type(decrypted_event).__name__})"
+                )
+            return
+        
+        # Message couldn't be decrypted - request the key
         logger.warning(
             f"Unable to decrypt message in {room.display_name} ({room.room_id}) "
             f"from {event.sender}. Requesting room key..."
