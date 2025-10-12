@@ -30,8 +30,8 @@ class SensitiveInfoRedactor:
         # Matrix room IDs: !roomid:server.com
         self.room_id_pattern = re.compile(r'![a-zA-Z0-9]+:[a-zA-Z0-9\.\-]+')
         
-        # Matrix user IDs: @username:server.com
-        self.user_id_pattern = re.compile(r'@[a-zA-Z0-9\-_\.]+:[a-zA-Z0-9\.\-]+')
+        # Matrix user IDs: @username:server.com (including URL-encoded characters like =40 for @)
+        self.user_id_pattern = re.compile(r'@[a-zA-Z0-9\-_\.=]+:[a-zA-Z0-9\.\-]+')
         
         # IPv4 addresses - mask last 2 octets
         self.ipv4_pattern = re.compile(r'\b(\d{1,3}\.\d{1,3}\.)\d{1,3}\.\d{1,3}\b')
@@ -55,11 +55,20 @@ class SensitiveInfoRedactor:
             re.IGNORECASE
         )
         
-        # Session IDs and similar hex strings
-        self.session_id_pattern = re.compile(r'\b[a-fA-F0-9]{32,}\b')
+        # Cryptographic sender keys (base64-like strings in sender_key field)
+        self.sender_key_pattern = re.compile(
+            r'(sender[_\s]?key[\'\":\s]+[\'\"]+)([A-Za-z0-9+/]{20,})[\.]*',
+            re.IGNORECASE
+        )
         
-        # Device IDs (Matrix device IDs are typically alphanumeric)
-        self.device_id_pattern = re.compile(r'\bdevice[_\s]?id[=:\s]+[a-zA-Z0-9]+', re.IGNORECASE)
+        # Session IDs and similar hex/base64 strings (alphanumeric strings 32+ chars)
+        self.session_id_pattern = re.compile(r'\b[a-zA-Z0-9]{32,}')
+        
+        # Device IDs (Matrix device IDs in various contexts)
+        self.device_id_pattern = re.compile(
+            r'\bdevice[_\s]?id[\'\"=:\s]+[\'\"]*([A-Z0-9]{6,})',
+            re.IGNORECASE
+        )
         
         # SSH/TLS host keys and fingerprints
         self.hostkey_pattern = re.compile(
@@ -116,15 +125,21 @@ class SensitiveInfoRedactor:
             message
         )
         
-        # Redact session IDs
-        message = self.session_id_pattern.sub(
-            self._wrap_redacted('[SESSION_ID_REDACTED]'),
+        # Redact sender keys (before session IDs to be more specific)
+        message = self.sender_key_pattern.sub(
+            lambda m: m.group(1) + self._wrap_redacted('[SENDER_KEY_REDACTED]'),
             message
         )
         
-        # Redact device IDs
+        # Redact device IDs (before session IDs as device IDs might match session pattern)
         message = self.device_id_pattern.sub(
-            lambda m: 'device_id=' + self._wrap_redacted('[DEVICE_ID_REDACTED]'),
+            lambda m: m.group(0)[:m.group(0).index(m.group(1))] + self._wrap_redacted('[DEVICE_ID_REDACTED]'),
+            message
+        )
+        
+        # Redact session IDs (after more specific patterns)
+        message = self.session_id_pattern.sub(
+            self._wrap_redacted('[SESSION_ID_REDACTED]'),
             message
         )
         

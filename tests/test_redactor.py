@@ -124,6 +124,35 @@ class TestSensitiveInfoRedactor(unittest.TestCase):
         """Test redaction of None message."""
         result = self.redactor.redact(None)
         self.assertIsNone(result)
+    
+    def test_redact_user_id_with_url_encoding(self):
+        """Test redaction of Matrix user IDs with URL-encoded characters."""
+        message = "'sender': '@chrisw=40privacyinternational.org:privacyinternational.org'"
+        result = self.redactor.redact(message)
+        self.assertIn('@[USER]:', result)
+        self.assertNotIn('@chrisw=40', result)
+        self.assertNotIn('chrisw=40privacyinternational', result)
+    
+    def test_redact_sender_key_in_json(self):
+        """Test redaction of sender_key cryptographic keys in JSON."""
+        message = "'sender_key': 'Efq109VQIqHXV7D2l+IZ7YTVz34IXvGdXRyS4X....'"
+        result = self.redactor.redact(message)
+        self.assertIn('[SENDER_KEY_REDACTED]', result)
+        self.assertNotIn('Efq109VQIqHXV7D2l', result)
+    
+    def test_redact_session_id_with_dots(self):
+        """Test redaction of session IDs followed by dots."""
+        message = "'session_id': 'pMqd8VKtcXc4wwthMHQb2VNjOATOXnPrkvvbgio.....'"
+        result = self.redactor.redact(message)
+        self.assertIn('[SESSION_ID_REDACTED]', result)
+        self.assertNotIn('pMqd8VKtcXc4wwth', result)
+    
+    def test_redact_device_id_in_json(self):
+        """Test redaction of device IDs in JSON context."""
+        message = "'device_id': 'XYEZMPLXBC'"
+        result = self.redactor.redact(message)
+        self.assertIn('[DEVICE_ID_REDACTED]', result)
+        self.assertNotIn('XYEZMPLXBC', result)
 
 
 class TestRedactingFilter(unittest.TestCase):
