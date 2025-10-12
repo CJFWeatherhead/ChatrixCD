@@ -20,6 +20,11 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ### Fixed
 - **Encrypted Room Support**: Fixed issue where bot would not respond to commands in encrypted rooms. The bot now properly handles successfully decrypted Megolm events and processes them as normal messages
 - **Bot Message Processing**: Fixed issue where bot would process old messages on reconnect or startup. The bot now ignores messages that were sent before it started, preventing execution of stale commands and tasks that may have already been processed
+- **Redaction Feature**: Fixed redaction feature leaving some information un-redacted when using `-R` flag
+  - User IDs with URL-encoded characters (e.g., `@chrisw=40privacyinternational.org`) are now properly redacted
+  - Cryptographic sender keys in JSON context are now redacted with `[SENDER_KEY_REDACTED]` marker
+  - Session IDs in various formats (including with trailing dots) are now properly redacted
+  - Device IDs in JSON string context (e.g., `'device_id': 'XYEZMPLXBC'`) are now properly redacted
 
 #### Privacy and Security Features
 - **Sensitive Information Redaction**: New `-R` / `--redact` command-line flag to automatically redact sensitive information from logs
