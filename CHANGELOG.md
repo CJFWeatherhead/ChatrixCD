@@ -18,6 +18,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ### Added
 
 ### Fixed
+- **Encrypted Room Support**: Fixed issue where bot would not respond to commands in encrypted rooms. The bot now properly handles successfully decrypted Megolm events and processes them as normal messages
 - **Bot Message Processing**: Fixed issue where bot would process old messages on reconnect or startup. The bot now ignores messages that were sent before it started, preventing execution of stale commands and tasks that may have already been processed
 
 #### Privacy and Security Features
