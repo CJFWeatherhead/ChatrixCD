@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import AsyncMock, MagicMock, patch, call
 import asyncio
 import os
+import time
 import tempfile
 from nio import MegolmEvent, MatrixRoom, RoomMessageText, SyncResponse, Rooms
 from chatrixcd.bot import ChatrixBot
@@ -125,10 +126,11 @@ class TestChatrixBot(unittest.TestCase):
         event = MagicMock(spec=MegolmEvent)
         event.sender = "@user:example.com"
         event.session_id = "test_session_id"
+        event.decrypted = None  # Message couldn't be decrypted
         
         # Call the callback
         self.loop.run_until_complete(
-            bot.decryption_failure_callback(room, event)
+            bot.megolm_event_callback(room, event)
         )
         
         # Verify request_room_key was called
@@ -153,10 +155,11 @@ class TestChatrixBot(unittest.TestCase):
         event = MagicMock(spec=MegolmEvent)
         event.sender = "@user:example.com"
         event.session_id = "test_session_id"
+        event.decrypted = None  # Message couldn't be decrypted
         
         # Call the callback - should not raise an exception
         self.loop.run_until_complete(
-            bot.decryption_failure_callback(room, event)
+            bot.megolm_event_callback(room, event)
         )
         
         # Verify request_room_key was NOT called since store is not loaded
@@ -601,13 +604,14 @@ class TestChatrixBot(unittest.TestCase):
         event = MagicMock(spec=MegolmEvent)
         event.sender = "@user:example.com"
         event.session_id = "test_session_id_123"
+        event.decrypted = None  # Message couldn't be decrypted
         
         # Call the callback twice with the same session_id
         self.loop.run_until_complete(
-            bot.decryption_failure_callback(room, event)
+            bot.megolm_event_callback(room, event)
         )
         self.loop.run_until_complete(
-            bot.decryption_failure_callback(room, event)
+            bot.megolm_event_callback(room, event)
         )
         
         # Verify request_room_key was only called once
@@ -634,17 +638,19 @@ class TestChatrixBot(unittest.TestCase):
         event1 = MagicMock(spec=MegolmEvent)
         event1.sender = "@user:example.com"
         event1.session_id = "session_1"
+        event1.decrypted = None  # Message couldn't be decrypted
         
         event2 = MagicMock(spec=MegolmEvent)
         event2.sender = "@user:example.com"
         event2.session_id = "session_2"
+        event2.decrypted = None  # Message couldn't be decrypted
         
         # Call the callback with both events
         self.loop.run_until_complete(
-            bot.decryption_failure_callback(room, event1)
+            bot.megolm_event_callback(room, event1)
         )
         self.loop.run_until_complete(
-            bot.decryption_failure_callback(room, event2)
+            bot.megolm_event_callback(room, event2)
         )
         
         # Verify request_room_key was called twice (once for each session)
@@ -653,6 +659,73 @@ class TestChatrixBot(unittest.TestCase):
         # Verify both session IDs were tracked
         self.assertIn("session_1", bot.requested_session_ids)
         self.assertIn("session_2", bot.requested_session_ids)
+
+    def test_megolm_event_processes_decrypted_messages(self):
+        """Test that successfully decrypted Megolm events are processed as messages."""
+        bot = ChatrixBot(self.config)
+        
+        # Mock the command handler
+        bot.command_handler.handle_message = AsyncMock()
+        
+        # Create mock room
+        room = MagicMock(spec=MatrixRoom)
+        room.display_name = "Test Room"
+        room.room_id = "!test:example.com"
+        
+        # Create a decrypted text message
+        decrypted_event = MagicMock(spec=RoomMessageText)
+        decrypted_event.sender = "@user:example.com"
+        decrypted_event.body = "!cd help"
+        decrypted_event.server_timestamp = int(time.time() * 1000)
+        
+        # Create a MegolmEvent with the decrypted content
+        event = MagicMock(spec=MegolmEvent)
+        event.sender = "@user:example.com"
+        event.session_id = "test_session_id"
+        event.decrypted = decrypted_event  # Message was successfully decrypted
+        
+        # Call the callback
+        self.loop.run_until_complete(
+            bot.megolm_event_callback(room, event)
+        )
+        
+        # Verify the message was processed
+        bot.command_handler.handle_message.assert_called_once()
+        # Check that the decrypted event was passed to the handler
+        call_args = bot.command_handler.handle_message.call_args[0]
+        self.assertEqual(call_args[0], room)
+        self.assertEqual(call_args[1], decrypted_event)
+
+    def test_megolm_event_ignores_decrypted_non_text(self):
+        """Test that decrypted non-text Megolm events are ignored."""
+        bot = ChatrixBot(self.config)
+        
+        # Mock the command handler
+        bot.command_handler.handle_message = AsyncMock()
+        
+        # Create mock room
+        room = MagicMock(spec=MatrixRoom)
+        room.display_name = "Test Room"
+        room.room_id = "!test:example.com"
+        
+        # Create a decrypted non-text event (e.g., image)
+        from nio import RoomMessageImage
+        decrypted_event = MagicMock(spec=RoomMessageImage)
+        decrypted_event.sender = "@user:example.com"
+        
+        # Create a MegolmEvent with the decrypted content
+        event = MagicMock(spec=MegolmEvent)
+        event.sender = "@user:example.com"
+        event.session_id = "test_session_id"
+        event.decrypted = decrypted_event  # Message was successfully decrypted
+        
+        # Call the callback
+        self.loop.run_until_complete(
+            bot.megolm_event_callback(room, event)
+        )
+        
+        # Verify the message was NOT processed (only text messages are handled)
+        bot.command_handler.handle_message.assert_not_called()
 
     def test_sync_callback_uploads_keys(self):
         """Test that sync callback uploads keys when needed."""
