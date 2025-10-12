@@ -201,29 +201,192 @@ class SessionsScreen(Screen):
         self.app.push_screen(MessageScreen(sessions_text))
     
     async def show_emoji_verification(self):
-        """Show emoji-based device verification."""
+        """Show emoji-based device verification using Matrix SDK."""
         if not self.tui_app.bot or not self.tui_app.bot.client or not self.tui_app.bot.client.olm:
             self.app.push_screen(MessageScreen("Encryption is not enabled. Cannot perform emoji verification."))
             return
         
-        # Generate example emoji sequence
-        emojis = "🐶 🐱 🐭 🐹 🐰 🦊 🐻"
-        message = f"""[bold cyan]Emoji Verification[/bold cyan]
-
-Compare the following emoji sequence with the other device:
-
-{emojis}
-
-[bold]Steps:[/bold]
-1. On the other device, start emoji verification
-2. Compare the emoji sequences
-3. If they match, confirm on both devices
-4. If they don't match, reject the verification
-
-[dim]Note: This is a demonstration. Full interactive
-emoji verification requires Matrix SDK support.[/dim]"""
+        # Check if there are any unverified devices to verify
+        client = self.tui_app.bot.client
+        unverified_devices = []
         
-        self.app.push_screen(MessageScreen(message))
+        try:
+            if hasattr(client, 'device_store') and client.device_store:
+                for user_id in client.device_store.users:
+                    user_devices = client.device_store[user_id]
+                    for device_id, device in user_devices.items():
+                        # Skip our own device
+                        if user_id == client.user_id and device_id == client.device_id:
+                            continue
+                        # Only include unverified devices
+                        if not getattr(device, 'verified', False):
+                            unverified_devices.append({
+                                'user_id': user_id,
+                                'device_id': device_id,
+                                'device_name': getattr(device, 'display_name', 'Unknown'),
+                                'device': device
+                            })
+        except Exception as e:
+            logger.error(f"Error getting unverified devices: {e}")
+            self.app.push_screen(MessageScreen(f"Error getting unverified devices: {e}"))
+            return
+        
+        if not unverified_devices:
+            self.app.push_screen(MessageScreen("[bold cyan]Emoji Verification[/bold cyan]\n\nNo unverified devices found.\n\n[dim]All known devices are already verified or\nthere are no other devices to verify.[/dim]"))
+            return
+        
+        # Show device selection screen
+        await self.show_device_selection_for_verification(unverified_devices)
+    
+    async def show_device_selection_for_verification(self, devices: List[Dict[str, Any]]):
+        """Show device selection screen for verification."""
+        from textual.screen import Screen as BaseScreen
+        
+        class DeviceSelectionScreen(BaseScreen):
+            BINDINGS = [
+                Binding("escape", "app.pop_screen", "Back", priority=True),
+            ]
+            
+            def __init__(self, tui_app, devices: List[Dict[str, Any]], **kwargs):
+                super().__init__(**kwargs)
+                self.tui_app = tui_app
+                self.devices = devices
+            
+            def compose(self) -> ComposeResult:
+                yield Header()
+                with ScrollableContainer():
+                    yield Static("[bold cyan]Select Device to Verify[/bold cyan]\n", id="title")
+                    yield Static("[dim]Choose a device to start emoji verification:[/dim]\n")
+                    
+                    for idx, device_info in enumerate(self.devices):
+                        user_id = device_info['user_id']
+                        device_id = device_info['device_id']
+                        device_name = device_info['device_name']
+                        
+                        button_text = f"{user_id}\n  Device: {device_name} ({device_id})"
+                        yield Button(button_text, id=f"device_{idx}", variant="primary")
+                yield Footer()
+            
+            async def on_button_pressed(self, event: Button.Pressed) -> None:
+                button_id = event.button.id
+                if button_id.startswith("device_"):
+                    idx = int(button_id.split("_")[1])
+                    device_info = self.devices[idx]
+                    await self.start_verification(device_info)
+            
+            async def start_verification(self, device_info: Dict[str, Any]):
+                """Start SAS verification with selected device."""
+                from nio import ToDeviceError
+                from nio.crypto import Sas
+                
+                try:
+                    client = self.tui_app.bot.client
+                    device = device_info['device']
+                    
+                    # Start key verification
+                    resp = await client.start_key_verification(device)
+                    
+                    if isinstance(resp, ToDeviceError):
+                        self.app.push_screen(MessageScreen(f"Failed to start verification: {resp.message}"))
+                        return
+                    
+                    # Wait for the verification to be set up
+                    await asyncio.sleep(1)
+                    
+                    # Get the SAS object from the client
+                    sas = None
+                    if hasattr(client, 'key_verifications'):
+                        for transaction_id, verification in client.key_verifications.items():
+                            if isinstance(verification, Sas):
+                                if verification.other_olm_device == device:
+                                    sas = verification
+                                    break
+                    
+                    if not sas:
+                        self.app.push_screen(MessageScreen("Verification started, but could not retrieve SAS object.\n\nPlease check the other device to continue."))
+                        return
+                    
+                    # Get emoji sequence
+                    try:
+                        emoji_list = sas.get_emoji()
+                        emoji_display = " ".join([f"{emoji} ({desc})" for emoji, desc in emoji_list])
+                    except Exception as e:
+                        logger.error(f"Error getting emojis: {e}")
+                        emoji_display = "Error retrieving emojis"
+                    
+                    # Show verification screen with emojis
+                    await self.show_verification_screen(sas, emoji_display, device_info)
+                    
+                except Exception as e:
+                    logger.error(f"Error starting verification: {e}")
+                    self.app.push_screen(MessageScreen(f"Error starting verification: {e}"))
+            
+            async def show_verification_screen(self, sas: Any, emoji_display: str, device_info: Dict[str, Any]):
+                """Show the verification screen with emojis."""
+                class VerificationScreen(ModalScreen):
+                    BINDINGS = [
+                        Binding("escape", "app.pop_screen", "Cancel", priority=True),
+                    ]
+                    
+                    def __init__(self, parent_screen, sas, emoji_display: str, device_info: Dict[str, Any], **kwargs):
+                        super().__init__(**kwargs)
+                        self.parent_screen = parent_screen
+                        self.sas = sas
+                        self.emoji_display = emoji_display
+                        self.device_info = device_info
+                    
+                    def compose(self) -> ComposeResult:
+                        yield Header()
+                        with Container():
+                            yield Static("[bold cyan]Emoji Verification[/bold cyan]\n", id="title")
+                            yield Static(f"[bold]Verifying device:[/bold]\n{self.device_info['user_id']}\n{self.device_info['device_name']}\n")
+                            yield Static(f"[bold]Compare these emojis with the other device:[/bold]\n\n{self.emoji_display}\n")
+                            yield Static("[bold]Do the emojis match?[/bold]\n")
+                            yield Button("✅ Yes, they match", id="confirm", variant="success")
+                            yield Button("❌ No, they don't match", id="reject", variant="error")
+                        yield Footer()
+                    
+                    async def on_button_pressed(self, event: Button.Pressed) -> None:
+                        if event.button.id == "confirm":
+                            await self.confirm_verification()
+                        elif event.button.id == "reject":
+                            await self.reject_verification()
+                    
+                    async def confirm_verification(self):
+                        """Confirm the SAS verification."""
+                        try:
+                            # Accept the SAS
+                            self.sas.accept_sas()
+                            
+                            # Send the MAC
+                            client = self.parent_screen.tui_app.bot.client
+                            await client.send_to_device_messages()
+                            
+                            self.app.push_screen(MessageScreen("✅ Verification successful!\n\nThe device has been verified and marked as trusted."))
+                            self.dismiss()
+                            
+                        except Exception as e:
+                            logger.error(f"Error confirming verification: {e}")
+                            self.app.push_screen(MessageScreen(f"Error confirming verification: {e}"))
+                    
+                    async def reject_verification(self):
+                        """Reject the SAS verification."""
+                        try:
+                            self.sas.reject_sas()
+                            
+                            client = self.parent_screen.tui_app.bot.client
+                            await client.send_to_device_messages()
+                            
+                            self.app.push_screen(MessageScreen("❌ Verification rejected.\n\nThe emojis did not match. The device was not verified."))
+                            self.dismiss()
+                            
+                        except Exception as e:
+                            logger.error(f"Error rejecting verification: {e}")
+                            self.app.push_screen(MessageScreen(f"Error rejecting verification: {e}"))
+                
+                self.app.push_screen(VerificationScreen(self, sas, emoji_display, device_info))
+        
+        self.app.push_screen(DeviceSelectionScreen(self.tui_app, devices))
     
     async def show_qr_verification(self):
         """Show QR code for device verification."""

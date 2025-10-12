@@ -350,11 +350,22 @@ The TUI now includes comprehensive device verification features for end-to-end e
 
 #### Emoji Verification
 
-Compare emoji sequences between devices to verify encryption keys:
+Full interactive emoji verification using the Matrix SDK:
 
 1. Select "Verify Device (Emoji)" from the Sessions menu
-2. Compare the displayed emoji sequence with the other device
-3. Confirm if they match to establish trust
+2. Choose an unverified device from the list
+3. The bot initiates SAS (Short Authentication String) verification
+4. Compare the displayed emoji sequence (7 emojis) with the other device
+5. If they match, click "✅ Yes, they match" to confirm verification
+6. If they don't match, click "❌ No, they don't match" to reject
+7. Upon confirmation, devices exchange and verify MAC codes automatically
+
+**Features:**
+- Uses Matrix SDK's native SAS verification protocol
+- Real emoji sequences generated from shared secrets
+- Automatic MAC exchange and verification
+- Works with any Matrix client that supports emoji verification
+- Permanent device verification (persisted across sessions)
 
 #### QR Code Verification
 

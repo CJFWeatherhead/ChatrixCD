@@ -32,7 +32,13 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - **ROOMS**: View all rooms the bot has joined
   - **SESSIONS**: Comprehensive encryption session management
     - View active encryption sessions with verification status
-    - Emoji-based device verification
+    - **Full interactive emoji verification using Matrix SDK (SAS protocol)**
+      - Select unverified devices from list
+      - Initiate SAS verification with chosen device
+      - Compare 7 cryptographically-secure emojis
+      - Confirm or reject verification interactively
+      - Automatic MAC exchange and verification
+      - Compatible with all Matrix clients (Element, FluffyChat, etc.)
     - QR code device verification
     - Device fingerprint display for manual verification
     - Olm session reset instructions
@@ -56,6 +62,14 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ### Fixed
 - **Encrypted Room Support**: Fixed issue where bot would not respond to commands in encrypted rooms. The bot now properly handles successfully decrypted Megolm events and processes them as normal messages
 - **Bot Message Processing**: Fixed issue where bot would process old messages on reconnect or startup. The bot now ignores messages that were sent before it started, preventing execution of stale commands and tasks that may have already been processed
+
+#### Matrix SDK Integration
+- **Key Verification Event Callbacks**: Added support for handling key verification protocol events
+  - `KeyVerificationStart`: Handles incoming verification requests
+  - `KeyVerificationCancel`: Handles verification cancellations
+  - `KeyVerificationKey`: Handles key exchange during verification
+  - `KeyVerificationMac`: Handles MAC verification completion
+  - Full SAS (Short Authentication String) protocol support
 
 #### Privacy and Security Features
 - **Sensitive Information Redaction**: New `-R` / `--redact` command-line flag to automatically redact sensitive information from logs

@@ -13,6 +13,10 @@ from nio import (
     MegolmEvent,
     LoginResponse,
     SyncResponse,
+    KeyVerificationStart,
+    KeyVerificationCancel,
+    KeyVerificationKey,
+    KeyVerificationMac,
 )
 from chatrixcd.config import Config
 from chatrixcd.auth import MatrixAuth
@@ -88,6 +92,12 @@ class ChatrixBot:
         self.client.add_event_callback(self.message_callback, RoomMessageText)
         self.client.add_event_callback(self.invite_callback, InviteMemberEvent)
         self.client.add_event_callback(self.megolm_event_callback, MegolmEvent)
+        
+        # Setup key verification callbacks for interactive emoji verification
+        self.client.add_event_callback(self.key_verification_start_callback, KeyVerificationStart)
+        self.client.add_event_callback(self.key_verification_cancel_callback, KeyVerificationCancel)
+        self.client.add_event_callback(self.key_verification_key_callback, KeyVerificationKey)
+        self.client.add_event_callback(self.key_verification_mac_callback, KeyVerificationMac)
 
     async def setup_encryption(self) -> bool:
         """Setup encryption keys after successful login.
@@ -404,6 +414,41 @@ class ChatrixBot:
             logger.error(f"Sync loop error: {e}")
         finally:
             await self.close()
+
+    async def key_verification_start_callback(self, event: KeyVerificationStart):
+        """Handle incoming key verification start events.
+        
+        Args:
+            event: Key verification start event
+        """
+        logger.info(f"Received key verification start from {event.sender} (device: {event.from_device})")
+        
+        # The verification will be handled by the SAS object in the client
+        # TUI will access client.key_verifications to get active verifications
+        
+    async def key_verification_cancel_callback(self, event: KeyVerificationCancel):
+        """Handle key verification cancellation events.
+        
+        Args:
+            event: Key verification cancel event
+        """
+        logger.info(f"Key verification cancelled by {event.sender}: {event.reason}")
+    
+    async def key_verification_key_callback(self, event: KeyVerificationKey):
+        """Handle key verification key exchange events.
+        
+        Args:
+            event: Key verification key event
+        """
+        logger.debug(f"Key verification key exchange with {event.sender}")
+    
+    async def key_verification_mac_callback(self, event: KeyVerificationMac):
+        """Handle key verification MAC events.
+        
+        Args:
+            event: Key verification MAC event
+        """
+        logger.debug(f"Key verification MAC received from {event.sender}")
 
     async def close(self):
         """Clean up resources."""
