@@ -42,7 +42,7 @@ pip install -r requirements.txt
 #### Python Version Issues
 
 ```bash
-# Check Python version (need 3.8+)
+# Check Python version (need 3.9+)
 python --version
 
 # Use specific Python version

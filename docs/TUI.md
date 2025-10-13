@@ -319,7 +319,7 @@ Without the `-C` flag, the TUI remains fully functional using monochrome colors.
 
 ## System Requirements
 
-- Python 3.8 or higher
+- Python 3.9 or higher
 - Terminal with support for:
   - UTF-8 encoding
   - ANSI escape sequences (for colors with `-C`)

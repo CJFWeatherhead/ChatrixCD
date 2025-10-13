@@ -7,7 +7,7 @@
 **Matrix bot for CI/CD automation through chat**
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-4A9B7F)](https://cjfweatherhead.github.io/ChatrixCD/)
 
 ---
@@ -35,7 +35,7 @@ ChatrixCD integrates with Semaphore UI to enable CI/CD automation through chat. 
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.9 or higher
 - [uv](https://docs.astral.sh/uv/) - Fast Python package installer
 - Access to a Matrix homeserver
 - Access to a Semaphore UI instance with API access
@@ -396,7 +396,7 @@ ChatrixCD/
 
 ### Automated Testing
 
-Pull requests are automatically tested using GitHub Actions. Tests run against Python 3.8, 3.9, 3.10, and 3.11.
+Pull requests are automatically tested using GitHub Actions. Tests run against Python 3.9, 3.10, 3.11, and 3.12.
 
 ### Releases
 

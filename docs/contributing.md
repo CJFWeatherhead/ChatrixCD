@@ -43,7 +43,7 @@ Thank you for your interest in contributing to ChatrixCD!
 
 ### Prerequisites
 
-- Python 3.8+
+- Python 3.9+
 - Git
 - Virtual environment tool (venv or uv)
 

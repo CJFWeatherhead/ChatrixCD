@@ -10,7 +10,7 @@ This guide covers all installation methods for ChatrixCD.
 
 ## Prerequisites
 
-- Python 3.8 or higher
+- Python 3.9 or higher
 - [uv](https://docs.astral.sh/uv/) - Fast Python package installer (recommended)
 - Access to a Matrix homeserver
 - Access to a Semaphore UI instance with API access
@@ -121,7 +121,7 @@ python -m chatrixcd.main --version
 
 If you encounter issues during installation:
 
-1. Ensure Python 3.8+ is installed: `python --version`
+1. Ensure Python 3.9+ is installed: `python --version`
 2. Check that all dependencies are installed: `pip list`
 3. Verify Matrix homeserver is accessible
 4. Verify Semaphore UI API is accessible

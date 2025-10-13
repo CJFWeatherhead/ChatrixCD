@@ -132,7 +132,7 @@ For security vulnerabilities:
 
 **Solutions**:
 - Check bot logs for error messages
-- Verify Python version is 3.8 or higher
+- Verify Python version is 3.9 or higher
 - Ensure all dependencies are installed: `uv pip install -r requirements.txt`
 - Check system resources (memory, disk space)
 - Review systemd journal if using systemd: `journalctl -u chatrixcd -n 100`

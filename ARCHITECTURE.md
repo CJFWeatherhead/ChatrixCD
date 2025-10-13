@@ -487,7 +487,7 @@ docker-compose.yml → Orchestration
 
 ### Platform
 
-- **Python 3.8+**: Async/await support
+- **Python 3.9+**: Async/await support and modern syntax features
 - **Linux/macOS/Windows**: Cross-platform
 
 ## Future Enhancements
