@@ -18,6 +18,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ### Changed
 - **BREAKING**: Removed token-based authentication method
 - **BREAKING**: Removed OAuth2 client credentials OIDC flow
+- **BREAKING**: Dropped Python 3.8 support - minimum required version is now Python 3.9
 - Refactored authentication to use native Matrix SDK methods exclusively
 - OIDC authentication now uses Matrix SSO/token-based login flow
 - Simplified authentication configuration (removed `oidc_issuer`, `oidc_client_id`, `oidc_client_secret`)

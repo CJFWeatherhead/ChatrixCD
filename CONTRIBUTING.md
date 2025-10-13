@@ -66,7 +66,7 @@ We actively welcome your pull requests:
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.9 or higher
 - [uv](https://docs.astral.sh/uv/) - Fast Python package installer
 - Git
 - A Matrix homeserver account for testing
