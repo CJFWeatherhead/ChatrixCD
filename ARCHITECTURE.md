@@ -17,14 +17,61 @@ ChatrixCD implements Matrix protocol features using the [matrix-nio](https://git
 - **Matrix Client-Server API**: Full compliance with Matrix spec for messaging, rooms, and events
 - **End-to-End Encryption (E2EE)**: Implements Olm and Megolm protocols as specified in Matrix spec
 - **SSO/OIDC Authentication**: Uses Matrix SSO flow (MSC2858) for OIDC authentication
-- **Device Verification**: Supports SAS (Short Authentication String) emoji verification
+- **Device Verification**: Supports SAS (Short Authentication String) emoji verification and QR codes
 - **Key Management**: Automatic key sharing and device cross-signing as per Matrix spec
 
 **Matrix Specification References:**
 - [Matrix Client-Server API](https://spec.matrix.org/latest/client-server-api/)
 - [End-to-End Encryption](https://spec.matrix.org/latest/client-server-api/#end-to-end-encryption)
 - [SSO Login Flow](https://spec.matrix.org/latest/client-server-api/#sso-client-login)
+- [Key Verification using SAS](https://spec.matrix.org/latest/client-server-api/#short-authentication-string-sas-verification)
 - [MSC2858: Multiple SSO Identity Providers](https://github.com/matrix-org/matrix-spec-proposals/pull/2858)
+
+### Encryption and Device Management Features
+
+The current implementation includes comprehensive encryption and device management:
+
+**Device Verification Methods:**
+1. **Emoji Verification (SAS)**: Interactive emoji comparison for device trust
+   - Initiated from TUI Sessions menu
+   - Supports incoming verification requests
+   - Uses Short Authentication String protocol per Matrix spec
+   
+2. **QR Code Verification**: Generate QR codes for device verification
+   - Accessible via TUI Sessions menu
+   - ASCII art QR code display in terminal
+   - Useful for mobile-to-desktop verification
+
+3. **Manual Fingerprint Verification**: Display device Ed25519 fingerprint
+   - View via TUI Sessions menu
+   - Out-of-band verification support
+
+**Key Sharing and Cross-Device Support:**
+- **Automatic Key Requests**: When receiving undecryptable messages (MegolmEvent), the bot automatically requests missing keys from other devices
+- **Key Upload**: Encryption keys uploaded after successful login
+- **Device Keys Query**: Queries device keys for room members to establish encrypted sessions
+- **Persistent Store**: Encryption keys stored in configurable directory (default: `./store`)
+- **Cross-Device Sessions**: Supports multiple bot instances with same account (different device IDs)
+
+**Session Management (via TUI):**
+- View all encryption sessions
+- List trusted/verified devices
+- Reset Olm sessions (manual process)
+- Monitor key verification status
+
+**Matrix Spec Compliance:**
+- Uses matrix-nio which implements Matrix spec and relevant MSCs
+- Olm and Megolm protocols for E2EE (Double Ratchet algorithm)
+- Proper device ID management and session persistence
+- Automatic key backup and recovery (via matrix-nio store)
+
+**Comparison with matrix-commander:**
+While matrix-commander provides a CLI-focused approach, ChatrixCD implements:
+- Interactive TUI for device management (vs CLI flags)
+- Automatic key request handling
+- Real-time encryption status in TUI
+- Bot-specific optimizations for CI/CD use case
+- Both tools use matrix-nio for protocol compliance
 
 ## System Architecture
 

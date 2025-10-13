@@ -1,4 +1,8 @@
-"""Authentication module with native Matrix SDK authentication support."""
+"""Authentication module with native Matrix SDK authentication support.
+
+This module was developed with assistance from AI/LLM tools. It provides a simple
+wrapper for Matrix authentication using password and OIDC/SSO methods.
+"""
 
 import logging
 from typing import Optional, Dict, Any

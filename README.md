@@ -451,6 +451,7 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 - Built with [matrix-nio](https://github.com/poljar/matrix-nio)
 - Integrates with [Semaphore UI](https://github.com/ansible-semaphore/semaphore)
+- Inspired by [matrix-commander](https://github.com/8go/matrix-commander) for device verification and encryption handling patterns
 
 ### AI/LLM Contributions
 
