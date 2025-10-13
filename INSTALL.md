@@ -94,7 +94,7 @@ chatrixcd -s
 
 ChatrixCD supports two authentication methods:
 
-### Password Authentication (Recommended)
+### Password Authentication
 
 This is the simplest and most common method:
 
