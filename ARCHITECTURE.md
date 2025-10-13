@@ -2,9 +2,29 @@
 
 This document describes the architecture and design of ChatrixCD.
 
+## Development Notice
+
+**Important:** Large portions of this project were developed with assistance from AI/LLM tools (GitHub Copilot, Large Language Models). While all code has been reviewed, tested, and validated by human developers, the architecture and implementation reflect AI-assisted development practices.
+
 ## Overview
 
 ChatrixCD is a Matrix bot that bridges Matrix chat with Semaphore UI for CI/CD automation. It's built using asynchronous Python with support for end-to-end encryption and modern authentication methods including OIDC.
+
+## Matrix Protocol Compliance
+
+ChatrixCD implements Matrix protocol features using the [matrix-nio](https://github.com/poljar/matrix-nio) client library, which provides:
+
+- **Matrix Client-Server API**: Full compliance with Matrix spec for messaging, rooms, and events
+- **End-to-End Encryption (E2EE)**: Implements Olm and Megolm protocols as specified in Matrix spec
+- **SSO/OIDC Authentication**: Uses Matrix SSO flow (MSC2858) for OIDC authentication
+- **Device Verification**: Supports SAS (Short Authentication String) emoji verification
+- **Key Management**: Automatic key sharing and device cross-signing as per Matrix spec
+
+**Matrix Specification References:**
+- [Matrix Client-Server API](https://spec.matrix.org/latest/client-server-api/)
+- [End-to-End Encryption](https://spec.matrix.org/latest/client-server-api/#end-to-end-encryption)
+- [SSO Login Flow](https://spec.matrix.org/latest/client-server-api/#sso-client-login)
+- [MSC2858: Multiple SSO Identity Providers](https://github.com/matrix-org/matrix-spec-proposals/pull/2858)
 
 ## System Architecture
 

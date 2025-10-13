@@ -22,9 +22,17 @@
     // Password for password authentication (required if auth_type is "password")
     "password": "your_bot_password_here",
     
-    // OIDC/SSO redirect URL (required if auth_type is "oidc")
-    // This is the URL where the OIDC provider will redirect after authentication
-    // For local testing, use "http://localhost:8080/callback"
+    // OIDC/SSO redirect URL (optional, defaults to "http://localhost:8080/callback")
+    // This is the URL where the browser will be redirected after authentication
+    // The redirect URL does NOT need to be a running web server - it's only used
+    // to receive the loginToken parameter. You copy/paste the token from the URL.
+    // 
+    // Common values:
+    //   - "http://localhost:8080/callback" (default, for local use)
+    //   - "https://your-domain.com/auth/callback" (production with web handler)
+    //   - "urn:ietf:wg:oauth:2.0:oob" (OAuth2 out-of-band for CLI apps)
+    //
+    // For most users: leave this commented out to use the default
     // "oidc_redirect_url": "http://localhost:8080/callback",
     
     // Path to store encryption keys and session data

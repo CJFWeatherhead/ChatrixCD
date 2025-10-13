@@ -134,12 +134,18 @@ class ChatrixBot:
             logger.error(f"Encryption setup error: {e}")
             return False
 
-    async def login(self) -> bool:
+    async def login(self, oidc_token_callback=None) -> bool:
         """Login to Matrix server using configured authentication method.
         
         Supports two authentication methods:
         1. Password authentication: Direct login with username/password
         2. OIDC authentication: Interactive SSO login with browser callback
+        
+        Args:
+            oidc_token_callback: Optional async callback for OIDC token input.
+                               Useful for TUI integration. Should accept
+                               (sso_url, redirect_url, identity_providers)
+                               and return the login token.
         
         Returns:
             True if login successful, False otherwise
@@ -179,7 +185,7 @@ class ChatrixBot:
                     
             elif auth_type == 'oidc':
                 # OIDC authentication using Matrix SSO flow
-                return await self._login_oidc()
+                return await self._login_oidc(token_callback=oidc_token_callback)
             else:
                 logger.error(f"Unknown auth_type: {auth_type}")
                 return False
@@ -188,7 +194,7 @@ class ChatrixBot:
             logger.error(f"Login error: {e}")
             return False
 
-    async def _login_oidc(self) -> bool:
+    async def _login_oidc(self, token_callback=None) -> bool:
         """Perform OIDC authentication using Matrix SSO flow.
         
         This method implements the Matrix SSO login flow:
@@ -198,6 +204,13 @@ class ChatrixBot:
         4. Wait for user to complete authentication in browser
         5. User provides the login token from callback
         6. Complete login with the token
+        
+        Args:
+            token_callback: Optional async callback function that displays
+                          SSO URL and prompts for token. Should accept
+                          (sso_url, redirect_url, identity_providers) and
+                          return the login token. If None, uses default
+                          console input.
         
         Returns:
             True if login successful, False otherwise
@@ -298,25 +311,30 @@ class ChatrixBot:
                     f"?redirectUrl={redirect_url}"
                 )
             
-            # Display instructions to user
-            logger.info("=" * 70)
-            logger.info("OIDC Authentication Required")
-            logger.info("=" * 70)
-            logger.info("")
-            logger.info("Please complete authentication in your browser:")
-            logger.info("")
-            logger.info(f"  {sso_redirect_url}")
-            logger.info("")
-            logger.info("After authentication, you will be redirected to:")
-            logger.info(f"  {redirect_url}")
-            logger.info("")
-            logger.info("The redirect URL will contain a 'loginToken' parameter.")
-            logger.info("Copy the entire URL or just the loginToken value.")
-            logger.info("=" * 70)
-            
-            # Prompt user for the login token
-            print("\nWaiting for login token...")
-            login_token = input("Paste the callback URL or loginToken: ").strip()
+            # Get login token from user via callback or default method
+            if token_callback:
+                # Use provided callback (e.g., from TUI)
+                login_token = await token_callback(sso_redirect_url, redirect_url, identity_providers)
+            else:
+                # Default console-based prompt
+                logger.info("=" * 70)
+                logger.info("OIDC Authentication Required")
+                logger.info("=" * 70)
+                logger.info("")
+                logger.info("Please complete authentication in your browser:")
+                logger.info("")
+                logger.info(f"  {sso_redirect_url}")
+                logger.info("")
+                logger.info("After authentication, you will be redirected to:")
+                logger.info(f"  {redirect_url}")
+                logger.info("")
+                logger.info("The redirect URL will contain a 'loginToken' parameter.")
+                logger.info("Copy the entire URL or just the loginToken value.")
+                logger.info("=" * 70)
+                
+                # Prompt user for the login token
+                print("\nWaiting for login token...")
+                login_token = input("Paste the callback URL or loginToken: ").strip()
             
             # Extract token if full URL was provided
             if 'loginToken=' in login_token:

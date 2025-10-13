@@ -123,7 +123,7 @@ For Matrix servers that use OIDC/Single Sign-On (like some enterprise deployment
        "homeserver": "https://matrix.example.com",
        "user_id": "@chatrixcd:example.com",
        "auth_type": "oidc",
-       "oidc_redirect_url": "http://localhost:8080/callback",
+       "oidc_redirect_url": "http://localhost:8080/callback",  // Optional
        "store_path": "./store"
      }
    }
@@ -138,7 +138,27 @@ For Matrix servers that use OIDC/Single Sign-On (like some enterprise deployment
 
 3. The bot will complete the login automatically
 
-**Note:** The `oidc_redirect_url` is just used to receive the authentication token. For local testing, `http://localhost:8080/callback` works fine. You don't need to set up a web server.
+#### Understanding `oidc_redirect_url`
+
+The `oidc_redirect_url` is the URL where the Matrix server will redirect your browser after successful authentication. **This field is optional** and defaults to `http://localhost:8080/callback` if not specified.
+
+**Important:** The redirect URL does not need to be a running web server. It's simply used to receive the `loginToken` parameter in the URL. When the authentication completes, you copy the entire callback URL (or just the token) and paste it back into ChatrixCD.
+
+**Common redirect URL patterns:**
+
+- **Local development/testing:** `http://localhost:8080/callback` (default)
+  - No web server needed
+  - Works for desktop/local deployments
+  
+- **Production with web handler:** `https://your-domain.com/auth/callback`
+  - If you want to build a web page that automatically extracts and submits the token
+  - Requires setting up a simple web server/page
+  
+- **Out-of-band (CLI apps):** `urn:ietf:wg:oauth:2.0:oob`
+  - Standard OAuth2 redirect for command-line applications
+  - Some Matrix servers may not support this
+
+**For most users:** Leave `oidc_redirect_url` unset or use the default. The token will appear in your browser's address bar, and you simply copy/paste it.
 
 ## Docker Deployment
 

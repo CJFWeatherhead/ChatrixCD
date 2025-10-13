@@ -133,8 +133,7 @@ For Matrix servers using OIDC/Single Sign-On:
 {
   "matrix": {
     "auth_type": "oidc",
-    "user_id": "@chatrixcd:example.com",
-    "oidc_redirect_url": "http://localhost:8080/callback"
+    "user_id": "@chatrixcd:example.com"
   }
 }
 ```
@@ -146,7 +145,11 @@ For Matrix servers using OIDC/Single Sign-On:
 4. Paste the URL or token back into the bot
 5. The bot completes login automatically
 
-**Note:** The `oidc_redirect_url` can be any URL - it's only used to receive the token. For local testing, use `http://localhost:8080/callback`.
+**Optional Configuration:**
+- `oidc_redirect_url`: The URL where your browser will be redirected after authentication (defaults to `http://localhost:8080/callback`)
+  - Does **not** need to be a running web server
+  - Only used to receive the `loginToken` in the URL
+  - For most users, the default is sufficient
 
 ## Usage
 
@@ -448,3 +451,17 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 - Built with [matrix-nio](https://github.com/poljar/matrix-nio)
 - Integrates with [Semaphore UI](https://github.com/ansible-semaphore/semaphore)
+
+### AI/LLM Contributions
+
+**Important Notice:** Significant portions of this codebase were developed with assistance from AI/LLM tools, including:
+- GitHub Copilot for code generation and completion
+- Large Language Models (LLMs) for architecture design, documentation, and implementation
+- AI-assisted code review and testing strategies
+
+While AI tools accelerated development, all code has been reviewed, tested, and validated by human developers. Users should be aware that:
+- Code patterns and documentation may reflect AI-generated content
+- The project follows standard software engineering practices for testing and quality assurance
+- Contributions and improvements from the community are welcome and encouraged
+
+This transparency aligns with emerging best practices for AI-assisted software development.

@@ -2,8 +2,20 @@
 
 Thank you for your interest in contributing to ChatrixCD! This document provides guidelines and information for contributors.
 
+## AI/LLM Development Notice
+
+**Important:** This project was developed with significant assistance from AI/LLM tools (GitHub Copilot, Large Language Models). While all code has been reviewed and tested, contributors should be aware that:
+
+- Many code patterns and documentation were AI-generated
+- AI tools may have influenced architectural decisions
+- Human review and testing validate all contributions
+- We welcome improvements, refactoring, and optimizations from the community
+
+We embrace transparency about AI-assisted development and encourage contributors to use AI tools responsibly.
+
 ## Table of Contents
 
+- [AI/LLM Development Notice](#aillm-development-notice)
 - [Code of Conduct](#code-of-conduct)
 - [How Can I Contribute?](#how-can-i-contribute)
 - [Development Setup](#development-setup)

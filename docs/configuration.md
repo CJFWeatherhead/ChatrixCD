@@ -125,12 +125,17 @@ Environment variables use `SCREAMING_SNAKE_CASE` with component prefixes:
 
 ### OIDC Configuration
 
-For OIDC authentication:
+For OIDC authentication using Matrix SSO flow:
 
-- `MATRIX_OIDC_CLIENT_ID` - OIDC client ID
-- `MATRIX_OIDC_CLIENT_SECRET` - OIDC client secret
-- `MATRIX_OIDC_ISSUER` - OIDC issuer URL
-- `MATRIX_OIDC_REDIRECT_URI` - OIDC redirect URI (optional)
+- `MATRIX_OIDC_REDIRECT_URL` - Redirect URL for SSO callback (optional, default: `http://localhost:8080/callback`)
+  - The URL where your browser will be redirected after SSO authentication
+  - Does **not** need to be a running web server - only used to receive the `loginToken` in the URL
+  - Common values:
+    - `http://localhost:8080/callback` (default, for local/desktop use)
+    - `https://your-domain.com/auth/callback` (production with web handler)
+    - `urn:ietf:wg:oauth:2.0:oob` (OAuth2 out-of-band for CLI apps)
+
+**Note:** ChatrixCD uses the Matrix SSO/OIDC flow, not direct OAuth2 client credentials. The Matrix server handles the OIDC provider integration.
 
 ### Semaphore Configuration
 
@@ -176,18 +181,37 @@ For OIDC authentication:
 
 ### OIDC Authentication
 
+ChatrixCD uses Matrix's native SSO/OIDC flow. The Matrix server handles the OIDC provider configuration.
+
+**Minimal configuration (recommended):**
+```json
+{
+  "matrix": {
+    "homeserver": "https://matrix.example.com",
+    "user_id": "@bot:example.com",
+    "auth_type": "oidc"
+  }
+}
+```
+
+**With custom redirect URL:**
 ```json
 {
   "matrix": {
     "homeserver": "https://matrix.example.com",
     "user_id": "@bot:example.com",
     "auth_type": "oidc",
-    "oidc_client_id": "your-client-id",
-    "oidc_client_secret": "your-client-secret",
-    "oidc_issuer": "https://auth.example.com"
+    "oidc_redirect_url": "https://your-domain.com/auth/callback"
   }
 }
 ```
+
+**Authentication flow:**
+1. Bot displays SSO authentication URL
+2. Open URL in browser and authenticate with your OIDC provider
+3. Browser redirects to `oidc_redirect_url` with `loginToken` parameter
+4. Copy the callback URL (or just the token) and paste into bot
+5. Bot completes login automatically
 
 ## SSL/TLS Configuration for Semaphore
 
