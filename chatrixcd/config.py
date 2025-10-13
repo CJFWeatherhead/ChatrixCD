@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 # Current configuration schema version
-CURRENT_CONFIG_VERSION = 2
+CURRENT_CONFIG_VERSION = 3
 
 
 class ConfigMigrator:
@@ -61,6 +61,20 @@ class ConfigMigrator:
         - Added bot.startup_message and bot.shutdown_message
         """
         # These fields are already handled by defaults in load_config
+        # This migration exists primarily to set the version number
+        # and document the changes between versions
+        return config
+    
+    @staticmethod
+    def _migrate_v2_to_v3(config: Dict[str, Any]) -> Dict[str, Any]:
+        """Migrate from version 2 to version 3.
+        
+        Changes in v3:
+        - Added semaphore.ssl_ca_cert, ssl_client_cert, ssl_client_key (now standard features)
+        - Added bot.log_file for configurable log file path
+        """
+        # These fields are already handled by defaults in load_config
+        # SSL settings were already in the default config but are now documented as part of v3
         # This migration exists primarily to set the version number
         # and document the changes between versions
         return config
@@ -152,6 +166,7 @@ class Config:
                 'greeting_rooms': [],
                 'startup_message': '🤖 ChatrixCD bot is now online and ready to help with CI/CD tasks!',
                 'shutdown_message': '👋 ChatrixCD bot is shutting down. See you later!',
+                'log_file': 'chatrixcd.log',
             },
         }
     

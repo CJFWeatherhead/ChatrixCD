@@ -1,6 +1,6 @@
 {
   // Configuration file version - do not modify
-  "_config_version": 2,
+  "_config_version": 3,
   
   // Matrix homeserver connection settings
   "matrix": {
@@ -83,6 +83,10 @@
     "startup_message": "🤖 ChatrixCD bot is now online and ready to help with CI/CD tasks!",
     
     // Message sent when bot shuts down
-    "shutdown_message": "👋 ChatrixCD bot is shutting down. See you later!"
+    "shutdown_message": "👋 ChatrixCD bot is shutting down. See you later!",
+    
+    // Path to log file (default: chatrixcd.log in current directory)
+    // Can be absolute or relative path
+    "log_file": "chatrixcd.log"
   }
 }

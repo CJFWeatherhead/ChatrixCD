@@ -642,39 +642,86 @@ class SetScreen(Screen):
         self.tui_app = tui_app
         self.pending_changes = {}
     
+    def _get_setting_label(self, config_key: str) -> str:
+        """Generate a label for a setting showing current and default values.
+        
+        Args:
+            config_key: Configuration key (e.g., 'bot.command_prefix')
+            
+        Returns:
+            Formatted label with current and default values
+        """
+        current_value = self.tui_app.config.get(config_key, "")
+        
+        # Get default value
+        default_config = self.tui_app.config._get_default_config()
+        keys = config_key.split('.')
+        default_value = default_config
+        for key in keys:
+            if isinstance(default_value, dict):
+                default_value = default_value.get(key, "")
+            else:
+                default_value = ""
+                break
+        
+        # Format values for display
+        def format_value(val):
+            if isinstance(val, bool):
+                return str(val)
+            elif isinstance(val, list):
+                return f"[{len(val)} items]" if val else "[]"
+            elif isinstance(val, str):
+                if any(sensitive in config_key.lower() for sensitive in ['password', 'token', 'secret']):
+                    return "***" if val else "(empty)"
+                return val if len(str(val)) <= 30 else f"{str(val)[:27]}..."
+            else:
+                return str(val)
+        
+        current_display = format_value(current_value)
+        default_display = format_value(default_value)
+        
+        # Determine if value is modified (use color if available)
+        is_modified = current_value != default_value
+        if is_modified and self.tui_app.use_color:
+            # Use yellow to indicate modified from default
+            return f"{config_key}\n[yellow]Current:[/yellow] {current_display} [dim]| Default: {default_display}[/dim]"
+        else:
+            return f"{config_key}\nCurrent: {current_display} | Default: {default_display}"
+    
     def compose(self) -> ComposeResult:
         """Create child widgets."""
         yield Header()
         with ScrollableContainer():
             yield Static("[bold cyan]Set Operational Variables[/bold cyan]\n", id="title")
-            yield Static("[dim]Select a variable to edit:[/dim]\n")
+            yield Static("[dim]Select a variable to edit. Modified values shown in color.[/dim]\n")
             
             # Matrix configuration options
             yield Static("[bold]Matrix Configuration:[/bold]")
-            yield Button("matrix.homeserver", id="edit_matrix.homeserver")
-            yield Button("matrix.user_id", id="edit_matrix.user_id")
-            yield Button("matrix.device_id", id="edit_matrix.device_id")
-            yield Button("matrix.device_name", id="edit_matrix.device_name")
-            yield Button("matrix.auth_type", id="edit_matrix.auth_type")
-            yield Button("matrix.password", id="edit_matrix.password")
-            yield Button("matrix.access_token", id="edit_matrix.access_token")
-            yield Button("matrix.store_path", id="edit_matrix.store_path")
+            yield Button(self._get_setting_label("matrix.homeserver"), id="edit_matrix.homeserver")
+            yield Button(self._get_setting_label("matrix.user_id"), id="edit_matrix.user_id")
+            yield Button(self._get_setting_label("matrix.device_id"), id="edit_matrix.device_id")
+            yield Button(self._get_setting_label("matrix.device_name"), id="edit_matrix.device_name")
+            yield Button(self._get_setting_label("matrix.auth_type"), id="edit_matrix.auth_type")
+            yield Button(self._get_setting_label("matrix.password"), id="edit_matrix.password")
+            yield Button(self._get_setting_label("matrix.access_token"), id="edit_matrix.access_token")
+            yield Button(self._get_setting_label("matrix.store_path"), id="edit_matrix.store_path")
             
             # Semaphore configuration options
             yield Static("\n[bold]Semaphore Configuration:[/bold]")
-            yield Button("semaphore.url", id="edit_semaphore.url")
-            yield Button("semaphore.api_token", id="edit_semaphore.api_token")
-            yield Button("semaphore.ssl_verify", id="edit_semaphore.ssl_verify")
+            yield Button(self._get_setting_label("semaphore.url"), id="edit_semaphore.url")
+            yield Button(self._get_setting_label("semaphore.api_token"), id="edit_semaphore.api_token")
+            yield Button(self._get_setting_label("semaphore.ssl_verify"), id="edit_semaphore.ssl_verify")
             
             # Bot configuration options
             yield Static("\n[bold]Bot Configuration:[/bold]")
-            yield Button("bot.command_prefix", id="edit_bot.command_prefix")
-            yield Button("bot.allowed_rooms", id="edit_bot.allowed_rooms")
-            yield Button("bot.admin_users", id="edit_bot.admin_users")
-            yield Button("bot.greetings_enabled", id="edit_bot.greetings_enabled")
-            yield Button("bot.greeting_rooms", id="edit_bot.greeting_rooms")
-            yield Button("bot.startup_message", id="edit_bot.startup_message")
-            yield Button("bot.shutdown_message", id="edit_bot.shutdown_message")
+            yield Button(self._get_setting_label("bot.command_prefix"), id="edit_bot.command_prefix")
+            yield Button(self._get_setting_label("bot.allowed_rooms"), id="edit_bot.allowed_rooms")
+            yield Button(self._get_setting_label("bot.admin_users"), id="edit_bot.admin_users")
+            yield Button(self._get_setting_label("bot.greetings_enabled"), id="edit_bot.greetings_enabled")
+            yield Button(self._get_setting_label("bot.greeting_rooms"), id="edit_bot.greeting_rooms")
+            yield Button(self._get_setting_label("bot.startup_message"), id="edit_bot.startup_message")
+            yield Button(self._get_setting_label("bot.shutdown_message"), id="edit_bot.shutdown_message")
+            yield Button(self._get_setting_label("bot.log_file"), id="edit_bot.log_file")
             
             yield Static("\n[bold]Actions:[/bold]")
             yield Button("Apply Changes (Runtime Only)", id="apply_button", variant="primary")
@@ -1103,15 +1150,16 @@ class ChatrixTUI(App):
     async def show_log(self):
         """Show log screen."""
         log_content = ""
+        log_file = self.config.get('bot.log_file', 'chatrixcd.log')
         try:
-            with open('chatrixcd.log', 'r') as f:
+            with open(log_file, 'r') as f:
                 # Read last 1000 lines and reverse order (most recent first)
                 lines = f.readlines()
                 reversed_lines = lines[-1000:]
                 reversed_lines.reverse()
                 log_content = ''.join(reversed_lines)
         except FileNotFoundError:
-            log_content = "Log file not found"
+            log_content = f"Log file not found: {log_file}"
         except Exception as e:
             log_content = f"Error reading log: {e}"
         

@@ -473,6 +473,7 @@ The SET menu now provides full interactive configuration editing for **all confi
 - `bot.greeting_rooms` - Rooms for greetings
 - `bot.startup_message` - Bot startup message
 - `bot.shutdown_message` - Bot shutdown message
+- `bot.log_file` - Path to log file
 
 #### Edit Workflow
 
