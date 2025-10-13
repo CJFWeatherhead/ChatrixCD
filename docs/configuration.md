@@ -25,7 +25,7 @@ Configuration files use the `.json` extension but support all HJSON features. Th
 
 ## Configuration Versioning
 
-Configuration files support versioning to enable automatic migration when new features are added. The current configuration version is **2**.
+Configuration files support versioning to enable automatic migration when new features are added. The current configuration version is **3**.
 
 When you load an older configuration file:
 - It will be automatically migrated to the current version
@@ -37,6 +37,7 @@ When you load an older configuration file:
 
 - **Version 1** (implicit): Original configuration format
 - **Version 2**: Added greeting messages support (`greetings_enabled`, `greeting_rooms`, `startup_message`, `shutdown_message`)
+- **Version 3**: Added SSL/TLS configuration for Semaphore (`ssl_ca_cert`, `ssl_client_cert`, `ssl_client_key`) and configurable log file path (`bot.log_file`)
 
 ## Configuration Priority
 
@@ -64,7 +65,7 @@ Create a `config.json` file in your working directory. The file supports HJSON f
 ```hjson
 {
   // Configuration file version - do not modify
-  "_config_version": 2,
+  "_config_version": 3,
   
   // Matrix homeserver connection settings
   "matrix": {
@@ -381,6 +382,27 @@ You can configure the bot to send startup and shutdown messages to specific room
 To disable greetings entirely, either:
 - Set `greetings_enabled` to `false` in config.json, or
 - Leave `greeting_rooms` as an empty array
+
+### Log File Configuration
+
+You can configure the path to the log file:
+
+```json
+{
+  "bot": {
+    "log_file": "chatrixcd.log"
+  }
+}
+```
+
+**Default:** `chatrixcd.log` (in the current working directory)
+
+**Examples:**
+- Absolute path: `"/var/log/chatrixcd/bot.log"`
+- Relative path: `"logs/chatrixcd.log"`
+- Custom name: `"my-bot.log"`
+
+The log file location is used both for logging output and for the TUI log viewer. Make sure the bot has write permissions to the specified path.
 
 ## Security Best Practices
 

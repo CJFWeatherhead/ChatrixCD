@@ -84,6 +84,7 @@ class AdminsScreen(Screen):
     
     BINDINGS = [
         Binding("escape", "app.pop_screen", "Back", priority=True),
+        Binding("b", "app.pop_screen", "Back"),
     ]
     
     def __init__(self, admins: List[str], **kwargs):
@@ -108,6 +109,7 @@ class RoomsScreen(Screen):
     
     BINDINGS = [
         Binding("escape", "app.pop_screen", "Back", priority=True),
+        Binding("b", "app.pop_screen", "Back"),
     ]
     
     def __init__(self, rooms: List[Dict[str, str]], **kwargs):
@@ -132,6 +134,7 @@ class SessionsScreen(Screen):
     
     BINDINGS = [
         Binding("escape", "app.pop_screen", "Back", priority=True),
+        Binding("b", "app.pop_screen", "Back"),
     ]
     
     def __init__(self, tui_app, **kwargs):
@@ -497,6 +500,7 @@ class SayScreen(Screen):
     
     BINDINGS = [
         Binding("escape", "app.pop_screen", "Back", priority=True),
+        Binding("b", "app.pop_screen", "Back"),
     ]
     
     def __init__(self, tui_app, rooms: List[Dict[str, str]], **kwargs):
@@ -542,6 +546,7 @@ class LogScreen(Screen):
     
     BINDINGS = [
         Binding("escape", "app.pop_screen", "Back", priority=True),
+        Binding("b", "app.pop_screen", "Back"),
     ]
     
     def __init__(self, log_content: str, **kwargs):
@@ -626,6 +631,10 @@ class SetScreen(Screen):
     
     BINDINGS = [
         Binding("escape", "app.pop_screen", "Back", priority=True),
+        Binding("b", "app.pop_screen", "Back"),
+        Binding("a", "apply", "Apply"),
+        Binding("s", "save", "Save"),
+        Binding("d", "discard", "Discard"),
     ]
     
     def __init__(self, tui_app, **kwargs):
@@ -633,19 +642,86 @@ class SetScreen(Screen):
         self.tui_app = tui_app
         self.pending_changes = {}
     
+    def _get_setting_label(self, config_key: str) -> str:
+        """Generate a label for a setting showing current and default values.
+        
+        Args:
+            config_key: Configuration key (e.g., 'bot.command_prefix')
+            
+        Returns:
+            Formatted label with current and default values
+        """
+        current_value = self.tui_app.config.get(config_key, "")
+        
+        # Get default value
+        default_config = self.tui_app.config._get_default_config()
+        keys = config_key.split('.')
+        default_value = default_config
+        for key in keys:
+            if isinstance(default_value, dict):
+                default_value = default_value.get(key, "")
+            else:
+                default_value = ""
+                break
+        
+        # Format values for display
+        def format_value(val):
+            if isinstance(val, bool):
+                return str(val)
+            elif isinstance(val, list):
+                return f"[{len(val)} items]" if val else "[]"
+            elif isinstance(val, str):
+                if any(sensitive in config_key.lower() for sensitive in ['password', 'token', 'secret']):
+                    return "***" if val else "(empty)"
+                return val if len(str(val)) <= 30 else f"{str(val)[:27]}..."
+            else:
+                return str(val)
+        
+        current_display = format_value(current_value)
+        default_display = format_value(default_value)
+        
+        # Determine if value is modified (use color if available)
+        is_modified = current_value != default_value
+        if is_modified and self.tui_app.use_color:
+            # Use yellow to indicate modified from default
+            return f"{config_key}\n[yellow]Current:[/yellow] {current_display} [dim]| Default: {default_display}[/dim]"
+        else:
+            return f"{config_key}\nCurrent: {current_display} | Default: {default_display}"
+    
     def compose(self) -> ComposeResult:
         """Create child widgets."""
         yield Header()
         with ScrollableContainer():
             yield Static("[bold cyan]Set Operational Variables[/bold cyan]\n", id="title")
-            yield Static("[dim]Select a variable to edit:[/dim]\n")
+            yield Static("[dim]Select a variable to edit. Modified values shown in color.[/dim]\n")
+            
+            # Matrix configuration options
+            yield Static("[bold]Matrix Configuration:[/bold]")
+            yield Button(self._get_setting_label("matrix.homeserver"), id="edit_matrix.homeserver")
+            yield Button(self._get_setting_label("matrix.user_id"), id="edit_matrix.user_id")
+            yield Button(self._get_setting_label("matrix.device_id"), id="edit_matrix.device_id")
+            yield Button(self._get_setting_label("matrix.device_name"), id="edit_matrix.device_name")
+            yield Button(self._get_setting_label("matrix.auth_type"), id="edit_matrix.auth_type")
+            yield Button(self._get_setting_label("matrix.password"), id="edit_matrix.password")
+            yield Button(self._get_setting_label("matrix.access_token"), id="edit_matrix.access_token")
+            yield Button(self._get_setting_label("matrix.store_path"), id="edit_matrix.store_path")
+            
+            # Semaphore configuration options
+            yield Static("\n[bold]Semaphore Configuration:[/bold]")
+            yield Button(self._get_setting_label("semaphore.url"), id="edit_semaphore.url")
+            yield Button(self._get_setting_label("semaphore.api_token"), id="edit_semaphore.api_token")
+            yield Button(self._get_setting_label("semaphore.ssl_verify"), id="edit_semaphore.ssl_verify")
             
             # Bot configuration options
-            yield Static("[bold]Bot Configuration:[/bold]")
-            yield Button("command_prefix", id="edit_command_prefix")
-            yield Button("greetings_enabled", id="edit_greetings_enabled")
-            yield Button("startup_message", id="edit_startup_message")
-            yield Button("shutdown_message", id="edit_shutdown_message")
+            yield Static("\n[bold]Bot Configuration:[/bold]")
+            yield Button(self._get_setting_label("bot.command_prefix"), id="edit_bot.command_prefix")
+            yield Button(self._get_setting_label("bot.allowed_rooms"), id="edit_bot.allowed_rooms")
+            yield Button(self._get_setting_label("bot.admin_users"), id="edit_bot.admin_users")
+            yield Button(self._get_setting_label("bot.greetings_enabled"), id="edit_bot.greetings_enabled")
+            yield Button(self._get_setting_label("bot.greeting_rooms"), id="edit_bot.greeting_rooms")
+            yield Button(self._get_setting_label("bot.startup_message"), id="edit_bot.startup_message")
+            yield Button(self._get_setting_label("bot.shutdown_message"), id="edit_bot.shutdown_message")
+            yield Button(self._get_setting_label("bot.log_file"), id="edit_bot.log_file")
             
             yield Static("\n[bold]Actions:[/bold]")
             yield Button("Apply Changes (Runtime Only)", id="apply_button", variant="primary")
@@ -655,7 +731,11 @@ class SetScreen(Screen):
             if self.pending_changes:
                 yield Static(f"\n[bold yellow]Pending Changes:[/bold yellow]")
                 for key, value in self.pending_changes.items():
-                    yield Static(f"  • {key} = {value}")
+                    # Redact sensitive values in display
+                    display_value = value
+                    if any(sensitive in key.lower() for sensitive in ['password', 'token', 'secret']):
+                        display_value = '***REDACTED***'
+                    yield Static(f"  • {key} = {display_value}")
         yield Footer()
     
     async def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -670,14 +750,30 @@ class SetScreen(Screen):
         elif button_id == "save_button":
             await self.save_changes()
         elif button_id == "discard_button":
-            self.pending_changes = {}
-            self.app.push_screen(MessageScreen("Changes discarded."))
-            self.refresh()
+            await self.discard_changes()
+    
+    async def action_apply(self):
+        """Handle apply action."""
+        await self.apply_changes()
+    
+    async def action_save(self):
+        """Handle save action."""
+        await self.save_changes()
+    
+    async def action_discard(self):
+        """Handle discard action."""
+        await self.discard_changes()
+    
+    async def discard_changes(self):
+        """Discard all pending changes."""
+        self.pending_changes = {}
+        self.app.push_screen(MessageScreen("Changes discarded."))
+        self.refresh()
     
     async def edit_config_value(self, config_key: str):
         """Edit a configuration value."""
-        bot_config = self.tui_app.config.get_bot_config()
-        current_value = bot_config.get(config_key, "")
+        # Get current value using dot notation
+        current_value = self.tui_app.config.get(config_key, "")
         
         # Determine value type
         if isinstance(current_value, bool):
@@ -696,7 +792,11 @@ class SetScreen(Screen):
         def handle_result(new_value):
             if new_value is not None:
                 self.pending_changes[config_key] = new_value
-                self.app.push_screen(MessageScreen(f"Changed {config_key} to: {new_value}\n\nRemember to Apply or Save changes!"))
+                # Redact sensitive values in display
+                display_value = new_value
+                if any(sensitive in config_key.lower() for sensitive in ['password', 'token', 'secret']):
+                    display_value = '***REDACTED***'
+                self.app.push_screen(MessageScreen(f"Changed {config_key} to: {display_value}\n\nRemember to Apply or Save changes!"))
                 self.refresh()
         
         await self.app.push_screen(ConfigEditScreen(config_key, current_value, value_type), handle_result)
@@ -709,11 +809,31 @@ class SetScreen(Screen):
         
         # Update runtime configuration
         for key, value in self.pending_changes.items():
-            self.tui_app.config.config.setdefault('bot', {})[key] = value
+            self._set_nested_value(self.tui_app.config.config, key, value)
         
         self.app.push_screen(MessageScreen(f"Applied {len(self.pending_changes)} changes to runtime configuration.\n\nChanges will be lost when the bot restarts unless saved to config.json."))
         self.pending_changes = {}
         self.refresh()
+    
+    def _set_nested_value(self, config_dict: dict, key: str, value: Any):
+        """Set a value in nested dictionary using dot notation.
+        
+        Args:
+            config_dict: Configuration dictionary
+            key: Dot-separated key path (e.g., 'matrix.homeserver')
+            value: Value to set
+        """
+        keys = key.split('.')
+        current = config_dict
+        
+        # Navigate to the nested location
+        for k in keys[:-1]:
+            if k not in current:
+                current[k] = {}
+            current = current[k]
+        
+        # Set the final value
+        current[keys[-1]] = value
     
     async def save_changes(self):
         """Save changes to config.json file."""
@@ -724,7 +844,7 @@ class SetScreen(Screen):
         try:
             # Update configuration
             for key, value in self.pending_changes.items():
-                self.tui_app.config.config.setdefault('bot', {})[key] = value
+                self._set_nested_value(self.tui_app.config.config, key, value)
             
             # Save to file
             config_file = getattr(self.tui_app.config, 'config_file', 'config.json')
@@ -745,6 +865,7 @@ class ShowScreen(Screen):
     
     BINDINGS = [
         Binding("escape", "app.pop_screen", "Back", priority=True),
+        Binding("b", "app.pop_screen", "Back"),
     ]
     
     def __init__(self, config_text: str, **kwargs):
@@ -846,6 +967,14 @@ class ChatrixTUI(App):
     BINDINGS = [
         Binding("q", "quit", "Quit", priority=True),
         Binding("ctrl+c", "quit", "Quit", show=False),
+        Binding("s", "show_status", "Status"),
+        Binding("a", "show_admins", "Admins"),
+        Binding("r", "show_rooms", "Rooms"),
+        Binding("e", "show_sessions", "Sessions"),
+        Binding("m", "show_say", "Say"),
+        Binding("l", "show_log", "Log"),
+        Binding("t", "show_set", "Set"),
+        Binding("c", "show_config", "Show Config"),
     ]
     
     def __init__(self, bot, config, use_color: bool = True, **kwargs):
@@ -877,15 +1006,15 @@ class ChatrixTUI(App):
             yield tasks_widget
             yield Static("\n")
             
-            yield Button("STATUS - Show bot status", id="status")
-            yield Button("ADMINS - View admin users", id="admins")
-            yield Button("ROOMS - Show joined rooms", id="rooms")
-            yield Button("SESSIONS - Session management", id="sessions")
-            yield Button("SAY - Send message to room", id="say")
-            yield Button("LOG - View log", id="log")
-            yield Button("SET - Change operational variables", id="set")
-            yield Button("SHOW - Show current configuration", id="show")
-            yield Button("QUIT - Exit", id="quit", variant="error")
+            yield Button("STATUS - Show bot status [s]", id="status")
+            yield Button("ADMINS - View admin users [a]", id="admins")
+            yield Button("ROOMS - Show joined rooms [r]", id="rooms")
+            yield Button("SESSIONS - Session management [e]", id="sessions")
+            yield Button("SAY - Send message to room [m]", id="say")
+            yield Button("LOG - View log [l]", id="log")
+            yield Button("SET - Change operational variables [t]", id="set")
+            yield Button("SHOW - Show current configuration [c]", id="show")
+            yield Button("QUIT - Exit [q]", id="quit", variant="error")
         yield Footer()
     
     async def on_mount(self) -> None:
@@ -1021,13 +1150,16 @@ class ChatrixTUI(App):
     async def show_log(self):
         """Show log screen."""
         log_content = ""
+        log_file = self.config.get('bot.log_file', 'chatrixcd.log')
         try:
-            with open('chatrixcd.log', 'r') as f:
-                # Read last 1000 lines
+            with open(log_file, 'r') as f:
+                # Read last 1000 lines and reverse order (most recent first)
                 lines = f.readlines()
-                log_content = ''.join(lines[-1000:])
+                reversed_lines = lines[-1000:]
+                reversed_lines.reverse()
+                log_content = ''.join(reversed_lines)
         except FileNotFoundError:
-            log_content = "Log file not found"
+            log_content = f"Log file not found: {log_file}"
         except Exception as e:
             log_content = f"Error reading log: {e}"
         
@@ -1080,6 +1212,38 @@ class ChatrixTUI(App):
     async def action_quit(self):
         """Handle quit action."""
         self.exit()
+    
+    async def action_show_status(self):
+        """Handle status action."""
+        await self.show_status()
+    
+    async def action_show_admins(self):
+        """Handle admins action."""
+        await self.show_admins()
+    
+    async def action_show_rooms(self):
+        """Handle rooms action."""
+        await self.show_rooms()
+    
+    async def action_show_sessions(self):
+        """Handle sessions action."""
+        await self.show_sessions()
+    
+    async def action_show_say(self):
+        """Handle say action."""
+        await self.show_say()
+    
+    async def action_show_log(self):
+        """Handle log action."""
+        await self.show_log()
+    
+    async def action_show_set(self):
+        """Handle set action."""
+        await self.show_set()
+    
+    async def action_show_config(self):
+        """Handle show config action."""
+        await self.show_config()
 
 
 async def run_tui(bot, config, use_color: bool = True):

@@ -270,7 +270,7 @@ class TestConfig(unittest.TestCase):
     
     def test_config_version_detection(self):
         """Test configuration version detection."""
-        # Test v2 config
+        # Test v2 config (will be migrated to v3)
         json_content = {
             "_config_version": 2,
             "matrix": {
@@ -284,7 +284,8 @@ class TestConfig(unittest.TestCase):
         
         try:
             config = Config(temp_file)
-            self.assertEqual(config.get_config_version(), 2)
+            # v2 config should be migrated to v3 (current version)
+            self.assertEqual(config.get_config_version(), 3)
         finally:
             os.unlink(temp_file)
     
@@ -455,7 +456,8 @@ class TestConfig(unittest.TestCase):
         
         try:
             config = Config(temp_file)
-            self.assertEqual(config.get_config_version(), 2)
+            # v2 config should be migrated to v3 (current version)
+            self.assertEqual(config.get_config_version(), 3)
             self.assertEqual(config.get('matrix.homeserver'), 'https://matrix.org')
         finally:
             os.unlink(temp_file)

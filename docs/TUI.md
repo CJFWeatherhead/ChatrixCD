@@ -179,30 +179,50 @@ Message:
 
 ### LOG
 
-Displays the last 1000 lines of the bot log in a scrollable text area:
+Displays the last 1000 lines of the bot log in a scrollable text area. **Most recent messages appear at the top** for easier access to current activity:
 
 ```
 Log View
 
 ┌─────────────────────────────────────────────────────────────┐
-│ 2025-10-12 01:15:23 - INFO - ChatrixCD starting...        │
-│ 2025-10-12 01:15:24 - INFO - Connected to Matrix          │
-│ 2025-10-12 01:15:25 - INFO - Joined room !abc:matrix.org  │
 │ 2025-10-12 01:15:30 - INFO - Message from @user:matrix.org│
+│ 2025-10-12 01:15:25 - INFO - Joined room !abc:matrix.org  │
+│ 2025-10-12 01:15:24 - INFO - Connected to Matrix          │
+│ 2025-10-12 01:15:23 - INFO - ChatrixCD starting...        │
 │ ...                                                          │
 │                                                              │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
+**Keyboard shortcuts:**
+- **Escape** or **b**: Go back
+- **Arrow Keys** or **Mouse Wheel**: Scroll through logs
+
 ### SET
 
-Change operational variables (future feature). Will allow modifying:
+Change operational variables interactively. Allows editing any configuration setting:
 
-- Command prefix
-- Greeting messages
-- Admin users
-- Allowed rooms
+**Matrix Configuration:**
+- homeserver, user_id, device_id, device_name
+- auth_type, password, access_token
+- store_path
+
+**Semaphore Configuration:**
+- url, api_token, ssl_verify
+
+**Bot Configuration:**
+- command_prefix
+- allowed_rooms, admin_users
+- greetings_enabled, greeting_rooms
+- startup_message, shutdown_message
+
+**Features:**
+- Interactive editing with type validation
+- Pending changes preview with sensitive value redaction
+- Apply changes to runtime (temporary) or save to config.json (persistent)
+- Discard changes option
+- Keyboard shortcuts: **a** (Apply), **s** (Save), **d** (Discard)
 
 Changes can be applied immediately or saved to config.json.
 
@@ -244,11 +264,31 @@ Gracefully shuts down the bot:
 
 ## Keyboard Shortcuts
 
+### Main Menu Shortcuts
+
 - **q** or **Ctrl+C**: Quit the TUI
-- **Escape**: Go back to previous screen
+- **s**: Show bot status
+- **a**: View admin users
+- **r**: Show joined rooms
+- **e**: Session management
+- **m**: Send message to room (Say)
+- **l**: View log
+- **t**: Change operational variables (Set)
+- **c**: Show current configuration
+
+### Global Navigation
+
+- **Escape** or **b**: Go back to previous screen
 - **Enter**: Select/activate button
 - **Tab**: Navigate between elements
 - **Arrow Keys**: Navigate menu items
+
+### SET Menu Shortcuts
+
+- **a**: Apply changes (runtime only)
+- **s**: Save changes to config.json
+- **d**: Discard pending changes
+- **Escape** or **b**: Go back
 
 ## Mouse Support
 
@@ -263,11 +303,17 @@ The TUI fully supports mouse interaction:
 
 When using the `-C` flag, the TUI displays in brand colors:
 
-- **Header**: ChatrixCD green (#4A9B7F) background with white text
-- **Footer**: Dark background (#2D3238)
+- **Header**: ChatrixCD green (#4A9B7F / RGB: 74, 155, 127) background with white text
+- **Footer**: Dark background (#2D3238 / RGB: 45, 50, 56)
 - **Primary Buttons**: ChatrixCD green background
 - **Text**: Standard terminal colors
 - **Status**: Color-coded status indicators
+
+**Color Translation:**
+The Textual framework automatically translates HTML hex colors to appropriate terminal colors based on your terminal's capabilities:
+- True color (24-bit) terminals: Exact RGB colors
+- 256-color terminals: Closest match from 256-color palette
+- 16-color terminals: Closest match from basic 16 colors
 
 Without the `-C` flag, the TUI remains fully functional using monochrome colors.
 
@@ -317,7 +363,10 @@ If the TUI displays incorrectly:
 
 If mouse clicks don't work:
 
-1. Use keyboard shortcuts instead (Tab, Enter, Arrow keys)
+1. Use keyboard shortcuts instead:
+   - Main menu: **s**, **a**, **r**, **e**, **m**, **l**, **t**, **c**, **q**
+   - Navigation: **Tab**, **Enter**, **Arrow keys**, **Escape**, **b**
+   - SET menu: **a** (Apply), **s** (Save), **d** (Discard)
 2. Check if your terminal emulator supports mouse events
 3. Try a different terminal emulator
 
@@ -397,31 +446,52 @@ View all active encryption sessions:
 
 ### Interactive Configuration Editing
 
-The SET menu now provides full interactive configuration editing:
+The SET menu now provides full interactive configuration editing for **all configuration settings**:
 
-#### Editable Variables
+#### Editable Sections
 
-- **command_prefix**: Change the bot's command prefix (e.g., `!cd` to `!bot`)
-- **greetings_enabled**: Enable/disable startup/shutdown messages
-- **startup_message**: Customize the bot's startup greeting
-- **shutdown_message**: Customize the bot's shutdown message
+**Matrix Configuration:**
+- `matrix.homeserver` - Matrix homeserver URL
+- `matrix.user_id` - Bot user ID
+- `matrix.device_id` - Device identifier
+- `matrix.device_name` - Human-readable device name
+- `matrix.auth_type` - Authentication type (password/token/oidc)
+- `matrix.password` - Password for password auth
+- `matrix.access_token` - Access token for token auth
+- `matrix.store_path` - Path to encryption store
+
+**Semaphore Configuration:**
+- `semaphore.url` - Semaphore UI URL
+- `semaphore.api_token` - Semaphore API token
+- `semaphore.ssl_verify` - SSL certificate verification
+
+**Bot Configuration:**
+- `bot.command_prefix` - Command prefix (e.g., `!cd`)
+- `bot.allowed_rooms` - List of allowed room IDs
+- `bot.admin_users` - List of admin user IDs
+- `bot.greetings_enabled` - Enable/disable greetings
+- `bot.greeting_rooms` - Rooms for greetings
+- `bot.startup_message` - Bot startup message
+- `bot.shutdown_message` - Bot shutdown message
+- `bot.log_file` - Path to log file
 
 #### Edit Workflow
 
-1. Select "SET - Change operational variables"
-2. Choose a variable to edit
+1. Press **t** or select "SET - Change operational variables"
+2. Choose a variable to edit from the list
 3. Enter the new value (with type validation)
 4. Choose action:
-   - **Apply Changes (Runtime Only)**: Changes take effect immediately but are lost on restart
-   - **Save to config.json**: Changes are persisted to disk and survive restarts
-   - **Discard Changes**: Abandon all pending modifications
+   - **Apply Changes (Runtime Only)** or press **a**: Changes take effect immediately but are lost on restart
+   - **Save to config.json** or press **s**: Changes are persisted to disk and survive restarts
+   - **Discard Changes** or press **d**: Abandon all pending modifications
 
 #### Safety Features
 
-- Type validation ensures correct data types
-- Preview pending changes before applying
+- Type validation ensures correct data types (string, integer, boolean, list)
+- Preview pending changes before applying with sensitive value redaction
 - Separate runtime and persistent save operations
 - Graceful error handling with user-friendly messages
+- Keyboard shortcuts for faster operation
 
 ## Screenshots
 
@@ -518,31 +588,52 @@ to verify this bot's identity.
 
 Select a variable to edit:
 
+Matrix Configuration:
+ ┌───────────────────────────────────────────────────────────┐
+ │    matrix.homeserver                                      │
+ └───────────────────────────────────────────────────────────┘
+ ┌───────────────────────────────────────────────────────────┐
+ │    matrix.user_id                                         │
+ └───────────────────────────────────────────────────────────┘
+ [... more matrix options ...]
+
+Semaphore Configuration:
+ ┌───────────────────────────────────────────────────────────┐
+ │    semaphore.url                                          │
+ └───────────────────────────────────────────────────────────┘
+ [... more semaphore options ...]
+
 Bot Configuration:
  ┌───────────────────────────────────────────────────────────┐
- │    command_prefix                                         │
+ │    bot.command_prefix                                     │
  └───────────────────────────────────────────────────────────┘
  
  ┌───────────────────────────────────────────────────────────┐
- │    greetings_enabled                                      │
+ │    bot.greetings_enabled                                  │
  └───────────────────────────────────────────────────────────┘
  
  ┌───────────────────────────────────────────────────────────┐
- │    startup_message                                        │
+ │    bot.startup_message                                    │
  └───────────────────────────────────────────────────────────┘
+ [... more bot options ...]
 
 Actions:
  ┌───────────────────────────────────────────────────────────┐
- │    Apply Changes (Runtime Only)                           │
+ │    Apply Changes (Runtime Only)                      [a]  │
  └───────────────────────────────────────────────────────────┘
  
  ┌───────────────────────────────────────────────────────────┐
- │    Save to config.json                                    │
+ │    Save to config.json                               [s]  │
+ └───────────────────────────────────────────────────────────┘
+ 
+ ┌───────────────────────────────────────────────────────────┐
+ │    Discard Changes                                   [d]  │
  └───────────────────────────────────────────────────────────┘
 
 Pending Changes:
-  • command_prefix = !bot
-  • greetings_enabled = false
+  • bot.command_prefix = !bot
+  • bot.greetings_enabled = false
+  • matrix.password = ***REDACTED***
 ```
 
 ## Future Enhancements

@@ -11,13 +11,14 @@ from chatrixcd.bot import ChatrixBot
 from chatrixcd.redactor import SensitiveInfoRedactor, RedactingFilter
 
 
-def setup_logging(verbosity: int = 0, color: bool = False, redact: bool = False):
+def setup_logging(verbosity: int = 0, color: bool = False, redact: bool = False, log_file: str = 'chatrixcd.log'):
     """Setup logging configuration.
     
     Args:
         verbosity: Verbosity level (0=INFO, 1=DEBUG, 2+=detailed DEBUG)
         color: Enable colored logging output
         redact: Enable redaction of sensitive information
+        log_file: Path to log file (default: chatrixcd.log)
     """
     # Determine log level based on verbosity
     if verbosity == 0:
@@ -42,17 +43,17 @@ def setup_logging(verbosity: int = 0, color: bool = False, redact: bool = False)
                     'CRITICAL': 'red,bg_white',
                 }
             ))
-            handlers = [handler, logging.FileHandler('chatrixcd.log')]
+            handlers = [handler, logging.FileHandler(log_file)]
         except ImportError:
             # Fallback if colorlog not available
             handlers = [
                 logging.StreamHandler(sys.stdout),
-                logging.FileHandler('chatrixcd.log')
+                logging.FileHandler(log_file)
             ]
     else:
         handlers = [
             logging.StreamHandler(sys.stdout),
-            logging.FileHandler('chatrixcd.log')
+            logging.FileHandler(log_file)
         ]
     
     logging.basicConfig(
@@ -252,8 +253,12 @@ def main():
     # Parse command-line arguments
     args = parse_args()
     
+    # Load configuration first to get log file path
+    config = Config(config_file=args.config)
+    log_file = config.get('bot.log_file', 'chatrixcd.log')
+    
     # Setup logging with verbosity, color, and redaction options
-    setup_logging(verbosity=args.verbosity, color=args.color, redact=args.redact)
+    setup_logging(verbosity=args.verbosity, color=args.color, redact=args.redact, log_file=log_file)
     logger = logging.getLogger(__name__)
     
     # Daemonize if requested (Unix/Linux only)
@@ -264,13 +269,10 @@ def main():
         logger.info("Entering daemon mode...")
         daemonize()
         # Re-setup logging after daemonization
-        setup_logging(verbosity=args.verbosity, color=False, redact=args.redact)  # No color in daemon mode
+        setup_logging(verbosity=args.verbosity, color=False, redact=args.redact, log_file=log_file)  # No color in daemon mode
         logger = logging.getLogger(__name__)
     
     logger.info(f"ChatrixCD {__version__} starting...")
-    
-    # Load configuration with CLI overrides
-    config = Config(config_file=args.config)
     
     # Validate configuration before starting
     validation_errors = config.validate_schema()
