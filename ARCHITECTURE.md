@@ -88,16 +88,23 @@ ChatrixCD is a Matrix bot that bridges Matrix chat with Semaphore UI for CI/CD a
 
 **OIDC Authentication Flow**:
 ```
-1. Check server supports SSO via AsyncClient.login_info()
-2. Generate SSO redirect URL from homeserver
-3. User opens URL in browser and authenticates with OIDC provider
-4. User receives callback URL with loginToken parameter
-5. User provides token to bot
-6. Bot completes login using AsyncClient.login(token=loginToken)
+1. Query server for available login flows via AsyncClient.login_info()
+2. Parse response to extract SSO flow and identity providers
+3. If multiple identity providers, present options to user
+4. Generate appropriate SSO redirect URL:
+   - Single provider: /_matrix/client/v3/login/sso/redirect/{provider_id}?redirectUrl={url}
+   - Generic/No providers: /_matrix/client/v3/login/sso/redirect?redirectUrl={url}
+5. User opens URL in browser and authenticates with OIDC provider
+6. User receives callback URL with loginToken parameter
+7. User provides token to bot
+8. Bot completes login using AsyncClient.login(token=loginToken)
 ```
 
 **Implementation Notes**:
 - All authentication uses native matrix-nio methods
+- Server response contains detailed flow information including identity providers
+- Implementation parses transport_response to access identity provider details
+- Supports multiple identity providers with user selection
 - No custom OAuth2 client implementation needed
 - Encryption store is automatically loaded by matrix-nio after successful login
 
@@ -272,10 +279,17 @@ Bot ready to receive messages
 ```
 Bot starts
     ↓
-AsyncClient.login_info() - Check SSO support
+AsyncClient.login_info() - Query server for login flows
     ↓
-Display SSO URL to user:
-  {homeserver}/_matrix/client/v3/login/sso/redirect?redirectUrl={redirect_url}
+Parse response for m.login.sso flow and identity_providers
+    ↓
+If multiple providers, user selects one
+    ↓
+Generate SSO redirect URL:
+  - With provider: {homeserver}/_matrix/client/v3/login/sso/redirect/{provider_id}?redirectUrl={url}
+  - Generic: {homeserver}/_matrix/client/v3/login/sso/redirect?redirectUrl={url}
+    ↓
+Display SSO URL to user
     ↓
 User opens URL in browser
     ↓
@@ -317,9 +331,11 @@ Bot ready to receive messages
 
 - **OIDC/SSO Security**:
   - Uses native Matrix SSO/OIDC flow
+  - Server provides identity provider details
   - Token-based authentication
   - No credentials stored after initial login
   - Supports standard OIDC providers (Keycloak, Authentik, etc.)
+  - Multi-provider support with user selection
 
 ### Access Control
 

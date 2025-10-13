@@ -28,10 +28,14 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - Better encryption support with proper E2E key handling
 - More reliable OIDC/SSO authentication following Matrix specification
 - Clearer authentication flow with user prompts for OIDC login
+- **OIDC authentication now properly queries server for identity providers**
+- **Support for multiple identity providers with user selection**
+- **Generates correct provider-specific SSO URLs when available**
 
 ### Fixed
 - Fixed encrypted session failures in 1-1 rooms with OIDC authentication
 - Improved encryption key management and session handling
+- **Corrected OIDC/SSO implementation to properly parse server login flow response**
 
 ## [2025.10.12.0.0.1] - 2025-10-12
 

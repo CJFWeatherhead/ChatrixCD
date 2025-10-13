@@ -192,11 +192,12 @@ class ChatrixBot:
         """Perform OIDC authentication using Matrix SSO flow.
         
         This method implements the Matrix SSO login flow:
-        1. Check if server supports SSO login
-        2. Display SSO redirect URL to user
-        3. Wait for user to complete authentication in browser
-        4. User provides the login token from callback
-        5. Complete login with the token
+        1. Query server for available login flows
+        2. Parse SSO flow and identity providers from server response
+        3. Display appropriate SSO redirect URL to user
+        4. Wait for user to complete authentication in browser
+        5. User provides the login token from callback
+        6. Complete login with the token
         
         Returns:
             True if login successful, False otherwise
@@ -205,7 +206,7 @@ class ChatrixBot:
         
         try:
             # Get available login flows from the server
-            logger.info("Checking available login flows...")
+            logger.info("Querying server for available login flows...")
             login_info = await self.client.login_info()
             
             if not isinstance(login_info, LoginInfoResponse):
@@ -222,14 +223,80 @@ class ChatrixBot:
             
             logger.info("Server supports SSO login")
             
+            # Parse the raw response to get identity providers
+            # LoginInfoResponse.transport_response contains the full HTTP response
+            identity_providers = []
+            sso_flow = None
+            
+            if hasattr(login_info, 'transport_response') and login_info.transport_response:
+                try:
+                    import json
+                    response_data = json.loads(login_info.transport_response.content)
+                    flows = response_data.get('flows', [])
+                    
+                    # Find the m.login.sso flow
+                    for flow in flows:
+                        if flow.get('type') == 'm.login.sso':
+                            sso_flow = flow
+                            identity_providers = flow.get('identity_providers', [])
+                            break
+                    
+                    if identity_providers:
+                        logger.info(f"Found {len(identity_providers)} identity provider(s)")
+                        for idp in identity_providers:
+                            logger.info(f"  - {idp.get('name', idp.get('id', 'Unknown'))}")
+                except Exception as e:
+                    logger.warning(f"Could not parse identity providers: {e}")
+                    # Continue anyway with generic SSO URL
+            
             # Get redirect URL from config
             redirect_url = self.auth.get_oidc_redirect_url()
             
             # Construct SSO redirect URL
-            sso_redirect_url = (
-                f"{self.homeserver}/_matrix/client/v3/login/sso/redirect"
-                f"?redirectUrl={redirect_url}"
-            )
+            # If there are multiple identity providers, we should let the user choose
+            # For now, we'll use the generic redirect (works for single or no-preference)
+            if identity_providers and len(identity_providers) == 1:
+                # Single provider - use specific provider URL
+                provider_id = identity_providers[0].get('id')
+                sso_redirect_url = (
+                    f"{self.homeserver}/_matrix/client/v3/login/sso/redirect/{provider_id}"
+                    f"?redirectUrl={redirect_url}"
+                )
+                logger.info(f"Using identity provider: {identity_providers[0].get('name', provider_id)}")
+            elif identity_providers and len(identity_providers) > 1:
+                # Multiple providers - user needs to choose
+                logger.info("=" * 70)
+                logger.info("Multiple Identity Providers Available")
+                logger.info("=" * 70)
+                logger.info("")
+                for i, idp in enumerate(identity_providers, 1):
+                    logger.info(f"{i}. {idp.get('name', idp.get('id', 'Unknown'))}")
+                logger.info("")
+                
+                # Let user select
+                print("Select identity provider (enter number): ", end='')
+                try:
+                    choice = int(input().strip())
+                    if 1 <= choice <= len(identity_providers):
+                        selected_idp = identity_providers[choice - 1]
+                        provider_id = selected_idp.get('id')
+                        sso_redirect_url = (
+                            f"{self.homeserver}/_matrix/client/v3/login/sso/redirect/{provider_id}"
+                            f"?redirectUrl={redirect_url}"
+                        )
+                        logger.info(f"Selected: {selected_idp.get('name', provider_id)}")
+                    else:
+                        logger.error("Invalid selection")
+                        return False
+                except (ValueError, EOFError):
+                    logger.error("Invalid input")
+                    return False
+            else:
+                # No specific providers or generic SSO
+                sso_redirect_url = (
+                    f"{self.homeserver}/_matrix/client/v3/login/sso/redirect"
+                    f"?redirectUrl={redirect_url}"
+                )
             
             # Display instructions to user
             logger.info("=" * 70)
