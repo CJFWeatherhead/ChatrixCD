@@ -62,9 +62,9 @@ Create a `config.json` file:
 }
 ```
 
-### For OIDC Authentication
+### For OIDC/SSO Authentication
 
-Create a `config.json` file with OIDC settings:
+If your Matrix server uses OIDC/Single Sign-On:
 
 ```json
 {
@@ -72,9 +72,7 @@ Create a `config.json` file with OIDC settings:
     "homeserver": "https://matrix.example.com",
     "user_id": "@chatrixcd:example.com",
     "auth_type": "oidc",
-    "oidc_issuer": "https://auth.example.com",
-    "oidc_client_id": "your_client_id",
-    "oidc_client_secret": "your_client_secret"
+    "oidc_redirect_url": "http://localhost:8080/callback"
   },
   "semaphore": {
     "url": "https://semaphore.example.com",
@@ -85,6 +83,13 @@ Create a `config.json` file with OIDC settings:
   }
 }
 ```
+
+When you start the bot:
+1. It will display an SSO authentication URL
+2. Open the URL in your browser
+3. Complete authentication with your OIDC provider
+4. Copy the callback URL (containing `loginToken`)
+5. Paste it back into the bot
 
 ## Running the Bot
 

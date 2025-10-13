@@ -70,34 +70,43 @@ ChatrixCD is a Matrix bot that bridges Matrix chat with Semaphore UI for CI/CD a
 
 ### 3. Authentication Handler (`auth.py`)
 
-**Purpose**: Handle multiple authentication methods for Matrix
+**Purpose**: Configuration and validation for Matrix authentication
 
 **Supported Methods**:
 
 #### Password Authentication
-- Traditional Matrix password login
-- Handled directly by matrix-nio
-- Simplest method for testing
+- Traditional Matrix username/password login
+- Handled natively by matrix-nio's `AsyncClient.login(password=...)`
+- Simplest and most common method
+- Works with standard Matrix homeservers
 
-#### Token Authentication
-- Uses pre-obtained access token
-- Useful for long-running deployments
-- Token set directly on client
+#### OIDC/SSO Authentication
+- Matrix SSO login using OIDC providers
+- Interactive browser-based authentication flow
+- Uses matrix-nio's `AsyncClient.login(token=...)`
+- Ideal for enterprise Matrix deployments with centralized authentication
 
-#### OIDC Authentication
-- Full OAuth2/OIDC client credentials flow
-- Discovery via `.well-known/openid-configuration`
-- Automatic token refresh support
-- Ideal for enterprise Matrix deployments
-
-**Flow for OIDC**:
+**OIDC Authentication Flow**:
 ```
-1. Discover OIDC endpoints from issuer
-2. Request token using client credentials grant
-3. Store access and refresh tokens
-4. Use access token for Matrix authentication
-5. Refresh token when needed
+1. Query server for available login flows via AsyncClient.login_info()
+2. Parse response to extract SSO flow and identity providers
+3. If multiple identity providers, present options to user
+4. Generate appropriate SSO redirect URL:
+   - Single provider: /_matrix/client/v3/login/sso/redirect/{provider_id}?redirectUrl={url}
+   - Generic/No providers: /_matrix/client/v3/login/sso/redirect?redirectUrl={url}
+5. User opens URL in browser and authenticates with OIDC provider
+6. User receives callback URL with loginToken parameter
+7. User provides token to bot
+8. Bot completes login using AsyncClient.login(token=loginToken)
 ```
+
+**Implementation Notes**:
+- All authentication uses native matrix-nio methods
+- Server response contains detailed flow information including identity providers
+- Implementation parses transport_response to access identity provider details
+- Supports multiple identity providers with user selection
+- No custom OAuth2 client implementation needed
+- Encryption store is automatically loaded by matrix-nio after successful login
 
 ### 4. Bot Core (`bot.py`)
 
@@ -113,18 +122,22 @@ ChatrixCD is a Matrix bot that bridges Matrix chat with Semaphore UI for CI/CD a
 **Event Callbacks**:
 - `message_callback()`: Process incoming messages (decrypted messages)
 - `invite_callback()`: Handle room invitations
-- `decryption_failure_callback()`: Handle encrypted messages that couldn't be decrypted and request encryption keys
+- `megolm_event_callback()`: Handle encrypted messages and request keys when needed
 
 **Authentication Flow**:
 ```python
 if auth_type == 'password':
-    await client.login(password=...)
-    # login() automatically loads the store
-elif auth_type in ('token', 'oidc'):
-    token = await auth.get_access_token()
-    await client.load_store()  # Required for E2E encryption
-    client.access_token = token
-    await client.sync()  # Verify token
+    # Native password login
+    response = await client.login(password=password, device_name=device_name)
+    await setup_encryption()
+    
+elif auth_type == 'oidc':
+    # Interactive SSO login
+    login_info = await client.login_info()
+    # Display SSO URL to user
+    token = input("Paste loginToken: ")
+    response = await client.login(token=token, device_name=device_name)
+    await setup_encryption()
 ```
 
 ### 5. Command Handler (`commands.py`)
@@ -241,24 +254,60 @@ Bot sends status updates:
   "✅ Task 123 completed!"
 ```
 
-### Authentication Flow (OIDC)
+### Authentication Flow (Password)
 
 ```
 Bot starts
     ↓
-Config loads OIDC settings
+Config loads Matrix settings
     ↓
-MatrixAuth.get_access_token()
+AsyncClient.login(password=password)
     ↓
-Discover OIDC endpoints
+Matrix server validates credentials
     ↓
-POST to token_endpoint with client_credentials
+Receive access_token and device_id
     ↓
-Receive access_token and refresh_token
+Load encryption store
     ↓
-Set access_token on Matrix client
+Upload/query encryption keys
     ↓
-Sync with Matrix server to verify
+Bot ready to receive messages
+```
+
+### Authentication Flow (OIDC/SSO)
+
+```
+Bot starts
+    ↓
+AsyncClient.login_info() - Query server for login flows
+    ↓
+Parse response for m.login.sso flow and identity_providers
+    ↓
+If multiple providers, user selects one
+    ↓
+Generate SSO redirect URL:
+  - With provider: {homeserver}/_matrix/client/v3/login/sso/redirect/{provider_id}?redirectUrl={url}
+  - Generic: {homeserver}/_matrix/client/v3/login/sso/redirect?redirectUrl={url}
+    ↓
+Display SSO URL to user
+    ↓
+User opens URL in browser
+    ↓
+User authenticates with OIDC provider
+    ↓
+User receives callback with loginToken
+    ↓
+User provides token to bot
+    ↓
+AsyncClient.login(token=loginToken)
+    ↓
+Matrix server validates token
+    ↓
+Receive access_token and device_id
+    ↓
+Load encryption store
+    ↓
+Upload/query encryption keys
     ↓
 Bot ready to receive messages
 ```
@@ -274,15 +323,19 @@ Bot ready to receive messages
 
 ### Authentication
 
-- **Token Security**: 
-  - Tokens never logged
-  - Stored in memory only (not persisted)
-  - Refresh tokens used for long-lived sessions
+- **Password Security**: 
+  - Passwords never logged
+  - Stored only in configuration file
+  - Use strong, unique passwords
+  - Consider using environment variables for sensitive data
 
-- **OIDC Security**:
-  - Uses client credentials grant (suitable for bots)
-  - Credentials passed via Basic Auth header
-  - Supports HTTPS-only endpoints
+- **OIDC/SSO Security**:
+  - Uses native Matrix SSO/OIDC flow
+  - Server provides identity provider details
+  - Token-based authentication
+  - No credentials stored after initial login
+  - Supports standard OIDC providers (Keycloak, Authentik, etc.)
+  - Multi-provider support with user selection
 
 ### Access Control
 

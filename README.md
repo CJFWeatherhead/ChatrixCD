@@ -86,7 +86,7 @@ Configuration files support HJSON format, which allows comments and trailing com
      "matrix": {
        "homeserver": "https://matrix.example.com",  // Your Matrix server
        "user_id": "@chatrixcd:example.com",         // Bot user ID
-       "auth_type": "password",                      // or "token" or "oidc"
+       "auth_type": "password",                      // or "oidc"
        "password": "your_password"
      },
      
@@ -109,9 +109,11 @@ Configuration files support HJSON format, which allows comments and trailing com
 
 ## Authentication Methods
 
-ChatrixCD supports three authentication methods for Matrix:
+ChatrixCD supports two authentication methods for Matrix:
 
-### 1. Password Authentication (Traditional)
+### 1. Password Authentication (Recommended for most users)
+
+Traditional username/password authentication:
 
 ```json
 {
@@ -123,35 +125,28 @@ ChatrixCD supports three authentication methods for Matrix:
 }
 ```
 
-### 2. Token Authentication (Pre-obtained)
+### 2. OIDC/SSO Authentication (For OIDC-enabled servers)
 
-If you have a pre-obtained access token:
-
-```json
-{
-  "matrix": {
-    "auth_type": "token",
-    "user_id": "@chatrixcd:example.com",
-    "access_token": "your_access_token"
-  }
-}
-```
-
-### 3. OIDC Authentication (Recommended for OIDC-enabled servers)
-
-For Matrix servers using OIDC/OAuth2:
+For Matrix servers using OIDC/Single Sign-On:
 
 ```json
 {
   "matrix": {
     "auth_type": "oidc",
     "user_id": "@chatrixcd:example.com",
-    "oidc_issuer": "https://auth.example.com",
-    "oidc_client_id": "your_client_id",
-    "oidc_client_secret": "your_client_secret"
+    "oidc_redirect_url": "http://localhost:8080/callback"
   }
 }
 ```
+
+**OIDC Authentication Flow:**
+1. When you start the bot, it will display an SSO URL
+2. Open the URL in your browser and complete authentication
+3. After authentication, copy the callback URL (containing `loginToken`)
+4. Paste the URL or token back into the bot
+5. The bot completes login automatically
+
+**Note:** The `oidc_redirect_url` can be any URL - it's only used to receive the token. For local testing, use `http://localhost:8080/callback`.
 
 ## Usage
 

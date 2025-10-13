@@ -15,6 +15,28 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Changed
+- **BREAKING**: Removed token-based authentication method
+- **BREAKING**: Removed OAuth2 client credentials OIDC flow
+- Refactored authentication to use native Matrix SDK methods exclusively
+- OIDC authentication now uses Matrix SSO/token-based login flow
+- Simplified authentication configuration (removed `oidc_issuer`, `oidc_client_id`, `oidc_client_secret`)
+- Updated OIDC configuration to use `oidc_redirect_url` instead
+
+### Improved
+- Authentication now uses matrix-nio's native login methods
+- Better encryption support with proper E2E key handling
+- More reliable OIDC/SSO authentication following Matrix specification
+- Clearer authentication flow with user prompts for OIDC login
+- **OIDC authentication now properly queries server for identity providers**
+- **Support for multiple identity providers with user selection**
+- **Generates correct provider-specific SSO URLs when available**
+
+### Fixed
+- Fixed encrypted session failures in 1-1 rooms with OIDC authentication
+- Improved encryption key management and session handling
+- **Corrected OIDC/SSO implementation to properly parse server login flow response**
+
 ## [2025.10.12.0.0.1] - 2025-10-12
 
 ### Added

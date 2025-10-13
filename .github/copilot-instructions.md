@@ -6,7 +6,7 @@ This file provides repository-specific guidance for GitHub Copilot when working 
 
 ChatrixCD is a Matrix bot that integrates with Semaphore UI to enable CI/CD automation through chat. The bot supports:
 - End-to-end encrypted Matrix rooms
-- Multiple authentication methods (password, token, OIDC)
+- Native Matrix authentication (password and OIDC/SSO)
 - Asynchronous Python architecture
 - Real-time task monitoring and status updates
 
@@ -16,16 +16,15 @@ ChatrixCD is a Matrix bot that integrates with Semaphore UI to enable CI/CD auto
 
 - **main.py**: Application entry point and lifecycle management
 - **config.py**: Configuration management (JSON with HJSON support)
-- **auth.py**: Matrix authentication handler (password, token, OIDC)
+- **auth.py**: Matrix authentication configuration validator
 - **bot.py**: Matrix client integration and event handling
 - **commands.py**: Command parser and task orchestration
 - **semaphore.py**: Semaphore UI REST API client
 
 ### Key Technologies
 
-- **matrix-nio**: Matrix protocol client with E2E encryption
+- **matrix-nio**: Matrix protocol client with E2E encryption and native auth
 - **aiohttp**: Async HTTP client for Semaphore API
-- **authlib**: OAuth2/OIDC authentication
 
 ## Coding Standards
 
@@ -230,7 +229,9 @@ def start_task(self, project_id: int, template_id: int) -> dict:
 Configuration is done through `config.json` file with essential settings:
 - `matrix.homeserver`: Matrix homeserver URL
 - `matrix.user_id`: Bot user ID
-- `matrix.password` or `matrix.access_token`: Authentication
+- `matrix.auth_type`: Authentication type ("password" or "oidc")
+- `matrix.password`: Password (for password auth)
+- `matrix.oidc_redirect_url`: Redirect URL (for OIDC auth)
 - `semaphore.url`: Semaphore UI URL
 - `semaphore.api_token`: Semaphore API token
 
