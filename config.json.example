@@ -16,19 +16,16 @@
     // Human-readable device name
     "device_name": "ChatrixCD Bot",
     
-    // Authentication type: "password", "token", or "oidc"
+    // Authentication type: "password" or "oidc"
     "auth_type": "password",
     
     // Password for password authentication (required if auth_type is "password")
     "password": "your_bot_password_here",
     
-    // Access token for token authentication (required if auth_type is "token")
-    // "access_token": "your_access_token_here",
-    
-    // OIDC settings (required if auth_type is "oidc")
-    // "oidc_issuer": "https://id.example.com",
-    // "oidc_client_id": "your_client_id",
-    // "oidc_client_secret": "your_client_secret",
+    // OIDC/SSO redirect URL (required if auth_type is "oidc")
+    // This is the URL where the OIDC provider will redirect after authentication
+    // For local testing, use "http://localhost:8080/callback"
+    // "oidc_redirect_url": "http://localhost:8080/callback",
     
     // Path to store encryption keys and session data
     "store_path": "./store"

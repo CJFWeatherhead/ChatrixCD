@@ -92,55 +92,53 @@ chatrixcd -s
 
 ## Authentication Setup
 
-### Password Authentication
+ChatrixCD supports two authentication methods:
 
-This is the simplest method for traditional Matrix servers:
+### Password Authentication (Recommended)
+
+This is the simplest and most common method:
 
 1. Create a bot account on your Matrix server
-2. Configure the credentials:
+2. Configure the credentials in `config.json`:
    ```json
    {
      "matrix": {
+       "homeserver": "https://matrix.example.com",
+       "user_id": "@chatrixcd:example.com",
        "auth_type": "password",
-       "user_id": "@chatrixcd:example.com",
-       "password": "your_password"
+       "password": "your_password",
+       "store_path": "./store"
      }
    }
    ```
 
-### Token Authentication
+### OIDC/SSO Authentication
 
-If you have a pre-obtained access token:
+For Matrix servers that use OIDC/Single Sign-On (like some enterprise deployments):
 
-1. Obtain an access token from your Matrix server
-2. Configure the token:
+1. Configure OIDC settings in `config.json`:
    ```json
    {
      "matrix": {
-       "auth_type": "token",
+       "homeserver": "https://matrix.example.com",
        "user_id": "@chatrixcd:example.com",
-       "access_token": "your_access_token"
-     }
-   }
-   ```
-
-### OIDC Authentication
-
-For Matrix servers that use OIDC/OAuth2:
-
-1. Register an OAuth2 client with your OIDC provider
-2. Configure OIDC settings:
-   ```json
-   {
-     "matrix": {
        "auth_type": "oidc",
-       "user_id": "@chatrixcd:example.com",
-       "oidc_issuer": "https://auth.example.com",
-       "oidc_client_id": "your_client_id",
-       "oidc_client_secret": "your_client_secret"
+       "oidc_redirect_url": "http://localhost:8080/callback",
+       "store_path": "./store"
      }
    }
    ```
+
+2. When you start the bot:
+   - The bot will display an SSO authentication URL
+   - Open the URL in your browser
+   - Complete the authentication with your OIDC provider
+   - Copy the callback URL (it will contain a `loginToken` parameter)
+   - Paste the URL or just the token back into the bot
+
+3. The bot will complete the login automatically
+
+**Note:** The `oidc_redirect_url` is just used to receive the authentication token. For local testing, `http://localhost:8080/callback` works fine. You don't need to set up a web server.
 
 ## Docker Deployment
 
