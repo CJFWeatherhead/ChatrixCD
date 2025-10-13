@@ -135,73 +135,159 @@ class ChatrixBot:
             return False
 
     async def login(self) -> bool:
-        """Login to Matrix server.
+        """Login to Matrix server using configured authentication method.
+        
+        Supports two authentication methods:
+        1. Password authentication: Direct login with username/password
+        2. OIDC authentication: Interactive SSO login with browser callback
         
         Returns:
             True if login successful, False otherwise
         """
-        matrix_config = self.config.get_matrix_config()
-        auth_type = matrix_config.get('auth_type', 'password')
+        # Validate that user_id is set for all authentication types
+        if not self.user_id:
+            logger.error("user_id is not set in configuration. Please add 'user_id' to config.json")
+            return False
+        
+        # Validate authentication configuration
+        is_valid, error_msg = self.auth.validate_config()
+        if not is_valid:
+            logger.error(f"Authentication configuration error: {error_msg}")
+            return False
+        
+        auth_type = self.auth.get_auth_type()
         
         try:
-            # Validate that user_id is set for all authentication types
-            if not self.user_id:
-                logger.error("user_id is not set in configuration. Please add 'user_id' to config.json")
-                return False
-            
             if auth_type == 'password':
-                # Traditional password login
-                password = matrix_config.get('password')
-                if not password:
-                    logger.error("Password authentication requires password")
-                    return False
-                    
+                # Password authentication using matrix-nio
+                password = self.auth.get_password()
+                
+                logger.info(f"Logging in with password authentication as {self.user_id}")
                 response = await self.client.login(
                     password=password,
                     device_name=self.device_name
                 )
                 
                 if isinstance(response, LoginResponse):
-                    logger.info(f"Logged in as {self.user_id}")
+                    logger.info(f"Successfully logged in as {self.user_id}")
                     # Setup encryption keys after successful login
                     await self.setup_encryption()
                     return True
                 else:
-                    logger.error(f"Login failed: {response}")
+                    logger.error(f"Password login failed: {response}")
                     return False
                     
-            elif auth_type in ('token', 'oidc'):
-                # Token-based or OIDC authentication
-                access_token = await self.auth.get_access_token()
-                if not access_token:
-                    logger.error("Failed to get access token")
-                    return False
-                
-                # Load the encryption store before setting token
-                # This is required for E2E encryption to work
-                # Note: load_store() requires user_id to be set, which we validated above
-                self.client.load_store()
-                logger.info("Loaded encryption store")
-                
-                # Set the access token directly
-                self.client.access_token = access_token
-                
-                # Verify the token works by doing a sync
-                sync_response = await self.client.sync(timeout=30000)
-                if isinstance(sync_response, SyncResponse):
-                    logger.info(f"Authenticated with token as {self.user_id}")
-                    # Setup encryption keys after successful authentication
-                    await self.setup_encryption()
-                    return True
-                else:
-                    logger.error(f"Token authentication failed: {sync_response}")
-                    return False
+            elif auth_type == 'oidc':
+                # OIDC authentication using Matrix SSO flow
+                return await self._login_oidc()
             else:
                 logger.error(f"Unknown auth_type: {auth_type}")
                 return False
                 
         except Exception as e:
             logger.error(f"Login error: {e}")
+            return False
+
+    async def _login_oidc(self) -> bool:
+        """Perform OIDC authentication using Matrix SSO flow.
+        
+        This method implements the Matrix SSO login flow:
+        1. Check if server supports SSO login
+        2. Display SSO redirect URL to user
+        3. Wait for user to complete authentication in browser
+        4. User provides the login token from callback
+        5. Complete login with the token
+        
+        Returns:
+            True if login successful, False otherwise
+        """
+        from nio import LoginInfoResponse
+        
+        try:
+            # Get available login flows from the server
+            logger.info("Checking available login flows...")
+            login_info = await self.client.login_info()
+            
+            if not isinstance(login_info, LoginInfoResponse):
+                logger.error(f"Failed to get login info: {login_info}")
+                return False
+            
+            # Check if SSO login is supported
+            if 'm.login.sso' not in login_info.flows and 'm.login.token' not in login_info.flows:
+                logger.error(
+                    "Server does not support SSO/OIDC login. "
+                    f"Available flows: {login_info.flows}"
+                )
+                return False
+            
+            logger.info("Server supports SSO login")
+            
+            # Get redirect URL from config
+            redirect_url = self.auth.get_oidc_redirect_url()
+            
+            # Construct SSO redirect URL
+            sso_redirect_url = (
+                f"{self.homeserver}/_matrix/client/v3/login/sso/redirect"
+                f"?redirectUrl={redirect_url}"
+            )
+            
+            # Display instructions to user
+            logger.info("=" * 70)
+            logger.info("OIDC Authentication Required")
+            logger.info("=" * 70)
+            logger.info("")
+            logger.info("Please complete authentication in your browser:")
+            logger.info("")
+            logger.info(f"  {sso_redirect_url}")
+            logger.info("")
+            logger.info("After authentication, you will be redirected to:")
+            logger.info(f"  {redirect_url}")
+            logger.info("")
+            logger.info("The redirect URL will contain a 'loginToken' parameter.")
+            logger.info("Copy the entire URL or just the loginToken value.")
+            logger.info("=" * 70)
+            
+            # Prompt user for the login token
+            print("\nWaiting for login token...")
+            login_token = input("Paste the callback URL or loginToken: ").strip()
+            
+            # Extract token if full URL was provided
+            if 'loginToken=' in login_token:
+                # Parse the token from URL
+                import urllib.parse
+                parsed = urllib.parse.urlparse(login_token)
+                params = urllib.parse.parse_qs(parsed.query)
+                if 'loginToken' in params:
+                    login_token = params['loginToken'][0]
+                else:
+                    # Try fragment as some SSO providers use fragments
+                    params = urllib.parse.parse_qs(parsed.fragment)
+                    if 'loginToken' in params:
+                        login_token = params['loginToken'][0]
+                    else:
+                        logger.error("Could not find loginToken in provided URL")
+                        return False
+            
+            # Login using the token
+            logger.info("Attempting login with provided token...")
+            response = await self.client.login(
+                token=login_token,
+                device_name=self.device_name
+            )
+            
+            if isinstance(response, LoginResponse):
+                logger.info(f"Successfully logged in as {self.user_id} via OIDC")
+                # Setup encryption keys after successful login
+                await self.setup_encryption()
+                return True
+            else:
+                logger.error(f"OIDC login failed: {response}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"OIDC login error: {e}")
+            import traceback
+            logger.debug(traceback.format_exc())
             return False
 
     async def message_callback(self, room: MatrixRoom, event: RoomMessageText):

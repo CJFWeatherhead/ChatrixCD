@@ -130,10 +130,7 @@ class Config:
                 'device_name': 'ChatrixCD Bot',
                 'auth_type': 'password',
                 'password': '',
-                'access_token': '',
-                'oidc_issuer': '',
-                'oidc_client_id': '',
-                'oidc_client_secret': '',
+                'oidc_redirect_url': 'http://localhost:8080/callback',
                 'store_path': './store',
             },
             'semaphore': {

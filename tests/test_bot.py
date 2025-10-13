@@ -252,48 +252,26 @@ class TestChatrixBot(unittest.TestCase):
         # Verify handle_message WAS called (>= comparison, not >)
         bot.command_handler.handle_message.assert_called_once_with(room, event)
 
-    def test_login_token_loads_store(self):
-        """Test that token authentication loads the encryption store."""
-        # Configure for token authentication
+    def test_login_oidc_missing_redirect_url(self):
+        """Test that OIDC authentication fails without redirect URL."""
+        # Configure for OIDC authentication without redirect URL
         self.config.get_matrix_config.return_value = {
             'homeserver': 'https://matrix.example.com',
             'user_id': '@bot:example.com',
             'device_id': 'TESTDEVICE',
             'device_name': 'Test Bot',
             'store_path': self.temp_dir,
-            'auth_type': 'token',
-            'access_token': 'test_token_12345'
+            'auth_type': 'oidc'
+            # Missing oidc_redirect_url
         }
         
         bot = ChatrixBot(self.config)
         
-        # Mock the client methods
-        bot.client.load_store = MagicMock()  # load_store is sync, not async
-        bot.client.sync = AsyncMock()
-        from nio import SyncResponse, Rooms
-        # Create a properly initialized SyncResponse with all required arguments
-        bot.client.sync.return_value = SyncResponse(
-            next_batch="s123456",
-            rooms=Rooms({}, {}, {}),
-            device_key_count={},
-            device_list={},
-            to_device_events=[],
-            presence_events=[]
-        )
-        
-        # Mock the auth handler
-        bot.auth.get_access_token = AsyncMock(return_value='test_token_12345')
-        
-        # Call login
+        # Call login - should fail validation
         result = self.loop.run_until_complete(bot.login())
         
-        # Verify load_store was called before sync
-        self.assertTrue(result, "Login should succeed")
-        bot.client.load_store.assert_called_once()
-        bot.client.sync.assert_called_once()
-        
-        # Verify access token was set
-        self.assertEqual(bot.client.access_token, 'test_token_12345')
+        # Verify login failed
+        self.assertFalse(result, "Login should fail without OIDC redirect URL")
 
     def test_login_fails_with_empty_user_id(self):
         """Test that login fails gracefully when user_id is not set."""
@@ -304,26 +282,20 @@ class TestChatrixBot(unittest.TestCase):
             'device_id': 'TESTDEVICE',
             'device_name': 'Test Bot',
             'store_path': self.temp_dir,
-            'auth_type': 'token',
-            'access_token': 'test_token_12345'
+            'auth_type': 'password',
+            'password': 'testpass'
         }
         
         bot = ChatrixBot(self.config)
-        
-        # Mock the auth handler
-        bot.auth.get_access_token = AsyncMock(return_value='test_token_12345')
         
         # Call login - should fail
         result = self.loop.run_until_complete(bot.login())
         
         # Verify login failed
         self.assertFalse(result, "Login should fail with empty user_id")
-        
-        # Verify load_store was NOT called since we fail early
-        # (we can't easily assert this without mocking, but the test will fail if it tries)
 
-    def test_login_token_validates_user_id_before_load_store(self):
-        """Test that user_id is validated before attempting to load store."""
+    def test_login_password_validates_user_id(self):
+        """Test that user_id is validated before attempting to login."""
         # Configure with missing user_id
         self.config.get_matrix_config.return_value = {
             'homeserver': 'https://matrix.example.com',
@@ -331,24 +303,23 @@ class TestChatrixBot(unittest.TestCase):
             'device_id': 'TESTDEVICE',
             'device_name': 'Test Bot',
             'store_path': self.temp_dir,
-            'auth_type': 'token',
-            'access_token': 'test_token_12345'
+            'auth_type': 'password',
+            'password': 'testpass'
         }
         
         bot = ChatrixBot(self.config)
         
         # Mock client methods - these should NOT be called
-        bot.client.load_store = MagicMock()  # load_store is sync, not async
-        bot.auth.get_access_token = AsyncMock(return_value='test_token_12345')
+        bot.client.login = AsyncMock()
         
-        # Call login - should fail before calling load_store
+        # Call login - should fail before calling client.login
         result = self.loop.run_until_complete(bot.login())
         
         # Verify login failed
         self.assertFalse(result, "Login should fail with None user_id")
         
-        # Verify load_store was NOT called
-        bot.client.load_store.assert_not_called()
+        # Verify client.login was NOT called
+        bot.client.login.assert_not_called()
 
     def test_send_startup_message_greetings_disabled(self):
         """Test that startup message is skipped when greetings are disabled."""
