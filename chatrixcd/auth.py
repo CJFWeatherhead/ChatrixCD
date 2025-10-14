@@ -1,4 +1,8 @@
-"""Authentication module with native Matrix SDK authentication support."""
+"""Authentication module with native Matrix SDK authentication support.
+
+This module was developed with assistance from AI/LLM tools. It provides a simple
+wrapper for Matrix authentication using password and OIDC/SSO methods.
+"""
 
 import logging
 from typing import Optional, Dict, Any
@@ -38,17 +42,26 @@ class MatrixAuth:
         """
         return self.config.get('password')
 
-    def get_oidc_redirect_url(self) -> Optional[str]:
+    def get_oidc_redirect_url(self) -> str:
         """Get OIDC redirect URL from configuration.
         
         This is the URL where the user will be redirected after
-        successful OIDC authentication. The URL should handle
-        extracting the loginToken parameter.
+        successful OIDC authentication. The URL should contain
+        the loginToken parameter that will be provided to complete login.
+        
+        The redirect URL can be any URL - it doesn't need to be a running
+        web server. The important part is the loginToken parameter that
+        will be appended to the URL. Common patterns:
+        - http://localhost:8080/callback (local development)
+        - https://example.com/login-callback (production with web handler)
+        - urn:ietf:wg:oauth:2.0:oob (out-of-band, for CLI apps)
+        
+        If not configured, defaults to http://localhost:8080/callback
         
         Returns:
-            Redirect URL string or None
+            Redirect URL string (never None)
         """
-        return self.config.get('oidc_redirect_url')
+        return self.config.get('oidc_redirect_url', 'http://localhost:8080/callback')
 
     def validate_config(self) -> tuple[bool, Optional[str]]:
         """Validate authentication configuration.
@@ -63,9 +76,7 @@ class MatrixAuth:
             return True, None
             
         elif self.auth_type == 'oidc':
-            redirect_url = self.get_oidc_redirect_url()
-            if not redirect_url:
-                return False, "OIDC authentication requires 'oidc_redirect_url' in configuration"
+            # OIDC redirect URL is now optional with a sensible default
             return True, None
             
         else:

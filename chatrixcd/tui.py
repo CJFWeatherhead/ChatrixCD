@@ -1,4 +1,9 @@
-"""Text User Interface for ChatrixCD bot."""
+"""Text User Interface for ChatrixCD bot.
+
+This TUI implementation was developed with assistance from AI/LLM tools,
+providing an interactive menu-driven interface for bot management and
+device verification workflows.
+"""
 
 import asyncio
 import logging
@@ -879,6 +884,87 @@ class ShowScreen(Screen):
             yield Static("[bold cyan]Current Configuration[/bold cyan]\n", id="title")
             yield TextArea(self.config_text, read_only=True, id="config_area")
         yield Footer()
+
+
+class OIDCAuthScreen(ModalScreen):
+    """Screen for OIDC authentication token input."""
+    
+    BINDINGS = [
+        Binding("escape", "app.pop_screen", "Cancel", priority=True),
+    ]
+    
+    def __init__(self, sso_url: str, redirect_url: str, identity_providers: list, **kwargs):
+        super().__init__(**kwargs)
+        self.sso_url = sso_url
+        self.redirect_url = redirect_url
+        self.identity_providers = identity_providers
+        self.token = None
+    
+    def compose(self) -> ComposeResult:
+        """Create child widgets."""
+        yield Header()
+        with ScrollableContainer():
+            yield Static("[bold cyan]OIDC/SSO Authentication Required[/bold cyan]\n", id="title")
+            
+            yield Static("[bold]Please complete authentication in your browser:[/bold]\n")
+            yield Static(f"[link={self.sso_url}]{self.sso_url}[/link]\n", id="sso_url")
+            yield Static("[dim](Click the link or copy/paste it into your browser)[/dim]\n")
+            
+            if self.identity_providers:
+                yield Static(f"[bold]Identity Providers:[/bold]")
+                for idp in self.identity_providers:
+                    provider_name = idp.get('name', idp.get('id', 'Unknown'))
+                    yield Static(f"  • {provider_name}")
+                yield Static("")
+            
+            yield Static(f"[bold]After authentication, you will be redirected to:[/bold]")
+            yield Static(f"{self.redirect_url}\n")
+            
+            yield Static("[bold]Instructions:[/bold]")
+            yield Static("1. Open the SSO URL in your browser")
+            yield Static("2. Complete authentication with your OIDC provider")
+            yield Static("3. Copy the callback URL (contains 'loginToken' parameter)")
+            yield Static("4. Paste the URL or just the token below\n")
+            
+            yield Label("Paste callback URL or loginToken:")
+            yield Input(placeholder="https://example.com/callback?loginToken=...", id="token_input")
+            
+            yield Button("Submit", id="submit_button", variant="primary")
+            yield Button("Cancel", id="cancel_button")
+        yield Footer()
+    
+    async def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Handle button presses."""
+        if event.button.id == "submit_button":
+            input_widget = self.query_one("#token_input", Input)
+            token_input = input_widget.value.strip()
+            
+            if not token_input:
+                self.app.push_screen(MessageScreen("Please enter the callback URL or login token"))
+                return
+            
+            # Extract token if full URL was provided
+            if 'loginToken=' in token_input:
+                import urllib.parse
+                parsed = urllib.parse.urlparse(token_input)
+                params = urllib.parse.parse_qs(parsed.query)
+                if 'loginToken' in params:
+                    self.token = params['loginToken'][0]
+                else:
+                    # Try fragment as some SSO providers use fragments
+                    params = urllib.parse.parse_qs(parsed.fragment)
+                    if 'loginToken' in params:
+                        self.token = params['loginToken'][0]
+                    else:
+                        self.app.push_screen(MessageScreen("Could not find loginToken in provided URL"))
+                        return
+            else:
+                # Assume the input is just the token
+                self.token = token_input
+            
+            self.dismiss(self.token)
+        elif event.button.id == "cancel_button":
+            self.dismiss(None)
 
 
 class MessageScreen(Screen):

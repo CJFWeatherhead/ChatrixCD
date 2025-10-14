@@ -67,14 +67,15 @@ class TestMatrixAuth(unittest.TestCase):
         
         self.assertEqual(auth.get_oidc_redirect_url(), 'http://localhost:8080/callback')
 
-    def test_get_oidc_redirect_url_missing(self):
-        """Test getting OIDC redirect URL when not configured."""
+    def test_get_oidc_redirect_url_default(self):
+        """Test getting OIDC redirect URL with default value when not configured."""
         config = {
             'auth_type': 'oidc'
         }
         auth = MatrixAuth(config)
         
-        self.assertIsNone(auth.get_oidc_redirect_url())
+        # Should return default value, not None
+        self.assertEqual(auth.get_oidc_redirect_url(), 'http://localhost:8080/callback')
 
     def test_validate_config_password_valid(self):
         """Test validation of valid password configuration."""
@@ -111,16 +112,20 @@ class TestMatrixAuth(unittest.TestCase):
         self.assertTrue(is_valid)
         self.assertIsNone(error_msg)
 
-    def test_validate_config_oidc_missing_redirect_url(self):
-        """Test validation of OIDC configuration without redirect URL."""
+    def test_validate_config_oidc_without_redirect_url(self):
+        """Test validation of OIDC configuration without explicit redirect URL.
+        
+        OIDC redirect URL is now optional with a default value, so validation
+        should pass even without explicit configuration.
+        """
         config = {
             'auth_type': 'oidc'
         }
         auth = MatrixAuth(config)
         
         is_valid, error_msg = auth.validate_config()
-        self.assertFalse(is_valid)
-        self.assertIn('redirect_url', error_msg.lower())
+        self.assertTrue(is_valid)
+        self.assertIsNone(error_msg)
 
     def test_validate_config_unknown_auth_type(self):
         """Test validation with unknown authentication type."""

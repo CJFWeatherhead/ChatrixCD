@@ -25,8 +25,8 @@ class TestChatrixBot(unittest.TestCase):
         # Mock configuration
         self.config = MagicMock(spec=Config)
         self.config.get_matrix_config.return_value = {
-            'homeserver': 'https://matrix.example.com',
-            'user_id': '@bot:example.com',
+            'homeserver': 'https://matrix.example.test',
+            'user_id': '@bot:example.test',
             'device_id': 'TESTDEVICE',
             'device_name': 'Test Bot',
             'store_path': self.temp_dir,
@@ -34,7 +34,7 @@ class TestChatrixBot(unittest.TestCase):
             'password': 'testpass'
         }
         self.config.get_semaphore_config.return_value = {
-            'url': 'https://semaphore.example.com',
+            'url': 'https://semaphore.example.test',
             'api_token': 'test_token'
         }
         self.config.get_bot_config.return_value = {
@@ -56,9 +56,9 @@ class TestChatrixBot(unittest.TestCase):
         bot = ChatrixBot(self.config)
         
         # Verify that both bot.user_id and client.user_id are set
-        self.assertEqual(bot.user_id, '@bot:example.com')
-        self.assertEqual(bot.client.user_id, '@bot:example.com')
-        self.assertEqual(bot.client.user, '@bot:example.com')
+        self.assertEqual(bot.user_id, '@bot:example.test')
+        self.assertEqual(bot.client.user_id, '@bot:example.test')
+        self.assertEqual(bot.client.user, '@bot:example.test')
         
         # Ensure user_id is not empty (important for load_store())
         self.assertTrue(bot.client.user_id)
@@ -252,32 +252,36 @@ class TestChatrixBot(unittest.TestCase):
         # Verify handle_message WAS called (>= comparison, not >)
         bot.command_handler.handle_message.assert_called_once_with(room, event)
 
-    def test_login_oidc_missing_redirect_url(self):
-        """Test that OIDC authentication fails without redirect URL."""
-        # Configure for OIDC authentication without redirect URL
+    def test_login_oidc_uses_default_redirect_url(self):
+        """Test that OIDC authentication uses default redirect URL when not specified."""
+        # Configure for OIDC authentication without explicit redirect URL
         self.config.get_matrix_config.return_value = {
-            'homeserver': 'https://matrix.example.com',
-            'user_id': '@bot:example.com',
+            'homeserver': 'https://matrix.example.test',
+            'user_id': '@bot:example.test',
             'device_id': 'TESTDEVICE',
             'device_name': 'Test Bot',
             'store_path': self.temp_dir,
             'auth_type': 'oidc'
-            # Missing oidc_redirect_url
+            # Missing oidc_redirect_url - should use default
         }
         
         bot = ChatrixBot(self.config)
         
-        # Call login - should fail validation
-        result = self.loop.run_until_complete(bot.login())
+        # Verify that the auth handler returns the default redirect URL
+        redirect_url = bot.auth.get_oidc_redirect_url()
+        self.assertEqual(redirect_url, 'http://localhost:8080/callback', 
+                        "Should use default redirect URL when not configured")
         
-        # Verify login failed
-        self.assertFalse(result, "Login should fail without OIDC redirect URL")
+        # Verify validation passes
+        is_valid, error_msg = bot.auth.validate_config()
+        self.assertTrue(is_valid, "OIDC validation should pass with default redirect URL")
+        self.assertIsNone(error_msg)
 
     def test_login_fails_with_empty_user_id(self):
         """Test that login fails gracefully when user_id is not set."""
         # Configure with empty user_id
         self.config.get_matrix_config.return_value = {
-            'homeserver': 'https://matrix.example.com',
+            'homeserver': 'https://matrix.example.test',
             'user_id': '',  # Empty user_id
             'device_id': 'TESTDEVICE',
             'device_name': 'Test Bot',
@@ -288,17 +292,23 @@ class TestChatrixBot(unittest.TestCase):
         
         bot = ChatrixBot(self.config)
         
-        # Call login - should fail
+        # Mock client login to ensure it's not called
+        bot.client.login = AsyncMock()
+        
+        # Call login - should fail early due to empty user_id
         result = self.loop.run_until_complete(bot.login())
         
         # Verify login failed
         self.assertFalse(result, "Login should fail with empty user_id")
+        
+        # Verify client.login was NOT called (failed validation before that)
+        bot.client.login.assert_not_called()
 
     def test_login_password_validates_user_id(self):
         """Test that user_id is validated before attempting to login."""
         # Configure with missing user_id
         self.config.get_matrix_config.return_value = {
-            'homeserver': 'https://matrix.example.com',
+            'homeserver': 'https://matrix.example.test',
             'user_id': None,  # None user_id
             'device_id': 'TESTDEVICE',
             'device_name': 'Test Bot',

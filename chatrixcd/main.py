@@ -342,16 +342,70 @@ async def run_tui_with_bot(bot, config, use_color: bool):
         config: Configuration object
         use_color: Whether to use colors
     """
-    from chatrixcd.tui import run_tui
+    import logging
+    from chatrixcd.tui import run_tui, ChatrixTUI, OIDCAuthScreen
+    from nio import SyncResponse
     
-    # Start the bot login in background
-    asyncio.create_task(bot.run())
+    logger = logging.getLogger(__name__)
     
-    # Give bot a moment to initialize
-    await asyncio.sleep(1)
+    # Create TUI app first (but don't run it yet)
+    tui_app = ChatrixTUI(bot, config, use_color=use_color)
+    
+    # Create OIDC callback that uses the TUI
+    async def oidc_token_callback(sso_url: str, redirect_url: str, identity_providers: list) -> str:
+        """TUI-based OIDC token input.
+        
+        Args:
+            sso_url: SSO authentication URL
+            redirect_url: Redirect URL for callback
+            identity_providers: List of available identity providers
+            
+        Returns:
+            Login token from user
+        """
+        # Create a future to receive the token
+        token_future = asyncio.Future()
+        
+        def handle_result(token):
+            if token:
+                token_future.set_result(token)
+            else:
+                token_future.set_exception(Exception("OIDC authentication cancelled"))
+        
+        # Show OIDC screen
+        tui_app.push_screen(OIDCAuthScreen(sso_url, redirect_url, identity_providers), handle_result)
+        
+        # Wait for user to submit token
+        token = await token_future
+        return token
+    
+    # Perform login with TUI callback for OIDC
+    login_success = await bot.login(oidc_token_callback=oidc_token_callback)
+    
+    if not login_success:
+        logger.error("Failed to login, exiting")
+        return
+    
+    # Send startup message
+    await bot.send_startup_message()
+    
+    # Register sync callback
+    bot.client.add_response_callback(bot.sync_callback, SyncResponse)
+    
+    # Start bot sync in background
+    bot_task = asyncio.create_task(bot.client.sync_forever(timeout=30000, full_state=True))
     
     # Run the TUI
-    await run_tui(bot, config, use_color=use_color)
+    try:
+        await tui_app.run_async()
+    finally:
+        # Clean up
+        bot_task.cancel()
+        try:
+            await bot_task
+        except asyncio.CancelledError:
+            pass
+        await bot.close()
 
 
 if __name__ == "__main__":

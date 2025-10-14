@@ -13,7 +13,7 @@ class TestSemaphoreClient(unittest.TestCase):
         """Set up test fixtures."""
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
-        self.client = SemaphoreClient('https://semaphore.example.com', 'test_token')
+        self.client = SemaphoreClient('https://semaphore.example.test', 'test_token')
 
     def tearDown(self):
         """Clean up after tests."""
@@ -23,7 +23,7 @@ class TestSemaphoreClient(unittest.TestCase):
 
     def test_init(self):
         """Test client initialization."""
-        self.assertEqual(self.client.base_url, 'https://semaphore.example.com')
+        self.assertEqual(self.client.base_url, 'https://semaphore.example.test')
         self.assertEqual(self.client.api_token, 'test_token')
         self.assertTrue(self.client.ssl_verify)
         self.assertIsNone(self.client.ssl_ca_cert)
@@ -33,8 +33,8 @@ class TestSemaphoreClient(unittest.TestCase):
 
     def test_init_strips_trailing_slash(self):
         """Test that trailing slash is removed from URL."""
-        client = SemaphoreClient('https://semaphore.example.com/', 'token')
-        self.assertEqual(client.base_url, 'https://semaphore.example.com')
+        client = SemaphoreClient('https://semaphore.example.test/', 'token')
+        self.assertEqual(client.base_url, 'https://semaphore.example.test')
 
     @patch('aiohttp.ClientSession')
     def test_ensure_session(self, mock_session_class):
@@ -333,7 +333,7 @@ class TestSemaphoreClient(unittest.TestCase):
 
     def test_ssl_verify_disabled(self):
         """Test client initialization with SSL verification disabled."""
-        client = SemaphoreClient('https://semaphore.example.com', 'token', ssl_verify=False)
+        client = SemaphoreClient('https://semaphore.example.test', 'token', ssl_verify=False)
         self.assertFalse(client.ssl_verify)
         ssl_context = client._create_ssl_context()
         self.assertFalse(ssl_context)
@@ -341,7 +341,7 @@ class TestSemaphoreClient(unittest.TestCase):
     def test_ssl_custom_ca_cert(self):
         """Test client initialization with custom CA certificate."""
         client = SemaphoreClient(
-            'https://semaphore.example.com',
+            'https://semaphore.example.test',
             'token',
             ssl_ca_cert='/path/to/ca.crt'
         )
@@ -350,7 +350,7 @@ class TestSemaphoreClient(unittest.TestCase):
     def test_ssl_client_cert(self):
         """Test client initialization with client certificate."""
         client = SemaphoreClient(
-            'https://semaphore.example.com',
+            'https://semaphore.example.test',
             'token',
             ssl_client_cert='/path/to/cert.crt',
             ssl_client_key='/path/to/key.key'
@@ -360,13 +360,13 @@ class TestSemaphoreClient(unittest.TestCase):
 
     def test_create_ssl_context_default(self):
         """Test SSL context creation with default settings."""
-        client = SemaphoreClient('https://semaphore.example.com', 'token')
+        client = SemaphoreClient('https://semaphore.example.test', 'token')
         ssl_context = client._create_ssl_context()
         self.assertIsNone(ssl_context)
 
     def test_create_ssl_context_no_verify(self):
         """Test SSL context creation with verification disabled."""
-        client = SemaphoreClient('https://semaphore.example.com', 'token', ssl_verify=False)
+        client = SemaphoreClient('https://semaphore.example.test', 'token', ssl_verify=False)
         ssl_context = client._create_ssl_context()
         self.assertFalse(ssl_context)
 
