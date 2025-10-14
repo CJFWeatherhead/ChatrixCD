@@ -313,17 +313,12 @@ class Config:
         auth_type = matrix_config.get('auth_type', 'password')
         if auth_type == 'password' and not matrix_config.get('password'):
             errors.append("matrix.password is required when auth_type is 'password'")
-        elif auth_type == 'token' and not matrix_config.get('access_token'):
-            errors.append("matrix.access_token is required when auth_type is 'token'")
         elif auth_type == 'oidc':
-            if not matrix_config.get('oidc_issuer'):
-                errors.append("matrix.oidc_issuer is required when auth_type is 'oidc'")
-            if not matrix_config.get('oidc_client_id'):
-                errors.append("matrix.oidc_client_id is required when auth_type is 'oidc'")
-            if not matrix_config.get('oidc_client_secret'):
-                errors.append("matrix.oidc_client_secret is required when auth_type is 'oidc'")
-        elif auth_type not in ['password', 'token', 'oidc']:
-            errors.append(f"matrix.auth_type must be 'password', 'token', or 'oidc', got '{auth_type}'")
+            # OIDC only requires auth_type to be set to 'oidc'
+            # oidc_redirect_url is optional with a sensible default
+            pass
+        elif auth_type not in ['password', 'oidc']:
+            errors.append(f"matrix.auth_type must be 'password' or 'oidc', got '{auth_type}'")
         
         # Check required semaphore fields
         semaphore_config = self.get_semaphore_config()

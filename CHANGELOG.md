@@ -37,6 +37,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - Fixed encrypted session failures in 1-1 rooms with OIDC authentication
 - Improved encryption key management and session handling
 - **Corrected OIDC/SSO implementation to properly parse server login flow response**
+- **Fixed configuration validation to match current OIDC implementation** - removed legacy checks for `oidc_issuer`, `oidc_client_id`, and `oidc_client_secret` which are no longer required
+- **Fixed version management** - `setup.py` and `pyproject.toml` now read version dynamically from `chatrixcd/__init__.py` instead of hardcoding
 
 ## [2025.10.12.0.0.1] - 2025-10-12
 
