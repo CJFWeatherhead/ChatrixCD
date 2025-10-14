@@ -908,6 +908,246 @@ class TestChatrixBot(unittest.TestCase):
         bot.command_handler.handle_message.assert_called_once()
         bot.client.room_send.assert_called_once()
 
+    def test_login_oidc_parses_identity_providers(self):
+        """Test that OIDC login correctly parses identity providers from transport_response."""
+        from nio import LoginInfoResponse, LoginResponse
+        
+        # Configure for OIDC authentication
+        self.config.get_matrix_config.return_value = {
+            'homeserver': 'https://matrix.example.test',
+            'user_id': '@bot:example.test',
+            'device_id': 'TESTDEVICE',
+            'device_name': 'Test Bot',
+            'store_path': self.temp_dir,
+            'auth_type': 'oidc',
+            'oidc_redirect_url': 'http://localhost:8080/callback'
+        }
+        
+        bot = ChatrixBot(self.config)
+        
+        # Create a mock transport_response with identity providers
+        mock_transport_response = AsyncMock()
+        mock_transport_response.json = AsyncMock(return_value={
+            'flows': [
+                {
+                    'type': 'm.login.sso',
+                    'identity_providers': [
+                        {'id': 'oidc', 'name': 'OIDC Provider'}
+                    ]
+                },
+                {'type': 'm.login.token'}
+            ]
+        })
+        
+        # Create LoginInfoResponse with the mocked transport_response
+        login_info = LoginInfoResponse(flows=['m.login.sso', 'm.login.token'])
+        login_info.transport_response = mock_transport_response
+        
+        bot.client.login_info = AsyncMock(return_value=login_info)
+        
+        # Mock the login method to return success
+        login_response = LoginResponse(
+            user_id='@bot:example.test',
+            device_id='TESTDEVICE',
+            access_token='test_access_token'
+        )
+        bot.client.login = AsyncMock(return_value=login_response)
+        bot.client.sync = AsyncMock()
+        
+        # Create a token callback that returns a token immediately
+        async def mock_token_callback(sso_url, redirect_url, identity_providers):
+            # Verify identity providers were parsed correctly
+            self.assertEqual(len(identity_providers), 1)
+            self.assertEqual(identity_providers[0]['id'], 'oidc')
+            self.assertEqual(identity_providers[0]['name'], 'OIDC Provider')
+            return 'test_login_token'
+        
+        # Call login with the callback
+        result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
+        
+        # Verify login succeeded
+        self.assertTrue(result)
+        
+        # Verify transport_response.json() was called (not json.loads on content)
+        mock_transport_response.json.assert_called_once()
+        
+        # Verify login was called with the token
+        bot.client.login.assert_called_once()
+        call_kwargs = bot.client.login.call_args[1]
+        self.assertEqual(call_kwargs['token'], 'test_login_token')
+
+    def test_login_oidc_handles_no_identity_providers(self):
+        """Test that OIDC login handles SSO flows without identity_providers field."""
+        from nio import LoginInfoResponse, LoginResponse
+        
+        # Configure for OIDC authentication
+        self.config.get_matrix_config.return_value = {
+            'homeserver': 'https://matrix.example.test',
+            'user_id': '@bot:example.test',
+            'device_id': 'TESTDEVICE',
+            'device_name': 'Test Bot',
+            'store_path': self.temp_dir,
+            'auth_type': 'oidc',
+            'oidc_redirect_url': 'http://localhost:8080/callback'
+        }
+        
+        bot = ChatrixBot(self.config)
+        
+        # Create a mock transport_response without identity_providers
+        mock_transport_response = AsyncMock()
+        mock_transport_response.json = AsyncMock(return_value={
+            'flows': [
+                {'type': 'm.login.sso'},  # No identity_providers field
+                {'type': 'm.login.token'}
+            ]
+        })
+        
+        # Create LoginInfoResponse with the mocked transport_response
+        login_info = LoginInfoResponse(flows=['m.login.sso', 'm.login.token'])
+        login_info.transport_response = mock_transport_response
+        
+        bot.client.login_info = AsyncMock(return_value=login_info)
+        
+        # Mock the login method to return success
+        login_response = LoginResponse(
+            user_id='@bot:example.test',
+            device_id='TESTDEVICE',
+            access_token='test_access_token'
+        )
+        bot.client.login = AsyncMock(return_value=login_response)
+        bot.client.sync = AsyncMock()
+        
+        # Create a token callback that returns a token immediately
+        async def mock_token_callback(sso_url, redirect_url, identity_providers):
+            # Verify identity_providers is empty
+            self.assertEqual(len(identity_providers), 0)
+            # Verify SSO URL uses generic redirect
+            self.assertIn('/_matrix/client/v3/login/sso/redirect?', sso_url)
+            self.assertNotIn('redirect/oidc', sso_url)  # No provider ID
+            return 'test_login_token'
+        
+        # Call login with the callback
+        result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
+        
+        # Verify login succeeded
+        self.assertTrue(result)
+        mock_transport_response.json.assert_called_once()
+
+    def test_login_oidc_handles_multiple_identity_providers(self):
+        """Test that OIDC login handles multiple identity providers."""
+        from nio import LoginInfoResponse, LoginResponse
+        
+        # Configure for OIDC authentication
+        self.config.get_matrix_config.return_value = {
+            'homeserver': 'https://matrix.example.test',
+            'user_id': '@bot:example.test',
+            'device_id': 'TESTDEVICE',
+            'device_name': 'Test Bot',
+            'store_path': self.temp_dir,
+            'auth_type': 'oidc',
+            'oidc_redirect_url': 'http://localhost:8080/callback'
+        }
+        
+        bot = ChatrixBot(self.config)
+        
+        # Create a mock transport_response with multiple identity providers
+        mock_transport_response = AsyncMock()
+        mock_transport_response.json = AsyncMock(return_value={
+            'flows': [
+                {
+                    'type': 'm.login.sso',
+                    'identity_providers': [
+                        {'id': 'oidc', 'name': 'OIDC Provider'},
+                        {'id': 'google', 'name': 'Google'},
+                        {'id': 'github', 'name': 'GitHub'}
+                    ]
+                },
+                {'type': 'm.login.token'}
+            ]
+        })
+        
+        # Create LoginInfoResponse with the mocked transport_response
+        login_info = LoginInfoResponse(flows=['m.login.sso', 'm.login.token'])
+        login_info.transport_response = mock_transport_response
+        
+        bot.client.login_info = AsyncMock(return_value=login_info)
+        
+        # Mock the login method to return success
+        login_response = LoginResponse(
+            user_id='@bot:example.test',
+            device_id='TESTDEVICE',
+            access_token='test_access_token'
+        )
+        bot.client.login = AsyncMock(return_value=login_response)
+        bot.client.sync = AsyncMock()
+        
+        # Mock input to select the first provider
+        with patch('builtins.input', return_value='1'):
+            # Create a token callback that returns a token immediately
+            async def mock_token_callback(sso_url, redirect_url, identity_providers):
+                # Verify all identity providers were parsed correctly
+                self.assertEqual(len(identity_providers), 3)
+                self.assertEqual(identity_providers[0]['name'], 'OIDC Provider')
+                self.assertEqual(identity_providers[1]['name'], 'Google')
+                self.assertEqual(identity_providers[2]['name'], 'GitHub')
+                return 'test_login_token'
+            
+            # Call login with the callback
+            result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
+        
+        # Verify login succeeded
+        self.assertTrue(result)
+        mock_transport_response.json.assert_called_once()
+
+    def test_login_oidc_handles_json_parse_error_gracefully(self):
+        """Test that OIDC login handles JSON parse errors gracefully."""
+        from nio import LoginInfoResponse, LoginResponse
+        
+        # Configure for OIDC authentication
+        self.config.get_matrix_config.return_value = {
+            'homeserver': 'https://matrix.example.test',
+            'user_id': '@bot:example.test',
+            'device_id': 'TESTDEVICE',
+            'device_name': 'Test Bot',
+            'store_path': self.temp_dir,
+            'auth_type': 'oidc',
+            'oidc_redirect_url': 'http://localhost:8080/callback'
+        }
+        
+        bot = ChatrixBot(self.config)
+        
+        # Create a mock transport_response that raises an error
+        mock_transport_response = AsyncMock()
+        mock_transport_response.json = AsyncMock(side_effect=Exception("JSON parse error"))
+        
+        # Create LoginInfoResponse with the mocked transport_response
+        login_info = LoginInfoResponse(flows=['m.login.sso', 'm.login.token'])
+        login_info.transport_response = mock_transport_response
+        
+        bot.client.login_info = AsyncMock(return_value=login_info)
+        
+        # Mock the login method to return success
+        login_response = LoginResponse(
+            user_id='@bot:example.test',
+            device_id='TESTDEVICE',
+            access_token='test_access_token'
+        )
+        bot.client.login = AsyncMock(return_value=login_response)
+        bot.client.sync = AsyncMock()
+        
+        # Create a token callback that returns a token immediately
+        async def mock_token_callback(sso_url, redirect_url, identity_providers):
+            # Should still work with empty identity_providers
+            self.assertEqual(len(identity_providers), 0)
+            return 'test_login_token'
+        
+        # Call login with the callback - should succeed despite parse error
+        result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
+        
+        # Verify login succeeded (falls back to generic SSO URL)
+        self.assertTrue(result)
+        mock_transport_response.json.assert_called_once()
+
 
 if __name__ == '__main__':
     unittest.main()
