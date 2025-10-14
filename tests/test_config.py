@@ -171,13 +171,14 @@ class TestConfig(unittest.TestCase):
         finally:
             os.unlink(temp_file)
 
-    def test_token_auth_config_from_json(self):
-        """Test token authentication configuration from JSON."""
+    def test_oidc_auth_config_from_json(self):
+        """Test OIDC authentication configuration from JSON."""
         json_content = {
             "matrix": {
                 "homeserver": "https://mymatrixserver.com",
                 "user_id": "@auser:mymatrixserver",
-                "access_token": "secret_access_token_abcdefg"
+                "auth_type": "oidc",
+                "oidc_redirect_url": "http://localhost:8080/callback"
             }
         }
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -191,13 +192,13 @@ class TestConfig(unittest.TestCase):
             # User specified values
             self.assertEqual(matrix_config.get('homeserver'), 'https://mymatrixserver.com')
             self.assertEqual(matrix_config.get('user_id'), '@auser:mymatrixserver')
-            self.assertEqual(matrix_config.get('access_token'), 'secret_access_token_abcdefg')
+            self.assertEqual(matrix_config.get('auth_type'), 'oidc')
+            self.assertEqual(matrix_config.get('oidc_redirect_url'), 'http://localhost:8080/callback')
             
             # Defaults for unspecified values
             self.assertEqual(matrix_config.get('device_id'), 'CHATRIXCD')
             self.assertEqual(matrix_config.get('device_name'), 'ChatrixCD Bot')
             self.assertEqual(matrix_config.get('store_path'), './store')
-            self.assertEqual(matrix_config.get('auth_type'), 'password')
             
             # Ensure user_id is not None or empty
             self.assertIsNotNone(matrix_config.get('user_id'))
@@ -212,8 +213,8 @@ class TestConfig(unittest.TestCase):
             "matrix": {
                 "homeserver": "https://json.matrix.org",
                 "user_id": "@jsonbot:json.matrix.org",
-                "auth_type": "token",
-                "access_token": "jsontoken"
+                "auth_type": "password",
+                "password": "jsonpassword"
             },
             "semaphore": {
                 "url": "https://json.semaphore.com",
@@ -233,8 +234,8 @@ class TestConfig(unittest.TestCase):
             
             self.assertEqual(config.get('matrix.homeserver'), 'https://json.matrix.org')
             self.assertEqual(config.get('matrix.user_id'), '@jsonbot:json.matrix.org')
-            self.assertEqual(config.get('matrix.auth_type'), 'token')
-            self.assertEqual(config.get('matrix.access_token'), 'jsontoken')
+            self.assertEqual(config.get('matrix.auth_type'), 'password')
+            self.assertEqual(config.get('matrix.password'), 'jsonpassword')
             self.assertEqual(config.get('semaphore.url'), 'https://json.semaphore.com')
             self.assertEqual(config.get('bot.command_prefix'), '!json')
             
@@ -385,8 +386,8 @@ class TestConfig(unittest.TestCase):
         finally:
             os.unlink(temp_file)
     
-    def test_config_validation_token_auth_missing_token(self):
-        """Test validation fails when token auth is used but token is missing."""
+    def test_config_validation_token_auth_deprecated(self):
+        """Test validation fails when token auth is used (deprecated)."""
         json_content = {
             "matrix": {
                 "homeserver": "https://matrix.org",
@@ -406,7 +407,34 @@ class TestConfig(unittest.TestCase):
             config = Config(temp_file)
             errors = config.validate_schema()
             
-            self.assertTrue(any('access_token' in e for e in errors))
+            # Should fail because token auth is no longer supported
+            self.assertTrue(any('auth_type' in e and 'token' in e for e in errors))
+        finally:
+            os.unlink(temp_file)
+    
+    def test_config_validation_oidc_auth_valid(self):
+        """Test validation succeeds for OIDC authentication."""
+        json_content = {
+            "matrix": {
+                "homeserver": "https://matrix.org",
+                "user_id": "@bot:matrix.org",
+                "auth_type": "oidc"
+            },
+            "semaphore": {
+                "url": "https://semaphore.test",
+                "api_token": "token"
+            }
+        }
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(json_content, f)
+            temp_file = f.name
+        
+        try:
+            config = Config(temp_file)
+            errors = config.validate_schema()
+            
+            # OIDC validation should pass without requiring oidc_issuer, oidc_client_id, oidc_client_secret
+            self.assertEqual(errors, [])
         finally:
             os.unlink(temp_file)
     

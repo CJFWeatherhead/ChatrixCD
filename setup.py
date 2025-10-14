@@ -1,4 +1,10 @@
 from setuptools import setup, find_packages
+import os
+import sys
+
+# Add the package directory to the path to import __version__
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+from chatrixcd import __version__
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
@@ -8,7 +14,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name="chatrixcd",
-    version="2025.10.12.0.0.1",
+    version=__version__,
     author="ChatrixCD Contributors",
     description="A Matrix bot for CI/CD automation with Semaphore UI",
     long_description=long_description,
