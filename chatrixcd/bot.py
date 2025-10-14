@@ -248,8 +248,8 @@ class ChatrixBot:
             
             if hasattr(login_info, 'transport_response') and login_info.transport_response:
                 try:
-                    import json
-                    response_data = json.loads(login_info.transport_response.content)
+                    # Use the json() method to properly parse the aiohttp response
+                    response_data = await login_info.transport_response.json()
                     flows = response_data.get('flows', [])
                     
                     # Find the m.login.sso flow
