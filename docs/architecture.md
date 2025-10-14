@@ -56,9 +56,8 @@ ChatrixCD is built with a modular, asynchronous architecture for reliable Matrix
 
 - Matrix authentication handling
 - Support for password authentication
-- Support for token authentication
-- OIDC/OAuth2 authentication
-- Token refresh and management
+- OIDC/SSO authentication via Matrix native flow
+- Authentication configuration validation
 
 ### Bot Core (`bot.py`)
 
@@ -86,6 +85,16 @@ ChatrixCD is built with a modular, asynchronous architecture for reliable Matrix
 - Task lifecycle management
 - Log retrieval
 
+### Text User Interface (`tui.py`)
+
+- Interactive terminal interface for bot management
+- Built with Textual framework
+- Real-time status monitoring and metrics
+- Device verification workflows (emoji, QR code, fingerprint)
+- Interactive configuration editing
+- Session and room management
+- Log viewing and message sending
+
 ## Data Flow
 
 ### Command Execution Flow
@@ -109,9 +118,10 @@ ChatrixCD is built with a modular, asynchronous architecture for reliable Matrix
 
 ### Core Libraries
 
-- **matrix-nio**: Matrix protocol client with E2E encryption
+- **matrix-nio**: Matrix protocol client with E2E encryption and native authentication
 - **aiohttp**: Async HTTP client for API requests
-- **authlib**: OAuth2/OIDC authentication
+- **Textual**: Terminal UI framework for interactive interface
+- **hjson**: Human-friendly JSON parser for configuration files
 
 ### Python Version Support
 

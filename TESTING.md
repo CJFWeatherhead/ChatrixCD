@@ -36,7 +36,7 @@ pytest tests/ --cov=chatrixcd --cov-report=html
 |--------|----------|-------|--------|-------------|
 | `__init__.py` | 100% | 1 | 1 | Package initialization |
 | `config.py` | 87% | 142 | 123 | Configuration management |
-| `auth.py` | 38% | 95 | 36 | Authentication (password, token, OIDC) |
+| `auth.py` | 38% | 95 | 36 | Authentication (password, OIDC) |
 | `semaphore.py` | 87% | 94 | 82 | Semaphore API client |
 | `bot.py` | 72% | 143 | 103 | Matrix bot core and lifecycle |
 | `commands.py` | 84% | 185 | 155 | Command handlers |
@@ -64,15 +64,12 @@ pytest tests/ --cov=chatrixcd --cov-report=html
 
 #### Authentication Module (`tests/test_auth.py`)
 - ✅ Password authentication initialization
-- ✅ Token authentication initialization
 - ✅ OIDC authentication initialization
-- ✅ Access token retrieval for password auth
-- ✅ Access token retrieval for token auth
-- ✅ Missing token handling
+- ✅ Password retrieval
+- ✅ Missing password handling
 - ✅ Unknown auth type handling
-- ✅ OIDC missing configuration
-- ✅ Token refresh without refresh token
-- ✅ Token refresh with wrong auth type
+- ✅ OIDC redirect URL configuration
+- ✅ Configuration validation (password and OIDC)
 
 #### Semaphore Client Module (`tests/test_semaphore.py`)
 - ✅ Client initialization

@@ -421,8 +421,8 @@ Alpine Linux uses OpenRC instead of systemd. This is a lightweight deployment op
 ### Authentication fails
 
 - Verify your credentials are correct
-- For OIDC: Ensure the OIDC provider is accessible
-- For token auth: Verify the token hasn't expired
+- For OIDC: Follow the SSO authentication flow carefully
+- For password auth: Ensure the password is correct
 - Check the homeserver URL is correct
 
 ### Can't connect to Semaphore
