@@ -15,6 +15,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+## [2025.10.14.1.0.0] - 2025-10-14
+
 ### Changed
 - **BREAKING**: Removed token-based authentication method
 - **BREAKING**: Removed OAuth2 client credentials OIDC flow
@@ -451,6 +453,8 @@ ChatrixCD/
 
 
 
+
+- **2025.10.14.1.0.0** (2025-10-14)
 - **2025.10.12.0.0.1** (2025-10-12)
 - **2025.10.8** (2025-10-10)
 - **2025.10.7** (2025-10-09)
