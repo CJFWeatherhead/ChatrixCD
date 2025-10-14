@@ -19,8 +19,9 @@ nav_order: 1
 
 ## Features
 
-- 🔐 **OIDC Authentication**: Support for OIDC/OAuth2 and token-based authentication with Matrix servers
-- 🔒 **E2E Encryption**: Full support for end-to-end encrypted Matrix rooms
+- 🔐 **Native Matrix Authentication**: Support for password and OIDC/SSO authentication with Matrix servers
+- 🔒 **E2E Encryption**: Full support for end-to-end encrypted Matrix rooms with device verification
+- 🖥️ **Interactive TUI**: Text User Interface for bot management, monitoring, and configuration
 - 🚀 **Semaphore UI Integration**: Start and monitor CI/CD tasks via chat commands
 - 📊 **Real-time Updates**: Automatic status updates for running tasks
 - 🎯 **Command-based Interface**: Easy-to-use command system for task management

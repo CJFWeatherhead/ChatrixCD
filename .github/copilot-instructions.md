@@ -5,8 +5,9 @@ This file provides repository-specific guidance for GitHub Copilot when working 
 ## Project Overview
 
 ChatrixCD is a Matrix bot that integrates with Semaphore UI to enable CI/CD automation through chat. The bot supports:
-- End-to-end encrypted Matrix rooms
+- End-to-end encrypted Matrix rooms using matrix-nio SDK
 - Native Matrix authentication (password and OIDC/SSO)
+- Interactive Text User Interface (TUI) for bot management
 - Asynchronous Python architecture
 - Real-time task monitoring and status updates
 
@@ -20,11 +21,19 @@ ChatrixCD is a Matrix bot that integrates with Semaphore UI to enable CI/CD auto
 - **bot.py**: Matrix client integration and event handling
 - **commands.py**: Command parser and task orchestration
 - **semaphore.py**: Semaphore UI REST API client
+- **tui.py**: Text User Interface (interactive mode)
+- **redactor.py**: Sensitive information redaction
 
 ### Key Technologies
 
-- **matrix-nio**: Matrix protocol client with E2E encryption and native auth
+- **matrix-nio**: Matrix protocol client with E2E encryption and native auth (primary SDK)
+  - Handles all Matrix protocol communication
+  - Provides E2E encryption with Olm/Megolm
+  - Supports password and OIDC/SSO authentication
+  - Device verification (emoji, QR code, fingerprint)
 - **aiohttp**: Async HTTP client for Semaphore API
+- **Textual**: Terminal UI framework for interactive TUI
+- **hjson**: Human-friendly JSON parser for configuration files
 
 ## Coding Standards
 
@@ -126,6 +135,34 @@ python -m unittest tests.test_config  # Specific test file
 - Test edge cases: empty inputs, None values, errors
 - Keep tests isolated and independent
 - Write tests for new functionality
+
+## Text User Interface (TUI)
+
+### TUI Overview
+
+ChatrixCD includes an interactive Text User Interface (TUI) for bot management:
+- **Status Monitoring**: View bot status, connections, and metrics
+- **Room Management**: View and manage joined Matrix rooms
+- **Session Management**: Manage Olm encryption sessions
+- **Device Verification**: Emoji and QR code verification for E2E encryption
+- **Configuration Editing**: Interactive configuration editing
+- **Log Viewing**: Real-time log viewing
+- **Message Sending**: Send messages to rooms directly
+
+### TUI Implementation
+
+- Built with Textual framework
+- Located in `chatrixcd/tui.py`
+- Launches by default when running interactively
+- Can be disabled with `-L` (log-only mode) flag
+- Supports mouse and keyboard navigation
+
+### TUI Testing
+
+- TUI code has lower test coverage (17%) - this is expected
+- Interactive features require manual testing
+- Widget creation and initialization are unit tested
+- Full functionality testing should be done interactively
 
 ## Commands
 
@@ -231,9 +268,11 @@ Configuration is done through `config.json` file with essential settings:
 - `matrix.user_id`: Bot user ID
 - `matrix.auth_type`: Authentication type ("password" or "oidc")
 - `matrix.password`: Password (for password auth)
-- `matrix.oidc_redirect_url`: Redirect URL (for OIDC auth)
+- `matrix.oidc_redirect_url`: Redirect URL (for OIDC auth, optional)
 - `semaphore.url`: Semaphore UI URL
 - `semaphore.api_token`: Semaphore API token
+
+**Note**: Token-based authentication has been removed. Use password or OIDC authentication only.
 
 ## Common Patterns
 
