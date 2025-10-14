@@ -166,7 +166,7 @@ For OIDC authentication with Matrix:
 ### Authentication fails
 - Verify credentials in config.json
 - Check Matrix homeserver is accessible
-- Try using access_token instead of password
+- For OIDC, follow the SSO authentication flow
 
 ### Can't start tasks
 - Verify Semaphore API token is valid

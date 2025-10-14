@@ -89,34 +89,30 @@ python3.11 -m venv .venv
 #### Authentication Fails
 
 **Password Authentication:**
-```yaml
-matrix:
-  homeserver: "https://matrix.example.com"
-  user_id: "@bot:example.com"
-  password: "your-password"
-  auth_type: "password"  # Ensure this is set
-```
-
-**Token Authentication:**
-```yaml
-matrix:
-  homeserver: "https://matrix.example.com"
-  user_id: "@bot:example.com"
-  access_token: "your-token"
-  auth_type: "token"
+```json
+{
+  "matrix": {
+    "homeserver": "https://matrix.example.com",
+    "user_id": "@bot:example.com",
+    "password": "your-password",
+    "auth_type": "password"
+  }
+}
 ```
 
 **OIDC Authentication:**
-```yaml
-matrix:
-  homeserver: "https://matrix.example.com"
-  user_id: "@bot:example.com"
-  auth_type: "oidc"
-  oidc:
-    client_id: "your-client-id"
-    client_secret: "your-client-secret"
-    issuer: "https://auth.example.com"
+```json
+{
+  "matrix": {
+    "homeserver": "https://matrix.example.com",
+    "user_id": "@bot:example.com",
+    "auth_type": "oidc",
+    "oidc_redirect_url": "http://localhost:8080/callback"
+  }
+}
 ```
+
+**Note:** Token-based authentication has been removed. Use password or OIDC authentication.
 
 ### Runtime Issues
 

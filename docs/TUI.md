@@ -205,7 +205,7 @@ Change operational variables interactively. Allows editing any configuration set
 
 **Matrix Configuration:**
 - homeserver, user_id, device_id, device_name
-- auth_type, password, access_token
+- auth_type, password, oidc_redirect_url
 - store_path
 
 **Semaphore Configuration:**
@@ -455,9 +455,9 @@ The SET menu now provides full interactive configuration editing for **all confi
 - `matrix.user_id` - Bot user ID
 - `matrix.device_id` - Device identifier
 - `matrix.device_name` - Human-readable device name
-- `matrix.auth_type` - Authentication type (password/token/oidc)
+- `matrix.auth_type` - Authentication type (password/oidc)
 - `matrix.password` - Password for password auth
-- `matrix.access_token` - Access token for token auth
+- `matrix.oidc_redirect_url` - Redirect URL for OIDC auth (optional)
 - `matrix.store_path` - Path to encryption store
 
 **Semaphore Configuration:**

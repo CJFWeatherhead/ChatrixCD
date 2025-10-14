@@ -75,7 +75,7 @@ Create a `config.json` file in your working directory. The file supports HJSON f
     // Bot user ID (e.g., @bot:example.com)
     "user_id": "@bot:example.com",
     
-    // Authentication type: "password", "token", or "oidc"
+    // Authentication type: "password" or "oidc"
     "auth_type": "password",
     
     // Password for password authentication
@@ -117,11 +117,10 @@ Environment variables use `SCREAMING_SNAKE_CASE` with component prefixes:
 
 - `MATRIX_HOMESERVER` - Matrix homeserver URL (required)
 - `MATRIX_USER_ID` - Bot user ID, e.g., `@bot:example.com` (required)
-- `MATRIX_PASSWORD` - Bot password (required if not using token/OIDC)
-- `MATRIX_ACCESS_TOKEN` - Pre-generated access token (alternative to password)
+- `MATRIX_PASSWORD` - Bot password (required if not using OIDC)
 - `MATRIX_DEVICE_NAME` - Device name for the bot (default: "ChatrixCD Bot")
 - `MATRIX_STORE_PATH` - Path to store encryption keys (default: "./store")
-- `MATRIX_AUTH_TYPE` - Authentication type: "password", "token", or "oidc" (default: "password")
+- `MATRIX_AUTH_TYPE` - Authentication type: "password" or "oidc" (default: "password")
 
 ### OIDC Configuration
 
@@ -153,7 +152,11 @@ For OIDC authentication using Matrix SSO flow:
 
 ## Authentication Methods
 
+ChatrixCD supports two authentication methods for Matrix servers:
+
 ### Password Authentication
+
+Traditional username/password authentication:
 
 ```json
 {
@@ -162,19 +165,6 @@ For OIDC authentication using Matrix SSO flow:
     "user_id": "@bot:example.com",
     "password": "your-password",
     "auth_type": "password"
-  }
-}
-```
-
-### Token Authentication
-
-```json
-{
-  "matrix": {
-    "homeserver": "https://matrix.example.com",
-    "user_id": "@bot:example.com",
-    "access_token": "your-access-token",
-    "auth_type": "token"
   }
 }
 ```
@@ -357,9 +347,7 @@ You can combine custom CA certificate with client certificate authentication:
     "homeserver": "https://matrix.company.com",
     "user_id": "@cicd-bot:company.com",
     "auth_type": "oidc",
-    "oidc_client_id": "${OIDC_CLIENT_ID}",
-    "oidc_client_secret": "${OIDC_CLIENT_SECRET}",
-    "oidc_issuer": "https://auth.company.com",
+    "oidc_redirect_url": "https://company.com/auth/callback",
     "device_name": "ChatrixCD Production",
     "store_path": "/var/lib/chatrixcd/store"
   },
@@ -382,6 +370,8 @@ You can combine custom CA certificate with client certificate authentication:
   }
 }
 ```
+
+**Note:** The Matrix SSO/OIDC flow handles authentication through the Matrix server. You don't need to provide OIDC client credentials directly - the Matrix server manages the OIDC provider integration.
 
 ### Greeting Messages Configuration
 
@@ -444,13 +434,12 @@ To protect sensitive information in the config.json file:
 - Store config.json in a secure location with restricted file permissions (chmod 600)
 - Use secret management systems (like Kubernetes secrets, Vault, etc.) to generate the config file at deployment time
 - Keep config.json out of version control (add to .gitignore)
-- Use token-based authentication instead of passwords when possible
+- Use OIDC authentication for better security when available
 
 ### Rotate Credentials Regularly
 
 - Change bot password periodically
 - Regenerate API tokens regularly
-- Update access tokens when needed
 
 ## Configuration Validation
 
@@ -476,8 +465,8 @@ Validation errors will be reported with clear messages indicating which fields n
 ### Authentication fails
 - Verify credentials are correct
 - Check homeserver URL is accessible
-- For OIDC, verify client credentials
-- **Important:** `user_id` must be set for all authentication types (password, token, OIDC)
+- For OIDC, follow the SSO authentication flow
+- **Important:** `user_id` must be set for all authentication types (password, OIDC)
   - For token/OIDC: user_id is required to load the encryption store
   - Error message: "user_id is not set in configuration" indicates missing or empty user_id
   - Set via `matrix.user_id` in config.json
