@@ -139,7 +139,7 @@ class TestConfig(unittest.TestCase):
         """Test that JSON config without all fields still gets defaults."""
         json_content = {
             "matrix": {
-                "homeserver": "https://matrix.example.com",
+                "homeserver": "https://matrix.example.test",
                 "user_id": "@bot:example.com",
                 "access_token": "test_token"
             }
@@ -153,7 +153,7 @@ class TestConfig(unittest.TestCase):
             matrix_config = config.get_matrix_config()
             
             # JSON values should be present
-            self.assertEqual(matrix_config.get('homeserver'), 'https://matrix.example.com')
+            self.assertEqual(matrix_config.get('homeserver'), 'https://matrix.example.test')
             self.assertEqual(matrix_config.get('user_id'), '@bot:example.com')
             self.assertEqual(matrix_config.get('access_token'), 'test_token')
             

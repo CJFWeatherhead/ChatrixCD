@@ -25,8 +25,8 @@ class TestChatrixBot(unittest.TestCase):
         # Mock configuration
         self.config = MagicMock(spec=Config)
         self.config.get_matrix_config.return_value = {
-            'homeserver': 'https://matrix.example.com',
-            'user_id': '@bot:example.com',
+            'homeserver': 'https://matrix.example.test',
+            'user_id': '@bot:example.test',
             'device_id': 'TESTDEVICE',
             'device_name': 'Test Bot',
             'store_path': self.temp_dir,
@@ -34,7 +34,7 @@ class TestChatrixBot(unittest.TestCase):
             'password': 'testpass'
         }
         self.config.get_semaphore_config.return_value = {
-            'url': 'https://semaphore.example.com',
+            'url': 'https://semaphore.example.test',
             'api_token': 'test_token'
         }
         self.config.get_bot_config.return_value = {
@@ -56,9 +56,9 @@ class TestChatrixBot(unittest.TestCase):
         bot = ChatrixBot(self.config)
         
         # Verify that both bot.user_id and client.user_id are set
-        self.assertEqual(bot.user_id, '@bot:example.com')
-        self.assertEqual(bot.client.user_id, '@bot:example.com')
-        self.assertEqual(bot.client.user, '@bot:example.com')
+        self.assertEqual(bot.user_id, '@bot:example.test')
+        self.assertEqual(bot.client.user_id, '@bot:example.test')
+        self.assertEqual(bot.client.user, '@bot:example.test')
         
         # Ensure user_id is not empty (important for load_store())
         self.assertTrue(bot.client.user_id)
@@ -256,7 +256,7 @@ class TestChatrixBot(unittest.TestCase):
         """Test that OIDC authentication fails without redirect URL."""
         # Configure for OIDC authentication without redirect URL
         self.config.get_matrix_config.return_value = {
-            'homeserver': 'https://matrix.example.com',
+            'homeserver': 'https://matrix.example.test',
             'user_id': '@bot:example.com',
             'device_id': 'TESTDEVICE',
             'device_name': 'Test Bot',
@@ -277,7 +277,7 @@ class TestChatrixBot(unittest.TestCase):
         """Test that login fails gracefully when user_id is not set."""
         # Configure with empty user_id
         self.config.get_matrix_config.return_value = {
-            'homeserver': 'https://matrix.example.com',
+            'homeserver': 'https://matrix.example.test',
             'user_id': '',  # Empty user_id
             'device_id': 'TESTDEVICE',
             'device_name': 'Test Bot',
@@ -298,7 +298,7 @@ class TestChatrixBot(unittest.TestCase):
         """Test that user_id is validated before attempting to login."""
         # Configure with missing user_id
         self.config.get_matrix_config.return_value = {
-            'homeserver': 'https://matrix.example.com',
+            'homeserver': 'https://matrix.example.test',
             'user_id': None,  # None user_id
             'device_id': 'TESTDEVICE',
             'device_name': 'Test Bot',
