@@ -171,7 +171,7 @@ tests/
 Tests run automatically on:
 - Pull requests
 - Pushes to main branch
-- Multiple Python versions (3.9, 3.10, 3.11, 3.12)
+- Multiple Python versions (3.12, 3.13, 3.14)
 
 See `.github/workflows/test.yml` for CI configuration.
 
