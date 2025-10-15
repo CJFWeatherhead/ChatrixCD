@@ -15,11 +15,19 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Fixed
+- **CRITICAL**: Fixed OIDC authentication hanging when attempting to parse identity providers from server response
+  - The code was attempting to re-read an already consumed aiohttp response body, causing the authentication flow to hang
+  - Now makes a fresh HTTP request to `/_matrix/client/v3/login` to obtain identity provider information
+  - Fixes authentication with OIDC-enabled Matrix servers (e.g., chat.privacyinternational.org)
+  - Falls back gracefully to generic SSO URL if identity provider fetch fails
+
 ### Changed
 - **BREAKING**: Dropped support for Python 3.9, 3.10, and 3.11 - minimum required version is now Python 3.12
 - Updated to support Python 3.12, 3.13, and 3.14
 - Updated all documentation to reflect new Python version requirements
 - Updated GitHub Actions CI/CD workflow to test Python 3.12, 3.13, and 3.14
+- Updated ARCHITECTURE.md to reflect new OIDC identity provider parsing approach
 
 ## [2025.10.14.1.0.0] - 2025-10-14
 
