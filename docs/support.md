@@ -42,11 +42,11 @@ pip install -r requirements.txt
 #### Python Version Issues
 
 ```bash
-# Check Python version (need 3.9+)
+# Check Python version (need 3.12+)
 python --version
 
 # Use specific Python version
-python3.11 -m venv .venv
+python3.12 -m venv .venv
 ```
 
 ### Configuration Issues
@@ -291,7 +291,7 @@ What actually happens
 
 **Environment**
 - OS: [e.g., Ubuntu 22.04]
-- Python: [e.g., 3.11.2]
+- Python: [e.g., 3.12.0]
 - ChatrixCD: [e.g., 2024.12.0]
 - Deployment: [e.g., Docker, systemd]
 
