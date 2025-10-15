@@ -125,7 +125,7 @@ ChatrixCD is built with a modular, asynchronous architecture for reliable Matrix
 
 ### Python Version Support
 
-- Python 3.9+
+- Python 3.12+ (3.12, 3.13, 3.14 supported)
 - Async/await throughout
 - Type hints for better IDE support
 

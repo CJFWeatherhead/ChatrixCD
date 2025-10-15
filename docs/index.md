@@ -50,7 +50,7 @@ ChatrixCD makes it easy to manage CI/CD tasks through Matrix chat. Once installe
 
 ### Prerequisites
 
-- Python 3.9 or higher
+- Python 3.12 or higher (3.12, 3.13, 3.14 supported)
 - Access to a Matrix homeserver
 - Access to a Semaphore UI instance with API access
 

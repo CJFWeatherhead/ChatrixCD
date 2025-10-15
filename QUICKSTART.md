@@ -4,7 +4,7 @@ Get ChatrixCD up and running in 5 minutes!
 
 ## Prerequisites
 
-- Python 3.9+
+- Python 3.12+ (3.12, 3.13, 3.14 supported)
 - [uv](https://docs.astral.sh/uv/) - Fast Python package installer
 - A Matrix account for the bot
 - Access to a Semaphore UI instance

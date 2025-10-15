@@ -10,7 +10,7 @@ This repository uses GitHub Actions for continuous integration and automated rel
 
 ### What it does
 1. Checks out the code
-2. Sets up Python (versions 3.9, 3.10, 3.11, 3.12)
+2. Sets up Python (versions 3.12, 3.13, 3.14)
 3. Installs dependencies
 4. Runs all unit tests using `python -m unittest discover`
 

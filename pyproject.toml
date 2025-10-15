@@ -7,7 +7,7 @@ name = "chatrixcd"
 dynamic = ["version"]
 description = "A Matrix bot for CI/CD automation with Semaphore UI"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 license = {text = "GPL-3.0"}
 authors = [
     {name = "ChatrixCD Contributors"}
@@ -17,10 +17,9 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
     "matrix-nio[e2e]>=0.24.0",
