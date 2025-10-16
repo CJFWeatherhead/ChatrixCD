@@ -9,6 +9,7 @@ import logging
 import asyncio
 import os
 import time
+import aiohttp
 from typing import Optional, Dict, Any
 from nio import (
     AsyncClient,
@@ -241,31 +242,35 @@ class ChatrixBot:
             
             logger.info("Server supports SSO login")
             
-            # Parse the raw response to get identity providers
-            # LoginInfoResponse.transport_response contains the full HTTP response
+            # Parse identity providers by making a fresh HTTP request
+            # We can't use login_info.transport_response.json() because the aiohttp
+            # response body has already been consumed by matrix-nio when creating
+            # the LoginInfoResponse object. Attempting to read it again would hang.
             identity_providers = []
-            sso_flow = None
             
-            if hasattr(login_info, 'transport_response') and login_info.transport_response:
-                try:
-                    # Use the json() method to properly parse the aiohttp response
-                    response_data = await login_info.transport_response.json()
-                    flows = response_data.get('flows', [])
-                    
-                    # Find the m.login.sso flow
-                    for flow in flows:
-                        if flow.get('type') == 'm.login.sso':
-                            sso_flow = flow
-                            identity_providers = flow.get('identity_providers', [])
-                            break
-                    
-                    if identity_providers:
-                        logger.info(f"Found {len(identity_providers)} identity provider(s)")
-                        for idp in identity_providers:
-                            logger.info(f"  - {idp.get('name', idp.get('id', 'Unknown'))}")
-                except Exception as e:
-                    logger.warning(f"Could not parse identity providers: {e}")
-                    # Continue anyway with generic SSO URL
+            try:
+                # Make a direct request to get the full login response with identity providers
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(f"{self.homeserver}/_matrix/client/v3/login") as resp:
+                        if resp.status == 200:
+                            response_data = await resp.json()
+                            flows = response_data.get('flows', [])
+                            
+                            # Find the m.login.sso flow
+                            for flow in flows:
+                                if flow.get('type') == 'm.login.sso':
+                                    identity_providers = flow.get('identity_providers', [])
+                                    break
+                            
+                            if identity_providers:
+                                logger.info(f"Found {len(identity_providers)} identity provider(s)")
+                                for idp in identity_providers:
+                                    logger.info(f"  - {idp.get('name', idp.get('id', 'Unknown'))}")
+                        else:
+                            logger.warning(f"Failed to fetch login flows: HTTP {resp.status}")
+            except Exception as e:
+                logger.warning(f"Could not parse identity providers: {e}")
+                # Continue anyway with generic SSO URL
             
             # Get redirect URL from config
             redirect_url = self.auth.get_oidc_redirect_url()

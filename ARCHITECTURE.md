@@ -170,7 +170,7 @@ While matrix-commander provides a CLI-focused approach, ChatrixCD implements:
 **Implementation Notes**:
 - All authentication uses native matrix-nio methods
 - Server response contains detailed flow information including identity providers
-- Implementation parses transport_response to access identity provider details
+- Implementation makes a fresh HTTP request to parse identity provider details (avoids re-reading consumed aiohttp response)
 - Supports multiple identity providers with user selection
 - No custom OAuth2 client implementation needed
 - Encryption store is automatically loaded by matrix-nio after successful login

@@ -909,7 +909,7 @@ class TestChatrixBot(unittest.TestCase):
         bot.client.room_send.assert_called_once()
 
     def test_login_oidc_parses_identity_providers(self):
-        """Test that OIDC login correctly parses identity providers from transport_response."""
+        """Test that OIDC login correctly parses identity providers from direct HTTP request."""
         from nio import LoginInfoResponse, LoginResponse
         
         # Configure for OIDC authentication
@@ -925,23 +925,8 @@ class TestChatrixBot(unittest.TestCase):
         
         bot = ChatrixBot(self.config)
         
-        # Create a mock transport_response with identity providers
-        mock_transport_response = AsyncMock()
-        mock_transport_response.json = AsyncMock(return_value={
-            'flows': [
-                {
-                    'type': 'm.login.sso',
-                    'identity_providers': [
-                        {'id': 'oidc', 'name': 'OIDC Provider'}
-                    ]
-                },
-                {'type': 'm.login.token'}
-            ]
-        })
-        
-        # Create LoginInfoResponse with the mocked transport_response
+        # Create LoginInfoResponse
         login_info = LoginInfoResponse(flows=['m.login.sso', 'm.login.token'])
-        login_info.transport_response = mock_transport_response
         
         bot.client.login_info = AsyncMock(return_value=login_info)
         
@@ -954,6 +939,28 @@ class TestChatrixBot(unittest.TestCase):
         bot.client.login = AsyncMock(return_value=login_response)
         bot.client.sync = AsyncMock()
         
+        # Mock aiohttp to return identity providers
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.json = AsyncMock(return_value={
+            'flows': [
+                {
+                    'type': 'm.login.sso',
+                    'identity_providers': [
+                        {'id': 'oidc', 'name': 'OIDC Provider'}
+                    ]
+                },
+                {'type': 'm.login.token'}
+            ]
+        })
+        
+        mock_session = AsyncMock()
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock(return_value=None)
+        mock_session.get = MagicMock(return_value=mock_response)
+        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response.__aexit__ = AsyncMock(return_value=None)
+        
         # Create a token callback that returns a token immediately
         async def mock_token_callback(sso_url, redirect_url, identity_providers):
             # Verify identity providers were parsed correctly
@@ -962,14 +969,16 @@ class TestChatrixBot(unittest.TestCase):
             self.assertEqual(identity_providers[0]['name'], 'OIDC Provider')
             return 'test_login_token'
         
-        # Call login with the callback
-        result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
+        # Patch aiohttp.ClientSession in the bot module where it's imported
+        with patch('chatrixcd.bot.aiohttp.ClientSession', return_value=mock_session):
+            # Call login with the callback
+            result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
         
         # Verify login succeeded
         self.assertTrue(result)
         
-        # Verify transport_response.json() was called (not json.loads on content)
-        mock_transport_response.json.assert_called_once()
+        # Verify aiohttp request was made
+        mock_session.get.assert_called_once_with('https://matrix.example.test/_matrix/client/v3/login')
         
         # Verify login was called with the token
         bot.client.login.assert_called_once()
@@ -993,18 +1002,8 @@ class TestChatrixBot(unittest.TestCase):
         
         bot = ChatrixBot(self.config)
         
-        # Create a mock transport_response without identity_providers
-        mock_transport_response = AsyncMock()
-        mock_transport_response.json = AsyncMock(return_value={
-            'flows': [
-                {'type': 'm.login.sso'},  # No identity_providers field
-                {'type': 'm.login.token'}
-            ]
-        })
-        
-        # Create LoginInfoResponse with the mocked transport_response
+        # Create LoginInfoResponse
         login_info = LoginInfoResponse(flows=['m.login.sso', 'm.login.token'])
-        login_info.transport_response = mock_transport_response
         
         bot.client.login_info = AsyncMock(return_value=login_info)
         
@@ -1017,6 +1016,23 @@ class TestChatrixBot(unittest.TestCase):
         bot.client.login = AsyncMock(return_value=login_response)
         bot.client.sync = AsyncMock()
         
+        # Mock aiohttp to return flows without identity_providers
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.json = AsyncMock(return_value={
+            'flows': [
+                {'type': 'm.login.sso'},  # No identity_providers field
+                {'type': 'm.login.token'}
+            ]
+        })
+        
+        mock_session = AsyncMock()
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock(return_value=None)
+        mock_session.get = MagicMock(return_value=mock_response)
+        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response.__aexit__ = AsyncMock(return_value=None)
+        
         # Create a token callback that returns a token immediately
         async def mock_token_callback(sso_url, redirect_url, identity_providers):
             # Verify identity_providers is empty
@@ -1026,12 +1042,14 @@ class TestChatrixBot(unittest.TestCase):
             self.assertNotIn('redirect/oidc', sso_url)  # No provider ID
             return 'test_login_token'
         
-        # Call login with the callback
-        result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
+        # Patch aiohttp.ClientSession in the bot module where it's imported
+        with patch('chatrixcd.bot.aiohttp.ClientSession', return_value=mock_session):
+            # Call login with the callback
+            result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
         
         # Verify login succeeded
         self.assertTrue(result)
-        mock_transport_response.json.assert_called_once()
+        mock_response.json.assert_called_once()
 
     def test_login_oidc_handles_multiple_identity_providers(self):
         """Test that OIDC login handles multiple identity providers."""
@@ -1050,9 +1068,24 @@ class TestChatrixBot(unittest.TestCase):
         
         bot = ChatrixBot(self.config)
         
-        # Create a mock transport_response with multiple identity providers
-        mock_transport_response = AsyncMock()
-        mock_transport_response.json = AsyncMock(return_value={
+        # Create LoginInfoResponse
+        login_info = LoginInfoResponse(flows=['m.login.sso', 'm.login.token'])
+        
+        bot.client.login_info = AsyncMock(return_value=login_info)
+        
+        # Mock the login method to return success
+        login_response = LoginResponse(
+            user_id='@bot:example.test',
+            device_id='TESTDEVICE',
+            access_token='test_access_token'
+        )
+        bot.client.login = AsyncMock(return_value=login_response)
+        bot.client.sync = AsyncMock()
+        
+        # Mock aiohttp to return multiple identity providers
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.json = AsyncMock(return_value={
             'flows': [
                 {
                     'type': 'm.login.sso',
@@ -1066,20 +1099,12 @@ class TestChatrixBot(unittest.TestCase):
             ]
         })
         
-        # Create LoginInfoResponse with the mocked transport_response
-        login_info = LoginInfoResponse(flows=['m.login.sso', 'm.login.token'])
-        login_info.transport_response = mock_transport_response
-        
-        bot.client.login_info = AsyncMock(return_value=login_info)
-        
-        # Mock the login method to return success
-        login_response = LoginResponse(
-            user_id='@bot:example.test',
-            device_id='TESTDEVICE',
-            access_token='test_access_token'
-        )
-        bot.client.login = AsyncMock(return_value=login_response)
-        bot.client.sync = AsyncMock()
+        mock_session = AsyncMock()
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock(return_value=None)
+        mock_session.get = MagicMock(return_value=mock_response)
+        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response.__aexit__ = AsyncMock(return_value=None)
         
         # Mock input to select the first provider
         with patch('builtins.input', return_value='1'):
@@ -1092,12 +1117,14 @@ class TestChatrixBot(unittest.TestCase):
                 self.assertEqual(identity_providers[2]['name'], 'GitHub')
                 return 'test_login_token'
             
-            # Call login with the callback
-            result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
+            # Patch aiohttp.ClientSession in the bot module where it's imported
+            with patch('chatrixcd.bot.aiohttp.ClientSession', return_value=mock_session):
+                # Call login with the callback
+                result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
         
         # Verify login succeeded
         self.assertTrue(result)
-        mock_transport_response.json.assert_called_once()
+        mock_response.json.assert_called_once()
 
     def test_login_oidc_handles_json_parse_error_gracefully(self):
         """Test that OIDC login handles JSON parse errors gracefully."""
@@ -1116,13 +1143,8 @@ class TestChatrixBot(unittest.TestCase):
         
         bot = ChatrixBot(self.config)
         
-        # Create a mock transport_response that raises an error
-        mock_transport_response = AsyncMock()
-        mock_transport_response.json = AsyncMock(side_effect=Exception("JSON parse error"))
-        
-        # Create LoginInfoResponse with the mocked transport_response
+        # Create LoginInfoResponse
         login_info = LoginInfoResponse(flows=['m.login.sso', 'm.login.token'])
-        login_info.transport_response = mock_transport_response
         
         bot.client.login_info = AsyncMock(return_value=login_info)
         
@@ -1135,18 +1157,88 @@ class TestChatrixBot(unittest.TestCase):
         bot.client.login = AsyncMock(return_value=login_response)
         bot.client.sync = AsyncMock()
         
+        # Mock aiohttp to raise an error when json() is called
+        mock_response = AsyncMock()
+        mock_response.status = 200  # Status 200 so that json() gets called
+        mock_response.json = AsyncMock(side_effect=Exception("JSON parse error"))
+        
+        mock_session = AsyncMock()
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock(return_value=None)
+        mock_session.get = MagicMock(return_value=mock_response)
+        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response.__aexit__ = AsyncMock(return_value=None)
+        
         # Create a token callback that returns a token immediately
         async def mock_token_callback(sso_url, redirect_url, identity_providers):
             # Should still work with empty identity_providers
             self.assertEqual(len(identity_providers), 0)
             return 'test_login_token'
         
-        # Call login with the callback - should succeed despite parse error
-        result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
+        # Patch aiohttp.ClientSession in the bot module where it's imported
+        with patch('chatrixcd.bot.aiohttp.ClientSession', return_value=mock_session):
+            # Call login with the callback - should succeed despite parse error
+            result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
         
         # Verify login succeeded (falls back to generic SSO URL)
         self.assertTrue(result)
-        mock_transport_response.json.assert_called_once()
+        mock_response.json.assert_called_once()
+
+    def test_login_oidc_handles_http_error_gracefully(self):
+        """Test that OIDC login handles HTTP errors gracefully when fetching identity providers."""
+        from nio import LoginInfoResponse, LoginResponse
+        
+        # Configure for OIDC authentication
+        self.config.get_matrix_config.return_value = {
+            'homeserver': 'https://matrix.example.test',
+            'user_id': '@bot:example.test',
+            'device_id': 'TESTDEVICE',
+            'device_name': 'Test Bot',
+            'store_path': self.temp_dir,
+            'auth_type': 'oidc',
+            'oidc_redirect_url': 'http://localhost:8080/callback'
+        }
+        
+        bot = ChatrixBot(self.config)
+        
+        # Create LoginInfoResponse
+        login_info = LoginInfoResponse(flows=['m.login.sso', 'm.login.token'])
+        
+        bot.client.login_info = AsyncMock(return_value=login_info)
+        
+        # Mock the login method to return success
+        login_response = LoginResponse(
+            user_id='@bot:example.test',
+            device_id='TESTDEVICE',
+            access_token='test_access_token'
+        )
+        bot.client.login = AsyncMock(return_value=login_response)
+        bot.client.sync = AsyncMock()
+        
+        # Mock aiohttp to return HTTP 500 error
+        mock_response = AsyncMock()
+        mock_response.status = 500
+        
+        mock_session = AsyncMock()
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock(return_value=None)
+        mock_session.get = MagicMock(return_value=mock_response)
+        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response.__aexit__ = AsyncMock(return_value=None)
+        
+        # Create a token callback that returns a token immediately
+        async def mock_token_callback(sso_url, redirect_url, identity_providers):
+            # Should still work with empty identity_providers (fallback to generic URL)
+            self.assertEqual(len(identity_providers), 0)
+            return 'test_login_token'
+        
+        # Patch aiohttp.ClientSession in the bot module where it's imported
+        with patch('chatrixcd.bot.aiohttp.ClientSession', return_value=mock_session):
+            # Call login with the callback - should succeed with fallback to generic URL
+            result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
+        
+        # Verify login succeeded (falls back to generic SSO URL)
+        self.assertTrue(result)
 
 
 if __name__ == '__main__':
