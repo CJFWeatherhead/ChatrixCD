@@ -969,8 +969,8 @@ class TestChatrixBot(unittest.TestCase):
             self.assertEqual(identity_providers[0]['name'], 'OIDC Provider')
             return 'test_login_token'
         
-        # Patch aiohttp.ClientSession
-        with patch('aiohttp.ClientSession', return_value=mock_session):
+        # Patch aiohttp.ClientSession in the bot module where it's imported
+        with patch('chatrixcd.bot.aiohttp.ClientSession', return_value=mock_session):
             # Call login with the callback
             result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
         
@@ -1042,8 +1042,8 @@ class TestChatrixBot(unittest.TestCase):
             self.assertNotIn('redirect/oidc', sso_url)  # No provider ID
             return 'test_login_token'
         
-        # Patch aiohttp.ClientSession
-        with patch('aiohttp.ClientSession', return_value=mock_session):
+        # Patch aiohttp.ClientSession in the bot module where it's imported
+        with patch('chatrixcd.bot.aiohttp.ClientSession', return_value=mock_session):
             # Call login with the callback
             result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
         
@@ -1117,8 +1117,8 @@ class TestChatrixBot(unittest.TestCase):
                 self.assertEqual(identity_providers[2]['name'], 'GitHub')
                 return 'test_login_token'
             
-            # Patch aiohttp.ClientSession
-            with patch('aiohttp.ClientSession', return_value=mock_session):
+            # Patch aiohttp.ClientSession in the bot module where it's imported
+            with patch('chatrixcd.bot.aiohttp.ClientSession', return_value=mock_session):
                 # Call login with the callback
                 result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
         
@@ -1174,8 +1174,8 @@ class TestChatrixBot(unittest.TestCase):
             self.assertEqual(len(identity_providers), 0)
             return 'test_login_token'
         
-        # Patch aiohttp.ClientSession
-        with patch('aiohttp.ClientSession', return_value=mock_session):
+        # Patch aiohttp.ClientSession in the bot module where it's imported
+        with patch('chatrixcd.bot.aiohttp.ClientSession', return_value=mock_session):
             # Call login with the callback - should succeed despite parse error
             result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
         
@@ -1231,8 +1231,8 @@ class TestChatrixBot(unittest.TestCase):
             self.assertEqual(len(identity_providers), 0)
             return 'test_login_token'
         
-        # Patch aiohttp.ClientSession
-        with patch('aiohttp.ClientSession', return_value=mock_session):
+        # Patch aiohttp.ClientSession in the bot module where it's imported
+        with patch('chatrixcd.bot.aiohttp.ClientSession', return_value=mock_session):
             # Call login with the callback - should succeed with fallback to generic URL
             result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
         
