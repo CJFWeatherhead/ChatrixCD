@@ -1157,8 +1157,9 @@ class TestChatrixBot(unittest.TestCase):
         bot.client.login = AsyncMock(return_value=login_response)
         bot.client.sync = AsyncMock()
         
-        # Mock aiohttp to raise an error
+        # Mock aiohttp to raise an error when json() is called
         mock_response = AsyncMock()
+        mock_response.status = 200  # Status 200 so that json() gets called
         mock_response.json = AsyncMock(side_effect=Exception("JSON parse error"))
         
         mock_session = AsyncMock()

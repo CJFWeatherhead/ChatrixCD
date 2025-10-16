@@ -9,6 +9,7 @@ import logging
 import asyncio
 import os
 import time
+import aiohttp
 from typing import Optional, Dict, Any
 from nio import (
     AsyncClient,
@@ -249,7 +250,6 @@ class ChatrixBot:
             
             try:
                 # Make a direct request to get the full login response with identity providers
-                import aiohttp
                 async with aiohttp.ClientSession() as session:
                     async with session.get(f"{self.homeserver}/_matrix/client/v3/login") as resp:
                         if resp.status == 200:
