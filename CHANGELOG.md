@@ -16,11 +16,22 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Fixed
+- **CRITICAL**: Fixed OIDC authentication hanging when running with TUI (default interactive mode)
+  - Issue #59 recurrence: The code was trying to push OIDC screen to TUI before TUI was started
+  - Refactored `run_tui_with_bot` to start TUI first, then perform login within TUI context
+  - Login now happens in TUI's `on_mount` lifecycle method after TUI is fully running
+  - This fixes the hang when running `chatrixcd -vvv` or any interactive terminal mode with OIDC authentication
 - **CRITICAL**: Fixed OIDC authentication hanging when attempting to parse identity providers from server response
   - The code was attempting to re-read an already consumed aiohttp response body, causing the authentication flow to hang
   - Now makes a fresh HTTP request to `/_matrix/client/v3/login` to obtain identity provider information
   - Fixes authentication with OIDC-enabled Matrix servers (e.g., chat.privacyinternational.org)
   - Falls back gracefully to generic SSO URL if identity provider fetch fails
+
+### Improved
+- Added verbose debug logging throughout OIDC authentication flow for better diagnostics
+  - Logs redirect URL, SSO URL construction, identity provider selection
+  - Logs callback invocation and token retrieval steps
+  - Helps diagnose authentication issues when running with `-vv` or `-vvv` flags
 
 ### Changed
 - **BREAKING**: Dropped support for Python 3.9, 3.10, and 3.11 - minimum required version is now Python 3.12
