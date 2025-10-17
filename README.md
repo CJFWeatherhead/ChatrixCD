@@ -269,6 +269,11 @@ Once the bot is running and invited to a room, you can use the following command
 
 #### Basic Commands
 - `!cd help` - Show help message with available commands
+- `!cd admins` - List admin users who can run bot commands
+- `!cd rooms` - List all rooms the bot is currently in
+- `!cd rooms join <room_id>` - Join a specific room
+- `!cd rooms part <room_id>` - Leave a specific room
+- `!cd exit` - Shut down the bot (requires confirmation)
 - `!cd projects` - List all available Semaphore projects
 - `!cd templates [project_id]` - List templates for a specific project (auto-selects if only one project)
 - `!cd run [project_id] [template_id]` - Start a task from a template (with confirmation, auto-selects when possible)
@@ -282,6 +287,8 @@ Once the bot is running and invited to a room, you can use the following command
 
 #### Alias Commands
 - `!cd aliases` - List all configured command aliases
+
+**Admin Access**: When admin users are configured in `config.json`, only those users can run bot commands. Other users will receive a friendly brush-off message. Supports URL-encoded usernames (e.g., `@user%40domain.com`).
 
 Command aliases can be configured through the TUI (press `x` in the main menu) or by editing `aliases.json`.
 

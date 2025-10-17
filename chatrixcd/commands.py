@@ -59,6 +59,8 @@ class CommandHandler:
     def is_admin(self, user_id: str) -> bool:
         """Check if user is an admin.
         
+        Handles URL-encoded usernames (e.g., @user%40domain.com).
+        
         Args:
             user_id: User ID to check
             
@@ -67,7 +69,18 @@ class CommandHandler:
         """
         if not self.admin_users:
             return True
-        return user_id in self.admin_users
+        
+        # URL decode both the incoming user_id and admin users for comparison
+        import urllib.parse
+        normalized_user_id = urllib.parse.unquote(user_id)
+        
+        # Check against all admin users (with normalization)
+        for admin in self.admin_users:
+            normalized_admin = urllib.parse.unquote(admin)
+            if normalized_user_id == normalized_admin:
+                return True
+        
+        return False
 
     def markdown_to_html(self, text: str) -> str:
         """Convert simple markdown to HTML for Matrix.
@@ -115,6 +128,20 @@ class CommandHandler:
         if not self.is_allowed_room(room.room_id):
             logger.info(f"Ignoring command in non-allowed room: {room.room_id}")
             return
+        
+        # Check if user is admin (if admins are configured)
+        if not self.is_admin(event.sender):
+            # Send fun brush-off message
+            brush_off_messages = [
+                "I can't talk to you 🫢",
+                "You're not my boss 🫠",
+                "Who's the new guy? 😅",
+                "Sorry, admin access only! 🔐",
+                "Nice try, but you need to be an admin 😎",
+                "Admins only, friend! 🚫"
+            ]
+            await self.bot.send_message(room.room_id, random.choice(brush_off_messages))
+            return
             
         # Parse command
         command_text = message[len(self.command_prefix):].strip()
@@ -132,6 +159,12 @@ class CommandHandler:
         # Route to appropriate handler
         if command == 'help':
             await self.send_help(room.room_id)
+        elif command == 'admins':
+            await self.list_admins(room.room_id)
+        elif command == 'rooms':
+            await self.manage_rooms(room.room_id, args)
+        elif command == 'exit':
+            await self.exit_bot(room.room_id, event.sender)
         elif command == 'projects':
             await self.list_projects(room.room_id)
         elif command == 'templates':
@@ -165,6 +198,9 @@ class CommandHandler:
         help_text = f"""**ChatrixCD Bot Commands** 📚
 
 {self.command_prefix} help - Show this help message
+{self.command_prefix} admins - List admin users
+{self.command_prefix} rooms [join|part <room_id>] - List or manage rooms
+{self.command_prefix} exit - Exit the bot (requires confirmation)
 {self.command_prefix} projects - List available projects
 {self.command_prefix} templates <project_id> - List templates for a project
 {self.command_prefix} run <project_id> <template_id> - Run a task from template
@@ -177,6 +213,136 @@ class CommandHandler:
 """
         html_text = self.markdown_to_html(help_text)
         await self.bot.send_message(room_id, help_text, html_text)
+
+    async def list_admins(self, room_id: str):
+        """List admin users.
+        
+        Args:
+            room_id: Room to send response to
+        """
+        if not self.admin_users:
+            message = "**Admin Users** 👑\n\n"
+            message += "[dim]No admin users configured. All users have admin access.[/dim]"
+        else:
+            message = "**Admin Users** 👑\n\n"
+            for admin in self.admin_users:
+                message += f"• {admin}\n"
+        
+        html_message = self.markdown_to_html(message)
+        await self.bot.send_message(room_id, message, html_message)
+    
+    async def manage_rooms(self, room_id: str, args: list):
+        """Manage bot rooms (list, join, part).
+        
+        Args:
+            room_id: Room to send response to
+            args: Command arguments (action, optional room_id)
+        """
+        if not args:
+            # List rooms
+            rooms = self.bot.client.rooms
+            if not rooms:
+                await self.bot.send_message(room_id, "Not currently in any rooms. 🏠")
+                return
+            
+            message = "**Rooms I'm In** 🏠\n\n"
+            for room_id_key, room in rooms.items():
+                room_name = room.display_name or "Unknown"
+                message += f"• **{room_name}**\n  `{room_id_key}`\n"
+            
+            html_message = self.markdown_to_html(message)
+            await self.bot.send_message(room_id, message, html_message)
+            return
+        
+        action = args[0].lower()
+        
+        if action == 'join':
+            if len(args) < 2:
+                await self.bot.send_message(
+                    room_id,
+                    f"Usage: {self.command_prefix} rooms join <room_id>"
+                )
+                return
+            
+            target_room_id = args[1]
+            try:
+                await self.bot.client.join(target_room_id)
+                await self.bot.send_message(room_id, f"✅ Joined room: {target_room_id}")
+            except Exception as e:
+                logger.error(f"Failed to join room {target_room_id}: {e}")
+                await self.bot.send_message(room_id, f"❌ Failed to join room: {e}")
+        
+        elif action == 'part' or action == 'leave':
+            if len(args) < 2:
+                await self.bot.send_message(
+                    room_id,
+                    f"Usage: {self.command_prefix} rooms part <room_id>"
+                )
+                return
+            
+            target_room_id = args[1]
+            try:
+                await self.bot.client.room_leave(target_room_id)
+                await self.bot.send_message(room_id, f"👋 Left room: {target_room_id}")
+            except Exception as e:
+                logger.error(f"Failed to leave room {target_room_id}: {e}")
+                await self.bot.send_message(room_id, f"❌ Failed to leave room: {e}")
+        
+        else:
+            await self.bot.send_message(
+                room_id,
+                f"Unknown action: {action}. Use 'join' or 'part'."
+            )
+    
+    async def exit_bot(self, room_id: str, sender: str):
+        """Exit the bot with confirmation.
+        
+        Args:
+            room_id: Room to send response to
+            sender: User who sent the command
+        """
+        # Create a special confirmation for exit
+        confirmation_key = f"{room_id}:{sender}:exit"
+        
+        # Check if already waiting for confirmation
+        if confirmation_key in self.pending_confirmations:
+            # User is confirming
+            del self.pending_confirmations[confirmation_key]
+            
+            await self.bot.send_message(
+                room_id,
+                "👋 Shutting down bot as requested. Goodbye!"
+            )
+            
+            # Give time for message to send
+            await asyncio.sleep(1)
+            
+            # Trigger shutdown
+            logger.info(f"Bot shutdown requested by {sender}")
+            # Signal bot to close
+            asyncio.create_task(self.bot.close())
+            
+            # Exit the event loop to shutdown
+            import sys
+            sys.exit(0)
+        else:
+            # Request confirmation
+            self.pending_confirmations[confirmation_key] = {
+                'action': 'exit',
+                'room_id': room_id,
+                'sender': sender,
+                'timestamp': asyncio.get_event_loop().time()
+            }
+            
+            await self.bot.send_message(
+                room_id,
+                f"⚠️ **Confirm Bot Shutdown**\n\n"
+                f"Are you sure you want to shut down the bot?\n\n"
+                f"Reply with `{self.command_prefix} exit` again to confirm."
+            )
+            
+            # Set timeout to clear confirmation after 30 seconds
+            asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 30))
 
     async def list_projects(self, room_id: str):
         """List available Semaphore projects.
