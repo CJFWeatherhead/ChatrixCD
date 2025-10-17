@@ -15,6 +15,18 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Fixed
+- **End-to-End Encryption Improvements**: Major improvements to encryption handling and device verification
+  - Fixed TUI to properly display user ID and device ID in verification requests (was showing "Unknown")
+  - Proactively query device keys when receiving undecryptable messages
+  - Automatically establish Olm sessions by claiming one-time keys before requesting room keys
+  - Send to-device messages after room key requests to ensure delivery
+  - Track requested sessions per sender to prevent duplicate key requests
+  - Proactively query device keys for all users in encrypted rooms during sync
+  - Perform initial encryption setup after first sync (query keys and establish sessions)
+  - Share room keys with devices immediately after successful verification
+  - Improved error recovery for decryption failures with automatic session establishment
+
 ### Added
 - **Verification Status Persistence**: Device verification status is now persisted across restarts
   - Verified devices are automatically saved to the encryption store

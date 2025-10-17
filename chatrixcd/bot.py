@@ -100,6 +100,9 @@ class ChatrixBot:
         # Using milliseconds since epoch to match Matrix server_timestamp format
         self.start_time = int(time.time() * 1000)
         
+        # Track whether we've done initial encryption setup after first sync
+        self._encryption_setup_done = False
+        
         # Setup event callbacks
         self.client.add_event_callback(self.message_callback, RoomMessageText)
         self.client.add_event_callback(self.invite_callback, InviteMemberEvent)
@@ -800,12 +803,14 @@ class ChatrixBot:
             try:
                 if hasattr(response, 'rooms') and hasattr(response.rooms, 'join'):
                     users_to_query = set()
+                    encrypted_rooms_count = 0
                     
                     # Collect users from all encrypted rooms
                     for room_id, room_info in response.rooms.join.items():
                         # Check if this is an encrypted room
                         room = self.client.rooms.get(room_id)
                         if room and room.encrypted:
+                            encrypted_rooms_count += 1
                             # Add all room members to the set of users to query
                             for user_id in room.users:
                                 # Skip our own user_id
@@ -814,11 +819,52 @@ class ChatrixBot:
                     
                     # Query device keys for all collected users
                     if users_to_query:
-                        logger.debug(
-                            f"Proactively querying device keys for {len(users_to_query)} "
-                            f"user(s) in encrypted rooms"
-                        )
-                        await self.client.keys_query(user_set=users_to_query)
+                        # On first sync, log more details
+                        if not self._encryption_setup_done:
+                            logger.info(
+                                f"Initial encryption setup: Found {encrypted_rooms_count} encrypted room(s) "
+                                f"with {len(users_to_query)} unique user(s)"
+                            )
+                            logger.info("Querying device keys for all users in encrypted rooms...")
+                            await self.client.keys_query(user_set=users_to_query)
+                            
+                            # Claim one-time keys to establish Olm sessions with all devices
+                            logger.info("Claiming one-time keys to establish Olm sessions...")
+                            devices_to_claim = {}
+                            if hasattr(self.client, 'device_store') and self.client.device_store:
+                                for user_id in users_to_query:
+                                    if user_id in self.client.device_store.users:
+                                        user_devices = self.client.device_store[user_id]
+                                        device_ids = []
+                                        for device_id, device in user_devices.items():
+                                            # Check if we already have a session
+                                            if not self.client.olm.session_store.get(device.curve25519):
+                                                device_ids.append(device_id)
+                                        
+                                        if device_ids:
+                                            devices_to_claim[user_id] = device_ids
+                            
+                            if devices_to_claim:
+                                logger.info(
+                                    f"Claiming keys for {sum(len(d) for d in devices_to_claim.values())} device(s) "
+                                    f"across {len(devices_to_claim)} user(s)"
+                                )
+                                response = await self.client.keys_claim(devices_to_claim)
+                                if hasattr(response, 'one_time_keys'):
+                                    logger.info(
+                                        f"Successfully established Olm sessions with "
+                                        f"{len(response.one_time_keys)} device(s)"
+                                    )
+                            
+                            self._encryption_setup_done = True
+                            logger.info("Initial encryption setup completed")
+                        else:
+                            # Subsequent syncs - just query if there are new users
+                            logger.debug(
+                                f"Proactively querying device keys for {len(users_to_query)} "
+                                f"user(s) in encrypted rooms"
+                            )
+                            await self.client.keys_query(user_set=users_to_query)
             except Exception as e:
                 logger.debug(f"Error during proactive device key query: {e}")
 
