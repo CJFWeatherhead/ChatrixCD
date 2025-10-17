@@ -28,6 +28,7 @@ from chatrixcd.config import Config
 from chatrixcd.auth import MatrixAuth
 from chatrixcd.semaphore import SemaphoreClient
 from chatrixcd.commands import CommandHandler
+from chatrixcd.verification import DeviceVerificationManager
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +88,9 @@ class ChatrixBot:
             config=config.get_bot_config(),
             semaphore=self.semaphore
         )
+        
+        # Initialize verification manager
+        self.verification_manager = DeviceVerificationManager(self.client)
         
         # Track session IDs for which we've already requested keys
         # This prevents duplicate key requests
@@ -837,115 +841,75 @@ class ChatrixBot:
     async def _auto_verify_device(self, transaction_id: str):
         """Automatically verify a device in daemon mode.
         
+        Uses the verification manager to handle auto-verification.
+        
         Args:
             transaction_id: Transaction ID of the verification request
         """
-        from nio.crypto import Sas
-        
-        try:
-            # Get the SAS verification object
-            if not hasattr(self.client, 'key_verifications') or transaction_id not in self.client.key_verifications:
-                logger.warning(f"Cannot auto-verify: verification {transaction_id} not found")
-                return
-            
-            sas = self.client.key_verifications[transaction_id]
-            
-            if not isinstance(sas, Sas):
-                logger.warning(f"Cannot auto-verify: {transaction_id} is not a SAS verification")
-                return
-            
-            # Accept the verification request
-            await self.client.accept_key_verification(transaction_id)
-            logger.info(f"Auto-accepted verification request {transaction_id}")
-            
-            # Wait for key exchange
-            await asyncio.sleep(1)
-            
-            # Automatically accept the SAS (trust without emoji comparison)
-            if sas.other_key_set:
-                sas.accept_sas()
-                await self.client.send_to_device_messages()
-                logger.info(f"Auto-verified device in transaction {transaction_id}")
-            else:
-                logger.warning(f"Cannot auto-verify {transaction_id}: other device key not received")
-        
-        except Exception as e:
-            logger.error(f"Error during auto-verification: {e}")
+        success = await self.verification_manager.auto_verify_pending(transaction_id)
+        if success:
+            logger.info(f"Successfully auto-verified device in transaction {transaction_id}")
+        else:
+            logger.warning(f"Failed to auto-verify device in transaction {transaction_id}")
     
     async def _interactive_cli_verification(self, transaction_id: str, sender: str, device_id: str):
         """Handle verification interactively on command line in log-only mode.
+        
+        Uses the verification manager to handle interactive verification.
         
         Args:
             transaction_id: Transaction ID of the verification request
             sender: User ID of the sender
             device_id: Device ID of the sender
         """
-        from nio.crypto import Sas
+        # Get pending verifications
+        pending = await self.verification_manager.get_pending_verifications()
+        verification_info = None
         
-        try:
-            # Get the SAS verification object
-            if not hasattr(self.client, 'key_verifications') or transaction_id not in self.client.key_verifications:
-                logger.warning(f"Cannot verify: verification {transaction_id} not found")
-                return
-            
-            sas = self.client.key_verifications[transaction_id]
-            
-            if not isinstance(sas, Sas):
-                logger.warning(f"Cannot verify: {transaction_id} is not a SAS verification")
-                return
-            
-            # Accept the verification request
-            await self.client.accept_key_verification(transaction_id)
-            logger.info(f"Accepted verification request {transaction_id}")
-            
-            # Wait for key exchange
-            max_wait = 10
-            wait_time = 0
-            while not sas.other_key_set and wait_time < max_wait:
-                await asyncio.sleep(0.5)
-                wait_time += 0.5
-            
-            if not sas.other_key_set:
-                logger.error("Verification timeout: did not receive other device's key")
-                return
-            
-            # Get emoji sequence
-            try:
-                emoji_list = sas.get_emoji()
-                
-                # Display emojis
-                print("\n" + "=" * 70)
-                print("VERIFICATION REQUEST")
-                print("=" * 70)
-                print(f"From: {sender}")
-                print(f"Device: {device_id}")
-                print("\nCompare these emojis with the other device:")
-                print()
-                for emoji, desc in emoji_list:
-                    print(f"  {emoji}  {desc}")
-                print()
-                print("=" * 70)
-                
-                # Prompt user
-                response = input("Do the emojis match? (yes/no): ").strip().lower()
-                
-                if response in ('yes', 'y'):
-                    sas.accept_sas()
-                    await self.client.send_to_device_messages()
-                    logger.info("✅ Device verified successfully")
-                    print("✅ Device verified and marked as trusted")
-                else:
-                    sas.reject_sas()
-                    await self.client.send_to_device_messages()
-                    logger.info("❌ Verification rejected")
-                    print("❌ Verification rejected - emojis did not match")
-                
-            except Exception as e:
-                logger.error(f"Error during interactive verification: {e}")
-                print(f"Error: {e}")
+        for pending_item in pending:
+            if pending_item['transaction_id'] == transaction_id:
+                verification_info = pending_item
+                break
         
-        except Exception as e:
-            logger.error(f"Error during interactive verification: {e}")
+        if not verification_info:
+            logger.warning(f"Cannot verify: verification {transaction_id} not found")
+            return
+        
+        # Define callback to display emojis and get user confirmation
+        async def emoji_callback(emoji_list):
+            # Display emojis
+            print("\n" + "=" * 70)
+            print("VERIFICATION REQUEST")
+            print("=" * 70)
+            print(f"From: {sender}")
+            print(f"Device: {device_id}")
+            print("\nCompare these emojis with the other device:")
+            print()
+            for emoji, desc in emoji_list:
+                print(f"  {emoji}  {desc}")
+            print()
+            print("=" * 70)
+            
+            # Prompt user
+            response = input("Do the emojis match? (yes/no): ").strip().lower()
+            
+            if response in ('yes', 'y'):
+                logger.info("✅ Device verified successfully")
+                print("✅ Device verified and marked as trusted")
+                return True
+            else:
+                logger.info("❌ Verification rejected")
+                print("❌ Verification rejected - emojis did not match")
+                return False
+        
+        # Verify using the verification manager
+        success = await self.verification_manager.verify_pending_interactive(
+            verification_info, emoji_callback
+        )
+        
+        if not success:
+            logger.error("Failed to complete interactive verification")
+            print("Failed to complete verification. See logs for details.")
         
     async def key_verification_cancel_callback(self, event: KeyVerificationCancel):
         """Handle key verification cancellation events.
