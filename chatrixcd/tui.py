@@ -125,6 +125,8 @@ class AliasesScreen(Screen):
         super().__init__(**kwargs)
         self.tui_app = tui_app
         self.selected_alias = None
+        # Map sanitized button IDs to actual alias names
+        self.alias_id_map = {}
     
     def compose(self) -> ComposeResult:
         """Create child widgets."""
@@ -141,8 +143,13 @@ class AliasesScreen(Screen):
                     yield Static("[dim]No aliases configured.[/dim]\n")
                 else:
                     yield Static("[bold]Current Aliases:[/bold]\n")
-                    for alias, command in aliases.items():
-                        yield Button(f"{alias} → {command}", id=f"alias_{alias}")
+                    # Create sanitized button IDs
+                    self.alias_id_map = {}
+                    for idx, (alias, command) in enumerate(aliases.items()):
+                        # Use index-based ID to avoid issues with special characters
+                        button_id = f"alias_btn_{idx}"
+                        self.alias_id_map[button_id] = alias
+                        yield Button(f"{alias} → {command}", id=button_id)
             else:
                 yield Static("[dim]Bot not initialized.[/dim]\n")
             
@@ -155,16 +162,17 @@ class AliasesScreen(Screen):
         """Handle button presses."""
         button_id = event.button.id
         
-        if button_id.startswith("alias_"):
+        if button_id and button_id.startswith("alias_btn_"):
             # Select this alias
-            alias_name = button_id[6:]
-            self.selected_alias = alias_name
-            # Update button styles to show selection
-            for button in self.query(Button):
-                if button.id == button_id:
-                    button.variant = "success"
-                elif button.id and button.id.startswith("alias_"):
-                    button.variant = "default"
+            alias_name = self.alias_id_map.get(button_id)
+            if alias_name:
+                self.selected_alias = alias_name
+                # Update button styles to show selection
+                for button in self.query(Button):
+                    if button.id == button_id:
+                        button.variant = "success"
+                    elif button.id and button.id.startswith("alias_btn_"):
+                        button.variant = "default"
         elif button_id == "add_alias_button":
             await self.add_alias()
         elif button_id == "delete_alias_button":
