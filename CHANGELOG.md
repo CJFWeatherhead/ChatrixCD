@@ -16,6 +16,10 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Fixed
+- **CRITICAL**: Fixed TUI crash when OIDC authentication is detected
+  - OIDCAuthScreen now uses TextArea instead of markup links to avoid MarkupError with URLs containing special characters
+  - URLs like `https://chat.example.org/_matrix/client/v3/login/sso/redirect/oidc?redirectUrl=http://localhost:8080/callback` no longer cause crashes
+  - Fixes issue where app would crash with MarkupError during OIDC authentication flow in TUI mode
 - **CRITICAL**: Fixed OIDC authentication hanging when running with TUI (default interactive mode)
   - Issue #59 recurrence: The code was trying to push OIDC screen to TUI before TUI was started
   - Refactored `run_tui_with_bot` to start TUI first, then perform login within TUI context
@@ -26,6 +30,16 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Now makes a fresh HTTP request to `/_matrix/client/v3/login` to obtain identity provider information
   - Fixes authentication with OIDC-enabled Matrix servers (e.g., chat.privacyinternational.org)
   - Falls back gracefully to generic SSO URL if identity provider fetch fails
+
+### Added
+- TUI support for `-s`/`--show-config` flag
+  - When `-s` is used without `-R` (redact) or `-v` (verbose) flags, configuration is now displayed in a TUI window
+  - Provides a more user-friendly interface for viewing configuration
+  - Press 'q' or ESC to exit the configuration viewer
+- Comprehensive error handling to prevent stacktraces in production
+  - Unhandled exceptions in TUI and main application are now caught and displayed as user-friendly messages
+  - Stacktraces are only shown when running with `-v`, `-vv`, or `-vvv` flags (debug mode)
+  - Users are prompted to run with `-v` or `-vv` for more details when errors occur
 
 ### Improved
 - Added verbose debug logging throughout OIDC authentication flow for better diagnostics
