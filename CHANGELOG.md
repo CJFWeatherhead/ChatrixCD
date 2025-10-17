@@ -15,6 +15,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+## [2025.10.17.3.0.0] - 2025-10-17
+
 ### Fixed
 - **Bot Not Responding to Encrypted Messages**: Fixed critical issue where bot could decrypt messages but wouldn't respond to commands
   - Fixed `server_timestamp` attribute missing on decrypted events causing AttributeError
@@ -581,6 +583,8 @@ ChatrixCD/
 
 
 
+
+- **2025.10.17.3.0.0** (2025-10-17)
 - **2025.10.17.2.0.0** (2025-10-17)
 - **2025.10.14.1.0.0** (2025-10-14)
 - **2025.10.12.0.0.1** (2025-10-12)
