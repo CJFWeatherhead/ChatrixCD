@@ -386,7 +386,7 @@ class SessionsScreen(Screen):
             async def start_verification(self, device_info: Dict[str, Any]):
                 """Start SAS verification with selected device."""
                 from nio import ToDeviceError
-                from nio.crypto import Sas
+                from nio.crypto import Sas, SasState
                 
                 try:
                     client = self.parent_sessions_screen.tui_app.bot.client
@@ -415,13 +415,40 @@ class SessionsScreen(Screen):
                         self.app.push_screen(MessageScreen("Verification started, but could not retrieve SAS object.\n\nPlease check the other device to continue."))
                         return
                     
+                    # If we didn't start this verification (someone else initiated it), 
+                    # we need to accept it and share our key first
+                    if not sas.we_started_it and sas.state == SasState.created:
+                        # Accept the verification request
+                        await client.accept_key_verification(sas.transaction_id)
+                        # Wait for state to update
+                        await asyncio.sleep(0.5)
+                    
+                    # Wait for key exchange to complete (other device's key must be received)
+                    max_wait = 10  # Maximum 10 seconds
+                    wait_time = 0
+                    while not sas.other_key_set() and wait_time < max_wait:
+                        await asyncio.sleep(0.5)
+                        wait_time += 0.5
+                    
+                    if not sas.other_key_set():
+                        self.app.push_screen(MessageScreen(
+                            "Verification timeout: Did not receive the other device's key.\n\n"
+                            "Please ensure the other device has accepted the verification request."
+                        ))
+                        return
+                    
                     # Get emoji sequence
                     try:
                         emoji_list = sas.get_emoji()
                         emoji_display = " ".join([f"{emoji} ({desc})" for emoji, desc in emoji_list])
                     except Exception as e:
                         logger.error(f"Error getting emojis: {e}")
-                        emoji_display = "Error retrieving emojis"
+                        self.app.push_screen(MessageScreen(
+                            f"Error getting emojis: {e}\n\n"
+                            f"SAS state: {sas.state.name if hasattr(sas.state, 'name') else sas.state}\n"
+                            f"Other key set: {sas.other_key_set()}"
+                        ))
+                        return
                     
                     # Show verification screen with emojis
                     await self.show_verification_screen(sas, emoji_display, device_info)
@@ -463,7 +490,17 @@ class SessionsScreen(Screen):
                     
                     async def confirm_verification(self):
                         """Confirm the SAS verification."""
+                        from nio.crypto import SasState
+                        
                         try:
+                            # Check if we're in the right state
+                            if not self.sas.other_key_set():
+                                self.app.push_screen(MessageScreen(
+                                    "Cannot confirm verification: Key exchange not complete.\n\n"
+                                    "The other device has not sent its key yet. Please wait or try again."
+                                ))
+                                return
+                            
                             # Accept the SAS
                             self.sas.accept_sas()
                             
@@ -476,11 +513,25 @@ class SessionsScreen(Screen):
                             
                         except Exception as e:
                             logger.error(f"Error confirming verification: {e}")
-                            self.app.push_screen(MessageScreen(f"Error confirming verification: {e}"))
+                            self.app.push_screen(MessageScreen(
+                                f"Error confirming verification: {e}\n\n"
+                                f"SAS state: {self.sas.state.name if hasattr(self.sas.state, 'name') else self.sas.state}\n"
+                                f"Other key set: {self.sas.other_key_set()}"
+                            ))
                     
                     async def reject_verification(self):
                         """Reject the SAS verification."""
+                        from nio.crypto import SasState
+                        
                         try:
+                            # Check if we're in the right state
+                            if not self.sas.other_key_set():
+                                self.app.push_screen(MessageScreen(
+                                    "Cannot reject verification: Key exchange not complete.\n\n"
+                                    "The other device has not sent its key yet. Please wait or try again."
+                                ))
+                                return
+                            
                             self.sas.reject_sas()
                             
                             client = self.device_selection_screen.parent_sessions_screen.tui_app.bot.client
@@ -491,7 +542,11 @@ class SessionsScreen(Screen):
                             
                         except Exception as e:
                             logger.error(f"Error rejecting verification: {e}")
-                            self.app.push_screen(MessageScreen(f"Error rejecting verification: {e}"))
+                            self.app.push_screen(MessageScreen(
+                                f"Error rejecting verification: {e}\n\n"
+                                f"SAS state: {self.sas.state.name if hasattr(self.sas.state, 'name') else self.sas.state}\n"
+                                f"Other key set: {self.sas.other_key_set()}"
+                            ))
                 
                 self.app.push_screen(VerificationScreen(self, sas, emoji_display, device_info))
         
