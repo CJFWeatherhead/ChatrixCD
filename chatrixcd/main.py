@@ -347,8 +347,19 @@ def main():
             print_config(config, redact_identifiers=args.redact)
         sys.exit(0)
     
-    # Create and run bot
-    bot = ChatrixBot(config)
+    # Determine operating mode
+    # - daemon: Running in background with -D flag (auto-verify devices)
+    # - log: Log-only mode with -L flag (interactive CLI verification)
+    # - tui: Interactive TUI mode (default if terminal available)
+    if args.daemon:
+        mode = 'daemon'
+    elif args.log_only:
+        mode = 'log'
+    else:
+        mode = 'tui' if sys.stdin.isatty() else 'log'
+    
+    # Create bot with appropriate mode
+    bot = ChatrixBot(config, mode=mode)
     
     # Determine if we should use TUI
     # Use TUI if:
