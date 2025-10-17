@@ -11,7 +11,7 @@ from chatrixcd.bot import ChatrixBot
 from chatrixcd.redactor import SensitiveInfoRedactor, RedactingFilter
 
 
-def setup_logging(verbosity: int = 0, color: bool = False, redact: bool = False, log_file: str = 'chatrixcd.log'):
+def setup_logging(verbosity: int = 0, color: bool = False, redact: bool = False, log_file: str = 'chatrixcd.log', tui_mode: bool = False):
     """Setup logging configuration.
     
     Args:
@@ -19,6 +19,7 @@ def setup_logging(verbosity: int = 0, color: bool = False, redact: bool = False,
         color: Enable colored logging output
         redact: Enable redaction of sensitive information
         log_file: Path to log file (default: chatrixcd.log)
+        tui_mode: If True, only log to file (no console output to avoid TUI interference)
     """
     # Determine log level based on verbosity
     if verbosity == 0:
@@ -28,8 +29,12 @@ def setup_logging(verbosity: int = 0, color: bool = False, redact: bool = False,
     else:
         level = logging.DEBUG
     
-    # Setup format with optional color support
-    if color:
+    # In TUI mode, only log to file (no console output)
+    # This prevents logs from interfering with the TUI display
+    if tui_mode:
+        handlers = [logging.FileHandler(log_file)]
+    # Setup format with optional color support for console mode
+    elif color:
         try:
             import colorlog
             handler = colorlog.StreamHandler(sys.stdout)
@@ -257,8 +262,22 @@ def main():
     config = Config(config_file=args.config)
     log_file = config.get('bot.log_file', 'chatrixcd.log')
     
+    # Determine if we'll use TUI mode (before setting up logging)
+    # TUI is used when:
+    # - Not in daemon mode (-d)
+    # - Not in log-only mode (-L)
+    # - Running in an interactive terminal
+    will_use_tui = not args.daemon and not args.log_only and sys.stdin.isatty()
+    
     # Setup logging with verbosity, color, and redaction options
-    setup_logging(verbosity=args.verbosity, color=args.color, redact=args.redact, log_file=log_file)
+    # In TUI mode, only log to file (no console output) to avoid interference
+    setup_logging(
+        verbosity=args.verbosity, 
+        color=args.color, 
+        redact=args.redact, 
+        log_file=log_file,
+        tui_mode=will_use_tui
+    )
     logger = logging.getLogger(__name__)
     
     # Daemonize if requested (Unix/Linux only)
@@ -269,7 +288,8 @@ def main():
         logger.info("Entering daemon mode...")
         daemonize()
         # Re-setup logging after daemonization
-        setup_logging(verbosity=args.verbosity, color=False, redact=args.redact, log_file=log_file)  # No color in daemon mode
+        # Daemon mode never uses TUI, so tui_mode=False
+        setup_logging(verbosity=args.verbosity, color=False, redact=args.redact, log_file=log_file, tui_mode=False)  # No color in daemon mode
         logger = logging.getLogger(__name__)
     
     logger.info(f"ChatrixCD {__version__} starting...")
