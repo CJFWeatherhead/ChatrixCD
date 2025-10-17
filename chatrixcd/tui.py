@@ -152,6 +152,7 @@ class SessionsScreen(Screen):
         with ScrollableContainer():
             yield Static("[bold cyan]Session Management[/bold cyan]\n", id="title")
             yield Button("View Encryption Sessions", id="view_sessions", variant="primary")
+            yield Button("View Pending Verification Requests", id="view_pending_verifications")
             yield Button("Verify Device (Emoji)", id="verify_emoji")
             yield Button("Verify Device (QR Code)", id="verify_qr")
             yield Button("Show Fingerprint", id="show_fingerprint")
@@ -162,6 +163,8 @@ class SessionsScreen(Screen):
         """Handle button presses."""
         if event.button.id == "view_sessions":
             await self.show_sessions_list()
+        elif event.button.id == "view_pending_verifications":
+            await self.show_pending_verifications()
         elif event.button.id == "verify_emoji":
             await self.show_emoji_verification()
         elif event.button.id == "verify_qr":
@@ -170,6 +173,46 @@ class SessionsScreen(Screen):
             await self.show_device_fingerprint()
         elif event.button.id == "reset_olm":
             await self.reset_olm_sessions()
+    
+    async def show_pending_verifications(self):
+        """Display list of pending verification requests."""
+        if not self.tui_app.bot or not self.tui_app.bot.client or not self.tui_app.bot.client.olm:
+            self.app.push_screen(MessageScreen("Encryption is not enabled."))
+            return
+        
+        client = self.tui_app.bot.client
+        pending = []
+        
+        # Check for active key verifications
+        if hasattr(client, 'key_verifications') and client.key_verifications:
+            for transaction_id, verification in client.key_verifications.items():
+                pending.append({
+                    'transaction_id': transaction_id,
+                    'user_id': getattr(verification, 'user_id', 'Unknown'),
+                    'device_id': getattr(verification, 'device_id', 'Unknown'),
+                    'type': type(verification).__name__
+                })
+        
+        if not pending:
+            self.app.push_screen(MessageScreen(
+                "[bold cyan]Pending Verification Requests[/bold cyan]\n\n"
+                "No pending verification requests.\n\n"
+                "[dim]When another device initiates verification with this bot,\n"
+                "it will appear here. You can then complete the verification\n"
+                "using the 'Verify Device (Emoji)' option.[/dim]"
+            ))
+            return
+        
+        # Display pending verifications
+        message = "[bold cyan]Pending Verification Requests[/bold cyan]\n\n"
+        for ver in pending:
+            message += f"[bold]Transaction:[/bold] {ver['transaction_id'][:16]}...\n"
+            message += f"[bold]User:[/bold] {ver['user_id']}\n"
+            message += f"[bold]Device:[/bold] {ver['device_id']}\n"
+            message += f"[bold]Type:[/bold] {ver['type']}\n\n"
+        
+        message += "[dim]Use 'Verify Device (Emoji)' to respond to these requests.[/dim]"
+        self.app.push_screen(MessageScreen(message))
     
     async def show_sessions_list(self):
         """Display list of encryption sessions."""
@@ -247,7 +290,64 @@ class SessionsScreen(Screen):
         await self.show_device_selection_for_verification(unverified_devices)
     
     async def show_device_selection_for_verification(self, devices: List[Dict[str, Any]]):
-        """Show device selection screen for verification."""
+        """Show device selection screen for verification.
+        
+        First shows user selection, then device selection for chosen user.
+        """
+        from textual.screen import Screen as BaseScreen
+        
+        # Group devices by user
+        devices_by_user = {}
+        for device_info in devices:
+            user_id = device_info['user_id']
+            if user_id not in devices_by_user:
+                devices_by_user[user_id] = []
+            devices_by_user[user_id].append(device_info)
+        
+        # If only one user, skip user selection
+        if len(devices_by_user) == 1:
+            user_id = list(devices_by_user.keys())[0]
+            await self._show_user_devices_for_verification(user_id, devices_by_user[user_id])
+            return
+        
+        # Show user selection screen first
+        class UserSelectionScreen(BaseScreen):
+            """Screen for selecting a user to verify."""
+            
+            BINDINGS = [
+                Binding("escape", "app.pop_screen", "Back", priority=True),
+            ]
+            
+            def __init__(self, parent_sessions_screen, devices_by_user, **kwargs):
+                super().__init__(**kwargs)
+                self.parent_sessions_screen = parent_sessions_screen
+                self.devices_by_user = devices_by_user
+            
+            def compose(self) -> ComposeResult:
+                yield Header()
+                with ScrollableContainer():
+                    yield Static("[bold cyan]Select User to Verify[/bold cyan]\n", id="title")
+                    yield Static("[dim]Choose a user to see their unverified devices:[/dim]\n")
+                    
+                    for idx, (user_id, user_devices) in enumerate(self.devices_by_user.items()):
+                        device_count = len(user_devices)
+                        button_label = f"{user_id}\n[dim]{device_count} unverified device(s)[/dim]"
+                        yield Button(button_label, id=f"user_{idx}")
+                yield Footer()
+            
+            async def on_button_pressed(self, event: Button.Pressed) -> None:
+                button_id = event.button.id
+                if button_id.startswith("user_"):
+                    idx = int(button_id.split("_")[1])
+                    user_id = list(self.devices_by_user.keys())[idx]
+                    user_devices = self.devices_by_user[user_id]
+                    self.app.pop_screen()
+                    await self.parent_sessions_screen._show_user_devices_for_verification(user_id, user_devices)
+        
+        self.app.push_screen(UserSelectionScreen(self, devices_by_user))
+    
+    async def _show_user_devices_for_verification(self, user_id: str, devices: List[Dict[str, Any]]):
+        """Show device selection for a specific user."""
         from textual.screen import Screen as BaseScreen
         
         class DeviceSelectionScreen(BaseScreen):
@@ -255,23 +355,24 @@ class SessionsScreen(Screen):
                 Binding("escape", "app.pop_screen", "Back", priority=True),
             ]
             
-            def __init__(self, tui_app, devices: List[Dict[str, Any]], **kwargs):
+            def __init__(self, parent_sessions_screen, user_id: str, devices: List[Dict[str, Any]], **kwargs):
                 super().__init__(**kwargs)
-                self.tui_app = tui_app
+                self.parent_sessions_screen = parent_sessions_screen
+                self.user_id = user_id
                 self.devices = devices
             
             def compose(self) -> ComposeResult:
                 yield Header()
                 with ScrollableContainer():
-                    yield Static("[bold cyan]Select Device to Verify[/bold cyan]\n", id="title")
+                    yield Static(f"[bold cyan]Select Device to Verify[/bold cyan]\n", id="title")
+                    yield Static(f"[bold]User:[/bold] {self.user_id}\n")
                     yield Static("[dim]Choose a device to start emoji verification:[/dim]\n")
                     
                     for idx, device_info in enumerate(self.devices):
-                        user_id = device_info['user_id']
                         device_id = device_info['device_id']
                         device_name = device_info['device_name']
                         
-                        button_text = f"{user_id}\n  Device: {device_name} ({device_id})"
+                        button_text = f"{device_name}\n[dim]{device_id}[/dim]"
                         yield Button(button_text, id=f"device_{idx}", variant="primary")
                 yield Footer()
             
@@ -288,7 +389,7 @@ class SessionsScreen(Screen):
                 from nio.crypto import Sas
                 
                 try:
-                    client = self.tui_app.bot.client
+                    client = self.parent_sessions_screen.tui_app.bot.client
                     device = device_info['device']
                     
                     # Start key verification
@@ -336,9 +437,9 @@ class SessionsScreen(Screen):
                         Binding("escape", "app.pop_screen", "Cancel", priority=True),
                     ]
                     
-                    def __init__(self, parent_screen, sas, emoji_display: str, device_info: Dict[str, Any], **kwargs):
+                    def __init__(self, device_selection_screen, sas, emoji_display: str, device_info: Dict[str, Any], **kwargs):
                         super().__init__(**kwargs)
-                        self.parent_screen = parent_screen
+                        self.device_selection_screen = device_selection_screen
                         self.sas = sas
                         self.emoji_display = emoji_display
                         self.device_info = device_info
@@ -367,7 +468,7 @@ class SessionsScreen(Screen):
                             self.sas.accept_sas()
                             
                             # Send the MAC
-                            client = self.parent_screen.tui_app.bot.client
+                            client = self.device_selection_screen.parent_sessions_screen.tui_app.bot.client
                             await client.send_to_device_messages()
                             
                             self.app.push_screen(MessageScreen("✅ Verification successful!\n\nThe device has been verified and marked as trusted."))
@@ -382,7 +483,7 @@ class SessionsScreen(Screen):
                         try:
                             self.sas.reject_sas()
                             
-                            client = self.parent_screen.tui_app.bot.client
+                            client = self.device_selection_screen.parent_sessions_screen.tui_app.bot.client
                             await client.send_to_device_messages()
                             
                             self.app.push_screen(MessageScreen("❌ Verification rejected.\n\nThe emojis did not match. The device was not verified."))
@@ -394,7 +495,7 @@ class SessionsScreen(Screen):
                 
                 self.app.push_screen(VerificationScreen(self, sas, emoji_display, device_info))
         
-        self.app.push_screen(DeviceSelectionScreen(self.tui_app, devices))
+        self.app.push_screen(DeviceSelectionScreen(self, user_id, devices))
     
     async def show_qr_verification(self):
         """Show QR code for device verification."""
@@ -702,31 +803,31 @@ class SetScreen(Screen):
             
             # Matrix configuration options
             yield Static("[bold]Matrix Configuration:[/bold]")
-            yield Button(self._get_setting_label("matrix.homeserver"), id="edit_matrix.homeserver")
-            yield Button(self._get_setting_label("matrix.user_id"), id="edit_matrix.user_id")
-            yield Button(self._get_setting_label("matrix.device_id"), id="edit_matrix.device_id")
-            yield Button(self._get_setting_label("matrix.device_name"), id="edit_matrix.device_name")
-            yield Button(self._get_setting_label("matrix.auth_type"), id="edit_matrix.auth_type")
-            yield Button(self._get_setting_label("matrix.password"), id="edit_matrix.password")
-            yield Button(self._get_setting_label("matrix.access_token"), id="edit_matrix.access_token")
-            yield Button(self._get_setting_label("matrix.store_path"), id="edit_matrix.store_path")
+            yield Button(self._get_setting_label("matrix.homeserver"), id="edit_matrix_homeserver")
+            yield Button(self._get_setting_label("matrix.user_id"), id="edit_matrix_user_id")
+            yield Button(self._get_setting_label("matrix.device_id"), id="edit_matrix_device_id")
+            yield Button(self._get_setting_label("matrix.device_name"), id="edit_matrix_device_name")
+            yield Button(self._get_setting_label("matrix.auth_type"), id="edit_matrix_auth_type")
+            yield Button(self._get_setting_label("matrix.password"), id="edit_matrix_password")
+            yield Button(self._get_setting_label("matrix.access_token"), id="edit_matrix_access_token")
+            yield Button(self._get_setting_label("matrix.store_path"), id="edit_matrix_store_path")
             
             # Semaphore configuration options
             yield Static("\n[bold]Semaphore Configuration:[/bold]")
-            yield Button(self._get_setting_label("semaphore.url"), id="edit_semaphore.url")
-            yield Button(self._get_setting_label("semaphore.api_token"), id="edit_semaphore.api_token")
-            yield Button(self._get_setting_label("semaphore.ssl_verify"), id="edit_semaphore.ssl_verify")
+            yield Button(self._get_setting_label("semaphore.url"), id="edit_semaphore_url")
+            yield Button(self._get_setting_label("semaphore.api_token"), id="edit_semaphore_api_token")
+            yield Button(self._get_setting_label("semaphore.ssl_verify"), id="edit_semaphore_ssl_verify")
             
             # Bot configuration options
             yield Static("\n[bold]Bot Configuration:[/bold]")
-            yield Button(self._get_setting_label("bot.command_prefix"), id="edit_bot.command_prefix")
-            yield Button(self._get_setting_label("bot.allowed_rooms"), id="edit_bot.allowed_rooms")
-            yield Button(self._get_setting_label("bot.admin_users"), id="edit_bot.admin_users")
-            yield Button(self._get_setting_label("bot.greetings_enabled"), id="edit_bot.greetings_enabled")
-            yield Button(self._get_setting_label("bot.greeting_rooms"), id="edit_bot.greeting_rooms")
-            yield Button(self._get_setting_label("bot.startup_message"), id="edit_bot.startup_message")
-            yield Button(self._get_setting_label("bot.shutdown_message"), id="edit_bot.shutdown_message")
-            yield Button(self._get_setting_label("bot.log_file"), id="edit_bot.log_file")
+            yield Button(self._get_setting_label("bot.command_prefix"), id="edit_bot_command_prefix")
+            yield Button(self._get_setting_label("bot.allowed_rooms"), id="edit_bot_allowed_rooms")
+            yield Button(self._get_setting_label("bot.admin_users"), id="edit_bot_admin_users")
+            yield Button(self._get_setting_label("bot.greetings_enabled"), id="edit_bot_greetings_enabled")
+            yield Button(self._get_setting_label("bot.greeting_rooms"), id="edit_bot_greeting_rooms")
+            yield Button(self._get_setting_label("bot.startup_message"), id="edit_bot_startup_message")
+            yield Button(self._get_setting_label("bot.shutdown_message"), id="edit_bot_shutdown_message")
+            yield Button(self._get_setting_label("bot.log_file"), id="edit_bot_log_file")
             
             yield Static("\n[bold]Actions:[/bold]")
             yield Button("Apply Changes (Runtime Only)", id="apply_button", variant="primary")
@@ -748,7 +849,8 @@ class SetScreen(Screen):
         button_id = event.button.id
         
         if button_id.startswith("edit_"):
-            config_key = button_id[5:]  # Remove "edit_" prefix
+            # Remove "edit_" prefix and convert underscores back to dots for config key
+            config_key = button_id[5:].replace('_', '.')
             await self.edit_config_value(config_key)
         elif button_id == "apply_button":
             await self.apply_changes()
@@ -908,31 +1010,31 @@ class OIDCAuthScreen(ModalScreen):
         with ScrollableContainer():
             yield Static("[bold cyan]OIDC/SSO Authentication Required[/bold cyan]\n", id="title")
             
-            yield Static("[bold]Please complete authentication in your browser:[/bold]\n")
-            # Use plain text to avoid markup parsing issues with URLs containing special characters
+            yield Static("[bold yellow]Step 1:[/bold yellow] [bold]Copy and open this URL in your browser:[/bold]\n")
+            # Use TextArea with read_only=True to allow text selection in terminals
             yield TextArea(self.sso_url, read_only=True, id="sso_url")
-            yield Static("[dim](Copy the URL above and paste it into your browser)[/dim]\n")
+            yield Static("[dim]↑ Select and copy the URL above (you can use your mouse or keyboard)[/dim]\n")
             
             if self.identity_providers:
-                yield Static(f"[bold]Identity Providers:[/bold]")
+                yield Static(f"[bold]Available Identity Providers:[/bold]")
                 for idp in self.identity_providers:
                     provider_name = idp.get('name', idp.get('id', 'Unknown'))
                     yield Static(f"  • {provider_name}")
                 yield Static("")
             
-            yield Static(f"[bold]After authentication, you will be redirected to:[/bold]")
-            yield Static(f"{self.redirect_url}\n")
+            yield Static(f"[bold yellow]Step 2:[/bold yellow] [bold]After browser authentication, you'll be redirected to:[/bold]")
+            yield Static(f"  {self.redirect_url}")
+            yield Static("[dim]The redirect URL will contain a 'loginToken' parameter[/dim]\n")
             
-            yield Static("[bold]Instructions:[/bold]")
-            yield Static("1. Open the SSO URL in your browser")
-            yield Static("2. Complete authentication with your OIDC provider")
-            yield Static("3. Copy the callback URL (contains 'loginToken' parameter)")
-            yield Static("4. Paste the URL or just the token below\n")
+            yield Static("[bold yellow]Step 3:[/bold yellow] [bold]Paste the callback URL or just the token in the field below:[/bold]")
+            yield Static("[dim]You can paste either the full URL or just the token value[/dim]")
+            yield Input(
+                placeholder="Paste here: https://example.com/callback?loginToken=... or just the token", 
+                id="token_input"
+            )
+            yield Static("")
             
-            yield Label("Paste callback URL or loginToken:")
-            yield Input(placeholder="https://example.com/callback?loginToken=...", id="token_input")
-            
-            yield Button("Submit", id="submit_button", variant="primary")
+            yield Button("Submit Token", id="submit_button", variant="primary")
             yield Button("Cancel", id="cancel_button")
         yield Footer()
     
