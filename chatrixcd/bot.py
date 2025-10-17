@@ -585,6 +585,13 @@ class ChatrixBot:
                 logger.debug(
                     f"Processing decrypted message from {event.sender} in {room.display_name}"
                 )
+                
+                # Copy server_timestamp from the MegolmEvent to the decrypted event
+                # The decrypted event might not have this attribute set properly,
+                # so we ensure it has the correct timestamp for filtering old messages
+                if not hasattr(decrypted_event, 'server_timestamp'):
+                    decrypted_event.server_timestamp = event.server_timestamp
+                
                 # Process the decrypted message using the regular message callback
                 await self.message_callback(room, decrypted_event)
             else:

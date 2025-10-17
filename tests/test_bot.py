@@ -729,6 +729,47 @@ class TestChatrixBot(unittest.TestCase):
         # Verify the message was NOT processed (only text messages are handled)
         bot.command_handler.handle_message.assert_not_called()
 
+    def test_megolm_event_preserves_timestamp_for_decrypted_messages(self):
+        """Test that decrypted messages use the MegolmEvent's timestamp, not the decrypted event's timestamp."""
+        bot = ChatrixBot(self.config)
+        
+        # Mock the command handler
+        bot.command_handler.handle_message = AsyncMock()
+        
+        # Create mock room
+        room = MagicMock(spec=MatrixRoom)
+        room.display_name = "Test Room"
+        room.room_id = "!test:example.com"
+        
+        # Create a decrypted text message WITHOUT server_timestamp set
+        decrypted_event = MagicMock(spec=RoomMessageText)
+        decrypted_event.sender = "@user:example.com"
+        decrypted_event.body = "!cd help"
+        # Intentionally NOT setting server_timestamp to simulate real-world scenario
+        # where decrypted event might not have this attribute
+        
+        # Create a MegolmEvent with proper timestamp
+        event = MagicMock(spec=MegolmEvent)
+        event.sender = "@user:example.com"
+        event.session_id = "test_session_id"
+        event.server_timestamp = bot.start_time + 1000  # Message sent after bot started
+        event.decrypted = decrypted_event  # Message was successfully decrypted
+        
+        # Call the callback
+        self.loop.run_until_complete(
+            bot.megolm_event_callback(room, event)
+        )
+        
+        # Verify the message WAS processed (timestamp check should use MegolmEvent's timestamp)
+        bot.command_handler.handle_message.assert_called_once()
+        
+        # Check that the decrypted event was passed with the timestamp from MegolmEvent
+        call_args = bot.command_handler.handle_message.call_args[0]
+        self.assertEqual(call_args[0], room)
+        self.assertEqual(call_args[1], decrypted_event)
+        # The decrypted event should now have the server_timestamp attribute set
+        self.assertEqual(decrypted_event.server_timestamp, event.server_timestamp)
+
     def test_sync_callback_uploads_keys(self):
         """Test that sync callback uploads keys when needed."""
         bot = ChatrixBot(self.config)
