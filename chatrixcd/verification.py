@@ -75,10 +75,23 @@ class DeviceVerificationManager:
         
         if hasattr(self.client, 'key_verifications') and self.client.key_verifications:
             for transaction_id, verification in self.client.key_verifications.items():
+                # For Sas verifications, user_id and device_id are in other_olm_device
+                if isinstance(verification, Sas):
+                    other_device = getattr(verification, 'other_olm_device', None)
+                    if other_device:
+                        user_id = getattr(other_device, 'user_id', 'Unknown')
+                        device_id = getattr(other_device, 'id', 'Unknown')
+                    else:
+                        user_id = 'Unknown'
+                        device_id = 'Unknown'
+                else:
+                    user_id = getattr(verification, 'user_id', 'Unknown')
+                    device_id = getattr(verification, 'device_id', 'Unknown')
+                
                 pending.append({
                     'transaction_id': transaction_id,
-                    'user_id': getattr(verification, 'user_id', 'Unknown'),
-                    'device_id': getattr(verification, 'device_id', 'Unknown'),
+                    'user_id': user_id,
+                    'device_id': device_id,
                     'type': type(verification).__name__,
                     'verification': verification
                 })
@@ -101,6 +114,9 @@ class DeviceVerificationManager:
             if isinstance(resp, ToDeviceError):
                 logger.error(f"Failed to start verification: {resp.message}")
                 return None
+            
+            # Send the start message to the other device
+            await self.client.send_to_device_messages()
             
             # Wait for the verification to be set up
             await asyncio.sleep(1)
@@ -131,6 +147,8 @@ class DeviceVerificationManager:
         try:
             if not sas.we_started_it and sas.state == SasState.created:
                 await self.client.accept_key_verification(sas.transaction_id)
+                # Send the accept message to the other device
+                await self.client.send_to_device_messages()
                 await asyncio.sleep(0.5)
                 return True
             return True
@@ -239,6 +257,8 @@ class DeviceVerificationManager:
             
             # Accept the verification request
             await self.client.accept_key_verification(transaction_id)
+            # Send the accept message to the other device
+            await self.client.send_to_device_messages()
             logger.info(f"Auto-accepted verification request {transaction_id}")
             
             # Wait for key exchange
