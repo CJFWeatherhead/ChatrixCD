@@ -6,7 +6,7 @@ nav_order: 5
 
 # Architecture Overview
 
-ChatrixCD is built with a modular, asynchronous architecture for reliable Matrix bot operation.
+ChatrixCD is built with a modular, asynchronous architecture for reliable Matrix bot operation. For detailed technical documentation, implementation details, and design patterns, see the comprehensive [ARCHITECTURE.md](https://github.com/CJFWeatherhead/ChatrixCD/blob/main/ARCHITECTURE.md) in the repository root.
 
 ## System Architecture
 

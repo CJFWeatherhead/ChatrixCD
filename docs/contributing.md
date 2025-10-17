@@ -6,7 +6,7 @@ nav_order: 6
 
 # Contributing to ChatrixCD
 
-Thank you for your interest in contributing to ChatrixCD!
+Thank you for your interest in contributing to ChatrixCD! For comprehensive contribution guidelines including development setup, coding standards, and our AI/LLM development notice, see the full [CONTRIBUTING.md](https://github.com/CJFWeatherhead/ChatrixCD/blob/main/CONTRIBUTING.md) in the repository root.
 
 ## How to Contribute
 
