@@ -15,6 +15,21 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Fixed
+- **Device Verification**: Fixed timeout issues when verifying devices
+  - Verification requests now properly display user ID and device ID instead of "Unknown"
+  - Verification accept/start messages are now correctly sent to other devices
+  - Added `send_to_device_messages()` calls after verification operations
+  - Fixed `get_pending_verifications()` to extract device info from `Sas.other_olm_device`
+
+### Added
+- **Comprehensive E2E Verification Tests**: Added 10 new end-to-end tests for device verification
+  - Full verification flow test from start to finish
+  - Auto-verification flow test for daemon mode
+  - Interactive verification flow tests (accept/reject scenarios)
+  - Tests for proper user_id and device_id extraction
+  - Tests for to-device message sending
+
 ## [2025.10.17.2.0.0] - 2025-10-17
 
 ### Added
