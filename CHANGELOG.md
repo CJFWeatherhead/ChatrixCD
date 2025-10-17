@@ -15,6 +15,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+## [2025.10.17.2.0.0] - 2025-10-17
+
 ### Added
 - **Command Aliases**: Create custom shortcuts for frequently used commands
   - Manage aliases through the TUI (press `x` in main menu) or edit `aliases.json` file
@@ -536,6 +538,8 @@ ChatrixCD/
 
 
 
+
+- **2025.10.17.2.0.0** (2025-10-17)
 - **2025.10.14.1.0.0** (2025-10-14)
 - **2025.10.12.0.0.1** (2025-10-12)
 - **2025.10.8** (2025-10-10)
