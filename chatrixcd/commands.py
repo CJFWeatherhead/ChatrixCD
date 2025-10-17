@@ -587,7 +587,9 @@ class CommandHandler:
             f"Doing it now! **{template_name}** is launching... 🎯",
             f"Let's go! **{template_name}** starting up... ⚡"
         ]
-        await self.bot.send_message(room_id, random.choice(start_responses))
+        start_message = random.choice(start_responses)
+        html_start_message = self.markdown_to_html(start_message)
+        await self.bot.send_message(room_id, start_message, html_start_message)
         
         task = await self.semaphore.start_task(project_id, template_id)
         
@@ -648,33 +650,29 @@ class CommandHandler:
                 last_notification_time = current_time
                 
                 if status == 'running':
-                    await self.bot.send_message(
-                        room_id,
-                        f"🔄 Task **{task_display}** is now running..."
-                    )
+                    message = f"🔄 Task **{task_display}** is now running..."
+                    html_message = self.markdown_to_html(message)
+                    await self.bot.send_message(room_id, message, html_message)
                 elif status == 'success':
-                    event_id = await self.bot.send_message(
-                        room_id,
-                        f"✅ Task **{task_display}** completed successfully!"
-                    )
+                    message = f"✅ Task **{task_display}** completed successfully!"
+                    html_message = self.markdown_to_html(message)
+                    event_id = await self.bot.send_message(room_id, message, html_message)
                     # React with party emoji
                     if event_id:
                         await self.bot.send_reaction(room_id, event_id, "🎉")
                     del self.active_tasks[task_id]
                     break
                 elif status in ('error', 'stopped'):
-                    await self.bot.send_message(
-                        room_id,
-                        f"❌ Task **{task_display}** failed or was stopped. Status: {status}"
-                    )
+                    message = f"❌ Task **{task_display}** failed or was stopped. Status: {status}"
+                    html_message = self.markdown_to_html(message)
+                    await self.bot.send_message(room_id, message, html_message)
                     del self.active_tasks[task_id]
                     break
             elif status == 'running' and (current_time - last_notification_time) >= notification_interval:
                 # Send periodic update for long-running tasks
-                await self.bot.send_message(
-                    room_id,
-                    f"⏳ Task **{task_display}** is still running..."
-                )
+                message = f"⏳ Task **{task_display}** is still running..."
+                html_message = self.markdown_to_html(message)
+                await self.bot.send_message(room_id, message, html_message)
                 last_notification_time = current_time
 
     async def check_status(self, room_id: str, args: list):
@@ -771,10 +769,14 @@ class CommandHandler:
         success = await self.semaphore.stop_task(project_id, task_id)
         
         if success:
-            await self.bot.send_message(room_id, f"🛑 Task **{task_display}** stopped")
+            message = f"🛑 Task **{task_display}** stopped"
+            html_message = self.markdown_to_html(message)
+            await self.bot.send_message(room_id, message, html_message)
             del self.active_tasks[task_id]
         else:
-            await self.bot.send_message(room_id, f"❌ Failed to stop task **{task_display}**")
+            message = f"❌ Failed to stop task **{task_display}**"
+            html_message = self.markdown_to_html(message)
+            await self.bot.send_message(room_id, message, html_message)
 
     async def get_logs(self, room_id: str, args: list):
         """Get logs for a task.
