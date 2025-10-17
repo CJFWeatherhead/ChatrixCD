@@ -306,7 +306,19 @@ def main():
     
     # Show config and exit if requested
     if args.show_config:
-        print_config(config, redact_identifiers=args.redact)
+        # Use TUI for show-config if not in redact mode and not verbose mode
+        use_tui_for_config = not args.redact and args.verbosity == 0 and sys.stdin.isatty()
+        
+        if use_tui_for_config:
+            # Show config in TUI window
+            from chatrixcd.tui import show_config_tui
+            try:
+                asyncio.run(show_config_tui(config))
+            except KeyboardInterrupt:
+                pass
+        else:
+            # Show config in console (original behavior)
+            print_config(config, redact_identifiers=args.redact)
         sys.exit(0)
     
     # Create and run bot
@@ -330,7 +342,13 @@ def main():
     except KeyboardInterrupt:
         logger.info("Received keyboard interrupt, shutting down...")
     except Exception as e:
-        logger.error(f"Fatal error: {e}", exc_info=True)
+        # Show stacktrace only in verbose mode (-v, -vv, -vvv)
+        if args.verbosity >= 1:
+            logger.error(f"Fatal error: {e}", exc_info=True)
+        else:
+            logger.error(f"Fatal error: {e}")
+            print(f"\nError: {e}", file=sys.stderr)
+            print("Run with -v or -vv for more details", file=sys.stderr)
         sys.exit(1)
 
 
@@ -416,9 +434,36 @@ async def run_tui_with_bot(bot, config, use_color: bool):
     # Set the login task on the TUI app
     tui_app.login_task = perform_login_and_sync
     
+    # Wrap login task with error handling
+    async def perform_login_with_error_handling():
+        """Wrap login in error handler to show user-friendly errors."""
+        try:
+            await perform_login_and_sync()
+        except Exception as e:
+            logger.error(f"Error during login/sync: {e}", exc_info=logger.isEnabledFor(logging.DEBUG))
+            # Show error to user in TUI
+            from chatrixcd.tui import MessageScreen
+            error_msg = f"[bold red]Error during login/sync:[/bold red]\n\n{str(e)}"
+            if not logger.isEnabledFor(logging.DEBUG):
+                error_msg += "\n\n[dim]Run with -v or -vv for more details[/dim]"
+            tui_app.push_screen(MessageScreen(error_msg))
+    
+    # Override the login task with error-handling version
+    tui_app.login_task = perform_login_with_error_handling
+    
     # Run the TUI (login will happen in on_mount)
     try:
         await tui_app.run_async()
+    except Exception as e:
+        # Catch any unhandled TUI exceptions
+        logger.error(f"TUI error: {e}", exc_info=logger.isEnabledFor(logging.DEBUG))
+        if logger.isEnabledFor(logging.DEBUG):
+            # Only show stacktrace in debug mode (-v, -vv, -vvv)
+            raise
+        else:
+            print(f"\nError: {e}", file=sys.stderr)
+            print("Run with -v or -vv for more details", file=sys.stderr)
+            sys.exit(1)
     finally:
         # Clean up
         if hasattr(tui_app, 'bot_task') and tui_app.bot_task:

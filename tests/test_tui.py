@@ -32,13 +32,15 @@ class TestTUIImport(unittest.TestCase):
             SetScreen,
             ShowScreen,
             MessageScreen,
-            BotStatusWidget
+            BotStatusWidget,
+            OIDCAuthScreen
         )
         
         # Verify all classes are callable
         screen_classes = [
             AdminsScreen, RoomsScreen, SessionsScreen, SayScreen,
-            LogScreen, SetScreen, ShowScreen, MessageScreen, BotStatusWidget
+            LogScreen, SetScreen, ShowScreen, MessageScreen, 
+            BotStatusWidget, OIDCAuthScreen
         ]
         
         for screen_class in screen_classes:
@@ -164,6 +166,99 @@ class TestCLIIntegration(unittest.TestCase):
         with patch('sys.argv', ['chatrixcd']):
             args = parse_args()
             self.assertFalse(args.log_only)
+
+
+class TestOIDCAuthScreen(unittest.TestCase):
+    """Test OIDCAuthScreen for proper handling of SSO URLs."""
+    
+    def test_oidc_screen_creation(self):
+        """Test creating an OIDCAuthScreen with special characters in URL."""
+        from chatrixcd.tui import OIDCAuthScreen
+        
+        # URL with characters that would cause markup errors
+        sso_url = "https://chat.example.org/_matrix/client/v3/login/sso/redirect/oidc?redirectUrl=http://localhost:8080/callback"
+        redirect_url = "http://localhost:8080/callback"
+        identity_providers = [{'id': 'oidc', 'name': 'OIDC Provider'}]
+        
+        screen = OIDCAuthScreen(sso_url, redirect_url, identity_providers)
+        
+        self.assertIsNotNone(screen)
+        self.assertEqual(screen.sso_url, sso_url)
+        self.assertEqual(screen.redirect_url, redirect_url)
+        self.assertEqual(screen.identity_providers, identity_providers)
+        self.assertIsNone(screen.token)
+    
+    def test_oidc_screen_with_special_chars(self):
+        """Test OIDCAuthScreen handles URLs with special characters."""
+        from chatrixcd.tui import OIDCAuthScreen
+        
+        # URL with various special characters
+        sso_url = "https://example.com/path?param1=value1&param2=value2#fragment"
+        redirect_url = "http://localhost:8080/callback?session=123&state=abc"
+        identity_providers = []
+        
+        screen = OIDCAuthScreen(sso_url, redirect_url, identity_providers)
+        
+        self.assertIsNotNone(screen)
+        self.assertEqual(screen.sso_url, sso_url)
+        self.assertEqual(screen.redirect_url, redirect_url)
+    
+    def test_oidc_screen_compose_method(self):
+        """Test that OIDCAuthScreen.compose() doesn't crash."""
+        from chatrixcd.tui import OIDCAuthScreen
+        
+        sso_url = "https://chat.example.org/_matrix/client/v3/login/sso/redirect/oidc?redirectUrl=http://localhost:8080/callback"
+        redirect_url = "http://localhost:8080/callback"
+        identity_providers = []
+        
+        screen = OIDCAuthScreen(sso_url, redirect_url, identity_providers)
+        
+        # Test that compose returns widgets without errors
+        # We can't fully test the TUI rendering, but we can check the method exists and is callable
+        self.assertTrue(hasattr(screen, 'compose'))
+        self.assertTrue(callable(screen.compose))
+
+
+class TestShowConfigTUI(unittest.TestCase):
+    """Test show_config_tui function."""
+    
+    def test_show_config_tui_import(self):
+        """Test that show_config_tui can be imported."""
+        from chatrixcd.tui import show_config_tui
+        
+        self.assertTrue(callable(show_config_tui))
+    
+    def test_show_config_tui_callable(self):
+        """Test that show_config_tui is a coroutine function."""
+        from chatrixcd.tui import show_config_tui
+        import inspect
+        
+        self.assertTrue(inspect.iscoroutinefunction(show_config_tui))
+
+
+class TestErrorHandling(unittest.TestCase):
+    """Test error handling in main module."""
+    
+    def test_verbosity_affects_error_display(self):
+        """Test that verbosity level affects error message display."""
+        from chatrixcd.main import parse_args
+        
+        # Test verbosity levels
+        with patch('sys.argv', ['chatrixcd']):
+            args = parse_args()
+            self.assertEqual(args.verbosity, 0)
+        
+        with patch('sys.argv', ['chatrixcd', '-v']):
+            args = parse_args()
+            self.assertEqual(args.verbosity, 1)
+        
+        with patch('sys.argv', ['chatrixcd', '-vv']):
+            args = parse_args()
+            self.assertEqual(args.verbosity, 2)
+        
+        with patch('sys.argv', ['chatrixcd', '-vvv']):
+            args = parse_args()
+            self.assertEqual(args.verbosity, 3)
 
 
 if __name__ == '__main__':

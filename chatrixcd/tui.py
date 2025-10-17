@@ -902,13 +902,16 @@ class OIDCAuthScreen(ModalScreen):
     
     def compose(self) -> ComposeResult:
         """Create child widgets."""
+        from textual.widgets import Markdown
+        
         yield Header()
         with ScrollableContainer():
             yield Static("[bold cyan]OIDC/SSO Authentication Required[/bold cyan]\n", id="title")
             
             yield Static("[bold]Please complete authentication in your browser:[/bold]\n")
-            yield Static(f"[link={self.sso_url}]{self.sso_url}[/link]\n", id="sso_url")
-            yield Static("[dim](Click the link or copy/paste it into your browser)[/dim]\n")
+            # Use plain text to avoid markup parsing issues with URLs containing special characters
+            yield TextArea(self.sso_url, read_only=True, id="sso_url")
+            yield Static("[dim](Copy the URL above and paste it into your browser)[/dim]\n")
             
             if self.identity_providers:
                 yield Static(f"[bold]Identity Providers:[/bold]")
@@ -1349,4 +1352,92 @@ async def run_tui(bot, config, use_color: bool = True):
         use_color: Whether to use colors
     """
     app = ChatrixTUI(bot, config, use_color=use_color)
+    await app.run_async()
+
+
+async def show_config_tui(config):
+    """Show configuration in a TUI window.
+    
+    Args:
+        config: Configuration object
+    """
+    import json
+    import copy
+    from chatrixcd.redactor import SensitiveInfoRedactor
+    
+    # Deep copy config to avoid modifying original
+    config_dict = copy.deepcopy(config.config)
+    
+    # Redact sensitive fields
+    sensitive_fields = ['password', 'access_token', 'api_token', 'client_secret', 'oidc_client_secret']
+    
+    def redact_sensitive(obj):
+        """Recursively redact sensitive fields."""
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                if key in sensitive_fields and value:
+                    obj[key] = '***REDACTED***'
+                else:
+                    redact_sensitive(value)
+        elif isinstance(obj, list):
+            for item in obj:
+                redact_sensitive(item)
+    
+    redact_sensitive(config_dict)
+    config_text = json.dumps(config_dict, indent=2)
+    
+    # Create a simple TUI app to display the config
+    class ConfigViewerApp(App):
+        """Simple app to view configuration."""
+        
+        CSS = """
+        Screen {
+            background: $surface;
+        }
+        
+        Header {
+            background: #4A9B7F;
+            color: white;
+        }
+        
+        Footer {
+            background: #2D3238;
+        }
+        
+        Container {
+            height: 100%;
+            padding: 1;
+        }
+        
+        TextArea {
+            height: 90%;
+            margin: 1;
+        }
+        """
+        
+        TITLE = "ChatrixCD Configuration"
+        SUB_TITLE = "Press 'q' or ESC to exit"
+        
+        BINDINGS = [
+            Binding("q", "quit", "Quit", priority=True),
+            Binding("escape", "quit", "Quit", priority=True),
+        ]
+        
+        def __init__(self, config_text: str, **kwargs):
+            super().__init__(**kwargs)
+            self.config_text = config_text
+        
+        def compose(self) -> ComposeResult:
+            """Create child widgets."""
+            yield Header()
+            with Container():
+                yield Static("[bold cyan]Configuration[/bold cyan]\n", id="title")
+                yield TextArea(self.config_text, read_only=True, id="config_area")
+            yield Footer()
+        
+        async def action_quit(self):
+            """Handle quit action."""
+            self.exit()
+    
+    app = ConfigViewerApp(config_text)
     await app.run_async()
