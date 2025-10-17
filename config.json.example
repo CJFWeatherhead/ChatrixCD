@@ -74,8 +74,10 @@
     // Example: ["!roomid1:example.com", "!roomid2:example.com"]
     "allowed_rooms": [],
     
-    // List of admin user IDs (empty = no admins)
+    // List of admin user IDs (empty = all users have admin access)
+    // When specified, only these users can run bot commands
     // Example: ["@admin1:example.com", "@admin2:example.com"]
+    // Note: URL-encoded usernames are supported (e.g., "@user%40domain.com")
     "admin_users": [],
     
     // Enable automatic greeting messages in specified rooms

@@ -79,6 +79,28 @@ class TestCommandHandler(unittest.TestCase):
         self.handler.admin_users = ['@admin:example.com']
         result = self.handler.is_admin('@user:example.com')
         self.assertFalse(result)
+    
+    def test_is_admin_url_encoded_username(self):
+        """Test admin check with URL-encoded username."""
+        self.handler.admin_users = ['@user%40domain.com:example.com']
+        # Test with encoded username
+        result = self.handler.is_admin('@user%40domain.com:example.com')
+        self.assertTrue(result)
+        # Test with decoded username
+        result = self.handler.is_admin('@user@domain.com:example.com')
+        self.assertTrue(result)
+    
+    def test_is_admin_url_encoded_in_config_decoded_in_request(self):
+        """Test admin check when config has encoded username but request is decoded."""
+        self.handler.admin_users = ['@chrisw%40privacyinternational.org:privacyinternational.org']
+        result = self.handler.is_admin('@chrisw@privacyinternational.org:privacyinternational.org')
+        self.assertTrue(result)
+    
+    def test_is_admin_decoded_in_config_encoded_in_request(self):
+        """Test admin check when config has decoded username but request is encoded."""
+        self.handler.admin_users = ['@chrisw@privacyinternational.org:privacyinternational.org']
+        result = self.handler.is_admin('@chrisw%40privacyinternational.org:privacyinternational.org')
+        self.assertTrue(result)
 
     def test_handle_message_ignores_non_command(self):
         """Test that non-command messages are ignored."""
