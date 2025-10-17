@@ -162,6 +162,12 @@ def parse_args():
         help='Run in classic log-only mode (no TUI, only show logs)'
     )
     
+    parser.add_argument(
+        '-m', '--mouse',
+        action='store_true',
+        help='Enable mouse support in TUI (default: disabled)'
+    )
+    
     return parser.parse_args()
 
 
@@ -355,7 +361,7 @@ def main():
         if use_tui:
             # Run with TUI interface
             from chatrixcd.tui import run_tui
-            asyncio.run(run_tui_with_bot(bot, config, args.color))
+            asyncio.run(run_tui_with_bot(bot, config, args.color, args.mouse))
         else:
             # Run in classic log-only mode
             asyncio.run(bot.run())
@@ -372,7 +378,7 @@ def main():
         sys.exit(1)
 
 
-async def run_tui_with_bot(bot, config, use_color: bool):
+async def run_tui_with_bot(bot, config, use_color: bool, mouse: bool = False):
     """Run the bot with TUI interface.
     
     This function starts the TUI first, then performs login within the TUI context.
@@ -383,6 +389,7 @@ async def run_tui_with_bot(bot, config, use_color: bool):
         bot: The ChatrixBot instance
         config: Configuration object
         use_color: Whether to use colors
+        mouse: Whether to enable mouse support (default: False)
     """
     import logging
     from chatrixcd.tui import ChatrixTUI, OIDCAuthScreen
@@ -473,7 +480,7 @@ async def run_tui_with_bot(bot, config, use_color: bool):
     
     # Run the TUI (login will happen in on_mount)
     try:
-        await tui_app.run_async()
+        await tui_app.run_async(mouse=mouse)
     except Exception as e:
         # Catch any unhandled TUI exceptions
         logger.error(f"TUI error: {e}", exc_info=logger.isEnabledFor(logging.DEBUG))
