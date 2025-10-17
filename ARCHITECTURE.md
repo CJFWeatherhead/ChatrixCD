@@ -183,6 +183,7 @@ While matrix-commander provides a CLI-focused approach, ChatrixCD implements:
 
 - **AsyncClient Integration**: Uses matrix-nio for Matrix protocol
 - **E2E Encryption**: Automatic encryption key management via store
+- **Device Verification Manager**: Centralized verification handling for all modes
 - **Event Handling**: Callbacks for messages, invites, and encrypted messages
 - **Auto-Join**: Automatically joins rooms when invited
 
@@ -190,6 +191,12 @@ While matrix-commander provides a CLI-focused approach, ChatrixCD implements:
 - `message_callback()`: Process incoming messages (decrypted messages)
 - `invite_callback()`: Handle room invitations
 - `megolm_event_callback()`: Handle encrypted messages and request keys when needed
+- `key_verification_start_callback()`: Handle incoming verification requests (delegates to verification manager)
+
+**Verification Modes**:
+- **Daemon Mode**: Auto-accepts and verifies all devices without user interaction
+- **Log Mode**: Interactive CLI verification with emoji display
+- **TUI Mode**: Displays notifications, user verifies through TUI interface
 
 **Authentication Flow**:
 ```python
@@ -207,28 +214,96 @@ elif auth_type == 'oidc':
     await setup_encryption()
 ```
 
+### 4.5. Device Verification Manager (`verification.py`)
+
+**Purpose**: Reusable device verification logic for TUI, CLI, and daemon modes
+
+**Key Features**:
+- Centralized verification logic to avoid code duplication
+- Supports all operating modes (TUI, CLI, daemon)
+- Implements Matrix SAS (emoji) verification protocol
+- Async-first design for integration with matrix-nio
+
+**Core Methods**:
+- `get_unverified_devices()`: List devices that need verification
+- `get_pending_verifications()`: List active verification requests
+- `start_verification(device)`: Initiate verification with a device
+- `accept_verification(sas)`: Accept incoming verification request
+- `wait_for_key_exchange(sas)`: Wait for other device's key
+- `get_emoji_list(sas)`: Get emoji sequence for verification
+- `confirm_verification(sas)`: Confirm match (emojis match)
+- `reject_verification(sas)`: Reject match (emojis don't match)
+- `auto_verify_pending(transaction_id)`: Auto-verify in daemon mode
+- `verify_device_interactive(device_info, callback)`: Interactive verification with callback
+- `verify_pending_interactive(verification_info, callback)`: Handle pending verification interactively
+
+**Usage Pattern**:
+```python
+# In TUI/CLI modes
+verification_manager = DeviceVerificationManager(client)
+
+# Get unverified devices
+devices = await verification_manager.get_unverified_devices()
+
+# Define callback for emoji display and user confirmation
+async def emoji_callback(emoji_list):
+    # Display emojis to user
+    for emoji, desc in emoji_list:
+        print(f"{emoji} {desc}")
+    # Get user confirmation
+    return input("Match? (y/n): ") == 'y'
+
+# Verify device interactively
+success = await verification_manager.verify_device_interactive(
+    device_info, emoji_callback
+)
+
+# In daemon mode - auto-verify
+await verification_manager.auto_verify_pending(transaction_id)
+```
+
+**Benefits**:
+- DRY (Don't Repeat Yourself): Single source of truth for verification logic
+- Mode-agnostic: Works in TUI, CLI, and daemon modes
+- Testable: Easy to unit test verification logic
+- Maintainable: Changes to verification flow only need to be made once
+
 ### 5. Command Handler (`commands.py`)
 
 **Purpose**: Parse and execute bot commands
+
+**Admin Access Control**:
+- When `admin_users` is configured, only those users can run commands
+- Non-admin users receive fun brush-off messages ("I can't talk to you 🫢")
+- Supports URL-encoded usernames (e.g., `@user%40domain.com`)
 
 **Command Flow**:
 ```
 1. Check message starts with command prefix
 2. Verify room is allowed (if configured)
-3. Parse command and arguments
-4. Route to appropriate handler
-5. Execute command
-6. Send response to room
+3. Verify user is admin (if admins configured)
+4. Parse command and arguments
+5. Route to appropriate handler
+6. Execute command
+7. Send response to room
 ```
 
 **Available Commands**:
 - `help`: Show command list
+- `admins`: List admin users
+- `rooms`: List rooms bot is in
+- `rooms join <room_id>`: Join a room
+- `rooms part <room_id>`: Leave a room
+- `exit`: Shut down bot (with confirmation)
 - `projects`: List Semaphore projects
 - `templates <project_id>`: List templates
-- `run <project_id> <template_id>`: Start task
-- `status <task_id>`: Check task status
+- `run <project_id> <template_id>`: Start task (with confirmation)
+- `status [task_id]`: Check task status (uses last task if no ID)
 - `stop <task_id>`: Stop running task
-- `logs <task_id>`: Get task output
+- `logs [task_id]`: Get task output (uses last task if no ID)
+- `ping`: Ping Semaphore server
+- `info`: Get Semaphore info
+- `aliases`: List command aliases
 
 **Task Monitoring**:
 - Tracks active tasks in memory

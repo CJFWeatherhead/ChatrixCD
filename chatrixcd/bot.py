@@ -241,6 +241,16 @@ class ChatrixBot:
             logger.error("user_id is not set in configuration. Please add 'user_id' to config.json")
             return False
         
+        # Load existing encryption store if it exists
+        # This must be done before login to restore device keys
+        if self.client.olm:
+            try:
+                logger.info("Loading encryption store...")
+                self.client.load_store()
+                logger.info("Encryption store loaded successfully")
+            except Exception as e:
+                logger.warning(f"Could not load encryption store (this is normal on first run): {e}")
+        
         # Validate authentication configuration
         is_valid, error_msg = self.auth.validate_config()
         if not is_valid:
