@@ -252,7 +252,8 @@ class DeviceVerificationManager:
         """Confirm the SAS verification (emojis match).
         
         This method confirms the verification and persists the device's verified
-        status to the store for future sessions.
+        status to the store for future sessions. It also shares room keys with
+        the newly verified device.
         
         Args:
             sas: SAS verification object
@@ -276,6 +277,10 @@ class DeviceVerificationManager:
                     f"Verified and persisted trust for device {sas.other_olm_device.id} "
                     f"of user {sas.other_olm_device.user_id}"
                 )
+                
+                # Share room keys with the newly verified device
+                # This allows the device to decrypt messages in encrypted rooms
+                await self._share_room_keys_with_device(sas.other_olm_device)
             
             logger.info("Verification confirmed successfully")
             return True
@@ -283,6 +288,58 @@ class DeviceVerificationManager:
         except Exception as e:
             logger.error(f"Error confirming verification: {e}")
             return False
+    
+    async def _share_room_keys_with_device(self, device):
+        """Share room keys with a device after verification.
+        
+        This method shares the Megolm session keys for all encrypted rooms
+        with a newly verified device, allowing it to decrypt future messages.
+        
+        Args:
+            device: The OlmDevice to share keys with
+        """
+        try:
+            # Get all rooms the user is in
+            shared_rooms = []
+            for room_id, room in self.client.rooms.items():
+                # Check if this is an encrypted room and the user is a member
+                if room.encrypted and device.user_id in room.users:
+                    shared_rooms.append(room_id)
+            
+            if not shared_rooms:
+                logger.debug(
+                    f"No encrypted rooms shared with {device.user_id}, "
+                    "skipping room key sharing"
+                )
+                return
+            
+            logger.info(
+                f"Sharing room keys for {len(shared_rooms)} encrypted room(s) "
+                f"with verified device {device.id} of user {device.user_id}"
+            )
+            
+            # Share keys for each room
+            for room_id in shared_rooms:
+                try:
+                    # Share the group session for this room with the device
+                    await self.client.share_group_session(
+                        room_id,
+                        users=[device.user_id],
+                        ignore_unverified_devices=False
+                    )
+                    logger.debug(f"Shared room key for room {room_id} with {device.user_id}")
+                except Exception as e:
+                    logger.warning(f"Failed to share room key for room {room_id}: {e}")
+            
+            # Send the to-device messages to actually deliver the keys
+            await self.client.send_to_device_messages()
+            
+            logger.info(
+                f"Successfully shared room keys with {device.user_id}'s device {device.id}"
+            )
+            
+        except Exception as e:
+            logger.error(f"Error sharing room keys with device: {e}")
     
     async def reject_verification(self, sas: Sas) -> bool:
         """Reject the SAS verification (emojis don't match).
@@ -309,6 +366,8 @@ class DeviceVerificationManager:
     
     async def auto_verify_pending(self, transaction_id: str) -> bool:
         """Automatically verify a pending verification request (daemon mode).
+        
+        This method auto-verifies devices and shares room keys with them.
         
         Args:
             transaction_id: Transaction ID of the verification request
@@ -349,6 +408,9 @@ class DeviceVerificationManager:
                         f"Auto-verified and persisted trust for device {sas.other_olm_device.id} "
                         f"of user {sas.other_olm_device.user_id} in transaction {transaction_id}"
                     )
+                    
+                    # Share room keys with the newly verified device
+                    await self._share_room_keys_with_device(sas.other_olm_device)
                 else:
                     logger.info(f"Auto-verified device in transaction {transaction_id}")
                 return True

@@ -21,6 +21,7 @@ from textual.binding import Binding
 from textual import events
 from textual.reactive import reactive
 from chatrixcd.verification import DeviceVerificationManager
+from nio.crypto import Sas
 
 logger = logging.getLogger(__name__)
 
@@ -1650,8 +1651,18 @@ class ChatrixTUI(App):
                     
                     # Check if this is a new verification request
                     if transaction_id not in self.last_notified_verifications:
-                        user_id = getattr(verification, 'user_id', 'Unknown')
-                        device_id = getattr(verification, 'device_id', 'Unknown')
+                        # For Sas verifications, user_id and device_id are in other_olm_device
+                        if isinstance(verification, Sas):
+                            other_device = getattr(verification, 'other_olm_device', None)
+                            if other_device:
+                                user_id = getattr(other_device, 'user_id', 'Unknown')
+                                device_id = getattr(other_device, 'id', 'Unknown')
+                            else:
+                                user_id = 'Unknown'
+                                device_id = 'Unknown'
+                        else:
+                            user_id = getattr(verification, 'user_id', 'Unknown')
+                            device_id = getattr(verification, 'device_id', 'Unknown')
                         
                         # Show notification
                         logger.info(
