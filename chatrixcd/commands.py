@@ -3,6 +3,7 @@
 import logging
 import asyncio
 import re
+import random
 from typing import Dict, Any, Optional
 from nio import MatrixRoom, RoomMessageText
 from chatrixcd.semaphore import SemaphoreClient
@@ -336,25 +337,39 @@ class CommandHandler:
         message += f"**Description:** {template_desc}\n"
         message += f"**Project ID:** {project_id}\n"
         message += f"**Template ID:** {template_id}\n\n"
-        message += "Reply with **y**, **yes**, **go**, or **start** to confirm, or anything else to cancel."
+        message += "Reply with **y**, **yes**, **go**, or **start** to confirm.\n"
+        message += "Reply with **n**, **no**, **cancel**, or **stop** to cancel."
         
         html_message = self.markdown_to_html(message)
         await self.bot.send_message(room_id, message, html_message)
         
-        # Set timeout to clear confirmation after 60 seconds
-        asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 60))
+        # Set timeout to clear confirmation after 5 minutes
+        asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 300, room_id))
 
-    async def _clear_confirmation_timeout(self, confirmation_key: str, timeout: int):
+    async def _clear_confirmation_timeout(self, confirmation_key: str, timeout: int, room_id: str = None):
         """Clear a pending confirmation after timeout.
         
         Args:
             confirmation_key: The confirmation key
             timeout: Timeout in seconds
+            room_id: Optional room ID to send timeout message to
         """
         await asyncio.sleep(timeout)
         if confirmation_key in self.pending_confirmations:
             del self.pending_confirmations[confirmation_key]
             logger.info(f"Cleared confirmation timeout for {confirmation_key}")
+            
+            # Send timeout message with fun response
+            if room_id:
+                timeout_responses = [
+                    "I'll just go back to what I was doing then? 🙄",
+                    "I wasn't busy anyway... 🚶",
+                    "Be more decisive next time, eh? 😏",
+                    "Guess you changed your mind. No worries! 🤷",
+                    "Timeout! Maybe next time? ⏰",
+                    "Taking too long to decide... request expired. 💤"
+                ]
+                await self.bot.send_message(room_id, random.choice(timeout_responses))
 
     async def handle_confirmation(self, room_id: str, sender: str, message: str):
         """Handle confirmation response for task execution.
@@ -373,18 +388,40 @@ class CommandHandler:
         
         # Check if message is a confirmation
         confirm_words = ['y', 'yes', 'go', 'start', 'ok', '👍', '✓', '✅']
-        is_confirmed = message.strip().lower() in confirm_words
+        cancel_words = ['n', 'no', 'cancel', 'stop', 'end', 'nope', '👎', '❌', '✖']
+        
+        message_lower = message.strip().lower()
+        is_confirmed = message_lower in confirm_words
+        is_cancelled = message_lower in cancel_words
+        
+        if is_cancelled:
+            cancel_responses = [
+                "Task execution cancelled. No problem! ❌",
+                "Cancelled! Maybe another time. 👋",
+                "Alright, stopping that. ✋",
+                "Task cancelled. All good! 🛑"
+            ]
+            await self.bot.send_message(room_id, random.choice(cancel_responses))
+            return
         
         if not is_confirmed:
             await self.bot.send_message(room_id, "Task execution cancelled. ❌")
             return
         
-        # Execute the task
+        # Execute the task with fun confirmation response
         project_id = confirmation['project_id']
         template_id = confirmation['template_id']
         template_name = confirmation['template_name']
         
-        await self.bot.send_message(room_id, f"Starting task **{template_name}**... 🚀")
+        start_responses = [
+            f"On it! Starting **{template_name}**... 🚀",
+            f"Here we go! Running **{template_name}**... 🏃",
+            f"Roger that! Executing **{template_name}**... 🫡",
+            f"Yes boss! Starting **{template_name}**... 💪",
+            f"Doing it now! **{template_name}** is launching... 🎯",
+            f"Let's go! **{template_name}** starting up... ⚡"
+        ]
+        await self.bot.send_message(room_id, random.choice(start_responses))
         
         task = await self.semaphore.start_task(project_id, template_id)
         
@@ -450,10 +487,13 @@ class CommandHandler:
                         f"🔄 Task **{task_display}** is now running..."
                     )
                 elif status == 'success':
-                    await self.bot.send_message(
+                    event_id = await self.bot.send_message(
                         room_id,
                         f"✅ Task **{task_display}** completed successfully!"
                     )
+                    # React with party emoji
+                    if event_id:
+                        await self.bot.send_reaction(room_id, event_id, "🎉")
                     del self.active_tasks[task_id]
                     break
                 elif status in ('error', 'stopped'):
