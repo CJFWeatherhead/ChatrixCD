@@ -714,7 +714,8 @@ class ChatrixBot:
         response = await self.client.room_send(
             room_id=room_id,
             message_type="m.room.message",
-            content=content
+            content=content,
+            ignore_unverified_devices=True
         )
         
         # Return the event_id for potential reactions
@@ -742,7 +743,8 @@ class ChatrixBot:
             await self.client.room_send(
                 room_id=room_id,
                 message_type="m.reaction",
-                content=content
+                content=content,
+                ignore_unverified_devices=True
             )
         except Exception as e:
             logger.debug(f"Failed to send reaction: {e}")

@@ -517,6 +517,36 @@ class TestChatrixBot(unittest.TestCase):
         self.assertEqual(content['formatted_body'], '<b>Hello world</b>')
         self.assertEqual(content['format'], 'org.matrix.custom.html')
 
+    def test_send_message_ignores_unverified_devices(self):
+        """Test that send_message allows sending to unverified devices."""
+        bot = ChatrixBot(self.config)
+        bot.client.room_send = AsyncMock()
+        
+        self.loop.run_until_complete(
+            bot.send_message('!test:example.com', 'Hello world')
+        )
+        
+        # Verify that ignore_unverified_devices is set to True
+        bot.client.room_send.assert_called_once()
+        call_args = bot.client.room_send.call_args
+        
+        self.assertEqual(call_args[1]['ignore_unverified_devices'], True)
+
+    def test_send_reaction_ignores_unverified_devices(self):
+        """Test that send_reaction allows sending to unverified devices."""
+        bot = ChatrixBot(self.config)
+        bot.client.room_send = AsyncMock()
+        
+        self.loop.run_until_complete(
+            bot.send_reaction('!test:example.com', '$event:example.com', '👍')
+        )
+        
+        # Verify that ignore_unverified_devices is set to True
+        bot.client.room_send.assert_called_once()
+        call_args = bot.client.room_send.call_args
+        
+        self.assertEqual(call_args[1]['ignore_unverified_devices'], True)
+
     def test_setup_encryption_uploads_keys(self):
         """Test that encryption setup uploads keys when needed."""
         bot = ChatrixBot(self.config)
