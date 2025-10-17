@@ -30,6 +30,66 @@ class DeviceVerificationManager:
         """
         self.client = client
     
+    async def get_verified_devices(self) -> List[Dict[str, Any]]:
+        """Get list of verified devices.
+        
+        Returns:
+            List of verified device dictionaries with user_id, device_id,
+            device_name, trust_state, and device object
+        """
+        if not self.client.olm:
+            logger.warning("Encryption not enabled, cannot get verified devices")
+            return []
+        
+        verified_devices = []
+        
+        try:
+            if hasattr(self.client, 'device_store') and self.client.device_store:
+                for user_id in self.client.device_store.users:
+                    user_devices = self.client.device_store[user_id]
+                    for device_id, device in user_devices.items():
+                        # Skip our own device
+                        if user_id == self.client.user_id and device_id == self.client.device_id:
+                            continue
+                        # Only include verified devices
+                        if getattr(device, 'verified', False):
+                            verified_devices.append({
+                                'user_id': user_id,
+                                'device_id': device_id,
+                                'device_name': getattr(device, 'display_name', 'Unknown'),
+                                'trust_state': getattr(device, 'trust_state', None),
+                                'device': device
+                            })
+        except Exception as e:
+            logger.error(f"Error getting verified devices: {e}")
+        
+        return verified_devices
+    
+    async def is_device_verified(self, user_id: str, device_id: str) -> bool:
+        """Check if a specific device is verified.
+        
+        Args:
+            user_id: User ID of the device owner
+            device_id: Device ID to check
+            
+        Returns:
+            True if device is verified, False otherwise
+        """
+        if not self.client.olm:
+            return False
+        
+        try:
+            if hasattr(self.client, 'device_store') and self.client.device_store:
+                if user_id in self.client.device_store.users:
+                    user_devices = self.client.device_store[user_id]
+                    if device_id in user_devices:
+                        device = user_devices[device_id]
+                        return getattr(device, 'verified', False)
+        except Exception as e:
+            logger.error(f"Error checking device verification: {e}")
+        
+        return False
+    
     async def get_unverified_devices(self) -> List[Dict[str, Any]]:
         """Get list of unverified devices.
         
@@ -75,10 +135,23 @@ class DeviceVerificationManager:
         
         if hasattr(self.client, 'key_verifications') and self.client.key_verifications:
             for transaction_id, verification in self.client.key_verifications.items():
+                # For Sas verifications, user_id and device_id are in other_olm_device
+                if isinstance(verification, Sas):
+                    other_device = getattr(verification, 'other_olm_device', None)
+                    if other_device:
+                        user_id = getattr(other_device, 'user_id', 'Unknown')
+                        device_id = getattr(other_device, 'id', 'Unknown')
+                    else:
+                        user_id = 'Unknown'
+                        device_id = 'Unknown'
+                else:
+                    user_id = getattr(verification, 'user_id', 'Unknown')
+                    device_id = getattr(verification, 'device_id', 'Unknown')
+                
                 pending.append({
                     'transaction_id': transaction_id,
-                    'user_id': getattr(verification, 'user_id', 'Unknown'),
-                    'device_id': getattr(verification, 'device_id', 'Unknown'),
+                    'user_id': user_id,
+                    'device_id': device_id,
                     'type': type(verification).__name__,
                     'verification': verification
                 })
@@ -101,6 +174,9 @@ class DeviceVerificationManager:
             if isinstance(resp, ToDeviceError):
                 logger.error(f"Failed to start verification: {resp.message}")
                 return None
+            
+            # Send the start message to the other device
+            await self.client.send_to_device_messages()
             
             # Wait for the verification to be set up
             await asyncio.sleep(1)
@@ -131,6 +207,8 @@ class DeviceVerificationManager:
         try:
             if not sas.we_started_it and sas.state == SasState.created:
                 await self.client.accept_key_verification(sas.transaction_id)
+                # Send the accept message to the other device
+                await self.client.send_to_device_messages()
                 await asyncio.sleep(0.5)
                 return True
             return True
@@ -173,6 +251,9 @@ class DeviceVerificationManager:
     async def confirm_verification(self, sas: Sas) -> bool:
         """Confirm the SAS verification (emojis match).
         
+        This method confirms the verification and persists the device's verified
+        status to the store for future sessions.
+        
         Args:
             sas: SAS verification object
             
@@ -186,6 +267,16 @@ class DeviceVerificationManager:
             
             sas.accept_sas()
             await self.client.send_to_device_messages()
+            
+            # Mark the device as verified in the store for persistence
+            # This ensures the verified status is saved and remembered across restarts
+            if sas.other_olm_device:
+                self.client.verify_device(sas.other_olm_device)
+                logger.info(
+                    f"Verified and persisted trust for device {sas.other_olm_device.id} "
+                    f"of user {sas.other_olm_device.user_id}"
+                )
+            
             logger.info("Verification confirmed successfully")
             return True
             
@@ -239,6 +330,8 @@ class DeviceVerificationManager:
             
             # Accept the verification request
             await self.client.accept_key_verification(transaction_id)
+            # Send the accept message to the other device
+            await self.client.send_to_device_messages()
             logger.info(f"Auto-accepted verification request {transaction_id}")
             
             # Wait for key exchange
@@ -248,7 +341,16 @@ class DeviceVerificationManager:
             if sas.other_key_set:
                 sas.accept_sas()
                 await self.client.send_to_device_messages()
-                logger.info(f"Auto-verified device in transaction {transaction_id}")
+                
+                # Mark the device as verified in the store for persistence
+                if sas.other_olm_device:
+                    self.client.verify_device(sas.other_olm_device)
+                    logger.info(
+                        f"Auto-verified and persisted trust for device {sas.other_olm_device.id} "
+                        f"of user {sas.other_olm_device.user_id} in transaction {transaction_id}"
+                    )
+                else:
+                    logger.info(f"Auto-verified device in transaction {transaction_id}")
                 return True
             else:
                 logger.warning(f"Cannot auto-verify {transaction_id}: other device key not received")
