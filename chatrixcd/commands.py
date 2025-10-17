@@ -804,11 +804,21 @@ class CommandHandler:
                 await self.bot.send_message(room_id, "Invalid task ID ❌")
                 return
                 
-            if task_id not in self.active_tasks:
-                await self.bot.send_message(room_id, f"Task {task_id} not found in active tasks ❌")
+            # Check if task is in active tasks first
+            if task_id in self.active_tasks:
+                project_id = self.active_tasks[task_id]['project_id']
+            # If not in active tasks but we have a last_project_id, try that
+            elif self.last_task_id == task_id and self.last_project_id is not None:
+                project_id = self.last_project_id
+            else:
+                # Try to get the project_id from semaphore if task exists
+                # For now, just inform the user to provide project info
+                await self.bot.send_message(
+                    room_id, 
+                    f"Task {task_id} not found in active tasks.\n"
+                    f"For finished tasks, use the last task with: `{self.command_prefix} logs`"
+                )
                 return
-                
-            project_id = self.active_tasks[task_id]['project_id']
         
         logs = await self.semaphore.get_task_output(project_id, task_id)
         
@@ -816,7 +826,7 @@ class CommandHandler:
             task_name = self.active_tasks.get(task_id, {}).get('template_name')
             task_display = f"{task_name} ({task_id})" if task_name else str(task_id)
             
-            # Parse and format logs
+            # Parse and format logs for plain text
             formatted_logs = self._format_task_logs(logs)
             
             # Tail only the last portion to avoid truncation
@@ -828,10 +838,74 @@ class CommandHandler:
             else:
                 header = f"**Logs for Task {task_display}** 📋\n\n"
             
-            message = f"{header}```\n{formatted_logs}\n```"
-            await self.bot.send_message(room_id, message)
+            # Create plain text version with markdown code block
+            plain_message = f"{header}```\n{formatted_logs}\n```"
+            
+            # Create HTML version with color formatting
+            html_header = self.markdown_to_html(header)
+            html_logs = self._format_task_logs_html(logs)
+            
+            # Tail HTML logs too if needed
+            if len(log_lines) > max_lines:
+                # Re-process with HTML formatting for tailed version
+                tailed_raw_logs = '\n'.join(logs.split('\n')[-max_lines:])
+                html_logs = self._format_task_logs_html(tailed_raw_logs)
+            
+            html_message = f"{html_header}{html_logs}"
+            
+            await self.bot.send_message(room_id, plain_message, html_message)
         else:
             await self.bot.send_message(room_id, f"No logs available for task {task_id} ❌")
+
+    def _ansi_to_html(self, text: str) -> str:
+        """Convert ANSI color codes to HTML.
+        
+        Args:
+            text: Text with ANSI color codes
+            
+        Returns:
+            HTML formatted text
+        """
+        # ANSI color code to HTML color mapping
+        ansi_colors = {
+            '30': 'black',
+            '31': 'red',
+            '32': 'green',
+            '33': 'yellow',
+            '34': 'blue',
+            '35': 'magenta',
+            '36': 'cyan',
+            '37': 'white',
+            '90': 'gray',
+            '91': 'lightred',
+            '92': 'lightgreen',
+            '93': 'lightyellow',
+            '94': 'lightblue',
+            '95': 'lightmagenta',
+            '96': 'lightcyan',
+            '97': 'white',
+        }
+        
+        # Convert color codes
+        result = text
+        
+        # Handle bold (1m)
+        result = re.sub(r'\x1b\[1m', '<strong>', result)
+        
+        # Handle color codes (e.g., 31m for red)
+        for code, color in ansi_colors.items():
+            result = re.sub(rf'\x1b\[{code}m', f'<span style="color: {color}">', result)
+        
+        # Handle reset codes (0m)
+        result = re.sub(r'\x1b\[0m', '</span></strong>', result)
+        
+        # Clean up any remaining ANSI codes
+        result = re.sub(r'\x1b\[[0-9;]*m', '', result)
+        
+        # Replace newlines with <br> for HTML
+        result = result.replace('\n', '<br>')
+        
+        return result
 
     def _format_task_logs(self, raw_logs: str) -> str:
         """Format raw task logs for better readability.
@@ -864,6 +938,28 @@ class CommandHandler:
             # Generic formatting - just remove ANSI codes
             logs = re.sub(r'\x1b\[[0-9;]*m', '', raw_logs)
             return logs.strip()
+    
+    def _format_task_logs_html(self, raw_logs: str) -> str:
+        """Format raw task logs with HTML formatting, preserving colors.
+        
+        Args:
+            raw_logs: Raw log output with ANSI codes
+            
+        Returns:
+            HTML formatted log output
+        """
+        # Detect log type
+        is_ansible = 'TASK [' in raw_logs or 'PLAY [' in raw_logs
+        is_terraform = 'Terraform' in raw_logs or 'terraform' in raw_logs
+        
+        # Remove excessive blank lines first
+        logs = re.sub(r'\n{3,}', '\n\n', raw_logs)
+        
+        # Convert ANSI codes to HTML
+        html_logs = self._ansi_to_html(logs)
+        
+        # Wrap in pre tag for monospace formatting
+        return f'<pre>{html_logs}</pre>'
 
     async def ping_semaphore(self, room_id: str):
         """Ping Semaphore server.
