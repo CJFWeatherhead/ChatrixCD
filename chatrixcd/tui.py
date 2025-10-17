@@ -175,7 +175,7 @@ class SessionsScreen(Screen):
             await self.reset_olm_sessions()
     
     async def show_pending_verifications(self):
-        """Display list of pending verification requests."""
+        """Display list of pending verification requests with action buttons."""
         if not self.tui_app.bot or not self.tui_app.bot.client or not self.tui_app.bot.client.olm:
             self.app.push_screen(MessageScreen("Encryption is not enabled."))
             return
@@ -190,7 +190,8 @@ class SessionsScreen(Screen):
                     'transaction_id': transaction_id,
                     'user_id': getattr(verification, 'user_id', 'Unknown'),
                     'device_id': getattr(verification, 'device_id', 'Unknown'),
-                    'type': type(verification).__name__
+                    'type': type(verification).__name__,
+                    'verification': verification
                 })
         
         if not pending:
@@ -199,20 +200,206 @@ class SessionsScreen(Screen):
                 "No pending verification requests.\n\n"
                 "[dim]When another device initiates verification with this bot,\n"
                 "it will appear here. You can then complete the verification\n"
-                "using the 'Verify Device (Emoji)' option.[/dim]"
+                "by clicking the 'Verify' button below.[/dim]"
             ))
             return
         
-        # Display pending verifications
-        message = "[bold cyan]Pending Verification Requests[/bold cyan]\n\n"
-        for ver in pending:
-            message += f"[bold]Transaction:[/bold] {ver['transaction_id'][:16]}...\n"
-            message += f"[bold]User:[/bold] {ver['user_id']}\n"
-            message += f"[bold]Device:[/bold] {ver['device_id']}\n"
-            message += f"[bold]Type:[/bold] {ver['type']}\n\n"
+        # Show interactive screen with buttons for each request
+        await self._show_pending_verifications_screen(pending)
+    
+    async def _show_pending_verifications_screen(self, pending: List[Dict[str, Any]]):
+        """Show interactive screen with pending verifications and action buttons.
         
-        message += "[dim]Use 'Verify Device (Emoji)' to respond to these requests.[/dim]"
-        self.app.push_screen(MessageScreen(message))
+        Args:
+            pending: List of pending verification requests
+        """
+        from textual.screen import Screen as BaseScreen
+        from nio.crypto import Sas
+        
+        class PendingVerificationsScreen(BaseScreen):
+            """Screen showing pending verification requests with action buttons."""
+            
+            BINDINGS = [
+                Binding("escape", "app.pop_screen", "Back", priority=True),
+            ]
+            
+            def __init__(self, parent_sessions_screen, pending: List[Dict[str, Any]], **kwargs):
+                super().__init__(**kwargs)
+                self.parent_sessions_screen = parent_sessions_screen
+                self.pending = pending
+            
+            def compose(self) -> ComposeResult:
+                yield Header()
+                with ScrollableContainer():
+                    yield Static("[bold cyan]Pending Verification Requests[/bold cyan]\n", id="title")
+                    yield Static(f"[bold]{len(self.pending)} pending request(s)[/bold]\n")
+                    
+                    for idx, ver in enumerate(self.pending):
+                        yield Static(f"\n[bold]Request {idx + 1}:[/bold]")
+                        yield Static(f"  User: {ver['user_id']}")
+                        yield Static(f"  Device: {ver['device_id']}")
+                        yield Static(f"  Transaction: {ver['transaction_id'][:16]}...")
+                        yield Static(f"  Type: {ver['type']}\n")
+                        yield Button(f"✅ Verify Request {idx + 1}", id=f"verify_{idx}", variant="primary")
+                    
+                    yield Static("\n[dim]Click 'Verify' to respond to a verification request.[/dim]")
+                yield Footer()
+            
+            async def on_button_pressed(self, event: Button.Pressed) -> None:
+                button_id = event.button.id
+                if button_id.startswith("verify_"):
+                    idx = int(button_id.split("_")[1])
+                    ver_info = self.pending[idx]
+                    await self.start_verification_for_pending(ver_info)
+            
+            async def start_verification_for_pending(self, ver_info: Dict[str, Any]):
+                """Start verification for a pending request.
+                
+                Args:
+                    ver_info: Verification information dictionary
+                """
+                from nio.crypto import Sas, SasState
+                
+                try:
+                    client = self.parent_sessions_screen.tui_app.bot.client
+                    verification = ver_info['verification']
+                    
+                    # Check if this is a SAS verification
+                    if not isinstance(verification, Sas):
+                        self.app.push_screen(MessageScreen(
+                            f"Unsupported verification type: {ver_info['type']}\n\n"
+                            "Only SAS (emoji) verification is currently supported."
+                        ))
+                        return
+                    
+                    sas = verification
+                    
+                    # If we didn't start this verification, accept it
+                    if not sas.we_started_it and sas.state == SasState.created:
+                        await client.accept_key_verification(sas.transaction_id)
+                        await asyncio.sleep(0.5)
+                    
+                    # Wait for key exchange
+                    max_wait = 10
+                    wait_time = 0
+                    while not sas.other_key_set and wait_time < max_wait:
+                        await asyncio.sleep(0.5)
+                        wait_time += 0.5
+                    
+                    if not sas.other_key_set:
+                        self.app.push_screen(MessageScreen(
+                            "Verification timeout: Did not receive the other device's key.\n\n"
+                            "Please ensure the other device has accepted the verification request."
+                        ))
+                        return
+                    
+                    # Get emoji sequence
+                    try:
+                        emoji_list = sas.get_emoji()
+                        emoji_display = " ".join([f"{emoji} ({desc})" for emoji, desc in emoji_list])
+                    except Exception as e:
+                        logger.error(f"Error getting emojis: {e}")
+                        self.app.push_screen(MessageScreen(
+                            f"Error getting emojis: {e}\n\n"
+                            f"SAS state: {sas.state.name if hasattr(sas.state, 'name') else sas.state}\n"
+                            f"Other key set: {sas.other_key_set}"
+                        ))
+                        return
+                    
+                    # Show verification screen
+                    device_info = {
+                        'user_id': ver_info['user_id'],
+                        'device_id': ver_info['device_id'],
+                        'device_name': f"Device {ver_info['device_id']}"
+                    }
+                    
+                    # Create inline verification screen (similar to the one in device selection)
+                    class VerificationScreen(ModalScreen):
+                        BINDINGS = [
+                            Binding("escape", "app.pop_screen", "Cancel", priority=True),
+                        ]
+                        
+                        def __init__(self, pending_screen, sas, emoji_display: str, device_info: Dict[str, Any], **kwargs):
+                            super().__init__(**kwargs)
+                            self.pending_screen = pending_screen
+                            self.sas = sas
+                            self.emoji_display = emoji_display
+                            self.device_info = device_info
+                        
+                        def compose(self) -> ComposeResult:
+                            yield Header()
+                            with Container():
+                                yield Static("[bold cyan]Emoji Verification[/bold cyan]\n", id="title")
+                                yield Static(f"[bold]Verifying device:[/bold]\n{self.device_info['user_id']}\n{self.device_info['device_name']}\n")
+                                yield Static(f"[bold]Compare these emojis with the other device:[/bold]\n\n{self.emoji_display}\n")
+                                yield Static("[bold]Do the emojis match?[/bold]\n")
+                                yield Button("✅ Yes, they match", id="confirm", variant="success")
+                                yield Button("❌ No, they don't match", id="reject", variant="error")
+                            yield Footer()
+                        
+                        async def on_button_pressed(self, event: Button.Pressed) -> None:
+                            if event.button.id == "confirm":
+                                await self.confirm_verification()
+                            elif event.button.id == "reject":
+                                await self.reject_verification()
+                        
+                        async def confirm_verification(self):
+                            """Confirm the SAS verification."""
+                            try:
+                                if not self.sas.other_key_set:
+                                    self.app.push_screen(MessageScreen(
+                                        "Cannot confirm verification: Key exchange not complete.\n\n"
+                                        "The other device has not sent its key yet. Please wait or try again."
+                                    ))
+                                    return
+                                
+                                self.sas.accept_sas()
+                                client = self.pending_screen.parent_sessions_screen.tui_app.bot.client
+                                await client.send_to_device_messages()
+                                
+                                self.app.push_screen(MessageScreen("✅ Verification successful!\n\nThe device has been verified and marked as trusted."))
+                                self.dismiss()
+                                
+                            except Exception as e:
+                                logger.error(f"Error confirming verification: {e}")
+                                self.app.push_screen(MessageScreen(
+                                    f"Error confirming verification: {e}\n\n"
+                                    f"SAS state: {self.sas.state.name if hasattr(self.sas.state, 'name') else self.sas.state}\n"
+                                    f"Other key set: {self.sas.other_key_set}"
+                                ))
+                        
+                        async def reject_verification(self):
+                            """Reject the SAS verification."""
+                            try:
+                                if not self.sas.other_key_set:
+                                    self.app.push_screen(MessageScreen(
+                                        "Cannot reject verification: Key exchange not complete.\n\n"
+                                        "The other device has not sent its key yet. Please wait or try again."
+                                    ))
+                                    return
+                                
+                                self.sas.reject_sas()
+                                client = self.pending_screen.parent_sessions_screen.tui_app.bot.client
+                                await client.send_to_device_messages()
+                                
+                                self.app.push_screen(MessageScreen("❌ Verification rejected.\n\nThe emojis did not match. The device was not verified."))
+                                self.dismiss()
+                                
+                            except Exception as e:
+                                logger.error(f"Error rejecting verification: {e}")
+                                self.app.push_screen(MessageScreen(
+                                    f"Error rejecting verification: {e}\n\n"
+                                    f"SAS state: {self.sas.state.name if hasattr(self.sas.state, 'name') else self.sas.state}\n"
+                                    f"Other key set: {self.sas.other_key_set}"
+                                ))
+                    
+                    self.app.push_screen(VerificationScreen(self, sas, emoji_display, device_info))
+                    
+                except Exception as e:
+                    logger.error(f"Error starting verification: {e}")
+                    self.app.push_screen(MessageScreen(f"Error starting verification: {e}"))
+        
+        self.app.push_screen(PendingVerificationsScreen(self, pending))
     
     async def show_sessions_list(self):
         """Display list of encryption sessions."""
@@ -426,11 +613,11 @@ class SessionsScreen(Screen):
                     # Wait for key exchange to complete (other device's key must be received)
                     max_wait = 10  # Maximum 10 seconds
                     wait_time = 0
-                    while not sas.other_key_set() and wait_time < max_wait:
+                    while not sas.other_key_set and wait_time < max_wait:
                         await asyncio.sleep(0.5)
                         wait_time += 0.5
                     
-                    if not sas.other_key_set():
+                    if not sas.other_key_set:
                         self.app.push_screen(MessageScreen(
                             "Verification timeout: Did not receive the other device's key.\n\n"
                             "Please ensure the other device has accepted the verification request."
@@ -446,7 +633,7 @@ class SessionsScreen(Screen):
                         self.app.push_screen(MessageScreen(
                             f"Error getting emojis: {e}\n\n"
                             f"SAS state: {sas.state.name if hasattr(sas.state, 'name') else sas.state}\n"
-                            f"Other key set: {sas.other_key_set()}"
+                            f"Other key set: {sas.other_key_set}"
                         ))
                         return
                     
@@ -494,7 +681,7 @@ class SessionsScreen(Screen):
                         
                         try:
                             # Check if we're in the right state
-                            if not self.sas.other_key_set():
+                            if not self.sas.other_key_set:
                                 self.app.push_screen(MessageScreen(
                                     "Cannot confirm verification: Key exchange not complete.\n\n"
                                     "The other device has not sent its key yet. Please wait or try again."
@@ -516,7 +703,7 @@ class SessionsScreen(Screen):
                             self.app.push_screen(MessageScreen(
                                 f"Error confirming verification: {e}\n\n"
                                 f"SAS state: {self.sas.state.name if hasattr(self.sas.state, 'name') else self.sas.state}\n"
-                                f"Other key set: {self.sas.other_key_set()}"
+                                f"Other key set: {self.sas.other_key_set}"
                             ))
                     
                     async def reject_verification(self):
@@ -525,7 +712,7 @@ class SessionsScreen(Screen):
                         
                         try:
                             # Check if we're in the right state
-                            if not self.sas.other_key_set():
+                            if not self.sas.other_key_set:
                                 self.app.push_screen(MessageScreen(
                                     "Cannot reject verification: Key exchange not complete.\n\n"
                                     "The other device has not sent its key yet. Please wait or try again."
@@ -545,7 +732,7 @@ class SessionsScreen(Screen):
                             self.app.push_screen(MessageScreen(
                                 f"Error rejecting verification: {e}\n\n"
                                 f"SAS state: {self.sas.state.name if hasattr(self.sas.state, 'name') else self.sas.state}\n"
-                                f"Other key set: {self.sas.other_key_set()}"
+                                f"Other key set: {self.sas.other_key_set}"
                             ))
                 
                 self.app.push_screen(VerificationScreen(self, sas, emoji_display, device_info))
@@ -1241,6 +1428,8 @@ class ChatrixTUI(App):
         self.warnings = 0
         self.login_task = None  # Will be set by run_tui_with_bot if login is needed
         self.bot_task = None  # Will store the sync task
+        self.pending_verifications_count = 0  # Track pending verification requests
+        self.last_notified_verifications = set()  # Track which verifications we've notified about
         
     def compose(self) -> ComposeResult:
         """Create child widgets for main menu."""
@@ -1269,6 +1458,9 @@ class ChatrixTUI(App):
         """Called when the TUI is mounted."""
         # Start background task to update active tasks
         self.set_interval(5, self.update_active_tasks)
+        
+        # Start background task to check for pending verifications
+        self.set_interval(3, self.check_pending_verifications)
         
         # If login task is set, perform login after TUI has started
         # This is necessary for OIDC flow which needs to push screens to the TUI
@@ -1304,6 +1496,53 @@ class ChatrixTUI(App):
                 widget.tasks = tasks_list
         except Exception as e:
             logger.debug(f"Error updating active tasks: {e}")
+    
+    async def check_pending_verifications(self):
+        """Check for pending verification requests and notify user."""
+        try:
+            if not self.bot or not self.bot.client or not self.bot.client.olm:
+                return
+            
+            client = self.bot.client
+            current_verifications = set()
+            
+            # Check for active key verifications
+            if hasattr(client, 'key_verifications') and client.key_verifications:
+                for transaction_id, verification in client.key_verifications.items():
+                    current_verifications.add(transaction_id)
+                    
+                    # Check if this is a new verification request
+                    if transaction_id not in self.last_notified_verifications:
+                        user_id = getattr(verification, 'user_id', 'Unknown')
+                        device_id = getattr(verification, 'device_id', 'Unknown')
+                        
+                        # Show notification
+                        logger.info(
+                            f"New verification request from {user_id} (device: {device_id}). "
+                            "Check Sessions menu to verify."
+                        )
+                        
+                        # Create notification message
+                        notification = (
+                            f"🔔 [bold yellow]New Verification Request[/bold yellow]\n\n"
+                            f"From: {user_id}\n"
+                            f"Device: {device_id}\n\n"
+                            f"[dim]Go to Sessions (press 'e') > View Pending Verification Requests[/dim]"
+                        )
+                        
+                        # Show notification as a temporary screen
+                        self.notify(
+                            f"New verification request from {user_id}",
+                            severity="information",
+                            timeout=10
+                        )
+            
+            # Update tracking sets
+            self.last_notified_verifications = current_verifications
+            self.pending_verifications_count = len(current_verifications)
+            
+        except Exception as e:
+            logger.debug(f"Error checking pending verifications: {e}")
     
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button presses."""
