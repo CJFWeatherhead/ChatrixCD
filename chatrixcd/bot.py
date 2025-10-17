@@ -140,12 +140,86 @@ class ChatrixBot:
             logger.error(f"Encryption setup error: {e}")
             return False
 
+    def _get_session_file(self) -> str:
+        """Get path to session file for storing access tokens.
+        
+        Returns:
+            Path to session file
+        """
+        return os.path.join(self.store_path, 'session.json')
+    
+    def _save_session(self, access_token: str, device_id: str):
+        """Save session data to file for restoration.
+        
+        Args:
+            access_token: The access token from login
+            device_id: The device ID from login
+        """
+        import json
+        session_file = self._get_session_file()
+        
+        try:
+            session_data = {
+                'user_id': self.user_id,
+                'device_id': device_id,
+                'access_token': access_token,
+                'homeserver': self.homeserver
+            }
+            
+            with open(session_file, 'w') as f:
+                json.dump(session_data, f)
+            
+            # Set restrictive permissions on session file (readable only by owner)
+            os.chmod(session_file, 0o600)
+            logger.info(f"Session saved to {session_file}")
+            
+        except Exception as e:
+            logger.warning(f"Failed to save session: {e}")
+    
+    def _load_session(self) -> Optional[Dict[str, str]]:
+        """Load saved session data from file.
+        
+        Returns:
+            Session data dict or None if not available
+        """
+        import json
+        session_file = self._get_session_file()
+        
+        if not os.path.exists(session_file):
+            return None
+        
+        try:
+            with open(session_file, 'r') as f:
+                session_data = json.load(f)
+            
+            # Validate session data
+            required_keys = ['user_id', 'device_id', 'access_token', 'homeserver']
+            if all(key in session_data for key in required_keys):
+                # Check if session matches current configuration
+                if (session_data['user_id'] == self.user_id and 
+                    session_data['homeserver'] == self.homeserver):
+                    logger.info("Found saved session, attempting to restore")
+                    return session_data
+                else:
+                    logger.info("Saved session is for different user/homeserver, ignoring")
+                    return None
+            else:
+                logger.warning("Saved session data is invalid")
+                return None
+                
+        except Exception as e:
+            logger.warning(f"Failed to load session: {e}")
+            return None
+    
     async def login(self, oidc_token_callback=None) -> bool:
         """Login to Matrix server using configured authentication method.
         
         Supports two authentication methods:
         1. Password authentication: Direct login with username/password
         2. OIDC authentication: Interactive SSO login with browser callback
+        
+        For OIDC, if a valid session is saved, it will be restored automatically
+        without requiring interactive login.
         
         Args:
             oidc_token_callback: Optional async callback for OIDC token input.
@@ -182,6 +256,8 @@ class ChatrixBot:
                 
                 if isinstance(response, LoginResponse):
                     logger.info(f"Successfully logged in as {self.user_id}")
+                    # Save session for future use
+                    self._save_session(response.access_token, response.device_id)
                     # Setup encryption keys after successful login
                     await self.setup_encryption()
                     return True
@@ -190,6 +266,31 @@ class ChatrixBot:
                     return False
                     
             elif auth_type == 'oidc':
+                # Try to restore saved session first
+                session_data = self._load_session()
+                if session_data:
+                    try:
+                        logger.info("Attempting to restore saved session...")
+                        self.client.restore_login(
+                            user_id=session_data['user_id'],
+                            device_id=session_data['device_id'],
+                            access_token=session_data['access_token']
+                        )
+                        
+                        # Test the restored session with a sync
+                        sync_response = await self.client.sync(timeout=5000)
+                        if hasattr(sync_response, 'rooms'):
+                            logger.info("Successfully restored session from saved data")
+                            await self.setup_encryption()
+                            return True
+                        else:
+                            logger.warning(f"Restored session test failed: {sync_response}")
+                            # Fall through to interactive OIDC login
+                            
+                    except Exception as e:
+                        logger.warning(f"Failed to restore session: {e}")
+                        # Fall through to interactive OIDC login
+                
                 # OIDC authentication using Matrix SSO flow
                 return await self._login_oidc(token_callback=oidc_token_callback)
             else:
@@ -379,11 +480,25 @@ class ChatrixBot:
             
             if isinstance(response, LoginResponse):
                 logger.info(f"Successfully logged in as {self.user_id} via OIDC")
+                # Save session for future use (avoid interactive login on reconnect)
+                self._save_session(response.access_token, response.device_id)
                 # Setup encryption keys after successful login
                 await self.setup_encryption()
                 return True
             else:
-                logger.error(f"OIDC login failed: {response}")
+                # Provide more helpful error message
+                error_msg = str(response)
+                if "Invalid login token" in error_msg or "M_FORBIDDEN" in error_msg:
+                    logger.error(
+                        f"OIDC login failed: {response}\n"
+                        "The login token is invalid or has expired. This can happen if:\n"
+                        "  1. The token was copied incorrectly\n"
+                        "  2. Too much time has passed since you authenticated in the browser\n"
+                        "  3. The token has already been used\n"
+                        "Please try the OIDC login process again."
+                    )
+                else:
+                    logger.error(f"OIDC login failed: {response}")
                 return False
                 
         except Exception as e:
@@ -594,14 +709,71 @@ class ChatrixBot:
         # Register sync callback for encryption key management
         self.client.add_response_callback(self.sync_callback, SyncResponse)
             
-        # Start sync loop
+        # Start sync loop with retry logic for recoverable errors
         logger.info("Starting sync loop...")
-        try:
-            await self.client.sync_forever(timeout=30000, full_state=True)
-        except Exception as e:
-            logger.error(f"Sync loop error: {e}")
-        finally:
-            await self.close()
+        max_retries = 5
+        retry_count = 0
+        retry_delay = 5
+        
+        while retry_count < max_retries:
+            try:
+                await self.client.sync_forever(timeout=30000, full_state=True)
+                # If sync_forever returns normally, break the loop
+                break
+            except Exception as e:
+                error_msg = str(e)
+                
+                # Handle specific error types
+                if "not verified or blacklisted" in error_msg:
+                    # This is a non-fatal error related to E2E encryption with unverified devices
+                    logger.warning(
+                        f"Encryption error: {error_msg}\n"
+                        "Note: This error occurs when trying to send encrypted messages to unverified devices. "
+                        "The bot will continue operating. To resolve this:\n"
+                        "  1. Verify the mentioned device through the TUI (VER menu)\n"
+                        "  2. Or ask the user to verify their device\n"
+                        "  3. Unverified users can still receive messages in unencrypted rooms"
+                    )
+                    # Continue running despite this error
+                    retry_count += 1
+                    if retry_count < max_retries:
+                        logger.info(f"Retrying sync loop in {retry_delay} seconds... (attempt {retry_count + 1}/{max_retries})")
+                        await asyncio.sleep(retry_delay)
+                        # Exponential backoff
+                        retry_delay = min(retry_delay * 2, 60)
+                        continue
+                    else:
+                        logger.error("Max retries reached for sync loop")
+                        break
+                        
+                elif "Invalid login token" in error_msg or "M_FORBIDDEN" in error_msg:
+                    # Authentication error - not recoverable
+                    logger.error(
+                        f"Authentication error: {error_msg}\n"
+                        "This error indicates the login credentials are invalid or expired. "
+                        "Please check your configuration and try logging in again."
+                    )
+                    break
+                    
+                else:
+                    # Unknown error - log and retry with backoff
+                    logger.error(f"Sync loop error: {e}")
+                    import traceback
+                    logger.debug(traceback.format_exc())
+                    
+                    retry_count += 1
+                    if retry_count < max_retries:
+                        logger.info(f"Retrying sync loop in {retry_delay} seconds... (attempt {retry_count + 1}/{max_retries})")
+                        await asyncio.sleep(retry_delay)
+                        # Exponential backoff
+                        retry_delay = min(retry_delay * 2, 60)
+                        continue
+                    else:
+                        logger.error("Max retries reached for sync loop")
+                        break
+        
+        # Cleanup
+        await self.close()
 
     async def key_verification_start_callback(self, event: KeyVerificationStart):
         """Handle incoming key verification start events.

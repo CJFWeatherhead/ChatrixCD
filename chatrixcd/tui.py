@@ -702,31 +702,31 @@ class SetScreen(Screen):
             
             # Matrix configuration options
             yield Static("[bold]Matrix Configuration:[/bold]")
-            yield Button(self._get_setting_label("matrix.homeserver"), id="edit_matrix.homeserver")
-            yield Button(self._get_setting_label("matrix.user_id"), id="edit_matrix.user_id")
-            yield Button(self._get_setting_label("matrix.device_id"), id="edit_matrix.device_id")
-            yield Button(self._get_setting_label("matrix.device_name"), id="edit_matrix.device_name")
-            yield Button(self._get_setting_label("matrix.auth_type"), id="edit_matrix.auth_type")
-            yield Button(self._get_setting_label("matrix.password"), id="edit_matrix.password")
-            yield Button(self._get_setting_label("matrix.access_token"), id="edit_matrix.access_token")
-            yield Button(self._get_setting_label("matrix.store_path"), id="edit_matrix.store_path")
+            yield Button(self._get_setting_label("matrix.homeserver"), id="edit_matrix_homeserver")
+            yield Button(self._get_setting_label("matrix.user_id"), id="edit_matrix_user_id")
+            yield Button(self._get_setting_label("matrix.device_id"), id="edit_matrix_device_id")
+            yield Button(self._get_setting_label("matrix.device_name"), id="edit_matrix_device_name")
+            yield Button(self._get_setting_label("matrix.auth_type"), id="edit_matrix_auth_type")
+            yield Button(self._get_setting_label("matrix.password"), id="edit_matrix_password")
+            yield Button(self._get_setting_label("matrix.access_token"), id="edit_matrix_access_token")
+            yield Button(self._get_setting_label("matrix.store_path"), id="edit_matrix_store_path")
             
             # Semaphore configuration options
             yield Static("\n[bold]Semaphore Configuration:[/bold]")
-            yield Button(self._get_setting_label("semaphore.url"), id="edit_semaphore.url")
-            yield Button(self._get_setting_label("semaphore.api_token"), id="edit_semaphore.api_token")
-            yield Button(self._get_setting_label("semaphore.ssl_verify"), id="edit_semaphore.ssl_verify")
+            yield Button(self._get_setting_label("semaphore.url"), id="edit_semaphore_url")
+            yield Button(self._get_setting_label("semaphore.api_token"), id="edit_semaphore_api_token")
+            yield Button(self._get_setting_label("semaphore.ssl_verify"), id="edit_semaphore_ssl_verify")
             
             # Bot configuration options
             yield Static("\n[bold]Bot Configuration:[/bold]")
-            yield Button(self._get_setting_label("bot.command_prefix"), id="edit_bot.command_prefix")
-            yield Button(self._get_setting_label("bot.allowed_rooms"), id="edit_bot.allowed_rooms")
-            yield Button(self._get_setting_label("bot.admin_users"), id="edit_bot.admin_users")
-            yield Button(self._get_setting_label("bot.greetings_enabled"), id="edit_bot.greetings_enabled")
-            yield Button(self._get_setting_label("bot.greeting_rooms"), id="edit_bot.greeting_rooms")
-            yield Button(self._get_setting_label("bot.startup_message"), id="edit_bot.startup_message")
-            yield Button(self._get_setting_label("bot.shutdown_message"), id="edit_bot.shutdown_message")
-            yield Button(self._get_setting_label("bot.log_file"), id="edit_bot.log_file")
+            yield Button(self._get_setting_label("bot.command_prefix"), id="edit_bot_command_prefix")
+            yield Button(self._get_setting_label("bot.allowed_rooms"), id="edit_bot_allowed_rooms")
+            yield Button(self._get_setting_label("bot.admin_users"), id="edit_bot_admin_users")
+            yield Button(self._get_setting_label("bot.greetings_enabled"), id="edit_bot_greetings_enabled")
+            yield Button(self._get_setting_label("bot.greeting_rooms"), id="edit_bot_greeting_rooms")
+            yield Button(self._get_setting_label("bot.startup_message"), id="edit_bot_startup_message")
+            yield Button(self._get_setting_label("bot.shutdown_message"), id="edit_bot_shutdown_message")
+            yield Button(self._get_setting_label("bot.log_file"), id="edit_bot_log_file")
             
             yield Static("\n[bold]Actions:[/bold]")
             yield Button("Apply Changes (Runtime Only)", id="apply_button", variant="primary")
@@ -748,7 +748,8 @@ class SetScreen(Screen):
         button_id = event.button.id
         
         if button_id.startswith("edit_"):
-            config_key = button_id[5:]  # Remove "edit_" prefix
+            # Remove "edit_" prefix and convert underscores back to dots for config key
+            config_key = button_id[5:].replace('_', '.')
             await self.edit_config_value(config_key)
         elif button_id == "apply_button":
             await self.apply_changes()
@@ -908,31 +909,31 @@ class OIDCAuthScreen(ModalScreen):
         with ScrollableContainer():
             yield Static("[bold cyan]OIDC/SSO Authentication Required[/bold cyan]\n", id="title")
             
-            yield Static("[bold]Please complete authentication in your browser:[/bold]\n")
-            # Use plain text to avoid markup parsing issues with URLs containing special characters
+            yield Static("[bold yellow]Step 1:[/bold yellow] [bold]Copy and open this URL in your browser:[/bold]\n")
+            # Use TextArea with read_only=True to allow text selection in terminals
             yield TextArea(self.sso_url, read_only=True, id="sso_url")
-            yield Static("[dim](Copy the URL above and paste it into your browser)[/dim]\n")
+            yield Static("[dim]↑ Select and copy the URL above (you can use your mouse or keyboard)[/dim]\n")
             
             if self.identity_providers:
-                yield Static(f"[bold]Identity Providers:[/bold]")
+                yield Static(f"[bold]Available Identity Providers:[/bold]")
                 for idp in self.identity_providers:
                     provider_name = idp.get('name', idp.get('id', 'Unknown'))
                     yield Static(f"  • {provider_name}")
                 yield Static("")
             
-            yield Static(f"[bold]After authentication, you will be redirected to:[/bold]")
-            yield Static(f"{self.redirect_url}\n")
+            yield Static(f"[bold yellow]Step 2:[/bold yellow] [bold]After browser authentication, you'll be redirected to:[/bold]")
+            yield Static(f"  {self.redirect_url}")
+            yield Static("[dim]The redirect URL will contain a 'loginToken' parameter[/dim]\n")
             
-            yield Static("[bold]Instructions:[/bold]")
-            yield Static("1. Open the SSO URL in your browser")
-            yield Static("2. Complete authentication with your OIDC provider")
-            yield Static("3. Copy the callback URL (contains 'loginToken' parameter)")
-            yield Static("4. Paste the URL or just the token below\n")
+            yield Static("[bold yellow]Step 3:[/bold yellow] [bold]Paste the callback URL or just the token in the field below:[/bold]")
+            yield Static("[dim]You can paste either the full URL or just the token value[/dim]")
+            yield Input(
+                placeholder="Paste here: https://example.com/callback?loginToken=... or just the token", 
+                id="token_input"
+            )
+            yield Static("")
             
-            yield Label("Paste callback URL or loginToken:")
-            yield Input(placeholder="https://example.com/callback?loginToken=...", id="token_input")
-            
-            yield Button("Submit", id="submit_button", variant="primary")
+            yield Button("Submit Token", id="submit_button", variant="primary")
             yield Button("Cancel", id="cancel_button")
         yield Footer()
     
