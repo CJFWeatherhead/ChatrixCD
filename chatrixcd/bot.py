@@ -274,10 +274,12 @@ class ChatrixBot:
             
             # Get redirect URL from config
             redirect_url = self.auth.get_oidc_redirect_url()
+            logger.debug(f"OIDC redirect URL: {redirect_url}")
             
             # Construct SSO redirect URL
             # If there are multiple identity providers, we should let the user choose
             # For now, we'll use the generic redirect (works for single or no-preference)
+            logger.debug(f"Constructing SSO redirect URL for {len(identity_providers) if identity_providers else 0} identity provider(s)")
             if identity_providers and len(identity_providers) == 1:
                 # Single provider - use specific provider URL
                 provider_id = identity_providers[0].get('id')
@@ -286,6 +288,7 @@ class ChatrixBot:
                     f"?redirectUrl={redirect_url}"
                 )
                 logger.info(f"Using identity provider: {identity_providers[0].get('name', provider_id)}")
+                logger.debug(f"SSO redirect URL: {sso_redirect_url}")
             elif identity_providers and len(identity_providers) > 1:
                 # Multiple providers - user needs to choose
                 logger.info("=" * 70)
@@ -320,11 +323,15 @@ class ChatrixBot:
                     f"{self.homeserver}/_matrix/client/v3/login/sso/redirect"
                     f"?redirectUrl={redirect_url}"
                 )
+                logger.debug(f"Using generic SSO redirect URL: {sso_redirect_url}")
             
             # Get login token from user via callback or default method
+            logger.debug(f"Requesting login token from user (callback={'provided' if token_callback else 'console'})")
             if token_callback:
                 # Use provided callback (e.g., from TUI)
+                logger.debug("Invoking token callback for OIDC authentication")
                 login_token = await token_callback(sso_redirect_url, redirect_url, identity_providers)
+                logger.debug("Token callback returned successfully")
             else:
                 # Default console-based prompt
                 logger.info("=" * 70)

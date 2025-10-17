@@ -337,18 +337,22 @@ def main():
 async def run_tui_with_bot(bot, config, use_color: bool):
     """Run the bot with TUI interface.
     
+    This function starts the TUI first, then performs login within the TUI context.
+    This is necessary because OIDC authentication may need to display screens in the TUI,
+    and screens can only be pushed when the TUI is already running.
+    
     Args:
         bot: The ChatrixBot instance
         config: Configuration object
         use_color: Whether to use colors
     """
     import logging
-    from chatrixcd.tui import run_tui, ChatrixTUI, OIDCAuthScreen
+    from chatrixcd.tui import ChatrixTUI, OIDCAuthScreen
     from nio import SyncResponse
     
     logger = logging.getLogger(__name__)
     
-    # Create TUI app first (but don't run it yet)
+    # Create TUI app
     tui_app = ChatrixTUI(bot, config, use_color=use_color)
     
     # Create OIDC callback that uses the TUI
@@ -363,48 +367,66 @@ async def run_tui_with_bot(bot, config, use_color: bool):
         Returns:
             Login token from user
         """
+        logger.debug("OIDC callback invoked, pushing OIDC auth screen to TUI")
+        
         # Create a future to receive the token
         token_future = asyncio.Future()
         
         def handle_result(token):
+            logger.debug(f"OIDC screen dismissed with token: {'<provided>' if token else '<cancelled>'}")
             if token:
                 token_future.set_result(token)
             else:
                 token_future.set_exception(Exception("OIDC authentication cancelled"))
         
-        # Show OIDC screen
+        # Show OIDC screen (TUI must be running for this to work)
         tui_app.push_screen(OIDCAuthScreen(sso_url, redirect_url, identity_providers), handle_result)
         
         # Wait for user to submit token
         token = await token_future
         return token
     
-    # Perform login with TUI callback for OIDC
-    login_success = await bot.login(oidc_token_callback=oidc_token_callback)
+    # Set up login task that will be executed after TUI starts
+    async def perform_login_and_sync():
+        """Perform login and start sync loop after TUI is mounted."""
+        logger.debug("Starting login process within TUI context")
+        
+        # Perform login with TUI callback for OIDC
+        login_success = await bot.login(oidc_token_callback=oidc_token_callback)
+        
+        if not login_success:
+            logger.error("Failed to login, exiting TUI")
+            tui_app.exit()
+            return
+        
+        logger.info("Login successful, starting bot sync loop")
+        
+        # Send startup message
+        await bot.send_startup_message()
+        
+        # Register sync callback
+        bot.client.add_response_callback(bot.sync_callback, SyncResponse)
+        
+        # Start bot sync in background
+        bot_task = asyncio.create_task(bot.client.sync_forever(timeout=30000, full_state=True))
+        
+        # Store the task so we can cancel it later
+        tui_app.bot_task = bot_task
     
-    if not login_success:
-        logger.error("Failed to login, exiting")
-        return
+    # Set the login task on the TUI app
+    tui_app.login_task = perform_login_and_sync
     
-    # Send startup message
-    await bot.send_startup_message()
-    
-    # Register sync callback
-    bot.client.add_response_callback(bot.sync_callback, SyncResponse)
-    
-    # Start bot sync in background
-    bot_task = asyncio.create_task(bot.client.sync_forever(timeout=30000, full_state=True))
-    
-    # Run the TUI
+    # Run the TUI (login will happen in on_mount)
     try:
         await tui_app.run_async()
     finally:
         # Clean up
-        bot_task.cancel()
-        try:
-            await bot_task
-        except asyncio.CancelledError:
-            pass
+        if hasattr(tui_app, 'bot_task') and tui_app.bot_task:
+            tui_app.bot_task.cancel()
+            try:
+                await tui_app.bot_task
+            except asyncio.CancelledError:
+                pass
         await bot.close()
 
 

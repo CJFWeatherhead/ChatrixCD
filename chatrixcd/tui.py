@@ -1079,6 +1079,8 @@ class ChatrixTUI(App):
         self.messages_processed = 0
         self.errors = 0
         self.warnings = 0
+        self.login_task = None  # Will be set by run_tui_with_bot if login is needed
+        self.bot_task = None  # Will store the sync task
         
     def compose(self) -> ComposeResult:
         """Create child widgets for main menu."""
@@ -1107,6 +1109,12 @@ class ChatrixTUI(App):
         """Called when the TUI is mounted."""
         # Start background task to update active tasks
         self.set_interval(5, self.update_active_tasks)
+        
+        # If login task is set, perform login after TUI has started
+        # This is necessary for OIDC flow which needs to push screens to the TUI
+        if self.login_task:
+            logger.debug("TUI mounted, starting login task")
+            asyncio.create_task(self.login_task())
     
     async def update_active_tasks(self):
         """Update the active tasks widget."""
