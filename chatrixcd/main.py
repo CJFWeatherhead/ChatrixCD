@@ -176,6 +176,10 @@ def daemonize():
     
     Forks the process into the background and detaches from the terminal.
     """
+    # Save the current working directory before daemonizing
+    # so the bot can still access config files
+    original_cwd = os.getcwd()
+    
     try:
         pid = os.fork()
         if pid > 0:
@@ -186,7 +190,8 @@ def daemonize():
         sys.exit(1)
     
     # Decouple from parent environment
-    os.chdir('/')
+    # Don't change directory - keep the original working directory
+    # os.chdir('/') would break access to config files
     os.setsid()
     os.umask(0)
     
@@ -199,6 +204,9 @@ def daemonize():
     except OSError as e:
         sys.stderr.write(f"Fork #2 failed: {e}\n")
         sys.exit(1)
+    
+    # Return to original working directory
+    os.chdir(original_cwd)
     
     # Redirect standard file descriptors
     sys.stdout.flush()
