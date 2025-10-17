@@ -98,10 +98,13 @@ body:
       placeholder: |
         !cd schedule "0 0 * * *" deploy production
         
-        Or in config:
-        ```yaml
-        scheduling:
-          enabled: true
+        Or in config.json:
+        ```json
+        {
+          "scheduling": {
+            "enabled": true
+          }
+        }
         ```
     validations:
       required: false
