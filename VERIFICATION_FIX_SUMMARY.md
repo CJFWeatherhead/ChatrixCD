@@ -255,5 +255,69 @@ While this fix resolves the immediate issues, potential future enhancements incl
 1. **Retry logic**: Automatic retry of failed to-device message delivery
 2. **Better error messages**: More detailed error reporting for verification failures
 3. **QR code verification**: Support for QR code verification in addition to emoji
-4. **Cross-signing**: Implement cross-signing for easier verification
-5. **Verification status persistence**: Remember verified devices across restarts
+4. ~~**Cross-signing**: Implement cross-signing for easier verification~~ *Note: matrix-nio does not currently provide cross-signing support. This would require implementation at a lower level than the library currently exposes.*
+5. ~~**Verification status persistence**: Remember verified devices across restarts~~ **✅ IMPLEMENTED** (see below)
+
+## Implemented Enhancements
+
+### Verification Status Persistence
+
+**Status**: ✅ Implemented
+
+Verified device status is now automatically persisted across bot restarts using matrix-nio's SqliteStore:
+
+- **Automatic Persistence**: When a device is successfully verified (via emoji or auto-verification), it is marked as verified in the encryption store
+- **Persistent Across Restarts**: The verified status is saved to disk and restored when the bot restarts
+- **New Methods**:
+  - `get_verified_devices()` - Returns a list of all verified devices with user IDs, device IDs, and trust states
+  - `is_device_verified(user_id, device_id)` - Checks if a specific device is verified
+- **Integration**: The verification manager now calls `client.verify_device()` after successful verification to persist the trust
+
+**Implementation Details**:
+
+1. After successful SAS emoji verification in `confirm_verification()`, the device is marked as verified:
+   ```python
+   if sas.other_olm_device:
+       self.client.verify_device(sas.other_olm_device)
+   ```
+
+2. In auto-verification mode in `auto_verify_pending()`, devices are similarly persisted:
+   ```python
+   if sas.other_olm_device:
+       self.client.verify_device(sas.other_olm_device)
+   ```
+
+3. The SqliteStore automatically saves this verification state to the database on disk
+
+**Testing**: Added 9 comprehensive tests in `test_verification_e2e.py`:
+- Test getting verified devices list
+- Test checking specific device verification status
+- Test that verification persistence works in confirm flow
+- Test that verification persistence works in auto-verify flow
+- Test filtering of own device from verified list
+- Test behavior with encryption disabled
+- Test behavior with non-existent devices
+
+**Benefits**:
+- Users don't need to re-verify devices after bot restarts
+- More seamless E2E encryption experience
+- Verified devices remain trusted between sessions
+- Reduces verification friction for regular users
+
+### Cross-Signing Support
+
+**Status**: ❌ Not Implemented
+
+Cross-signing requires master, self-signing, and user-signing keys that are not currently exposed by matrix-nio's API. The library would need to be extended to support:
+- Master signing key generation and storage
+- Self-signing key operations
+- User-signing key operations
+- Key signature verification
+- Trust chain validation
+
+This feature would require either:
+1. Waiting for matrix-nio to add cross-signing support
+2. Implementing custom cross-signing at a lower level using the underlying olm/vodozemac libraries
+3. Contributing cross-signing support to matrix-nio itself
+
+Given the complexity and the lack of library support, this enhancement is deferred for future consideration.

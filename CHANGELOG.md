@@ -15,6 +15,14 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Added
+- **Verification Status Persistence**: Device verification status is now persisted across restarts
+  - Verified devices are automatically saved to the encryption store
+  - `get_verified_devices()` method to retrieve list of verified devices
+  - `is_device_verified()` method to check verification status of specific devices
+  - Verification state is maintained even after bot restarts
+  - Added 9 new comprehensive tests for verification persistence
+
 ### Fixed
 - **Device Verification**: Fixed timeout issues when verifying devices
   - Verification requests now properly display user ID and device ID instead of "Unknown"

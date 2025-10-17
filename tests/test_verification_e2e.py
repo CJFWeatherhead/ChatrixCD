@@ -9,6 +9,7 @@ import unittest
 from unittest.mock import Mock, AsyncMock, MagicMock, patch
 from nio import AsyncClient
 from nio.crypto import Sas, OlmDevice, SasState
+from nio.crypto.device import TrustState
 from nio.responses import ToDeviceResponse, ToDeviceMessage
 from chatrixcd.verification import DeviceVerificationManager
 
@@ -384,6 +385,187 @@ class TestVerificationInteractiveFlow(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(result)
         sas.reject_sas.assert_called_once()
         self.client.send_to_device_messages.assert_called()
+
+
+class TestVerificationPersistence(unittest.IsolatedAsyncioTestCase):
+    """Test verification status persistence features."""
+    
+    async def asyncSetUp(self):
+        """Set up test fixtures."""
+        self.client = Mock(spec=AsyncClient)
+        self.client.user_id = "@alice:example.com"
+        self.client.device_id = "ALICE_DEVICE"
+        self.client.olm = True
+        self.client.device_store = Mock()
+        self.client.verify_device = Mock()
+        self.manager = DeviceVerificationManager(self.client)
+    
+    async def test_get_verified_devices(self):
+        """Test getting list of verified devices."""
+        # Create mock verified device
+        verified_device = Mock(spec=OlmDevice)
+        verified_device.user_id = "@bob:example.com"
+        verified_device.id = "BOB_DEVICE"
+        verified_device.display_name = "Bob's Phone"
+        verified_device.verified = True
+        verified_device.trust_state = TrustState.verified
+        
+        # Create mock unverified device
+        unverified_device = Mock(spec=OlmDevice)
+        unverified_device.user_id = "@charlie:example.com"
+        unverified_device.id = "CHARLIE_DEVICE"
+        unverified_device.display_name = "Charlie's Laptop"
+        unverified_device.verified = False
+        unverified_device.trust_state = TrustState.unset
+        
+        # Setup device store
+        self.client.device_store.users = ["@bob:example.com", "@charlie:example.com"]
+        self.client.device_store.__getitem__ = Mock(side_effect=lambda user_id: {
+            "@bob:example.com": {"BOB_DEVICE": verified_device},
+            "@charlie:example.com": {"CHARLIE_DEVICE": unverified_device}
+        }[user_id])
+        
+        # Get verified devices
+        verified = await self.manager.get_verified_devices()
+        
+        # Should only return Bob's verified device
+        self.assertEqual(len(verified), 1)
+        self.assertEqual(verified[0]['user_id'], "@bob:example.com")
+        self.assertEqual(verified[0]['device_id'], "BOB_DEVICE")
+        self.assertEqual(verified[0]['device_name'], "Bob's Phone")
+        self.assertEqual(verified[0]['trust_state'], TrustState.verified)
+    
+    async def test_is_device_verified_true(self):
+        """Test checking if a specific device is verified (verified case)."""
+        # Create mock verified device
+        verified_device = Mock(spec=OlmDevice)
+        verified_device.verified = True
+        
+        # Setup device store
+        self.client.device_store.users = ["@bob:example.com"]
+        self.client.device_store.__getitem__ = Mock(return_value={"BOB_DEVICE": verified_device})
+        
+        # Check if device is verified
+        result = await self.manager.is_device_verified("@bob:example.com", "BOB_DEVICE")
+        
+        self.assertTrue(result)
+    
+    async def test_is_device_verified_false(self):
+        """Test checking if a specific device is verified (unverified case)."""
+        # Create mock unverified device
+        unverified_device = Mock(spec=OlmDevice)
+        unverified_device.verified = False
+        
+        # Setup device store
+        self.client.device_store.users = ["@bob:example.com"]
+        self.client.device_store.__getitem__ = Mock(return_value={"BOB_DEVICE": unverified_device})
+        
+        # Check if device is verified
+        result = await self.manager.is_device_verified("@bob:example.com", "BOB_DEVICE")
+        
+        self.assertFalse(result)
+    
+    async def test_is_device_verified_device_not_found(self):
+        """Test checking verification for non-existent device."""
+        # Setup empty device store
+        self.client.device_store.users = []
+        
+        # Check if device is verified
+        result = await self.manager.is_device_verified("@bob:example.com", "BOB_DEVICE")
+        
+        self.assertFalse(result)
+    
+    async def test_confirm_verification_persists_device(self):
+        """Test that confirming verification persists device trust."""
+        # Create mock device and SAS
+        bob_device = Mock(spec=OlmDevice)
+        bob_device.user_id = "@bob:example.com"
+        bob_device.id = "BOB_DEVICE"
+        
+        sas = Mock(spec=Sas)
+        sas.other_key_set = True
+        sas.other_olm_device = bob_device
+        sas.accept_sas = Mock()
+        
+        # Mock client methods
+        self.client.send_to_device_messages = AsyncMock()
+        
+        # Confirm verification
+        result = await self.manager.confirm_verification(sas)
+        
+        # Verify success
+        self.assertTrue(result)
+        sas.accept_sas.assert_called_once()
+        self.client.send_to_device_messages.assert_called_once()
+        
+        # Verify that verify_device was called to persist the trust
+        self.client.verify_device.assert_called_once_with(bob_device)
+    
+    async def test_auto_verify_pending_persists_device(self):
+        """Test that auto-verification persists device trust."""
+        # Create mock device and SAS
+        bob_device = Mock(spec=OlmDevice)
+        bob_device.user_id = "@bob:example.com"
+        bob_device.id = "BOB_DEVICE"
+        
+        sas = Mock(spec=Sas)
+        sas.transaction_id = "auto_persist_transaction"
+        sas.other_olm_device = bob_device
+        sas.state = SasState.created
+        sas.we_started_it = False
+        sas.other_key_set = True
+        sas.accept_sas = Mock()
+        
+        # Setup mock client
+        self.client.key_verifications = {"auto_persist_transaction": sas}
+        self.client.accept_key_verification = AsyncMock(
+            return_value=create_mock_to_device_response()
+        )
+        self.client.send_to_device_messages = AsyncMock()
+        
+        # Auto-verify
+        result = await self.manager.auto_verify_pending("auto_persist_transaction")
+        
+        # Verify success
+        self.assertTrue(result)
+        
+        # Verify that verify_device was called to persist the trust
+        self.client.verify_device.assert_called_once_with(bob_device)
+    
+    async def test_get_verified_devices_no_encryption(self):
+        """Test getting verified devices when encryption is disabled."""
+        self.client.olm = None
+        
+        verified = await self.manager.get_verified_devices()
+        
+        self.assertEqual(len(verified), 0)
+    
+    async def test_is_device_verified_no_encryption(self):
+        """Test checking device verification when encryption is disabled."""
+        self.client.olm = None
+        
+        result = await self.manager.is_device_verified("@bob:example.com", "BOB_DEVICE")
+        
+        self.assertFalse(result)
+    
+    async def test_get_verified_devices_filters_own_device(self):
+        """Test that get_verified_devices filters out the bot's own device."""
+        # Create mock verified device (the bot's own device)
+        own_device = Mock(spec=OlmDevice)
+        own_device.user_id = "@alice:example.com"
+        own_device.id = "ALICE_DEVICE"
+        own_device.verified = True
+        own_device.trust_state = TrustState.verified
+        
+        # Setup device store with only own device
+        self.client.device_store.users = ["@alice:example.com"]
+        self.client.device_store.__getitem__ = Mock(return_value={"ALICE_DEVICE": own_device})
+        
+        # Get verified devices
+        verified = await self.manager.get_verified_devices()
+        
+        # Should not include own device
+        self.assertEqual(len(verified), 0)
 
 
 if __name__ == '__main__':
