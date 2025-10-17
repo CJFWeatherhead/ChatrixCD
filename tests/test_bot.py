@@ -770,6 +770,45 @@ class TestChatrixBot(unittest.TestCase):
         # The decrypted event should now have the server_timestamp attribute set
         self.assertEqual(decrypted_event.server_timestamp, event.server_timestamp)
 
+    def test_megolm_event_doesnt_overwrite_existing_timestamp(self):
+        """Test that existing server_timestamp on decrypted event is not overwritten."""
+        bot = ChatrixBot(self.config)
+        
+        # Mock the command handler
+        bot.command_handler.handle_message = AsyncMock()
+        
+        # Create mock room
+        room = MagicMock(spec=MatrixRoom)
+        room.display_name = "Test Room"
+        room.room_id = "!test:example.com"
+        
+        # Create a decrypted text message WITH server_timestamp already set
+        # This tests the case where matrix-nio properly sets the timestamp
+        decrypted_event = MagicMock(spec=RoomMessageText)
+        decrypted_event.sender = "@user:example.com"
+        decrypted_event.body = "!cd help"
+        decrypted_event.server_timestamp = bot.start_time + 2000  # Different timestamp
+        
+        # Create a MegolmEvent with different timestamp
+        event = MagicMock(spec=MegolmEvent)
+        event.sender = "@user:example.com"
+        event.session_id = "test_session_id"
+        event.server_timestamp = bot.start_time + 1000  # Different from decrypted event
+        event.decrypted = decrypted_event  # Message was successfully decrypted
+        
+        # Call the callback
+        self.loop.run_until_complete(
+            bot.megolm_event_callback(room, event)
+        )
+        
+        # Verify the message WAS processed
+        bot.command_handler.handle_message.assert_called_once()
+        
+        # The decrypted event should keep its ORIGINAL timestamp
+        # We don't overwrite if it's already set
+        self.assertEqual(decrypted_event.server_timestamp, bot.start_time + 2000)
+        self.assertNotEqual(decrypted_event.server_timestamp, event.server_timestamp)
+
     def test_sync_callback_uploads_keys(self):
         """Test that sync callback uploads keys when needed."""
         bot = ChatrixBot(self.config)
