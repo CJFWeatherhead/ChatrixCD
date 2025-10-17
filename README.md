@@ -290,7 +290,23 @@ Once the bot is running and invited to a room, you can use the following command
 
 **Admin Access**: When admin users are configured in `config.json`, only those users can run bot commands. Other users will receive a friendly brush-off message. Supports URL-encoded usernames (e.g., `@user%40domain.com`).
 
-Command aliases can be configured through the TUI (press `x` in the main menu) or by editing `aliases.json`.
+### Command Aliases
+
+Command aliases allow you to create custom shortcuts for frequently used commands. Aliases can be managed through the TUI or by editing the `aliases.json` file.
+
+#### Managing Aliases via TUI
+
+1. Press `x` in the main menu to access the ALIASES screen
+2. Press `a` to add a new alias
+3. Enter the alias name (e.g., "deploy")
+4. Enter the command to alias to (e.g., "run 1 5")
+5. Press `d` to delete a selected alias
+
+**Note**: Alias names with special characters (including emoji) are fully supported.
+
+#### Managing Aliases via JSON File
+
+Create or edit `aliases.json` in your ChatrixCD directory:
 
 **Example aliases** (`aliases.json`):
 ```json
@@ -298,9 +314,26 @@ Command aliases can be configured through the TUI (press `x` in the main menu) o
   "deploy-prod": "run 1 5",
   "deploy-staging": "run 1 3",
   "check-last": "status",
-  "health": "ping"
+  "health": "ping",
+  "🚀": "run 1 5",
+  "deploy😱": "run 2 10"
 }
 ```
+
+#### Using Aliases
+
+Once configured, use aliases just like regular commands:
+
+```
+!cd deploy-prod
+!cd health
+!cd 🚀
+```
+
+Aliases support all valid bot commands:
+- `help`, `projects`, `templates`, `run`, `status`, `stop`, `logs`, `ping`, `info`
+
+**Note**: Aliases cannot override built-in commands.
 
 ### Example Workflow
 
