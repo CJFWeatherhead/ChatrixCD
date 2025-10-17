@@ -1,0 +1,7 @@
+{
+  "deploy-prod": "run 1 5",
+  "deploy-staging": "run 1 3",
+  "check-last": "status",
+  "list-all": "projects",
+  "health": "ping"
+}

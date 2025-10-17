@@ -15,6 +15,49 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Added
+- **Command Aliases**: Create custom shortcuts for frequently used commands
+  - Manage aliases through the TUI (press `x` in main menu) or edit `aliases.json` file
+  - Aliases stored separately from `config.json` for easy management
+  - Only valid `!cd` commands can be aliased
+  - Example: Create `deploy-prod` alias for `run 1 5`
+- **Task Confirmation**: Required confirmation before executing tasks
+  - Shows task name and description before running
+  - Confirmation required with `y`, `yes`, `go`, `start`, or similar
+  - Prevents accidental task execution
+- **Smart Parameter Handling**: Auto-fill project/template IDs when only one option available
+  - `!cd templates` auto-selects project if only one exists
+  - `!cd run` auto-selects project/template if only one option
+  - Prompts for clarification when ambiguous
+- **Enhanced Status and Logs Commands**: Can be used without task ID
+  - `!cd status` uses last task run if no ID provided
+  - `!cd logs` uses last task run if no ID provided
+  - Remembers the most recently started task
+- **Rich Message Formatting**: Markdown and HTML formatting support
+  - Bold text with `**text**` renders properly
+  - Italic, code blocks, and lists supported
+  - Emoji support throughout all commands
+- **Improved Log Output**: Better formatting and parsing
+  - Detects Ansible and Terraform output formats
+  - Removes ANSI color codes for clean display
+  - Tails last 100 lines to avoid truncation
+  - Shows line count when truncated
+- **Periodic Task Updates**: Long-running tasks send status reminders
+  - "Task xyz is still running" message every 5 minutes
+  - Prevents tasks from being forgotten
+- **Task Naming**: Tasks displayed with name and ID
+  - Format: "Template Name (123)" instead of just "123"
+  - Fetches template names from Semaphore
+- **New API Endpoints**:
+  - `!cd ping` - Ping Semaphore server to check connectivity
+  - `!cd info` - Get Semaphore server information
+  - `!cd aliases` - List all configured command aliases
+- **TUI Aliases Screen**: Interactive alias management
+  - Add new aliases with validation
+  - Delete existing aliases
+  - View all configured aliases
+  - Accessible via `x` hotkey in main menu
+
 ### Fixed
 - **CRITICAL**: Fixed TUI crash when OIDC authentication is detected
   - OIDCAuthScreen now uses TextArea instead of markup links to avoid MarkupError with URLs containing special characters

@@ -28,6 +28,11 @@ ChatrixCD integrates with Semaphore UI to enable CI/CD automation through chat. 
 - 🚀 **Semaphore UI Integration**: Start and monitor CI/CD tasks via chat commands
 - 📊 **Real-time Updates**: Automatic status updates for running tasks
 - 🎯 **Command-based Interface**: Easy-to-use command system for task management
+- 🔖 **Command Aliases**: Create custom shortcuts for frequently used commands
+- ✅ **Task Confirmation**: Required confirmation before executing tasks with template details
+- 🎨 **Rich Formatting**: Markdown and HTML formatting in messages with emoji support
+- 🧠 **Smart Parameters**: Auto-fill project/template IDs when only one option available
+- 📝 **Enhanced Logs**: Formatted output for Ansible and Terraform with intelligent tailing
 - 🔧 **Flexible Configuration**: Support for HJSON config files (JSON with comments) with automatic migration
 - ✅ **Configuration Validation**: Built-in schema validation with clear error messages
 - 🔄 **Auto-Migration**: Automatic upgrade of configuration files when new features are added
@@ -262,13 +267,33 @@ chatrixcd -vv -C -R -L
 
 Once the bot is running and invited to a room, you can use the following commands:
 
+#### Basic Commands
 - `!cd help` - Show help message with available commands
 - `!cd projects` - List all available Semaphore projects
-- `!cd templates <project_id>` - List templates for a specific project
-- `!cd run <project_id> <template_id>` - Start a task from a template
-- `!cd status <task_id>` - Check the status of a running task
+- `!cd templates [project_id]` - List templates for a specific project (auto-selects if only one project)
+- `!cd run [project_id] [template_id]` - Start a task from a template (with confirmation, auto-selects when possible)
+- `!cd status [task_id]` - Check the status of a task (uses last task if no ID provided)
 - `!cd stop <task_id>` - Stop a running task
-- `!cd logs <task_id>` - Get logs from a task
+- `!cd logs [task_id]` - Get logs from a task (uses last task if no ID provided, formatted for Ansible/Terraform)
+
+#### Server Commands
+- `!cd ping` - Ping the Semaphore server to check connectivity
+- `!cd info` - Get Semaphore server information
+
+#### Alias Commands
+- `!cd aliases` - List all configured command aliases
+
+Command aliases can be configured through the TUI (press `x` in the main menu) or by editing `aliases.json`.
+
+**Example aliases** (`aliases.json`):
+```json
+{
+  "deploy-prod": "run 1 5",
+  "deploy-staging": "run 1 3",
+  "check-last": "status",
+  "health": "ping"
+}
+```
 
 ### Example Workflow
 
@@ -277,15 +302,25 @@ Once the bot is running and invited to a room, you can use the following command
    ```
    !cd projects
    ```
-3. View templates for a project:
+3. View templates for a project (auto-selects if only one):
+   ```
+   !cd templates
+   ```
+   or
    ```
    !cd templates 1
    ```
-4. Start a task:
+4. Start a task (with confirmation):
    ```
    !cd run 1 5
    ```
-5. The bot will automatically report status updates as the task runs
+   The bot will show task details and ask for confirmation. Reply with `y`, `yes`, `go`, or `start` to proceed.
+
+5. The bot will automatically report status updates as the task runs, with periodic reminders for long-running tasks
+6. Check logs without specifying task ID (uses last task):
+   ```
+   !cd logs
+   ```
 
 ## Deployment
 
