@@ -778,10 +778,16 @@ class ChatrixBot:
     async def key_verification_start_callback(self, event: KeyVerificationStart):
         """Handle incoming key verification start events.
         
+        This callback is triggered when another device initiates verification with the bot.
+        
         Args:
             event: Key verification start event
         """
-        logger.info(f"Received key verification start from {event.sender} (device: {event.from_device})")
+        logger.info(
+            f"Received key verification request from {event.sender} (device: {event.from_device})\n"
+            f"Transaction ID: {event.transaction_id}\n"
+            f"Note: To complete this verification, use the TUI (VER menu) or the other device will timeout."
+        )
         
         # The verification will be handled by the SAS object in the client
         # TUI will access client.key_verifications to get active verifications
@@ -792,7 +798,11 @@ class ChatrixBot:
         Args:
             event: Key verification cancel event
         """
-        logger.info(f"Key verification cancelled by {event.sender}: {event.reason}")
+        logger.info(
+            f"Key verification cancelled by {event.sender}\n"
+            f"Reason: {event.reason}\n"
+            f"This is normal if the verification timed out or was explicitly cancelled."
+        )
     
     async def key_verification_key_callback(self, event: KeyVerificationKey):
         """Handle key verification key exchange events.

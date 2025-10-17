@@ -152,6 +152,7 @@ class SessionsScreen(Screen):
         with ScrollableContainer():
             yield Static("[bold cyan]Session Management[/bold cyan]\n", id="title")
             yield Button("View Encryption Sessions", id="view_sessions", variant="primary")
+            yield Button("View Pending Verification Requests", id="view_pending_verifications")
             yield Button("Verify Device (Emoji)", id="verify_emoji")
             yield Button("Verify Device (QR Code)", id="verify_qr")
             yield Button("Show Fingerprint", id="show_fingerprint")
@@ -162,6 +163,8 @@ class SessionsScreen(Screen):
         """Handle button presses."""
         if event.button.id == "view_sessions":
             await self.show_sessions_list()
+        elif event.button.id == "view_pending_verifications":
+            await self.show_pending_verifications()
         elif event.button.id == "verify_emoji":
             await self.show_emoji_verification()
         elif event.button.id == "verify_qr":
@@ -170,6 +173,46 @@ class SessionsScreen(Screen):
             await self.show_device_fingerprint()
         elif event.button.id == "reset_olm":
             await self.reset_olm_sessions()
+    
+    async def show_pending_verifications(self):
+        """Display list of pending verification requests."""
+        if not self.tui_app.bot or not self.tui_app.bot.client or not self.tui_app.bot.client.olm:
+            self.app.push_screen(MessageScreen("Encryption is not enabled."))
+            return
+        
+        client = self.tui_app.bot.client
+        pending = []
+        
+        # Check for active key verifications
+        if hasattr(client, 'key_verifications') and client.key_verifications:
+            for transaction_id, verification in client.key_verifications.items():
+                pending.append({
+                    'transaction_id': transaction_id,
+                    'user_id': getattr(verification, 'user_id', 'Unknown'),
+                    'device_id': getattr(verification, 'device_id', 'Unknown'),
+                    'type': type(verification).__name__
+                })
+        
+        if not pending:
+            self.app.push_screen(MessageScreen(
+                "[bold cyan]Pending Verification Requests[/bold cyan]\n\n"
+                "No pending verification requests.\n\n"
+                "[dim]When another device initiates verification with this bot,\n"
+                "it will appear here. You can then complete the verification\n"
+                "using the 'Verify Device (Emoji)' option.[/dim]"
+            ))
+            return
+        
+        # Display pending verifications
+        message = "[bold cyan]Pending Verification Requests[/bold cyan]\n\n"
+        for ver in pending:
+            message += f"[bold]Transaction:[/bold] {ver['transaction_id'][:16]}...\n"
+            message += f"[bold]User:[/bold] {ver['user_id']}\n"
+            message += f"[bold]Device:[/bold] {ver['device_id']}\n"
+            message += f"[bold]Type:[/bold] {ver['type']}\n\n"
+        
+        message += "[dim]Use 'Verify Device (Emoji)' to respond to these requests.[/dim]"
+        self.app.push_screen(MessageScreen(message))
     
     async def show_sessions_list(self):
         """Display list of encryption sessions."""
