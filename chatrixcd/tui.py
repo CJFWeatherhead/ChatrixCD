@@ -1500,16 +1500,17 @@ class ChatrixTUI(App):
         await self.show_config()
 
 
-async def run_tui(bot, config, use_color: bool = True):
+async def run_tui(bot, config, use_color: bool = True, mouse: bool = False):
     """Run the TUI interface.
     
     Args:
         bot: The ChatrixBot instance
         config: Configuration object
         use_color: Whether to use colors
+        mouse: Whether to enable mouse support (default: False)
     """
     app = ChatrixTUI(bot, config, use_color=use_color)
-    await app.run_async()
+    await app.run_async(mouse=mouse)
 
 
 async def show_config_tui(config):

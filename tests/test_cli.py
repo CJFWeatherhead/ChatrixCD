@@ -191,6 +191,42 @@ class TestCLI(unittest.TestCase):
         args = parser.parse_args(['-R'])
         self.assertTrue(args.redact)
     
+    def test_log_only_flag(self):
+        """Test --log-only flag."""
+        import argparse
+        parser = argparse.ArgumentParser(prog='chatrixcd')
+        parser.add_argument('-L', '--log-only', action='store_true', dest='log_only')
+        
+        # Default (no log-only)
+        args = parser.parse_args([])
+        self.assertFalse(args.log_only)
+        
+        # With log-only
+        args = parser.parse_args(['--log-only'])
+        self.assertTrue(args.log_only)
+        
+        # Short form
+        args = parser.parse_args(['-L'])
+        self.assertTrue(args.log_only)
+    
+    def test_mouse_flag(self):
+        """Test --mouse flag."""
+        import argparse
+        parser = argparse.ArgumentParser(prog='chatrixcd')
+        parser.add_argument('-m', '--mouse', action='store_true')
+        
+        # Default (no mouse support)
+        args = parser.parse_args([])
+        self.assertFalse(args.mouse)
+        
+        # With mouse support
+        args = parser.parse_args(['--mouse'])
+        self.assertTrue(args.mouse)
+        
+        # Short form
+        args = parser.parse_args(['-m'])
+        self.assertTrue(args.mouse)
+    
     def test_combined_flags(self):
         """Test multiple flags combined."""
         import argparse
