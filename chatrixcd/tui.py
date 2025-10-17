@@ -20,6 +20,7 @@ from textual.screen import Screen, ModalScreen
 from textual.binding import Binding
 from textual import events
 from textual.reactive import reactive
+from chatrixcd.verification import DeviceVerificationManager
 
 logger = logging.getLogger(__name__)
 
@@ -345,19 +346,9 @@ class SessionsScreen(Screen):
             self.app.push_screen(MessageScreen("Encryption is not enabled."))
             return
         
-        client = self.tui_app.bot.client
-        pending = []
-        
-        # Check for active key verifications
-        if hasattr(client, 'key_verifications') and client.key_verifications:
-            for transaction_id, verification in client.key_verifications.items():
-                pending.append({
-                    'transaction_id': transaction_id,
-                    'user_id': getattr(verification, 'user_id', 'Unknown'),
-                    'device_id': getattr(verification, 'device_id', 'Unknown'),
-                    'type': type(verification).__name__,
-                    'verification': verification
-                })
+        # Use verification manager to get pending verifications
+        verification_manager = self.tui_app.bot.verification_manager
+        pending = await verification_manager.get_pending_verifications()
         
         if not pending:
             self.app.push_screen(MessageScreen(
@@ -609,30 +600,9 @@ class SessionsScreen(Screen):
             self.app.push_screen(MessageScreen("Encryption is not enabled. Cannot perform emoji verification."))
             return
         
-        # Check if there are any unverified devices to verify
-        client = self.tui_app.bot.client
-        unverified_devices = []
-        
-        try:
-            if hasattr(client, 'device_store') and client.device_store:
-                for user_id in client.device_store.users:
-                    user_devices = client.device_store[user_id]
-                    for device_id, device in user_devices.items():
-                        # Skip our own device
-                        if user_id == client.user_id and device_id == client.device_id:
-                            continue
-                        # Only include unverified devices
-                        if not getattr(device, 'verified', False):
-                            unverified_devices.append({
-                                'user_id': user_id,
-                                'device_id': device_id,
-                                'device_name': getattr(device, 'display_name', 'Unknown'),
-                                'device': device
-                            })
-        except Exception as e:
-            logger.error(f"Error getting unverified devices: {e}")
-            self.app.push_screen(MessageScreen(f"Error getting unverified devices: {e}"))
-            return
+        # Use verification manager to get unverified devices
+        verification_manager = self.tui_app.bot.verification_manager
+        unverified_devices = await verification_manager.get_unverified_devices()
         
         if not unverified_devices:
             self.app.push_screen(MessageScreen("[bold cyan]Emoji Verification[/bold cyan]\n\nNo unverified devices found.\n\n[dim]All known devices are already verified or\nthere are no other devices to verify.[/dim]"))
