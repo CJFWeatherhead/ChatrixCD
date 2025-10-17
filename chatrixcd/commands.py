@@ -975,29 +975,56 @@ class CommandHandler:
             await self.bot.send_message(room_id, "❌ Failed to ping Semaphore server")
 
     async def get_semaphore_info(self, room_id: str):
-        """Get Semaphore server info.
+        """Get Semaphore and Matrix server info.
         
         Args:
             room_id: Room to send response to
         """
-        info = await self.semaphore.get_info()
+        # Get Semaphore info
+        semaphore_info = await self.semaphore.get_info()
         
-        if info:
-            message = "**Semaphore Server Info** ℹ️\n\n"
+        message = "**Server Information** ℹ️\n\n"
+        
+        # Matrix information
+        message += "**Matrix Server**\n"
+        if self.bot.client:
+            message += f"• **Homeserver:** {self.bot.client.homeserver}\n"
+            message += f"• **User ID:** {self.bot.client.user_id}\n"
+            if hasattr(self.bot.client, 'device_id') and self.bot.client.device_id:
+                message += f"• **Device ID:** {self.bot.client.device_id}\n"
+            
+            # Connection status
+            if hasattr(self.bot.client, 'logged_in') and self.bot.client.logged_in:
+                message += f"• **Status:** Connected ✅\n"
+            else:
+                message += f"• **Status:** Disconnected ❌\n"
+            
+            # Encryption status
+            if hasattr(self.bot.client, 'olm') and self.bot.client.olm:
+                message += f"• **E2E Encryption:** Enabled 🔒\n"
+            else:
+                message += f"• **E2E Encryption:** Disabled\n"
+        
+        message += "\n"
+        
+        # Semaphore information
+        if semaphore_info:
+            message += "**Semaphore Server**\n"
             
             # Display version info
-            if 'version' in info:
-                message += f"**Version:** {info.get('version')}\n"
+            if 'version' in semaphore_info:
+                message += f"• **Version:** {semaphore_info.get('version')}\n"
             
             # Display any other relevant info
-            for key, value in info.items():
+            for key, value in semaphore_info.items():
                 if key not in ['version']:
-                    message += f"**{key.replace('_', ' ').title()}:** {value}\n"
-            
-            html_message = self.markdown_to_html(message)
-            await self.bot.send_message(room_id, message, html_message)
+                    message += f"• **{key.replace('_', ' ').title()}:** {value}\n"
         else:
-            await self.bot.send_message(room_id, "❌ Failed to get Semaphore server info")
+            message += "**Semaphore Server**\n"
+            message += "• Failed to get Semaphore info ❌\n"
+        
+        html_message = self.markdown_to_html(message)
+        await self.bot.send_message(room_id, message, html_message)
 
     async def list_command_aliases(self, room_id: str):
         """List all command aliases.
