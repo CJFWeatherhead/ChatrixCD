@@ -101,12 +101,177 @@ class AdminsScreen(Screen):
         yield Header()
         with Container():
             yield Static("[bold cyan]Admin Users[/bold cyan]\n", id="title")
-            if self.admins:
-                for admin in self.admins:
-                    yield Static(f"  • {admin}")
+            if not self.admins:
+                yield Static("[dim]No admin users configured. All users have admin access.[/dim]")
             else:
-                yield Static("[yellow]No admin users configured[/yellow]")
+                for admin in self.admins:
+                    yield Static(f"• {admin}")
         yield Footer()
+
+
+class AliasesScreen(Screen):
+    """Screen to manage command aliases."""
+    
+    BINDINGS = [
+        Binding("escape", "app.pop_screen", "Back", priority=True),
+        Binding("b", "app.pop_screen", "Back"),
+        Binding("a", "add_alias", "Add"),
+        Binding("d", "delete_alias", "Delete"),
+    ]
+    
+    def __init__(self, tui_app, **kwargs):
+        super().__init__(**kwargs)
+        self.tui_app = tui_app
+        self.selected_alias = None
+    
+    def compose(self) -> ComposeResult:
+        """Create child widgets."""
+        yield Header()
+        with ScrollableContainer():
+            yield Static("[bold cyan]Command Aliases[/bold cyan]\n", id="title")
+            yield Static("[dim]Press 'a' to add, 'd' to delete. Only valid !cd commands can be aliased.[/dim]\n")
+            
+            # Get aliases from command handler
+            if self.tui_app.bot and hasattr(self.tui_app.bot, 'command_handler'):
+                aliases = self.tui_app.bot.command_handler.alias_manager.list_aliases()
+                
+                if not aliases:
+                    yield Static("[dim]No aliases configured.[/dim]\n")
+                else:
+                    yield Static("[bold]Current Aliases:[/bold]\n")
+                    for alias, command in aliases.items():
+                        yield Button(f"{alias} → {command}", id=f"alias_{alias}")
+            else:
+                yield Static("[dim]Bot not initialized.[/dim]\n")
+            
+            yield Static("\n[bold]Actions:[/bold]")
+            yield Button("Add Alias [a]", id="add_alias_button", variant="primary")
+            yield Button("Delete Selected [d]", id="delete_alias_button", variant="error")
+        yield Footer()
+    
+    async def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Handle button presses."""
+        button_id = event.button.id
+        
+        if button_id.startswith("alias_"):
+            # Select this alias
+            alias_name = button_id[6:]
+            self.selected_alias = alias_name
+            # Update button styles to show selection
+            for button in self.query(Button):
+                if button.id == button_id:
+                    button.variant = "success"
+                elif button.id and button.id.startswith("alias_"):
+                    button.variant = "default"
+        elif button_id == "add_alias_button":
+            await self.add_alias()
+        elif button_id == "delete_alias_button":
+            await self.delete_alias()
+    
+    async def action_add_alias(self):
+        """Add a new alias."""
+        await self.add_alias()
+    
+    async def action_delete_alias(self):
+        """Delete selected alias."""
+        await self.delete_alias()
+    
+    async def add_alias(self):
+        """Prompt to add a new alias."""
+        from textual.widgets import Input
+        
+        class AliasInputScreen(ModalScreen):
+            """Modal screen for adding an alias."""
+            
+            def __init__(self, alias_manager, **kwargs):
+                super().__init__(**kwargs)
+                self.alias_manager = alias_manager
+            
+            def compose(self) -> ComposeResult:
+                """Create child widgets."""
+                with Container():
+                    yield Static("[bold cyan]Add New Alias[/bold cyan]\n")
+                    yield Static("Alias name (e.g., 'deploy'):")
+                    yield Input(placeholder="alias-name", id="alias_name")
+                    yield Static("\nCommand (e.g., 'run 1 5'):")
+                    yield Input(placeholder="run 1 5", id="alias_command")
+                    yield Static("\n[dim]Valid commands: help, projects, templates, run, status, stop, logs, ping, info[/dim]\n")
+                    yield Button("Create", id="create", variant="primary")
+                    yield Button("Cancel", id="cancel")
+            
+            async def on_button_pressed(self, event: Button.Pressed) -> None:
+                """Handle button presses."""
+                if event.button.id == "create":
+                    name_input = self.query_one("#alias_name", Input)
+                    command_input = self.query_one("#alias_command", Input)
+                    
+                    alias_name = name_input.value.strip()
+                    alias_command = command_input.value.strip()
+                    
+                    if not alias_name or not alias_command:
+                        self.app.push_screen(
+                            MessageScreen("Both alias name and command are required.")
+                        )
+                        return
+                    
+                    # Validate command
+                    if not self.alias_manager.validate_command(alias_command):
+                        self.app.push_screen(
+                            MessageScreen(
+                                f"Invalid command: {alias_command}\n\n"
+                                "Valid commands: help, projects, templates, run, status, stop, logs, ping, info"
+                            )
+                        )
+                        return
+                    
+                    # Add alias
+                    success = self.alias_manager.add_alias(alias_name, alias_command)
+                    
+                    if success:
+                        self.app.push_screen(
+                            MessageScreen(f"✅ Alias '{alias_name}' created successfully!")
+                        )
+                        self.dismiss()
+                    else:
+                        self.app.push_screen(
+                            MessageScreen(
+                                f"❌ Failed to create alias.\n\n"
+                                f"'{alias_name}' may conflict with a built-in command."
+                            )
+                        )
+                elif event.button.id == "cancel":
+                    self.dismiss()
+        
+        if self.tui_app.bot and hasattr(self.tui_app.bot, 'command_handler'):
+            alias_manager = self.tui_app.bot.command_handler.alias_manager
+            self.app.push_screen(AliasInputScreen(alias_manager))
+        else:
+            self.app.push_screen(MessageScreen("Bot not initialized."))
+    
+    async def delete_alias(self):
+        """Delete the selected alias."""
+        if not self.selected_alias:
+            self.app.push_screen(MessageScreen("No alias selected. Click on an alias to select it."))
+            return
+        
+        if self.tui_app.bot and hasattr(self.tui_app.bot, 'command_handler'):
+            alias_manager = self.tui_app.bot.command_handler.alias_manager
+            success = alias_manager.remove_alias(self.selected_alias)
+            
+            if success:
+                self.app.push_screen(
+                    MessageScreen(f"✅ Alias '{self.selected_alias}' deleted successfully!")
+                )
+                self.selected_alias = None
+                # Refresh screen
+                self.app.pop_screen()
+                self.app.push_screen(AliasesScreen(self.tui_app))
+            else:
+                self.app.push_screen(
+                    MessageScreen(f"❌ Failed to delete alias '{self.selected_alias}'.")
+                )
+        else:
+            self.app.push_screen(MessageScreen("Bot not initialized."))
 
 
 class RoomsScreen(Screen):
@@ -1408,6 +1573,7 @@ class ChatrixTUI(App):
         Binding("l", "show_log", "Log"),
         Binding("t", "show_set", "Set"),
         Binding("c", "show_config", "Show Config"),
+        Binding("x", "show_aliases", "Aliases"),
     ]
     
     def __init__(self, bot, config, use_color: bool = True, **kwargs):
@@ -1451,6 +1617,7 @@ class ChatrixTUI(App):
             yield Button("LOG - View log [l]", id="log")
             yield Button("SET - Change operational variables [t]", id="set")
             yield Button("SHOW - Show current configuration [c]", id="show")
+            yield Button("ALIASES - Manage command aliases [x]", id="aliases")
             yield Button("QUIT - Exit [q]", id="quit", variant="error")
         yield Footer()
     
@@ -1564,6 +1731,8 @@ class ChatrixTUI(App):
             await self.show_set()
         elif button_id == "show":
             await self.show_config()
+        elif button_id == "aliases":
+            await self.show_aliases()
         elif button_id == "quit":
             await self.action_quit()
     
@@ -1691,6 +1860,10 @@ class ChatrixTUI(App):
         
         self.push_screen(ShowScreen(config_text))
     
+    async def show_aliases(self):
+        """Show aliases management screen."""
+        self.push_screen(AliasesScreen(self))
+    
     async def send_message_to_room(self, room_id: str, message: str):
         """Send a message to a room.
         
@@ -1737,6 +1910,10 @@ class ChatrixTUI(App):
     async def action_show_config(self):
         """Handle show config action."""
         await self.show_config()
+    
+    async def action_show_aliases(self):
+        """Handle show aliases action."""
+        await self.show_aliases()
 
 
 async def run_tui(bot, config, use_color: bool = True, mouse: bool = False):
