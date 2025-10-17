@@ -6,7 +6,7 @@ nav_order: 2
 
 # Installation Guide
 
-This guide covers all installation methods for ChatrixCD.
+This guide covers all installation methods for ChatrixCD. For more detailed platform-specific instructions and troubleshooting, see the comprehensive [INSTALL.md](https://github.com/CJFWeatherhead/ChatrixCD/blob/main/INSTALL.md) in the repository root.
 
 ## Prerequisites
 

@@ -6,7 +6,7 @@ nav_order: 8
 
 # Deployment Guide
 
-Overview of deployment options for ChatrixCD.
+Overview of deployment options for ChatrixCD. For detailed deployment instructions, service configurations, and production best practices, see the comprehensive [DEPLOYMENT.md](https://github.com/CJFWeatherhead/ChatrixCD/blob/main/DEPLOYMENT.md) in the repository root.
 
 ## Quick Reference
 

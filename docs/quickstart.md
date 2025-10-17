@@ -6,7 +6,7 @@ nav_order: 3
 
 # Quick Start Guide
 
-Get ChatrixCD up and running in minutes.
+Get ChatrixCD up and running in minutes. For more detailed examples, configuration options, and troubleshooting, see the comprehensive [QUICKSTART.md](https://github.com/CJFWeatherhead/ChatrixCD/blob/main/QUICKSTART.md) in the repository root.
 
 ## 1. Install ChatrixCD
 

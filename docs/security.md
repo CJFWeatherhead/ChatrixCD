@@ -6,6 +6,8 @@ nav_order: 7
 
 # Security Policy
 
+For complete security guidelines, best practices, and detailed information, see the full [SECURITY.md](https://github.com/CJFWeatherhead/ChatrixCD/blob/main/SECURITY.md) in the repository root.
+
 ## Supported Versions
 
 | Version | Supported          |
