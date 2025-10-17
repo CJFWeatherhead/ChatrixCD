@@ -247,7 +247,64 @@ class SessionsScreen(Screen):
         await self.show_device_selection_for_verification(unverified_devices)
     
     async def show_device_selection_for_verification(self, devices: List[Dict[str, Any]]):
-        """Show device selection screen for verification."""
+        """Show device selection screen for verification.
+        
+        First shows user selection, then device selection for chosen user.
+        """
+        from textual.screen import Screen as BaseScreen
+        
+        # Group devices by user
+        devices_by_user = {}
+        for device_info in devices:
+            user_id = device_info['user_id']
+            if user_id not in devices_by_user:
+                devices_by_user[user_id] = []
+            devices_by_user[user_id].append(device_info)
+        
+        # If only one user, skip user selection
+        if len(devices_by_user) == 1:
+            user_id = list(devices_by_user.keys())[0]
+            await self._show_user_devices_for_verification(user_id, devices_by_user[user_id])
+            return
+        
+        # Show user selection screen first
+        class UserSelectionScreen(BaseScreen):
+            """Screen for selecting a user to verify."""
+            
+            BINDINGS = [
+                Binding("escape", "app.pop_screen", "Back", priority=True),
+            ]
+            
+            def __init__(self, parent_sessions_screen, devices_by_user, **kwargs):
+                super().__init__(**kwargs)
+                self.parent_sessions_screen = parent_sessions_screen
+                self.devices_by_user = devices_by_user
+            
+            def compose(self) -> ComposeResult:
+                yield Header()
+                with ScrollableContainer():
+                    yield Static("[bold cyan]Select User to Verify[/bold cyan]\n", id="title")
+                    yield Static("[dim]Choose a user to see their unverified devices:[/dim]\n")
+                    
+                    for idx, (user_id, user_devices) in enumerate(self.devices_by_user.items()):
+                        device_count = len(user_devices)
+                        button_label = f"{user_id}\n[dim]{device_count} unverified device(s)[/dim]"
+                        yield Button(button_label, id=f"user_{idx}")
+                yield Footer()
+            
+            async def on_button_pressed(self, event: Button.Pressed) -> None:
+                button_id = event.button.id
+                if button_id.startswith("user_"):
+                    idx = int(button_id.split("_")[1])
+                    user_id = list(self.devices_by_user.keys())[idx]
+                    user_devices = self.devices_by_user[user_id]
+                    self.app.pop_screen()
+                    await self.parent_sessions_screen._show_user_devices_for_verification(user_id, user_devices)
+        
+        self.app.push_screen(UserSelectionScreen(self, devices_by_user))
+    
+    async def _show_user_devices_for_verification(self, user_id: str, devices: List[Dict[str, Any]]):
+        """Show device selection for a specific user."""
         from textual.screen import Screen as BaseScreen
         
         class DeviceSelectionScreen(BaseScreen):
@@ -255,23 +312,24 @@ class SessionsScreen(Screen):
                 Binding("escape", "app.pop_screen", "Back", priority=True),
             ]
             
-            def __init__(self, tui_app, devices: List[Dict[str, Any]], **kwargs):
+            def __init__(self, parent_sessions_screen, user_id: str, devices: List[Dict[str, Any]], **kwargs):
                 super().__init__(**kwargs)
-                self.tui_app = tui_app
+                self.parent_sessions_screen = parent_sessions_screen
+                self.user_id = user_id
                 self.devices = devices
             
             def compose(self) -> ComposeResult:
                 yield Header()
                 with ScrollableContainer():
-                    yield Static("[bold cyan]Select Device to Verify[/bold cyan]\n", id="title")
+                    yield Static(f"[bold cyan]Select Device to Verify[/bold cyan]\n", id="title")
+                    yield Static(f"[bold]User:[/bold] {self.user_id}\n")
                     yield Static("[dim]Choose a device to start emoji verification:[/dim]\n")
                     
                     for idx, device_info in enumerate(self.devices):
-                        user_id = device_info['user_id']
                         device_id = device_info['device_id']
                         device_name = device_info['device_name']
                         
-                        button_text = f"{user_id}\n  Device: {device_name} ({device_id})"
+                        button_text = f"{device_name}\n[dim]{device_id}[/dim]"
                         yield Button(button_text, id=f"device_{idx}", variant="primary")
                 yield Footer()
             
@@ -288,7 +346,7 @@ class SessionsScreen(Screen):
                 from nio.crypto import Sas
                 
                 try:
-                    client = self.tui_app.bot.client
+                    client = self.parent_sessions_screen.tui_app.bot.client
                     device = device_info['device']
                     
                     # Start key verification
@@ -336,9 +394,9 @@ class SessionsScreen(Screen):
                         Binding("escape", "app.pop_screen", "Cancel", priority=True),
                     ]
                     
-                    def __init__(self, parent_screen, sas, emoji_display: str, device_info: Dict[str, Any], **kwargs):
+                    def __init__(self, device_selection_screen, sas, emoji_display: str, device_info: Dict[str, Any], **kwargs):
                         super().__init__(**kwargs)
-                        self.parent_screen = parent_screen
+                        self.device_selection_screen = device_selection_screen
                         self.sas = sas
                         self.emoji_display = emoji_display
                         self.device_info = device_info
@@ -367,7 +425,7 @@ class SessionsScreen(Screen):
                             self.sas.accept_sas()
                             
                             # Send the MAC
-                            client = self.parent_screen.tui_app.bot.client
+                            client = self.device_selection_screen.parent_sessions_screen.tui_app.bot.client
                             await client.send_to_device_messages()
                             
                             self.app.push_screen(MessageScreen("✅ Verification successful!\n\nThe device has been verified and marked as trusted."))
@@ -382,7 +440,7 @@ class SessionsScreen(Screen):
                         try:
                             self.sas.reject_sas()
                             
-                            client = self.parent_screen.tui_app.bot.client
+                            client = self.device_selection_screen.parent_sessions_screen.tui_app.bot.client
                             await client.send_to_device_messages()
                             
                             self.app.push_screen(MessageScreen("❌ Verification rejected.\n\nThe emojis did not match. The device was not verified."))
@@ -394,7 +452,7 @@ class SessionsScreen(Screen):
                 
                 self.app.push_screen(VerificationScreen(self, sas, emoji_display, device_info))
         
-        self.app.push_screen(DeviceSelectionScreen(self.tui_app, devices))
+        self.app.push_screen(DeviceSelectionScreen(self, user_id, devices))
     
     async def show_qr_verification(self):
         """Show QR code for device verification."""
