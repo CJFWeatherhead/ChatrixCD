@@ -1,7 +1,7 @@
 """Tests for bot module."""
 
 import unittest
-from unittest.mock import AsyncMock, MagicMock, patch, call
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch, call
 import asyncio
 import os
 import time
@@ -572,10 +572,19 @@ class TestChatrixBot(unittest.TestCase):
         """Test that decryption failure callback prevents duplicate key requests."""
         bot = ChatrixBot(self.config)
         
-        # Mock the request_room_key method and store/olm
+        # Mock the relevant methods
         bot.client.request_room_key = AsyncMock()
+        bot.client.keys_query = AsyncMock()
+        bot.client.send_to_device_messages = AsyncMock()
         bot.client.store = MagicMock()
         bot.client.olm = MagicMock()
+        bot.client.olm.session_store = MagicMock()
+        bot.client.olm.session_store.get = MagicMock(return_value=None)
+        
+        # Mock device_store as a property
+        mock_device_store = MagicMock()
+        mock_device_store.__contains__ = MagicMock(return_value=False)
+        type(bot.client).device_store = PropertyMock(return_value=mock_device_store)
         
         # Create mock room and event
         room = MagicMock(spec=MatrixRoom)
@@ -598,17 +607,27 @@ class TestChatrixBot(unittest.TestCase):
         # Verify request_room_key was only called once
         bot.client.request_room_key.assert_called_once_with(event)
         
-        # Verify the session_id was tracked
-        self.assertIn("test_session_id_123", bot.requested_session_ids)
+        # Verify the session was tracked (now uses sender:session_id format)
+        expected_key = f"{event.sender}:{event.session_id}"
+        self.assertIn(expected_key, bot.requested_session_ids)
 
     def test_decryption_failure_allows_different_sessions(self):
         """Test that different session IDs are each requested once."""
         bot = ChatrixBot(self.config)
         
-        # Mock the request_room_key method and store/olm
+        # Mock the relevant methods
         bot.client.request_room_key = AsyncMock()
+        bot.client.keys_query = AsyncMock()
+        bot.client.send_to_device_messages = AsyncMock()
         bot.client.store = MagicMock()
         bot.client.olm = MagicMock()
+        bot.client.olm.session_store = MagicMock()
+        bot.client.olm.session_store.get = MagicMock(return_value=None)
+        
+        # Mock device_store as a property
+        mock_device_store = MagicMock()
+        mock_device_store.__contains__ = MagicMock(return_value=False)
+        type(bot.client).device_store = PropertyMock(return_value=mock_device_store)
         
         # Create mock room
         room = MagicMock(spec=MatrixRoom)
@@ -637,9 +656,11 @@ class TestChatrixBot(unittest.TestCase):
         # Verify request_room_key was called twice (once for each session)
         self.assertEqual(bot.client.request_room_key.call_count, 2)
         
-        # Verify both session IDs were tracked
-        self.assertIn("session_1", bot.requested_session_ids)
-        self.assertIn("session_2", bot.requested_session_ids)
+        # Verify both sessions were tracked (now uses sender:session_id format)
+        expected_key1 = f"{event1.sender}:{event1.session_id}"
+        expected_key2 = f"{event2.sender}:{event2.session_id}"
+        self.assertIn(expected_key1, bot.requested_session_ids)
+        self.assertIn(expected_key2, bot.requested_session_ids)
 
     def test_megolm_event_processes_decrypted_messages(self):
         """Test that successfully decrypted Megolm events are processed as messages."""

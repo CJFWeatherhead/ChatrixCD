@@ -566,7 +566,7 @@ class ChatrixBot:
         
         This callback is triggered for all encrypted messages (MegolmEvent).
         If the message was successfully decrypted, it will be processed as a normal message.
-        If decryption failed, it will request the key from other devices in the room.
+        If decryption failed, it will actively work to establish proper encryption and request the key.
         
         Args:
             room: The room the encrypted message was sent in
@@ -591,33 +591,87 @@ class ChatrixBot:
                 )
             return
         
-        # Message couldn't be decrypted - request the key
+        # Message couldn't be decrypted - actively work to fix this
         logger.warning(
             f"Unable to decrypt message in {room.display_name} ({room.room_id}) "
-            f"from {event.sender}. Requesting room key..."
+            f"from {event.sender}. Taking steps to establish encryption..."
         )
         
         # Check if encryption store is loaded before trying to request keys
         if not self.client.store or not self.client.olm:
             logger.error(
-                "Cannot request room key: encryption store is not loaded. "
+                "Cannot establish encryption: encryption store is not loaded. "
                 "Make sure user_id is set correctly and the bot has logged in with encryption support."
             )
             return
         
+        # Step 1: Query device keys for the sender to ensure we have up-to-date device information
+        try:
+            logger.info(f"Querying device keys for {event.sender} to establish encryption")
+            await self.client.keys_query({event.sender})
+            logger.debug(f"Device keys queried successfully for {event.sender}")
+        except Exception as e:
+            logger.error(f"Failed to query device keys for {event.sender}: {e}")
+        
+        # Step 2: Try to claim one-time keys and establish Olm sessions with sender's devices
+        try:
+            if hasattr(self.client, 'device_store') and self.client.device_store:
+                if event.sender in self.client.device_store.users:
+                    sender_devices = self.client.device_store[event.sender]
+                    
+                    # Claim one-time keys for devices we don't have sessions with
+                    devices_to_claim = {}
+                    for device_id, device in sender_devices.items():
+                        # Check if we already have an Olm session with this device
+                        if not self.client.olm.session_store.get(device.curve25519):
+                            devices_to_claim[event.sender] = [device_id]
+                            logger.info(
+                                f"Need to establish Olm session with {event.sender}'s device {device_id}"
+                            )
+                    
+                    # Claim keys if needed
+                    if devices_to_claim:
+                        logger.info(f"Claiming one-time keys to establish Olm sessions")
+                        response = await self.client.keys_claim(devices_to_claim)
+                        if hasattr(response, 'one_time_keys'):
+                            logger.info(
+                                f"Successfully claimed one-time keys and established Olm sessions "
+                                f"with {len(response.one_time_keys)} device(s)"
+                            )
+                        else:
+                            logger.warning(f"Keys claim returned unexpected response: {response}")
+        except Exception as e:
+            logger.error(f"Failed to claim one-time keys for {event.sender}: {e}")
+        
+        # Step 3: Request the room key from the sender
         # Check if we've already requested this session key to avoid duplicate requests
-        if event.session_id in self.requested_session_ids:
-            logger.debug(f"Already requested key for session {event.session_id}, skipping duplicate request")
+        session_key = f"{event.sender}:{event.session_id}"
+        if session_key in self.requested_session_ids:
+            logger.debug(
+                f"Already requested key for session {event.session_id} from {event.sender}, "
+                "skipping duplicate request"
+            )
             return
         
         try:
             # Request the room key from other devices
+            logger.info(f"Requesting room key for session {event.session_id} from {event.sender}")
             await self.client.request_room_key(event)
-            # Track that we've requested this session ID
-            self.requested_session_ids.add(event.session_id)
-            logger.info(f"Requested room key for session {event.session_id}")
+            
+            # Track that we've requested this session ID from this sender
+            self.requested_session_ids.add(session_key)
+            
+            # Send the to-device messages to actually deliver the request
+            await self.client.send_to_device_messages()
+            
+            logger.info(
+                f"Sent room key request for session {event.session_id} to {event.sender}. "
+                "Waiting for key to be shared..."
+            )
         except Exception as e:
             logger.error(f"Failed to request room key: {e}")
+            # If the request failed, remove from tracking so we can retry
+            self.requested_session_ids.discard(session_key)
 
     async def send_message(self, room_id: str, message: str, 
                           formatted_message: Optional[str] = None):
@@ -724,6 +778,7 @@ class ChatrixBot:
         
         This callback is called after each sync to handle encryption-related tasks
         like uploading keys, querying device keys, and claiming one-time keys.
+        It also proactively queries device keys for members of encrypted rooms.
         
         Args:
             response: The sync response from the server
@@ -739,6 +794,33 @@ class ChatrixBot:
             if self.client.should_query_keys:
                 logger.debug("Querying device keys after sync...")
                 await self.client.keys_query()
+            
+            # Proactively query device keys for all members of encrypted rooms
+            # This ensures we have up-to-date device information for all users we might need to encrypt to
+            try:
+                if hasattr(response, 'rooms') and hasattr(response.rooms, 'join'):
+                    users_to_query = set()
+                    
+                    # Collect users from all encrypted rooms
+                    for room_id, room_info in response.rooms.join.items():
+                        # Check if this is an encrypted room
+                        room = self.client.rooms.get(room_id)
+                        if room and room.encrypted:
+                            # Add all room members to the set of users to query
+                            for user_id in room.users:
+                                # Skip our own user_id
+                                if user_id != self.client.user_id:
+                                    users_to_query.add(user_id)
+                    
+                    # Query device keys for all collected users
+                    if users_to_query:
+                        logger.debug(
+                            f"Proactively querying device keys for {len(users_to_query)} "
+                            f"user(s) in encrypted rooms"
+                        )
+                        await self.client.keys_query(user_set=users_to_query)
+            except Exception as e:
+                logger.debug(f"Error during proactive device key query: {e}")
 
     async def run(self):
         """Run the bot."""
