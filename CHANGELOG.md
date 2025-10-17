@@ -22,6 +22,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Automatically establish Olm sessions by claiming one-time keys before requesting room keys
   - Send to-device messages after room key requests to ensure delivery
   - Track requested sessions per sender to prevent duplicate key requests
+  - Handle duplicate key request errors gracefully (matrix-nio internally prevents duplicates)
+  - Add session tracking before request to prevent race conditions
   - Proactively query device keys for all users in encrypted rooms during sync
   - Perform initial encryption setup after first sync (query keys and establish sessions)
   - Share room keys with devices immediately after successful verification

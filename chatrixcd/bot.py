@@ -657,12 +657,13 @@ class ChatrixBot:
             return
         
         try:
+            # Track that we're requesting this session ID from this sender BEFORE making the request
+            # This prevents race conditions if the same event is processed multiple times
+            self.requested_session_ids.add(session_key)
+            
             # Request the room key from other devices
             logger.info(f"Requesting room key for session {event.session_id} from {event.sender}")
             await self.client.request_room_key(event)
-            
-            # Track that we've requested this session ID from this sender
-            self.requested_session_ids.add(session_key)
             
             # Send the to-device messages to actually deliver the request
             await self.client.send_to_device_messages()
@@ -672,9 +673,18 @@ class ChatrixBot:
                 "Waiting for key to be shared..."
             )
         except Exception as e:
-            logger.error(f"Failed to request room key: {e}")
-            # If the request failed, remove from tracking so we can retry
-            self.requested_session_ids.discard(session_key)
+            error_msg = str(e)
+            # matrix-nio prevents duplicate key requests internally
+            # If we get this error, it means nio already requested the key, which is fine
+            if "key sharing request is already sent out" in error_msg.lower():
+                logger.debug(
+                    f"Key request for session {event.session_id} already in progress "
+                    f"(managed by matrix-nio). This is normal behavior."
+                )
+            else:
+                # For other errors, log as error and remove from tracking so we can retry
+                logger.error(f"Failed to request room key: {e}")
+                self.requested_session_ids.discard(session_key)
 
     async def send_message(self, room_id: str, message: str, 
                           formatted_message: Optional[str] = None):
