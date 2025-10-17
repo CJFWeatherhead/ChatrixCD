@@ -247,3 +247,42 @@ class SemaphoreClient:
         except Exception as e:
             logger.error(f"Error stopping task: {e}")
             return False
+
+    async def ping(self) -> bool:
+        """Ping the Semaphore server to check if it's reachable.
+        
+        Returns:
+            True if server responds, False otherwise
+        """
+        await self._ensure_session()
+        try:
+            async with self.session.get(f"{self.base_url}/api/ping") as resp:
+                if resp.status == 200:
+                    logger.info("Semaphore server ping successful")
+                    return True
+                else:
+                    logger.error(f"Semaphore ping failed: {resp.status}")
+                    return False
+        except Exception as e:
+            logger.error(f"Error pinging Semaphore: {e}")
+            return False
+
+    async def get_info(self) -> Optional[Dict[str, Any]]:
+        """Get Semaphore server information.
+        
+        Returns:
+            Server info dictionary or None if failed
+        """
+        await self._ensure_session()
+        try:
+            async with self.session.get(f"{self.base_url}/api/info") as resp:
+                if resp.status == 200:
+                    info = await resp.json()
+                    logger.info("Retrieved Semaphore server info")
+                    return info
+                else:
+                    logger.error(f"Failed to get server info: {resp.status}")
+                    return None
+        except Exception as e:
+            logger.error(f"Error getting server info: {e}")
+            return None

@@ -192,6 +192,12 @@ class TestCommandHandler(unittest.TestCase):
 
     def test_list_templates_no_args(self):
         """Test list templates without project ID."""
+        # Mock to return multiple projects so it doesn't auto-select
+        self.mock_semaphore.get_projects = AsyncMock(return_value=[
+            {'id': 1, 'name': 'Project 1'},
+            {'id': 2, 'name': 'Project 2'}
+        ])
+        
         self.loop.run_until_complete(
             self.handler.list_templates('!test:example.com', [])
         )
@@ -244,6 +250,12 @@ class TestCommandHandler(unittest.TestCase):
 
     def test_run_task_no_args(self):
         """Test run task without arguments."""
+        # Mock to return multiple projects so it doesn't auto-select
+        self.mock_semaphore.get_projects = AsyncMock(return_value=[
+            {'id': 1, 'name': 'Project 1'},
+            {'id': 2, 'name': 'Project 2'}
+        ])
+        
         self.loop.run_until_complete(
             self.handler.run_task('!test:example.com', '@user:example.com', [])
         )
@@ -255,14 +267,20 @@ class TestCommandHandler(unittest.TestCase):
 
     def test_run_task_insufficient_args(self):
         """Test run task with insufficient arguments."""
+        # Mock to return multiple templates so it doesn't auto-select
+        self.mock_semaphore.get_project_templates = AsyncMock(return_value=[
+            {'id': 1, 'name': 'Template 1'},
+            {'id': 2, 'name': 'Template 2'}
+        ])
+        
         self.loop.run_until_complete(
             self.handler.run_task('!test:example.com', '@user:example.com', ['1'])
         )
         
-        # Should send usage message
+        # Should send message about multiple templates
         self.mock_bot.send_message.assert_called_once()
         call_args = self.mock_bot.send_message.call_args[0]
-        self.assertIn('Usage', call_args[1])
+        self.assertIn('Multiple templates', call_args[1])
 
     def test_run_task_invalid_ids(self):
         """Test run task with invalid IDs."""
@@ -277,37 +295,38 @@ class TestCommandHandler(unittest.TestCase):
 
     @patch('asyncio.create_task')
     def test_run_task_success(self, mock_create_task):
-        """Test successful task start."""
-        self.mock_semaphore.start_task = AsyncMock(return_value={
-            'id': 123,
-            'status': 'waiting'
-        })
+        """Test successful task start - now requests confirmation."""
+        # Mock template data
+        self.mock_semaphore.get_project_templates = AsyncMock(return_value=[
+            {'id': 1, 'name': 'Template 1', 'description': 'Test template'}
+        ])
         
         self.loop.run_until_complete(
             self.handler.run_task('!test:example.com', '@user:example.com', ['1', '1'])
         )
         
-        # Should send starting and success messages
-        self.assertEqual(self.mock_bot.send_message.call_count, 2)
+        # Should send confirmation request
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('Confirm', call_args[1])
         
-        # Check that task was added to active tasks
-        self.assertIn(123, self.handler.active_tasks)
-        
-        # Check that monitoring was started
-        mock_create_task.assert_called_once()
+        # Check that confirmation was added
+        confirmation_key = '!test:example.com:@user:example.com'
+        self.assertIn(confirmation_key, self.handler.pending_confirmations)
 
     def test_run_task_failure(self):
         """Test task start failure."""
-        self.mock_semaphore.start_task = AsyncMock(return_value=None)
+        # Mock template data  
+        self.mock_semaphore.get_project_templates = AsyncMock(return_value=[])
         
         self.loop.run_until_complete(
             self.handler.run_task('!test:example.com', '@user:example.com', ['1', '1'])
         )
         
-        # Should send starting and failure messages
-        self.assertEqual(self.mock_bot.send_message.call_count, 2)
-        last_call_args = self.mock_bot.send_message.call_args[0]
-        self.assertIn('Failed to start task', last_call_args[1])
+        # Should send template not found message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('not found', call_args[1])
 
     def test_check_status_no_args(self):
         """Test check status without task ID."""
@@ -519,18 +538,18 @@ class TestCommandHandler(unittest.TestCase):
             'room_id': '!test:example.com'
         }
         
-        # Create very long logs
-        long_logs = 'A' * 5000
+        # Create very long logs with many lines
+        long_logs = '\n'.join(['A' * 100 for _ in range(200)])
         self.mock_semaphore.get_task_output = AsyncMock(return_value=long_logs)
         
         self.loop.run_until_complete(
             self.handler.get_logs('!test:example.com', ['123'])
         )
         
-        # Should send truncated logs
+        # Should send truncated logs (last 100 lines)
         self.mock_bot.send_message.assert_called_once()
         call_args = self.mock_bot.send_message.call_args[0]
-        self.assertIn('truncated', call_args[1])
+        self.assertIn('last 100 lines', call_args[1])
 
 
 if __name__ == '__main__':

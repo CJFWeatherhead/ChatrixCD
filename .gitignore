@@ -147,6 +147,7 @@ venv.bak/
 # Bot configuration and data
 config.yaml
 config.json
+aliases.json
 store/
 *.log
 

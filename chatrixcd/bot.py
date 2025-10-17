@@ -623,11 +623,41 @@ class ChatrixBot:
             content["format"] = "org.matrix.custom.html"
             content["formatted_body"] = formatted_message
             
-        await self.client.room_send(
+        response = await self.client.room_send(
             room_id=room_id,
             message_type="m.room.message",
             content=content
         )
+        
+        # Return the event_id for potential reactions
+        if hasattr(response, 'event_id'):
+            return response.event_id
+        return None
+
+    async def send_reaction(self, room_id: str, event_id: str, emoji: str):
+        """Send a reaction to a message.
+        
+        Args:
+            room_id: ID of the room
+            event_id: ID of the event to react to
+            emoji: Emoji to react with
+        """
+        try:
+            content = {
+                "m.relates_to": {
+                    "rel_type": "m.annotation",
+                    "event_id": event_id,
+                    "key": emoji
+                }
+            }
+            
+            await self.client.room_send(
+                room_id=room_id,
+                message_type="m.reaction",
+                content=content
+            )
+        except Exception as e:
+            logger.debug(f"Failed to send reaction: {e}")
 
     async def send_startup_message(self):
         """Send startup message to configured greeting rooms."""
