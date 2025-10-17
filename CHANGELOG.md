@@ -16,6 +16,11 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Fixed
+- **Bot Not Responding to Encrypted Messages**: Fixed critical issue where bot could decrypt messages but wouldn't respond to commands
+  - Fixed `server_timestamp` attribute missing on decrypted events causing AttributeError
+  - Added logic to copy timestamp from MegolmEvent to decrypted RoomMessageText before processing
+  - Ensures old message filtering works correctly for encrypted messages
+  - Added comprehensive tests for encrypted message timestamp handling
 - **End-to-End Encryption Improvements**: Major improvements to encryption handling and device verification
   - Fixed TUI to properly display user ID and device ID in verification requests (was showing "Unknown")
   - Proactively query device keys when receiving undecryptable messages
