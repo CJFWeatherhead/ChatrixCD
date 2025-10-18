@@ -1,6 +1,6 @@
 # ChatrixCD Documentation
 
-This directory contains the documentation for ChatrixCD, published at: https://cjfweatherhead.github.io/ChatrixCD/
+This directory contains the documentation for ChatrixCD, published at: https://chatrixcd.cjfw.me/
 
 ## Documentation Structure
 

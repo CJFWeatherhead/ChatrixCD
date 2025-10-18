@@ -76,9 +76,8 @@ For detailed installation instructions, see the [Installation Guide](installatio
 
 ## Support
 
-- [GitHub Issues](https://github.com/CJFWeatherhead/ChatrixCD/issues)
-- [Discussions](https://github.com/CJFWeatherhead/ChatrixCD/discussions)
-- [Support Guide](support.html)
+- [GitHub Issues](https://github.com/CJFWeatherhead/ChatrixCD/issues) - Bug reports and feature requests
+- [Support Guide](support.html) - Troubleshooting and getting help
 
 ## License
 

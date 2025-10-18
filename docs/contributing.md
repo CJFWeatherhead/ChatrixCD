@@ -215,9 +215,8 @@ ChatrixCD/
 
 ## Getting Help
 
-- [GitHub Discussions](https://github.com/CJFWeatherhead/ChatrixCD/discussions)
-- [Issue Tracker](https://github.com/CJFWeatherhead/ChatrixCD/issues)
-- Read [ARCHITECTURE.md](architecture.html)
+- [Issue Tracker](https://github.com/CJFWeatherhead/ChatrixCD/issues) - Bug reports and feature requests
+- Read [ARCHITECTURE.md](architecture.html) - Technical details
 
 ## Code of Conduct
 

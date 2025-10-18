@@ -21,8 +21,6 @@ Start with our documentation:
 ### GitHub Resources
 
 - [GitHub Issues](https://github.com/CJFWeatherhead/ChatrixCD/issues) - Bug reports and feature requests
-- [GitHub Discussions](https://github.com/CJFWeatherhead/ChatrixCD/discussions) - Questions and community support
-- [GitHub Wiki](https://github.com/CJFWeatherhead/ChatrixCD/wiki) - Additional resources
 
 ## Common Issues
 
@@ -344,8 +342,7 @@ For professional support needs:
 
 Found a solution? Help others by:
 - Updating documentation
-- Creating a wiki page
-- Answering questions in discussions
+- Answering questions in GitHub issues
 - Contributing code fixes
 
 See [Contributing Guide](contributing.html) for more information.
