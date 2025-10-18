@@ -209,7 +209,7 @@ jobs:
       - name: Generate changelog
         id: changelog
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
+          export VERSION="${{ steps.version.outputs.version }}"
           
           # Get the latest tag (if any)
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
