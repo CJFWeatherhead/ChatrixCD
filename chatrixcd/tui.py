@@ -328,6 +328,7 @@ class SessionsScreen(Screen):
             yield Static("[bold cyan]Session Management[/bold cyan]\n", id="title")
             yield Button("View Encryption Sessions", id="view_sessions", variant="primary")
             yield Button("View Pending Verification Requests", id="view_pending_verifications")
+            yield Button("Verify This Bot (Self-Verification)", id="verify_self", variant="success")
             yield Button("Verify Device (Emoji)", id="verify_emoji")
             yield Button("Verify Device (QR Code)", id="verify_qr")
             yield Button("Show Fingerprint", id="show_fingerprint")
@@ -340,6 +341,8 @@ class SessionsScreen(Screen):
             await self.show_sessions_list()
         elif event.button.id == "view_pending_verifications":
             await self.show_pending_verifications()
+        elif event.button.id == "verify_self":
+            await self.show_self_verification_instructions()
         elif event.button.id == "verify_emoji":
             await self.show_emoji_verification()
         elif event.button.id == "verify_qr":
@@ -603,6 +606,52 @@ class SessionsScreen(Screen):
         
         self.app.push_screen(MessageScreen(sessions_text))
     
+    async def show_self_verification_instructions(self):
+        """Show instructions for self-verification to remove 'not verified by owner' warning."""
+        if not self.tui_app.bot or not self.tui_app.bot.client or not self.tui_app.bot.client.olm:
+            self.app.push_screen(MessageScreen("Encryption is not enabled."))
+            return
+        
+        device_id = self.tui_app.bot.client.device_id or "Unknown"
+        user_id = self.tui_app.bot.client.user_id or "Unknown"
+        
+        # Get fingerprint
+        fingerprint = "Unknown"
+        if self.tui_app.bot.client.olm and self.tui_app.bot.client.olm.account:
+            ed25519_key = self.tui_app.bot.client.olm.account.identity_keys['ed25519']
+            fingerprint = ' '.join([ed25519_key[i:i+4] for i in range(0, len(ed25519_key), 4)])
+        
+        instructions = f"""[bold cyan]Bot Self-Verification[/bold cyan]
+
+[bold yellow]Why Self-Verify?[/bold yellow]
+Messages from this bot show a red shield warning:
+"Encrypted by a device not verified by its owner"
+
+This happens because you (the owner) haven't verified this bot device yet.
+
+[bold green]How to Fix:[/bold green]
+
+[bold]Option 1: Verify from Another Device[/bold]
+1. Open Element (or another Matrix client) on your phone/computer
+2. Go to Settings → Security & Privacy → Session verification
+3. Find this bot's session in the list
+4. Start verification and compare the emojis shown here
+
+[bold]Option 2: Verify Using Fingerprint[/bold]
+Compare this fingerprint in your other client:
+[bold]{fingerprint}[/bold]
+
+[bold cyan]Bot Information:[/bold cyan]
+User ID: {user_id}
+Device ID: {device_id}
+
+[dim]After verification, the red shield will become a green checkmark ✅[/dim]
+
+[bold]Note:[/bold] You can also use the "Show Fingerprint" button
+or "Verify Device (QR Code)" for verification."""
+        
+        self.app.push_screen(MessageScreen(instructions))
+    
     async def show_emoji_verification(self):
         """Show emoji-based device verification using Matrix SDK."""
         if not self.tui_app.bot or not self.tui_app.bot.client or not self.tui_app.bot.client.olm:
@@ -730,6 +779,9 @@ class SessionsScreen(Screen):
                         self.app.push_screen(MessageScreen(f"Failed to start verification: {resp.message}"))
                         return
                     
+                    # Send the to-device messages immediately to deliver the verification request
+                    await client.send_to_device_messages()
+                    
                     # Wait for the verification to be set up
                     await asyncio.sleep(1)
                     
@@ -838,6 +890,14 @@ class SessionsScreen(Screen):
                             # Send the MAC
                             client = self.device_selection_screen.parent_sessions_screen.tui_app.bot.client
                             await client.send_to_device_messages()
+                            
+                            # Mark the device as verified and persist to store
+                            if self.sas.other_olm_device:
+                                client.verify_device(self.sas.other_olm_device)
+                                logger.info(
+                                    f"Verified and persisted trust for device {self.sas.other_olm_device.id} "
+                                    f"of user {self.sas.other_olm_device.user_id}"
+                                )
                             
                             self.app.push_screen(MessageScreen("✅ Verification successful!\n\nThe device has been verified and marked as trusted."))
                             self.dismiss()
