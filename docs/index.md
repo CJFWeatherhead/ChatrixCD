@@ -25,7 +25,14 @@ nav_order: 1
 - 🚀 **Semaphore UI Integration**: Start and monitor CI/CD tasks via chat commands
 - 📊 **Real-time Updates**: Automatic status updates for running tasks
 - 🎯 **Command-based Interface**: Easy-to-use command system for task management
-- 🔧 **Flexible Configuration**: JSON config files with HJSON support (comments and trailing commas)
+- 🔖 **Command Aliases**: Create custom shortcuts for frequently used commands
+- ✅ **Task Confirmation**: Required confirmation before executing tasks with template details
+- 🎨 **Rich Formatting**: Markdown and HTML formatting in messages with emoji support
+- 🧠 **Smart Parameters**: Auto-fill project/template IDs when only one option available
+- 📝 **Enhanced Logs**: Formatted output for Ansible and Terraform with intelligent tailing
+- 🔧 **Flexible Configuration**: Support for HJSON config files (JSON with comments) with automatic migration
+- ✅ **Configuration Validation**: Built-in schema validation with clear error messages
+- 🔄 **Auto-Migration**: Automatic upgrade of configuration files when new features are added
 
 ## Quick Links
 

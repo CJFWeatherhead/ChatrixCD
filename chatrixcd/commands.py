@@ -587,7 +587,9 @@ class CommandHandler:
             f"Doing it now! **{template_name}** is launching... 🎯",
             f"Let's go! **{template_name}** starting up... ⚡"
         ]
-        await self.bot.send_message(room_id, random.choice(start_responses))
+        start_message = random.choice(start_responses)
+        html_start_message = self.markdown_to_html(start_message)
+        await self.bot.send_message(room_id, start_message, html_start_message)
         
         task = await self.semaphore.start_task(project_id, template_id)
         
@@ -648,33 +650,29 @@ class CommandHandler:
                 last_notification_time = current_time
                 
                 if status == 'running':
-                    await self.bot.send_message(
-                        room_id,
-                        f"🔄 Task **{task_display}** is now running..."
-                    )
+                    message = f"🔄 Task **{task_display}** is now running..."
+                    html_message = self.markdown_to_html(message)
+                    await self.bot.send_message(room_id, message, html_message)
                 elif status == 'success':
-                    event_id = await self.bot.send_message(
-                        room_id,
-                        f"✅ Task **{task_display}** completed successfully!"
-                    )
+                    message = f"✅ Task **{task_display}** completed successfully!"
+                    html_message = self.markdown_to_html(message)
+                    event_id = await self.bot.send_message(room_id, message, html_message)
                     # React with party emoji
                     if event_id:
                         await self.bot.send_reaction(room_id, event_id, "🎉")
                     del self.active_tasks[task_id]
                     break
                 elif status in ('error', 'stopped'):
-                    await self.bot.send_message(
-                        room_id,
-                        f"❌ Task **{task_display}** failed or was stopped. Status: {status}"
-                    )
+                    message = f"❌ Task **{task_display}** failed or was stopped. Status: {status}"
+                    html_message = self.markdown_to_html(message)
+                    await self.bot.send_message(room_id, message, html_message)
                     del self.active_tasks[task_id]
                     break
             elif status == 'running' and (current_time - last_notification_time) >= notification_interval:
                 # Send periodic update for long-running tasks
-                await self.bot.send_message(
-                    room_id,
-                    f"⏳ Task **{task_display}** is still running..."
-                )
+                message = f"⏳ Task **{task_display}** is still running..."
+                html_message = self.markdown_to_html(message)
+                await self.bot.send_message(room_id, message, html_message)
                 last_notification_time = current_time
 
     async def check_status(self, room_id: str, args: list):
@@ -771,10 +769,14 @@ class CommandHandler:
         success = await self.semaphore.stop_task(project_id, task_id)
         
         if success:
-            await self.bot.send_message(room_id, f"🛑 Task **{task_display}** stopped")
+            message = f"🛑 Task **{task_display}** stopped"
+            html_message = self.markdown_to_html(message)
+            await self.bot.send_message(room_id, message, html_message)
             del self.active_tasks[task_id]
         else:
-            await self.bot.send_message(room_id, f"❌ Failed to stop task **{task_display}**")
+            message = f"❌ Failed to stop task **{task_display}**"
+            html_message = self.markdown_to_html(message)
+            await self.bot.send_message(room_id, message, html_message)
 
     async def get_logs(self, room_id: str, args: list):
         """Get logs for a task.
@@ -802,11 +804,21 @@ class CommandHandler:
                 await self.bot.send_message(room_id, "Invalid task ID ❌")
                 return
                 
-            if task_id not in self.active_tasks:
-                await self.bot.send_message(room_id, f"Task {task_id} not found in active tasks ❌")
+            # Check if task is in active tasks first
+            if task_id in self.active_tasks:
+                project_id = self.active_tasks[task_id]['project_id']
+            # If not in active tasks but we have a last_project_id, try that
+            elif self.last_task_id == task_id and self.last_project_id is not None:
+                project_id = self.last_project_id
+            else:
+                # Try to get the project_id from semaphore if task exists
+                # For now, just inform the user to provide project info
+                await self.bot.send_message(
+                    room_id, 
+                    f"Task {task_id} not found in active tasks.\n"
+                    f"For finished tasks, use the last task with: `{self.command_prefix} logs`"
+                )
                 return
-                
-            project_id = self.active_tasks[task_id]['project_id']
         
         logs = await self.semaphore.get_task_output(project_id, task_id)
         
@@ -814,7 +826,7 @@ class CommandHandler:
             task_name = self.active_tasks.get(task_id, {}).get('template_name')
             task_display = f"{task_name} ({task_id})" if task_name else str(task_id)
             
-            # Parse and format logs
+            # Parse and format logs for plain text
             formatted_logs = self._format_task_logs(logs)
             
             # Tail only the last portion to avoid truncation
@@ -826,10 +838,74 @@ class CommandHandler:
             else:
                 header = f"**Logs for Task {task_display}** 📋\n\n"
             
-            message = f"{header}```\n{formatted_logs}\n```"
-            await self.bot.send_message(room_id, message)
+            # Create plain text version with markdown code block
+            plain_message = f"{header}```\n{formatted_logs}\n```"
+            
+            # Create HTML version with color formatting
+            html_header = self.markdown_to_html(header)
+            html_logs = self._format_task_logs_html(logs)
+            
+            # Tail HTML logs too if needed
+            if len(log_lines) > max_lines:
+                # Re-process with HTML formatting for tailed version
+                tailed_raw_logs = '\n'.join(logs.split('\n')[-max_lines:])
+                html_logs = self._format_task_logs_html(tailed_raw_logs)
+            
+            html_message = f"{html_header}{html_logs}"
+            
+            await self.bot.send_message(room_id, plain_message, html_message)
         else:
             await self.bot.send_message(room_id, f"No logs available for task {task_id} ❌")
+
+    def _ansi_to_html(self, text: str) -> str:
+        """Convert ANSI color codes to HTML.
+        
+        Args:
+            text: Text with ANSI color codes
+            
+        Returns:
+            HTML formatted text
+        """
+        # ANSI color code to HTML color mapping
+        ansi_colors = {
+            '30': 'black',
+            '31': 'red',
+            '32': 'green',
+            '33': 'yellow',
+            '34': 'blue',
+            '35': 'magenta',
+            '36': 'cyan',
+            '37': 'white',
+            '90': 'gray',
+            '91': 'lightred',
+            '92': 'lightgreen',
+            '93': 'lightyellow',
+            '94': 'lightblue',
+            '95': 'lightmagenta',
+            '96': 'lightcyan',
+            '97': 'white',
+        }
+        
+        # Convert color codes
+        result = text
+        
+        # Handle bold (1m)
+        result = re.sub(r'\x1b\[1m', '<strong>', result)
+        
+        # Handle color codes (e.g., 31m for red)
+        for code, color in ansi_colors.items():
+            result = re.sub(rf'\x1b\[{code}m', f'<span style="color: {color}">', result)
+        
+        # Handle reset codes (0m)
+        result = re.sub(r'\x1b\[0m', '</span></strong>', result)
+        
+        # Clean up any remaining ANSI codes
+        result = re.sub(r'\x1b\[[0-9;]*m', '', result)
+        
+        # Replace newlines with <br> for HTML
+        result = result.replace('\n', '<br>')
+        
+        return result
 
     def _format_task_logs(self, raw_logs: str) -> str:
         """Format raw task logs for better readability.
@@ -862,6 +938,28 @@ class CommandHandler:
             # Generic formatting - just remove ANSI codes
             logs = re.sub(r'\x1b\[[0-9;]*m', '', raw_logs)
             return logs.strip()
+    
+    def _format_task_logs_html(self, raw_logs: str) -> str:
+        """Format raw task logs with HTML formatting, preserving colors.
+        
+        Args:
+            raw_logs: Raw log output with ANSI codes
+            
+        Returns:
+            HTML formatted log output
+        """
+        # Detect log type
+        is_ansible = 'TASK [' in raw_logs or 'PLAY [' in raw_logs
+        is_terraform = 'Terraform' in raw_logs or 'terraform' in raw_logs
+        
+        # Remove excessive blank lines first
+        logs = re.sub(r'\n{3,}', '\n\n', raw_logs)
+        
+        # Convert ANSI codes to HTML
+        html_logs = self._ansi_to_html(logs)
+        
+        # Wrap in pre tag for monospace formatting
+        return f'<pre>{html_logs}</pre>'
 
     async def ping_semaphore(self, room_id: str):
         """Ping Semaphore server.
@@ -877,29 +975,56 @@ class CommandHandler:
             await self.bot.send_message(room_id, "❌ Failed to ping Semaphore server")
 
     async def get_semaphore_info(self, room_id: str):
-        """Get Semaphore server info.
+        """Get Semaphore and Matrix server info.
         
         Args:
             room_id: Room to send response to
         """
-        info = await self.semaphore.get_info()
+        # Get Semaphore info
+        semaphore_info = await self.semaphore.get_info()
         
-        if info:
-            message = "**Semaphore Server Info** ℹ️\n\n"
+        message = "**Server Information** ℹ️\n\n"
+        
+        # Matrix information
+        message += "**Matrix Server**\n"
+        if self.bot.client:
+            message += f"• **Homeserver:** {self.bot.client.homeserver}\n"
+            message += f"• **User ID:** {self.bot.client.user_id}\n"
+            if hasattr(self.bot.client, 'device_id') and self.bot.client.device_id:
+                message += f"• **Device ID:** {self.bot.client.device_id}\n"
+            
+            # Connection status
+            if hasattr(self.bot.client, 'logged_in') and self.bot.client.logged_in:
+                message += f"• **Status:** Connected ✅\n"
+            else:
+                message += f"• **Status:** Disconnected ❌\n"
+            
+            # Encryption status
+            if hasattr(self.bot.client, 'olm') and self.bot.client.olm:
+                message += f"• **E2E Encryption:** Enabled 🔒\n"
+            else:
+                message += f"• **E2E Encryption:** Disabled\n"
+        
+        message += "\n"
+        
+        # Semaphore information
+        if semaphore_info:
+            message += "**Semaphore Server**\n"
             
             # Display version info
-            if 'version' in info:
-                message += f"**Version:** {info.get('version')}\n"
+            if 'version' in semaphore_info:
+                message += f"• **Version:** {semaphore_info.get('version')}\n"
             
             # Display any other relevant info
-            for key, value in info.items():
+            for key, value in semaphore_info.items():
                 if key not in ['version']:
-                    message += f"**{key.replace('_', ' ').title()}:** {value}\n"
-            
-            html_message = self.markdown_to_html(message)
-            await self.bot.send_message(room_id, message, html_message)
+                    message += f"• **{key.replace('_', ' ').title()}:** {value}\n"
         else:
-            await self.bot.send_message(room_id, "❌ Failed to get Semaphore server info")
+            message += "**Semaphore Server**\n"
+            message += "• Failed to get Semaphore info ❌\n"
+        
+        html_message = self.markdown_to_html(message)
+        await self.bot.send_message(room_id, message, html_message)
 
     async def list_command_aliases(self, room_id: str):
         """List all command aliases.
