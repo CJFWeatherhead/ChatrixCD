@@ -561,18 +561,6 @@ ChatrixCD/
 - Task history and analytics
 - Admin dashboard
 
-## [Unreleased]
-
-### Planned
-- Add tests for authentication module
-- Add tests for Semaphore client
-- Add tests for command handler
-- Add integration tests
-- Add CI/CD pipeline for the bot itself
-- Add health check endpoint
-- Add metrics collection
-- Add performance benchmarks
-
 ---
 
 ## Version History
