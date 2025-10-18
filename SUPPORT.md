@@ -20,7 +20,7 @@ If you have questions about using ChatrixCD:
 
 1. **Check the documentation** - Many common questions are already answered
 2. **Search existing issues** - Someone may have already asked the same question
-3. **Open a Discussion** - Use [GitHub Discussions](https://github.com/CJFWeatherhead/ChatrixCD/discussions) for questions and community help
+3. **Open an Issue** - Use [GitHub Issues](https://github.com/CJFWeatherhead/ChatrixCD/issues) for questions and support
 
 ### Reporting Bugs
 
@@ -235,7 +235,7 @@ If you'd like to contribute to the project:
 
 ### Staying Updated
 
-- **Watch the repository** for notifications about new releases and discussions
+- **Watch the repository** for notifications about new releases
 - **Star the repository** to bookmark it
 - **Follow releases** to be notified of new versions
 
@@ -258,6 +258,5 @@ Thank you for your patience and understanding!
 
 - [GitHub Repository](https://github.com/CJFWeatherhead/ChatrixCD)
 - [Issue Tracker](https://github.com/CJFWeatherhead/ChatrixCD/issues)
-- [Discussions](https://github.com/CJFWeatherhead/ChatrixCD/discussions)
 - [Matrix.org](https://matrix.org/) - Learn about Matrix
 - [Semaphore UI](https://github.com/ansible-semaphore/semaphore) - Learn about Semaphore UI

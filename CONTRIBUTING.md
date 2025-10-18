@@ -384,8 +384,7 @@ ChatrixCD/
 ### Resources
 
 - **Documentation**: Check README.md, INSTALL.md, and other docs
-- **Issues**: Search [existing issues](https://github.com/CJFWeatherhead/ChatrixCD/issues)
-- **Discussions**: Open a discussion for questions
+- **Issues**: Search [existing issues](https://github.com/CJFWeatherhead/ChatrixCD/issues) and open new ones for questions
 
 ### Asking Questions
 
