@@ -3,9 +3,9 @@ description: Matrix bot for CI/CD automation through chat with Semaphore UI inte
 theme: jekyll-theme-cayman
 remote_theme: just-the-docs/just-the-docs
 
-# GitHub repository URL
-url: https://cjfweatherhead.github.io
-baseurl: /ChatrixCD
+# Custom domain URL
+url: https://chatrixcd.cjfw.me
+baseurl: ""
 
 # GitHub repository details
 github_username: CJFWeatherhead

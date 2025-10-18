@@ -8,7 +8,7 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
-[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-4A9B7F)](https://cjfweatherhead.github.io/ChatrixCD/)
+[![Documentation](https://img.shields.io/badge/docs-ChatrixCD-4A9B7F)](https://chatrixcd.cjfw.me/)
 
 ---
 
@@ -18,7 +18,7 @@ ChatrixCD integrates with Semaphore UI to enable CI/CD automation through chat. 
 
 ## Documentation
 
-📚 **[Full Documentation](https://cjfweatherhead.github.io/ChatrixCD/)** - Installation guides, configuration reference, architecture overview, and more.
+📚 **[Full Documentation](https://chatrixcd.cjfw.me/)** - Installation guides, configuration reference, architecture overview, and more.
 
 ## Features
 
