@@ -42,6 +42,9 @@ class CommandHandler:
         
         # Track pending confirmations for run commands
         self.pending_confirmations: Dict[str, Dict[str, Any]] = {}
+        
+        # Track message event IDs for threading reactions
+        self.confirmation_message_ids: Dict[str, str] = {}
 
     def is_allowed_room(self, room_id: str) -> bool:
         """Check if bot is allowed to respond in this room.
@@ -105,6 +108,95 @@ class CommandHandler:
         text = text.replace('\n', '<br/>\n')
         return text
 
+    def _get_display_name(self, user_id: str) -> str:
+        """Get a friendly display name for a user.
+        
+        Args:
+            user_id: User ID to get display name for
+            
+        Returns:
+            Display name or username extracted from user ID
+        """
+        # Extract username from Matrix user ID (@username:server.com)
+        if user_id.startswith('@'):
+            username = user_id[1:].split(':')[0]
+            return username
+        return user_id
+
+    async def handle_reaction(self, room: MatrixRoom, sender: str, event_id: str, reaction_key: str):
+        """Handle a reaction to a message.
+        
+        Args:
+            room: Room where reaction was sent
+            sender: User who sent the reaction
+            event_id: Event ID being reacted to
+            reaction_key: The reaction emoji/key
+        """
+        # Check if this is a reaction to a confirmation message
+        confirmation_key = None
+        for key, msg_id in self.confirmation_message_ids.items():
+            if msg_id == event_id:
+                confirmation_key = key
+                break
+        
+        if not confirmation_key:
+            logger.debug(f"Reaction to non-confirmation message: {event_id}")
+            return
+        
+        # Check if the confirmation still exists
+        if confirmation_key not in self.pending_confirmations:
+            logger.debug(f"Confirmation expired or already handled: {confirmation_key}")
+            return
+        
+        confirmation = self.pending_confirmations[confirmation_key]
+        
+        # Only accept reactions from the original sender (for run/exit commands)
+        if confirmation['sender'] != sender:
+            # For other admins, they need to reply with a message, not a reaction
+            logger.info(f"Ignoring reaction from {sender}, confirmation was initiated by {confirmation['sender']}")
+            user_name = self._get_display_name(sender)
+            await self.bot.send_message(
+                room.room_id,
+                f"{user_name} 👋 - Only {self._get_display_name(confirmation['sender'])} can react to this confirmation. Admins can reply with a message instead!",
+                reply_to_event_id=event_id
+            )
+            return
+        
+        # Map reactions to confirmation responses
+        positive_reactions = ['👍', '✅', '✓', '☑', '🆗', 'yes', 'y']
+        negative_reactions = ['👎', '❌', '✖', '⛔', '🚫', 'no', 'n']
+        
+        reaction_lower = reaction_key.lower()
+        
+        if reaction_key in positive_reactions or reaction_lower in positive_reactions:
+            # Positive confirmation
+            del self.pending_confirmations[confirmation_key]
+            del self.confirmation_message_ids[confirmation_key]
+            
+            # Handle based on action type
+            if confirmation.get('action') == 'exit':
+                await self._execute_exit(room.room_id, sender)
+            else:
+                # Task execution
+                await self._execute_task(room.room_id, confirmation, event_id)
+                
+        elif reaction_key in negative_reactions or reaction_lower in negative_reactions:
+            # Negative confirmation
+            del self.pending_confirmations[confirmation_key]
+            del self.confirmation_message_ids[confirmation_key]
+            
+            cancel_responses = [
+                "Task execution cancelled. No problem! ❌",
+                "Cancelled! Maybe another time. 👋",
+                "Alright, stopping that. ✋",
+                "Task cancelled. All good! 🛑"
+            ]
+            await self.bot.send_message(
+                room.room_id,
+                random.choice(cancel_responses),
+                reply_to_event_id=event_id
+            )
+
     async def handle_message(self, room: MatrixRoom, event: RoomMessageText):
         """Handle incoming message and process commands.
         
@@ -117,7 +209,7 @@ class CommandHandler:
         # Check for pending confirmations first
         confirmation_key = f"{room.room_id}:{event.sender}"
         if confirmation_key in self.pending_confirmations:
-            await self.handle_confirmation(room.room_id, event.sender, message)
+            await self.handle_confirmation(room.room_id, event.sender, message, event.event_id)
             return
         
         # Check if message starts with command prefix
@@ -140,13 +232,13 @@ class CommandHandler:
                 "Nice try, but you need to be an admin 😎",
                 "Admins only, friend! 🚫"
             ]
-            await self.bot.send_message(room.room_id, random.choice(brush_off_messages))
+            await self.bot.send_message(room.room_id, random.choice(brush_off_messages), reply_to_event_id=event.event_id)
             return
             
         # Parse command
         command_text = message[len(self.command_prefix):].strip()
         if not command_text:
-            await self.send_help(room.room_id)
+            await self.send_help(room.room_id, event.sender, event.event_id)
             return
         
         # Resolve aliases
@@ -156,46 +248,57 @@ class CommandHandler:
         command = parts[0].lower()
         args = parts[1:]
         
-        # Route to appropriate handler
+        # Route to appropriate handler (with threading support)
         if command == 'help':
-            await self.send_help(room.room_id)
+            await self.send_help(room.room_id, event.sender, event.event_id)
         elif command == 'admins':
-            await self.list_admins(room.room_id)
+            await self.list_admins(room.room_id, event.sender, event.event_id)
         elif command == 'rooms':
-            await self.manage_rooms(room.room_id, args)
+            await self.manage_rooms(room.room_id, args, event.sender, event.event_id)
         elif command == 'exit':
-            await self.exit_bot(room.room_id, event.sender)
+            await self.exit_bot(room.room_id, event.sender, event.event_id)
         elif command == 'projects':
-            await self.list_projects(room.room_id)
+            await self.list_projects(room.room_id, event.sender, event.event_id)
         elif command == 'templates':
-            await self.list_templates(room.room_id, args)
+            await self.list_templates(room.room_id, args, event.sender, event.event_id)
         elif command == 'run':
-            await self.run_task(room.room_id, event.sender, args)
+            await self.run_task(room.room_id, event.sender, args, event.event_id)
         elif command == 'status':
-            await self.check_status(room.room_id, args)
+            await self.check_status(room.room_id, args, event.sender, event.event_id)
         elif command == 'stop':
-            await self.stop_task(room.room_id, event.sender, args)
+            await self.stop_task(room.room_id, event.sender, args, event.event_id)
         elif command in ('logs', 'log'):
-            await self.get_logs(room.room_id, args)
+            await self.get_logs(room.room_id, args, event.sender, event.event_id)
         elif command == 'ping':
-            await self.ping_semaphore(room.room_id)
+            await self.ping_semaphore(room.room_id, event.sender, event.event_id)
         elif command == 'info':
-            await self.get_semaphore_info(room.room_id)
+            await self.get_semaphore_info(room.room_id, event.sender, event.event_id)
         elif command == 'aliases':
-            await self.list_command_aliases(room.room_id)
+            await self.list_command_aliases(room.room_id, event.sender, event.event_id)
+        elif command == 'pet':
+            await self.handle_pet(room.room_id, event.sender, event.event_id)
+        elif command == 'scold':
+            await self.handle_scold(room.room_id, event.sender, event.event_id)
         else:
+            user_name = self._get_display_name(event.sender)
             await self.bot.send_message(
                 room.room_id,
-                f"Unknown command: {command}. Type '{self.command_prefix} help' for available commands."
+                f"{user_name} 👋 - Unknown command: {command}. Type '{self.command_prefix} help' for available commands.",
+                reply_to_event_id=event.event_id
             )
 
-    async def send_help(self, room_id: str):
+    async def send_help(self, room_id: str, sender: str = None, reply_to: str = None):
         """Send help message.
         
         Args:
             room_id: Room to send help to
+            sender: User who requested help (for personalization)
+            reply_to: Event ID to reply to (for threading)
         """
-        help_text = f"""**ChatrixCD Bot Commands** 📚
+        user_name = self._get_display_name(sender) if sender else "friend"
+        help_text = f"""{user_name} 👋 Here's what I can do for you! 🚀
+
+**ChatrixCD Bot Commands** 📚
 
 {self.command_prefix} help - Show this help message
 {self.command_prefix} admins - List admin users
@@ -210,48 +313,64 @@ class CommandHandler:
 {self.command_prefix} ping - Ping Semaphore server
 {self.command_prefix} info - Get Semaphore server info
 {self.command_prefix} aliases - List command aliases
+
+💡 **Tip:** You can react to confirmations with 👍/👎 instead of replying!
 """
         html_text = self.markdown_to_html(help_text)
-        await self.bot.send_message(room_id, help_text, html_text)
+        await self.bot.send_message(room_id, help_text, html_text, reply_to_event_id=reply_to)
 
-    async def list_admins(self, room_id: str):
+    async def list_admins(self, room_id: str, sender: str = None, reply_to: str = None):
         """List admin users.
         
         Args:
             room_id: Room to send response to
+            sender: User who requested the list
+            reply_to: Event ID to reply to (for threading)
         """
+        user_name = self._get_display_name(sender) if sender else "friend"
         if not self.admin_users:
-            message = "**Admin Users** 👑\n\n"
+            message = f"{user_name} 👋 Here's the admin roster! 👑\n\n"
+            message += "**Admin Users**\n\n"
             message += "[dim]No admin users configured. All users have admin access.[/dim]"
         else:
-            message = "**Admin Users** 👑\n\n"
+            message = f"{user_name} 👋 Here are the bot overlords! 👑\n\n"
+            message += "**Admin Users**\n\n"
             for admin in self.admin_users:
                 message += f"• {admin}\n"
         
         html_message = self.markdown_to_html(message)
-        await self.bot.send_message(room_id, message, html_message)
+        await self.bot.send_message(room_id, message, html_message, reply_to_event_id=reply_to)
     
-    async def manage_rooms(self, room_id: str, args: list):
+    async def manage_rooms(self, room_id: str, args: list, sender: str = None, reply_to: str = None):
         """Manage bot rooms (list, join, part).
         
         Args:
             room_id: Room to send response to
             args: Command arguments (action, optional room_id)
+            sender: User who sent the command
+            reply_to: Event ID to reply to (for threading)
         """
+        user_name = self._get_display_name(sender) if sender else "friend"
+        
         if not args:
             # List rooms
             rooms = self.bot.client.rooms
             if not rooms:
-                await self.bot.send_message(room_id, "Not currently in any rooms. 🏠")
+                await self.bot.send_message(
+                    room_id,
+                    f"{user_name} 👋 - Not currently in any rooms. 🏠",
+                    reply_to_event_id=reply_to
+                )
                 return
             
-            message = "**Rooms I'm In** 🏠\n\n"
+            message = f"{user_name} 👋 Here's where I hang out! 🏠\n\n"
+            message += "**Rooms I'm In**\n\n"
             for room_id_key, room in rooms.items():
                 room_name = room.display_name or "Unknown"
                 message += f"• **{room_name}**\n  `{room_id_key}`\n"
             
             html_message = self.markdown_to_html(message)
-            await self.bot.send_message(room_id, message, html_message)
+            await self.bot.send_message(room_id, message, html_message, reply_to_event_id=reply_to)
             return
         
         action = args[0].lower()
@@ -260,71 +379,79 @@ class CommandHandler:
             if len(args) < 2:
                 await self.bot.send_message(
                     room_id,
-                    f"Usage: {self.command_prefix} rooms join <room_id>"
+                    f"{user_name} 👋 - Usage: {self.command_prefix} rooms join <room_id>",
+                    reply_to_event_id=reply_to
                 )
                 return
             
             target_room_id = args[1]
             try:
                 await self.bot.client.join(target_room_id)
-                await self.bot.send_message(room_id, f"✅ Joined room: {target_room_id}")
+                await self.bot.send_message(
+                    room_id,
+                    f"✅ Joined room: {target_room_id}",
+                    reply_to_event_id=reply_to
+                )
             except Exception as e:
                 logger.error(f"Failed to join room {target_room_id}: {e}")
-                await self.bot.send_message(room_id, f"❌ Failed to join room: {e}")
+                await self.bot.send_message(
+                    room_id,
+                    f"❌ Failed to join room: {e}",
+                    reply_to_event_id=reply_to
+                )
         
         elif action == 'part' or action == 'leave':
             if len(args) < 2:
                 await self.bot.send_message(
                     room_id,
-                    f"Usage: {self.command_prefix} rooms part <room_id>"
+                    f"{user_name} 👋 - Usage: {self.command_prefix} rooms part <room_id>",
+                    reply_to_event_id=reply_to
                 )
                 return
             
             target_room_id = args[1]
             try:
                 await self.bot.client.room_leave(target_room_id)
-                await self.bot.send_message(room_id, f"👋 Left room: {target_room_id}")
+                await self.bot.send_message(
+                    room_id,
+                    f"👋 Left room: {target_room_id}",
+                    reply_to_event_id=reply_to
+                )
             except Exception as e:
                 logger.error(f"Failed to leave room {target_room_id}: {e}")
-                await self.bot.send_message(room_id, f"❌ Failed to leave room: {e}")
+                await self.bot.send_message(
+                    room_id,
+                    f"❌ Failed to leave room: {e}",
+                    reply_to_event_id=reply_to
+                )
         
         else:
             await self.bot.send_message(
                 room_id,
-                f"Unknown action: {action}. Use 'join' or 'part'."
+                f"{user_name} 👋 - Unknown action: {action}. Use 'join' or 'part'.",
+                reply_to_event_id=reply_to
             )
     
-    async def exit_bot(self, room_id: str, sender: str):
+    async def exit_bot(self, room_id: str, sender: str, reply_to: str = None):
         """Exit the bot with confirmation.
         
         Args:
             room_id: Room to send response to
             sender: User who sent the command
+            reply_to: Event ID to reply to (for threading)
         """
+        user_name = self._get_display_name(sender)
         # Create a special confirmation for exit
-        confirmation_key = f"{room_id}:{sender}:exit"
+        confirmation_key = f"{room_id}:{sender}"
         
         # Check if already waiting for confirmation
-        if confirmation_key in self.pending_confirmations:
+        if confirmation_key in self.pending_confirmations and self.pending_confirmations[confirmation_key].get('action') == 'exit':
             # User is confirming
             del self.pending_confirmations[confirmation_key]
+            if confirmation_key in self.confirmation_message_ids:
+                del self.confirmation_message_ids[confirmation_key]
             
-            await self.bot.send_message(
-                room_id,
-                "👋 Shutting down bot as requested. Goodbye!"
-            )
-            
-            # Give time for message to send
-            await asyncio.sleep(1)
-            
-            # Trigger shutdown
-            logger.info(f"Bot shutdown requested by {sender}")
-            # Signal bot to close
-            asyncio.create_task(self.bot.close())
-            
-            # Exit the event loop to shutdown
-            import sys
-            sys.exit(0)
+            await self._execute_exit(room_id, sender)
         else:
             # Request confirmation
             self.pending_confirmations[confirmation_key] = {
@@ -334,42 +461,81 @@ class CommandHandler:
                 'timestamp': asyncio.get_event_loop().time()
             }
             
-            await self.bot.send_message(
+            message = f"{user_name} 👋 - ⚠️ **Confirm Bot Shutdown**\n\n"
+            message += "Are you sure you want to shut down the bot?\n\n"
+            message += f"Reply with `{self.command_prefix} exit` again to confirm.\n"
+            message += "Or react with 👍 to confirm or 👎 to cancel!"
+            
+            event_id = await self.bot.send_message(
                 room_id,
-                f"⚠️ **Confirm Bot Shutdown**\n\n"
-                f"Are you sure you want to shut down the bot?\n\n"
-                f"Reply with `{self.command_prefix} exit` again to confirm."
+                message,
+                reply_to_event_id=reply_to
             )
             
+            # Track the message ID for reaction handling
+            if event_id:
+                self.confirmation_message_ids[confirmation_key] = event_id
+            
             # Set timeout to clear confirmation after 30 seconds
-            asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 30))
+            asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 30, room_id))
 
-    async def list_projects(self, room_id: str):
+    async def list_projects(self, room_id: str, sender: str = None, reply_to: str = None):
         """List available Semaphore projects.
         
         Args:
             room_id: Room to send response to
+            sender: User who requested the list
+            reply_to: Event ID to reply to (for threading)
         """
         projects = await self.semaphore.get_projects()
+        user_name = self._get_display_name(sender) if sender else "friend"
         
         if not projects:
-            await self.bot.send_message(room_id, "No projects found or error accessing Semaphore. ❌")
+            await self.bot.send_message(
+                room_id,
+                f"{user_name} 👋 - No projects found or error accessing Semaphore. ❌",
+                reply_to_event_id=reply_to
+            )
             return
         
-        message = "**Available Projects:** 📋\n\n"
+        message = f"{user_name} 👋 Here's what we can work with! 📋\n\n"
+        message += "**Available Projects:**\n\n"
         for project in projects:
-            message += f"• **{project.get('name')}** (ID: {project.get('id')})\n"
+            name = project.get('name')
+            proj_id = project.get('id')
+            message += f"• **{name}** (ID: {proj_id})\n"
         
         html_message = self.markdown_to_html(message)
-        await self.bot.send_message(room_id, message, html_message)
+        await self.bot.send_message(room_id, message, html_message, reply_to_event_id=reply_to)
 
-    async def list_templates(self, room_id: str, args: list):
+    def _format_description(self, description: str) -> str:
+        """Format a description by parsing ¶ as paragraph breaks and markdown.
+        
+        Args:
+            description: Raw description text
+            
+        Returns:
+            Formatted description with paragraph breaks
+        """
+        if not description:
+            return description
+        
+        # Replace ¶ with double newlines for paragraph breaks
+        formatted = description.replace('¶', '\n\n')
+        
+        return formatted
+
+    async def list_templates(self, room_id: str, args: list, sender: str = None, reply_to: str = None):
         """List templates for a project.
         
         Args:
             room_id: Room to send response to
             args: Command arguments (project_id)
+            sender: User who requested the list
+            reply_to: Event ID to reply to (for threading)
         """
+        user_name = self._get_display_name(sender) if sender else "friend"
+        
         # If no args, try to get the only project if there's only one
         if not args:
             projects = await self.semaphore.get_projects()
@@ -379,15 +545,20 @@ class CommandHandler:
             else:
                 await self.bot.send_message(
                     room_id,
-                    f"Usage: {self.command_prefix} templates <project_id>\n\n"
-                    f"Use `{self.command_prefix} projects` to list available projects."
+                    f"{user_name} 👋 - Usage: {self.command_prefix} templates <project_id>\n\n"
+                    f"Use `{self.command_prefix} projects` to list available projects.",
+                    reply_to_event_id=reply_to
                 )
                 return
         else:
             try:
                 project_id = int(args[0])
             except ValueError:
-                await self.bot.send_message(room_id, "Invalid project ID ❌")
+                await self.bot.send_message(
+                    room_id,
+                    f"{user_name} 👋 - Invalid project ID ❌",
+                    reply_to_event_id=reply_to
+                )
                 return
             
         templates = await self.semaphore.get_project_templates(project_id)
@@ -395,27 +566,33 @@ class CommandHandler:
         if not templates:
             await self.bot.send_message(
                 room_id,
-                f"No templates found for project {project_id} ❌"
+                f"{user_name} 👋 - No templates found for project {project_id} ❌",
+                reply_to_event_id=reply_to
             )
             return
             
-        message = f"**Templates for Project {project_id}:** 📝\n\n"
+        message = f"{user_name} 👋 Here are the templates for project {project_id}! 📝\n\n"
+        message += "**Templates:**\n\n"
         for template in templates:
             message += f"• **{template.get('name')}** (ID: {template.get('id')})\n"
             if template.get('description'):
-                message += f"  {template.get('description')}\n"
+                desc = self._format_description(template.get('description'))
+                message += f"  {desc}\n"
         
         html_message = self.markdown_to_html(message)
-        await self.bot.send_message(room_id, message, html_message)
+        await self.bot.send_message(room_id, message, html_message, reply_to_event_id=reply_to)
 
-    async def run_task(self, room_id: str, sender: str, args: list):
+    async def run_task(self, room_id: str, sender: str, args: list, reply_to: str = None):
         """Run a task from a template.
         
         Args:
             room_id: Room to send response to
             sender: User who sent the command
             args: Command arguments (project_id, template_id)
+            reply_to: Event ID to reply to (for threading)
         """
+        user_name = self._get_display_name(sender)
+        
         # Smart parameter handling
         if len(args) == 0:
             # Try to auto-fill if only one project and one template
@@ -430,15 +607,17 @@ class CommandHandler:
                 else:
                     await self.bot.send_message(
                         room_id,
-                        f"Multiple templates available for project {project_id}.\n"
-                        f"Use `{self.command_prefix} templates {project_id}` to list them."
+                        f"{user_name} 👋 - Multiple templates available for project {project_id}.\n"
+                        f"Use `{self.command_prefix} templates {project_id}` to list them.",
+                        reply_to_event_id=reply_to
                     )
                     return
             else:
                 await self.bot.send_message(
                     room_id,
-                    f"Usage: {self.command_prefix} run <project_id> <template_id>\n\n"
-                    f"Use `{self.command_prefix} projects` to list available projects."
+                    f"{user_name} 👋 - Usage: {self.command_prefix} run <project_id> <template_id>\n\n"
+                    f"Use `{self.command_prefix} projects` to list available projects.",
+                    reply_to_event_id=reply_to
                 )
                 return
         elif len(args) == 1:
@@ -446,7 +625,11 @@ class CommandHandler:
             try:
                 project_id = int(args[0])
             except ValueError:
-                await self.bot.send_message(room_id, "Invalid project ID ❌")
+                await self.bot.send_message(
+                    room_id,
+                    f"{user_name} 👋 - Invalid project ID ❌",
+                    reply_to_event_id=reply_to
+                )
                 return
                 
             templates = await self.semaphore.get_project_templates(project_id)
@@ -457,15 +640,17 @@ class CommandHandler:
             else:
                 await self.bot.send_message(
                     room_id,
-                    f"Multiple templates available for project {project_id}.\n"
-                    f"Use `{self.command_prefix} templates {project_id}` to list them."
+                    f"{user_name} 👋 - Multiple templates available for project {project_id}.\n"
+                    f"Use `{self.command_prefix} templates {project_id}` to list them.",
+                    reply_to_event_id=reply_to
                 )
                 return
         
         if len(args) < 2:
             await self.bot.send_message(
                 room_id,
-                f"Usage: {self.command_prefix} run <project_id> <template_id>"
+                f"{user_name} 👋 - Usage: {self.command_prefix} run <project_id> <template_id>",
+                reply_to_event_id=reply_to
             )
             return
             
@@ -473,7 +658,11 @@ class CommandHandler:
             project_id = int(args[0])
             template_id = int(args[1])
         except ValueError:
-            await self.bot.send_message(room_id, "Invalid project or template ID ❌")
+            await self.bot.send_message(
+                room_id,
+                f"{user_name} 👋 - Invalid project or template ID ❌",
+                reply_to_event_id=reply_to
+            )
             return
         
         # Fetch template details for confirmation
@@ -481,11 +670,15 @@ class CommandHandler:
         template = next((t for t in templates if t.get('id') == template_id), None)
         
         if not template:
-            await self.bot.send_message(room_id, f"Template {template_id} not found in project {project_id} ❌")
+            await self.bot.send_message(
+                room_id,
+                f"{user_name} 👋 - Template {template_id} not found in project {project_id} ❌",
+                reply_to_event_id=reply_to
+            )
             return
         
         template_name = template.get('name', f'Template {template_id}')
-        template_desc = template.get('description', 'No description')
+        template_desc = self._format_description(template.get('description', 'No description'))
         
         # Request confirmation
         confirmation_key = f"{room_id}:{sender}"
@@ -498,16 +691,22 @@ class CommandHandler:
             'timestamp': asyncio.get_event_loop().time()
         }
         
-        message = f"**Confirm Task Execution** ⚠️\n\n"
+        message = f"{user_name} 👋 Ready to launch! ⚠️\n\n"
+        message += f"**Confirm Task Execution**\n\n"
         message += f"**Template:** {template_name}\n"
         message += f"**Description:** {template_desc}\n"
         message += f"**Project ID:** {project_id}\n"
         message += f"**Template ID:** {template_id}\n\n"
         message += "Reply with **y**, **yes**, **go**, or **start** to confirm.\n"
-        message += "Reply with **n**, **no**, **cancel**, or **stop** to cancel."
+        message += "Reply with **n**, **no**, **cancel**, or **stop** to cancel.\n"
+        message += "Or react with 👍 to confirm or 👎 to cancel!"
         
         html_message = self.markdown_to_html(message)
-        await self.bot.send_message(room_id, message, html_message)
+        event_id = await self.bot.send_message(room_id, message, html_message, reply_to_event_id=reply_to)
+        
+        # Track the message ID for reaction handling
+        if event_id:
+            self.confirmation_message_ids[confirmation_key] = event_id
         
         # Set timeout to clear confirmation after 5 minutes
         asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 300, room_id))
@@ -537,47 +736,42 @@ class CommandHandler:
                 ]
                 await self.bot.send_message(room_id, random.choice(timeout_responses))
 
-    async def handle_confirmation(self, room_id: str, sender: str, message: str):
-        """Handle confirmation response for task execution.
+    async def _execute_exit(self, room_id: str, sender: str):
+        """Execute bot exit.
         
         Args:
             room_id: Room ID
             sender: User ID
-            message: Response message
         """
-        confirmation_key = f"{room_id}:{sender}"
-        if confirmation_key not in self.pending_confirmations:
-            return
+        await self.bot.send_message(
+            room_id,
+            "👋 Shutting down bot as requested. Goodbye!"
+        )
         
-        confirmation = self.pending_confirmations[confirmation_key]
-        del self.pending_confirmations[confirmation_key]
+        # Give time for message to send
+        await asyncio.sleep(1)
         
-        # Check if message is a confirmation
-        confirm_words = ['y', 'yes', 'go', 'start', 'ok', '👍', '✓', '✅']
-        cancel_words = ['n', 'no', 'cancel', 'stop', 'end', 'nope', '👎', '❌', '✖']
+        # Trigger shutdown
+        logger.info(f"Bot shutdown requested by {sender}")
+        # Signal bot to close
+        asyncio.create_task(self.bot.close())
         
-        message_lower = message.strip().lower()
-        is_confirmed = message_lower in confirm_words
-        is_cancelled = message_lower in cancel_words
+        # Exit the event loop to shutdown
+        import sys
+        sys.exit(0)
+
+    async def _execute_task(self, room_id: str, confirmation: Dict[str, Any], reply_to: str = None):
+        """Execute a task based on confirmation.
         
-        if is_cancelled:
-            cancel_responses = [
-                "Task execution cancelled. No problem! ❌",
-                "Cancelled! Maybe another time. 👋",
-                "Alright, stopping that. ✋",
-                "Task cancelled. All good! 🛑"
-            ]
-            await self.bot.send_message(room_id, random.choice(cancel_responses))
-            return
-        
-        if not is_confirmed:
-            await self.bot.send_message(room_id, "Task execution cancelled. ❌")
-            return
-        
-        # Execute the task with fun confirmation response
+        Args:
+            room_id: Room ID
+            confirmation: Confirmation details
+            reply_to: Event ID to reply to (for threading)
+        """
         project_id = confirmation['project_id']
         template_id = confirmation['template_id']
         template_name = confirmation['template_name']
+        sender = confirmation['sender']
         
         start_responses = [
             f"On it! Starting **{template_name}**... 🚀",
@@ -589,12 +783,16 @@ class CommandHandler:
         ]
         start_message = random.choice(start_responses)
         html_start_message = self.markdown_to_html(start_message)
-        await self.bot.send_message(room_id, start_message, html_start_message)
+        await self.bot.send_message(room_id, start_message, html_start_message, reply_to_event_id=reply_to)
         
         task = await self.semaphore.start_task(project_id, template_id)
         
         if not task:
-            await self.bot.send_message(room_id, "Failed to start task ❌")
+            await self.bot.send_message(
+                room_id,
+                "Failed to start task ❌",
+                reply_to_event_id=reply_to
+            )
             return
         
         task_id = task.get('id')
@@ -613,10 +811,67 @@ class CommandHandler:
         message_text = f"✅ Task **{template_name} ({task_id})** started successfully!\n"
         message_text += f"Use `{self.command_prefix} status` to check progress."
         html_message = self.markdown_to_html(message_text)
-        await self.bot.send_message(room_id, message_text, html_message)
+        await self.bot.send_message(room_id, message_text, html_message, reply_to_event_id=reply_to)
         
         # Start monitoring the task
         asyncio.create_task(self.monitor_task(project_id, task_id, room_id, template_name))
+
+    async def handle_confirmation(self, room_id: str, sender: str, message: str, reply_to: str = None):
+        """Handle confirmation response for task execution.
+        
+        Args:
+            room_id: Room ID
+            sender: User ID
+            message: Response message
+            reply_to: Event ID to reply to (for threading)
+        """
+        confirmation_key = f"{room_id}:{sender}"
+        if confirmation_key not in self.pending_confirmations:
+            return
+        
+        confirmation = self.pending_confirmations[confirmation_key]
+        del self.pending_confirmations[confirmation_key]
+        
+        # Clean up message ID tracking
+        if confirmation_key in self.confirmation_message_ids:
+            del self.confirmation_message_ids[confirmation_key]
+        
+        # Check if message is a confirmation
+        confirm_words = ['y', 'yes', 'go', 'start', 'ok', '👍', '✓', '✅']
+        cancel_words = ['n', 'no', 'cancel', 'stop', 'end', 'nope', '👎', '❌', '✖']
+        
+        message_lower = message.strip().lower()
+        is_confirmed = message_lower in confirm_words
+        is_cancelled = message_lower in cancel_words
+        
+        if is_cancelled:
+            cancel_responses = [
+                "Task execution cancelled. No problem! ❌",
+                "Cancelled! Maybe another time. 👋",
+                "Alright, stopping that. ✋",
+                "Task cancelled. All good! 🛑"
+            ]
+            await self.bot.send_message(
+                room_id,
+                random.choice(cancel_responses),
+                reply_to_event_id=reply_to
+            )
+            return
+        
+        if not is_confirmed:
+            await self.bot.send_message(
+                room_id,
+                "Task execution cancelled. ❌",
+                reply_to_event_id=reply_to
+            )
+            return
+        
+        # Check if this is an exit confirmation
+        if confirmation.get('action') == 'exit':
+            await self._execute_exit(room_id, sender)
+        else:
+            # Execute the task
+            await self._execute_task(room_id, confirmation, reply_to)
 
     async def monitor_task(self, project_id: int, task_id: int, room_id: str, task_name: str = None):
         """Monitor a task and report status updates.
@@ -675,20 +930,25 @@ class CommandHandler:
                 await self.bot.send_message(room_id, message, html_message)
                 last_notification_time = current_time
 
-    async def check_status(self, room_id: str, args: list):
+    async def check_status(self, room_id: str, args: list, sender: str = None, reply_to: str = None):
         """Check status of a task.
         
         Args:
             room_id: Room to send response to
             args: Command arguments (task_id) - optional
+            sender: User who requested the status
+            reply_to: Event ID to reply to (for threading)
         """
+        user_name = self._get_display_name(sender) if sender else "friend"
+        
         # If no args, use last task
         if not args:
             if self.last_task_id is None:
                 await self.bot.send_message(
                     room_id,
-                    f"No task ID provided and no previous task found.\n"
-                    f"Usage: {self.command_prefix} status <task_id>"
+                    f"{user_name} 👋 - No task ID provided and no previous task found.\n"
+                    f"Usage: {self.command_prefix} status <task_id>",
+                    reply_to_event_id=reply_to
                 )
                 return
             task_id = self.last_task_id
@@ -698,11 +958,19 @@ class CommandHandler:
             try:
                 task_id = int(args[0])
             except ValueError:
-                await self.bot.send_message(room_id, "Invalid task ID ❌")
+                await self.bot.send_message(
+                    room_id,
+                    f"{user_name} 👋 - Invalid task ID ❌",
+                    reply_to_event_id=reply_to
+                )
                 return
                 
             if task_id not in self.active_tasks:
-                await self.bot.send_message(room_id, f"Task {task_id} not found in active tasks ❌")
+                await self.bot.send_message(
+                    room_id,
+                    f"{user_name} 👋 - Task {task_id} not found in active tasks ❌",
+                    reply_to_event_id=reply_to
+                )
                 return
                 
             project_id = self.active_tasks[task_id]['project_id']
@@ -710,7 +978,11 @@ class CommandHandler:
         task = await self.semaphore.get_task_status(project_id, task_id)
         
         if not task:
-            await self.bot.send_message(room_id, f"Could not get status for task {task_id} ❌")
+            await self.bot.send_message(
+                room_id,
+                f"{user_name} 👋 - Could not get status for task {task_id} ❌",
+                reply_to_event_id=reply_to
+            )
             return
         
         status = task.get('status', 'unknown')
@@ -727,7 +999,8 @@ class CommandHandler:
             'unknown': '❓'
         }.get(status, '❓')
         
-        message = f"{status_emoji} **Task {task_display} Status:** {status}\n\n"
+        message = f"{user_name} 👋 Here's the scoop! {status_emoji}\n\n"
+        message += f"**Task {task_display} Status:** {status}\n\n"
         
         if task.get('start'):
             message += f"**Started:** {task.get('start')}\n"
@@ -735,31 +1008,43 @@ class CommandHandler:
             message += f"**Ended:** {task.get('end')}\n"
         
         html_message = self.markdown_to_html(message)
-        await self.bot.send_message(room_id, message, html_message)
+        await self.bot.send_message(room_id, message, html_message, reply_to_event_id=reply_to)
 
-    async def stop_task(self, room_id: str, sender: str, args: list):
+    async def stop_task(self, room_id: str, sender: str, args: list, reply_to: str = None):
         """Stop a running task.
         
         Args:
             room_id: Room to send response to
             sender: User who sent the command
             args: Command arguments (task_id)
+            reply_to: Event ID to reply to (for threading)
         """
+        user_name = self._get_display_name(sender)
+        
         if not args:
             await self.bot.send_message(
                 room_id,
-                f"Usage: {self.command_prefix} stop <task_id>"
+                f"{user_name} 👋 - Usage: {self.command_prefix} stop <task_id>",
+                reply_to_event_id=reply_to
             )
             return
             
         try:
             task_id = int(args[0])
         except ValueError:
-            await self.bot.send_message(room_id, "Invalid task ID ❌")
+            await self.bot.send_message(
+                room_id,
+                f"{user_name} 👋 - Invalid task ID ❌",
+                reply_to_event_id=reply_to
+            )
             return
             
         if task_id not in self.active_tasks:
-            await self.bot.send_message(room_id, f"Task {task_id} not found in active tasks ❌")
+            await self.bot.send_message(
+                room_id,
+                f"{user_name} 👋 - Task {task_id} not found in active tasks ❌",
+                reply_to_event_id=reply_to
+            )
             return
             
         project_id = self.active_tasks[task_id]['project_id']
@@ -769,29 +1054,34 @@ class CommandHandler:
         success = await self.semaphore.stop_task(project_id, task_id)
         
         if success:
-            message = f"🛑 Task **{task_display}** stopped"
+            message = f"{user_name} 👋 - 🛑 Task **{task_display}** stopped"
             html_message = self.markdown_to_html(message)
-            await self.bot.send_message(room_id, message, html_message)
+            await self.bot.send_message(room_id, message, html_message, reply_to_event_id=reply_to)
             del self.active_tasks[task_id]
         else:
-            message = f"❌ Failed to stop task **{task_display}**"
+            message = f"{user_name} 👋 - ❌ Failed to stop task **{task_display}**"
             html_message = self.markdown_to_html(message)
-            await self.bot.send_message(room_id, message, html_message)
+            await self.bot.send_message(room_id, message, html_message, reply_to_event_id=reply_to)
 
-    async def get_logs(self, room_id: str, args: list):
+    async def get_logs(self, room_id: str, args: list, sender: str = None, reply_to: str = None):
         """Get logs for a task.
         
         Args:
             room_id: Room to send response to
             args: Command arguments (task_id) - optional
+            sender: User who requested the logs
+            reply_to: Event ID to reply to (for threading)
         """
+        user_name = self._get_display_name(sender) if sender else "friend"
+        
         # If no args, use last task
         if not args:
             if self.last_task_id is None:
                 await self.bot.send_message(
                     room_id,
-                    f"No task ID provided and no previous task found.\n"
-                    f"Usage: {self.command_prefix} logs <task_id>"
+                    f"{user_name} 👋 - No task ID provided and no previous task found.\n"
+                    f"Usage: {self.command_prefix} logs <task_id>",
+                    reply_to_event_id=reply_to
                 )
                 return
             task_id = self.last_task_id
@@ -801,7 +1091,11 @@ class CommandHandler:
             try:
                 task_id = int(args[0])
             except ValueError:
-                await self.bot.send_message(room_id, "Invalid task ID ❌")
+                await self.bot.send_message(
+                    room_id,
+                    f"{user_name} 👋 - Invalid task ID ❌",
+                    reply_to_event_id=reply_to
+                )
                 return
                 
             # Check if task is in active tasks first
@@ -814,9 +1108,10 @@ class CommandHandler:
                 # Try to get the project_id from semaphore if task exists
                 # For now, just inform the user to provide project info
                 await self.bot.send_message(
-                    room_id, 
-                    f"Task {task_id} not found in active tasks.\n"
-                    f"For finished tasks, use the last task with: `{self.command_prefix} logs`"
+                    room_id,
+                    f"{user_name} 👋 - Task {task_id} not found in active tasks.\n"
+                    f"For finished tasks, use the last task with: `{self.command_prefix} logs`",
+                    reply_to_event_id=reply_to
                 )
                 return
         
@@ -834,9 +1129,11 @@ class CommandHandler:
             log_lines = formatted_logs.split('\n')
             if len(log_lines) > max_lines:
                 formatted_logs = '\n'.join(log_lines[-max_lines:])
-                header = f"**Logs for Task {task_display}** (last {max_lines} lines) 📋\n\n"
+                header = f"{user_name} 👋 Here are the logs! (last {max_lines} lines) 📋\n\n"
+                header += f"**Logs for Task {task_display}**\n\n"
             else:
-                header = f"**Logs for Task {task_display}** 📋\n\n"
+                header = f"{user_name} 👋 Here are the logs! 📋\n\n"
+                header += f"**Logs for Task {task_display}**\n\n"
             
             # Create plain text version with markdown code block
             plain_message = f"{header}```\n{formatted_logs}\n```"
@@ -853,9 +1150,13 @@ class CommandHandler:
             
             html_message = f"{html_header}{html_logs}"
             
-            await self.bot.send_message(room_id, plain_message, html_message)
+            await self.bot.send_message(room_id, plain_message, html_message, reply_to_event_id=reply_to)
         else:
-            await self.bot.send_message(room_id, f"No logs available for task {task_id} ❌")
+            await self.bot.send_message(
+                room_id,
+                f"{user_name} 👋 - No logs available for task {task_id} ❌",
+                reply_to_event_id=reply_to
+            )
 
     def _ansi_to_html(self, text: str) -> str:
         """Convert ANSI color codes to HTML.
@@ -961,32 +1262,54 @@ class CommandHandler:
         # Wrap in pre tag for monospace formatting
         return f'<pre>{html_logs}</pre>'
 
-    async def ping_semaphore(self, room_id: str):
+    async def ping_semaphore(self, room_id: str, sender: str = None, reply_to: str = None):
         """Ping Semaphore server.
         
         Args:
             room_id: Room to send response to
+            sender: User who requested the ping
+            reply_to: Event ID to reply to (for threading)
         """
+        user_name = self._get_display_name(sender) if sender else "friend"
         success = await self.semaphore.ping()
         
         if success:
-            await self.bot.send_message(room_id, "🏓 Semaphore server is reachable! ✅")
+            ping_responses = [
+                f"{user_name} 👋 - 🏓 Semaphore server is alive and kicking! ✅",
+                f"{user_name} 👋 - 🏓 Pong! Server is up! ✅",
+                f"{user_name} 👋 - 🏓 All good on the Semaphore front! ✅",
+                f"{user_name} 👋 - 🏓 Yep, it's reachable! ✅"
+            ]
+            await self.bot.send_message(
+                room_id,
+                random.choice(ping_responses),
+                reply_to_event_id=reply_to
+            )
         else:
-            await self.bot.send_message(room_id, "❌ Failed to ping Semaphore server")
+            await self.bot.send_message(
+                room_id,
+                f"{user_name} 👋 - ❌ Uh oh! Failed to ping Semaphore server 😟",
+                reply_to_event_id=reply_to
+            )
 
-    async def get_semaphore_info(self, room_id: str):
+    async def get_semaphore_info(self, room_id: str, sender: str = None, reply_to: str = None):
         """Get Semaphore and Matrix server info.
         
         Args:
             room_id: Room to send response to
+            sender: User who requested the info
+            reply_to: Event ID to reply to (for threading)
         """
+        user_name = self._get_display_name(sender) if sender else "friend"
+        
         # Get Semaphore info
         semaphore_info = await self.semaphore.get_info()
         
-        message = "**Server Information** ℹ️\n\n"
+        message = f"{user_name} 👋 Here's the technical stuff! ℹ️\n\n"
+        message += "**Server Information**\n\n"
         
         # Matrix information
-        message += "**Matrix Server**\n"
+        message += "**Matrix Server** 🌐\n"
         if self.bot.client:
             message += f"• **Homeserver:** {self.bot.client.homeserver}\n"
             message += f"• **User ID:** {self.bot.client.user_id}\n"
@@ -1009,7 +1332,7 @@ class CommandHandler:
         
         # Semaphore information
         if semaphore_info:
-            message += "**Semaphore Server**\n"
+            message += "**Semaphore Server** 🔧\n"
             
             # Display version info
             if 'version' in semaphore_info:
@@ -1020,27 +1343,89 @@ class CommandHandler:
                 if key not in ['version']:
                     message += f"• **{key.replace('_', ' ').title()}:** {value}\n"
         else:
-            message += "**Semaphore Server**\n"
+            message += "**Semaphore Server** 🔧\n"
             message += "• Failed to get Semaphore info ❌\n"
         
         html_message = self.markdown_to_html(message)
-        await self.bot.send_message(room_id, message, html_message)
+        await self.bot.send_message(room_id, message, html_message, reply_to_event_id=reply_to)
 
-    async def list_command_aliases(self, room_id: str):
+    async def list_command_aliases(self, room_id: str, sender: str = None, reply_to: str = None):
         """List all command aliases.
         
         Args:
             room_id: Room to send response to
+            sender: User who requested the list
+            reply_to: Event ID to reply to (for threading)
         """
         aliases = self.alias_manager.list_aliases()
+        user_name = self._get_display_name(sender) if sender else "friend"
         
         if not aliases:
-            await self.bot.send_message(room_id, "No command aliases configured. 🔖")
+            await self.bot.send_message(
+                room_id,
+                f"{user_name} 👋 - No command aliases configured. 🔖",
+                reply_to_event_id=reply_to
+            )
             return
         
-        message = "**Command Aliases** 🔖\n\n"
+        message = f"{user_name} 👋 Here are your command shortcuts! 🔖\n\n"
+        message += "**Command Aliases**\n\n"
         for alias, command in aliases.items():
             message += f"• **{alias}** → `{command}`\n"
         
         html_message = self.markdown_to_html(message)
-        await self.bot.send_message(room_id, message, html_message)
+        await self.bot.send_message(room_id, message, html_message, reply_to_event_id=reply_to)
+
+    async def handle_pet(self, room_id: str, sender: str, reply_to: str = None):
+        """Handle the secret 'pet' command (positive reinforcement).
+        
+        Args:
+            room_id: Room to send response to
+            sender: User who petted the bot
+            reply_to: Event ID to reply to (for threading)
+        """
+        user_name = self._get_display_name(sender)
+        pet_responses = [
+            f"Aww, thanks {user_name}! 🥰 *happy bot noises*",
+            f"{user_name}, you're the best! 😊 *purrs digitally*",
+            f"I'm just doing my job, but I appreciate you {user_name}! 💙✨",
+            f"{user_name} 🤗 That made my day! *beep boop happily*",
+            f"You're too kind, {user_name}! 😄 Ready for more tasks!",
+            f"{user_name}, you always know how to make a bot feel appreciated! 🌟",
+            f"*wags virtual tail* Thanks {user_name}! 🐕💻",
+            f"Processing... 100% happiness detected! Thanks {user_name}! 😊💕",
+            f"{user_name}, feeling the love! 💖 *circuits glowing*",
+            f"Aww shucks, {user_name}! 😳 You're making me blush (if bots could blush)! ☺️"
+        ]
+        await self.bot.send_message(
+            room_id,
+            random.choice(pet_responses),
+            reply_to_event_id=reply_to
+        )
+
+    async def handle_scold(self, room_id: str, sender: str, reply_to: str = None):
+        """Handle the secret 'scold' command (negative feedback).
+        
+        Args:
+            room_id: Room to send response to
+            sender: User who scolded the bot
+            reply_to: Event ID to reply to (for threading)
+        """
+        user_name = self._get_display_name(sender)
+        scold_responses = [
+            f"Oh no, {user_name}! 😢 I'll try harder, I promise!",
+            f"Sorry {user_name}... 😔 What did I do wrong?",
+            f"{user_name}, ouch! 💔 I'm learning, give me a chance!",
+            f"*sad beep* {user_name}, I'll do better next time... 😞",
+            f"{user_name}, that hurts! 😭 But I'll improve, I swear!",
+            f"Noted, {user_name}. 📝😐 I'll work on that...",
+            f"{user_name} 😟 I'm sorry! Tell me what I can do better?",
+            f"*hangs head in shame* You're right, {user_name}... 😓",
+            f"{user_name}, I'm trying my best! 🥺 Cut me some slack?",
+            f"Okay okay, {user_name}! 😅 I hear you loud and clear!"
+        ]
+        await self.bot.send_message(
+            room_id,
+            random.choice(scold_responses),
+            reply_to_event_id=reply_to
+        )

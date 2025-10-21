@@ -23,6 +23,7 @@ from nio import (
     KeyVerificationCancel,
     KeyVerificationKey,
     KeyVerificationMac,
+    Event,
 )
 from chatrixcd.config import Config
 from chatrixcd.auth import MatrixAuth
@@ -107,6 +108,7 @@ class ChatrixBot:
         self.client.add_event_callback(self.message_callback, RoomMessageText)
         self.client.add_event_callback(self.invite_callback, InviteMemberEvent)
         self.client.add_event_callback(self.megolm_event_callback, MegolmEvent)
+        self.client.add_event_callback(self.reaction_callback, Event)
         
         # Setup key verification callbacks for interactive emoji verification
         self.client.add_event_callback(self.key_verification_start_callback, KeyVerificationStart)
@@ -693,14 +695,54 @@ class ChatrixBot:
                 logger.error(f"Failed to request room key: {e}")
                 self.requested_session_ids.discard(session_key)
 
+    async def reaction_callback(self, room: MatrixRoom, event: Event):
+        """Handle incoming reactions.
+        
+        Args:
+            room: The room the reaction was sent in
+            event: The reaction event
+        """
+        # Check if this is a reaction event
+        if not hasattr(event, 'source') or 'content' not in event.source:
+            return
+            
+        content = event.source.get('content', {})
+        relates_to = content.get('m.relates_to', {})
+        
+        # Check if this is an annotation (reaction)
+        if relates_to.get('rel_type') != 'm.annotation':
+            return
+        
+        # Ignore reactions from the bot itself
+        if event.sender == self.user_id:
+            return
+        
+        # Ignore old reactions
+        if event.server_timestamp < self.start_time:
+            return
+        
+        # Get the reaction key (emoji) and the event being reacted to
+        reaction_key = relates_to.get('key')
+        reacted_event_id = relates_to.get('event_id')
+        
+        if not reaction_key or not reacted_event_id:
+            return
+        
+        logger.info(f"Reaction {reaction_key} from {event.sender} on event {reacted_event_id}")
+        
+        # Pass the reaction to the command handler
+        await self.command_handler.handle_reaction(room, event.sender, reacted_event_id, reaction_key)
+
     async def send_message(self, room_id: str, message: str, 
-                          formatted_message: Optional[str] = None):
-        """Send a message to a room.
+                          formatted_message: Optional[str] = None,
+                          reply_to_event_id: Optional[str] = None):
+        """Send a message to a room, optionally as a threaded reply.
         
         Args:
             room_id: ID of the room to send to
             message: Plain text message
             formatted_message: Optional HTML formatted message
+            reply_to_event_id: Optional event ID to reply to (creates a thread)
         """
         content = {
             "msgtype": "m.text",
@@ -710,6 +752,17 @@ class ChatrixBot:
         if formatted_message:
             content["format"] = "org.matrix.custom.html"
             content["formatted_body"] = formatted_message
+        
+        # Add threading relationship if replying to an event
+        if reply_to_event_id:
+            content["m.relates_to"] = {
+                "rel_type": "m.thread",
+                "event_id": reply_to_event_id,
+                "is_falling_back": True,
+                "m.in_reply_to": {
+                    "event_id": reply_to_event_id
+                }
+            }
             
         response = await self.client.room_send(
             room_id=room_id,
