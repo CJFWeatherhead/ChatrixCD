@@ -42,14 +42,53 @@ ChatrixCD integrates with Semaphore UI to enable CI/CD automation through chat. 
 
 ## Installation
 
-### Prerequisites
+### Option 1: Pre-built Binaries (Recommended)
 
+**No Python installation required!** Download the standalone executable for your platform:
+
+#### Linux
+- [x86_64 (64-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64) - Most common
+- [i686 (32-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
+- [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64) - For Raspberry Pi, ARM servers
+
+#### Windows
+- [x86_64 (64-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-x86_64.exe)
+- [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-arm64.exe) - For ARM-based Windows devices
+
+#### macOS
+- [Universal Binary](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal) - Works on both Intel and Apple Silicon
+
+**Quick Start:**
+
+```bash
+# Linux/macOS - Download and make executable
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
+chmod +x chatrixcd-linux-x86_64
+./chatrixcd-linux-x86_64
+
+# Or for macOS
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal
+chmod +x chatrixcd-macos-universal
+./chatrixcd-macos-universal
+```
+
+**Windows:** Simply download the `.exe` file and double-click to run, or run from Command Prompt/PowerShell.
+
+See [Installation Guide](INSTALL.md) for detailed setup instructions including configuration.
+
+### Option 2: Install from Source
+
+**Prerequisites:**
 - Python 3.12 or higher (3.12, 3.13, 3.14 supported)
 - [uv](https://docs.astral.sh/uv/) - Fast Python package installer
+
+**Common Requirements (both options):**
 - Access to a Matrix homeserver
 - Access to a Semaphore UI instance with API access
 
 ### Install from source
+
+**Installation steps:**
 
 ```bash
 # Clone the repository
@@ -70,6 +109,16 @@ uv pip install -r requirements.txt
 
 # Install the application
 uv pip install -e .
+```
+
+**Running from source:**
+
+```bash
+# After installation, you can run:
+chatrixcd
+
+# Or directly:
+python -m chatrixcd.main
 ```
 
 ## Configuration
@@ -522,7 +571,9 @@ Releases use a semantic calendar versioning system with the format `YYYY.MM.DD.M
 
 **Important:** Version numbers (MAJOR, MINOR, PATCH) always increment and never reset. This ensures each version is unique and comparable.
 
-To create a new release:
+#### Production Releases
+
+To create a new production release:
 
 1. Go to Actions → Build and Release workflow
 2. Click "Run workflow"
@@ -533,12 +584,21 @@ To create a new release:
 
 4. The workflow will:
    - Run all unit tests
+   - Build standalone executables for all platforms (Linux x86_64/i686/ARM64, Windows x86_64/ARM64, macOS Universal)
    - Calculate the new version based on current date and type
-   - Update version in code (`__init__.py` and `setup.py`)
+   - Update version in code files
    - Update `CHANGELOG.md` (move Unreleased content to new version section)
-   - Generate changelog from commits
-   - Commit all changes
-   - Create a GitHub release
+   - Create git tag
+   - Create a GitHub release with pre-built binaries
+
+#### Pre-releases (Automated)
+
+Pre-releases are automatically created when pull requests are merged to `main`:
+- Version includes `-dev` suffix (e.g., `2025.10.21.0.0.1-dev`)
+- Marked as pre-release on GitHub
+- Includes pre-built binaries for testing
+
+See [Build Workflow Documentation](docs/BUILD_WORKFLOW.md) for complete details on the build and release process.
 
 **Note**: Document changes in the `[Unreleased]` section of `CHANGELOG.md` as you develop. The release workflow will automatically move these changes to a versioned section.
 

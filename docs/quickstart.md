@@ -10,6 +10,31 @@ Get ChatrixCD up and running in minutes. For more detailed examples, configurati
 
 ## 1. Install ChatrixCD
 
+### Option 1: Pre-built Binary (Fastest!)
+
+**No Python required!** Download and run:
+
+**Linux (x86_64):**
+```bash
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
+chmod +x chatrixcd-linux-x86_64
+./chatrixcd-linux-x86_64
+```
+
+**macOS (Universal):**
+```bash
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal
+chmod +x chatrixcd-macos-universal
+./chatrixcd-macos-universal
+```
+
+**Windows:**
+Download [chatrixcd-windows-x86_64.exe](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-x86_64.exe) and double-click to run.
+
+**Other platforms:** See [all available binaries](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest).
+
+### Option 2: From Source
+
 ```bash
 git clone https://github.com/CJFWeatherhead/ChatrixCD.git
 cd ChatrixCD
@@ -45,6 +70,21 @@ Create a `config.json` file:
 ```
 
 ## 3. Start the Bot
+
+### From Binary
+
+```bash
+# Linux/macOS (adjust filename for your platform)
+./chatrixcd-linux-x86_64
+./chatrixcd-macos-universal
+```
+
+```cmd
+rem Windows
+chatrixcd-windows-x86_64.exe
+```
+
+### From Source
 
 ```bash
 chatrixcd

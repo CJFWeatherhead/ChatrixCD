@@ -2,21 +2,99 @@
 
 This guide provides detailed instructions for installing and running ChatrixCD.
 
-## Quick Start
+## Installation Methods
 
-### 1. Install uv (if not already installed)
+Choose the method that best suits your needs:
+
+1. **Pre-built Binary** (Recommended) - Easiest, no Python required
+2. **From Source** - For development or custom modifications
+3. **Docker** - For containerized deployments
+
+## Method 1: Pre-built Binary (Recommended)
+
+The easiest way to get started - no Python installation required!
+
+### Download
+
+Download the appropriate binary for your platform:
+
+#### Linux
+- [x86_64 (64-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64) - Most common
+- [i686 (32-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
+- [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64) - Raspberry Pi, ARM servers
+
+#### Windows
+- [x86_64 (64-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-x86_64.exe)
+- [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-arm64.exe)
+
+#### macOS
+- [Universal Binary](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal) - Intel and Apple Silicon
+
+### Setup and Run
+
+**Linux/macOS:**
+
+```bash
+# Download (example for Linux x86_64)
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
+
+# Make executable
+chmod +x chatrixcd-linux-x86_64
+
+# Run
+./chatrixcd-linux-x86_64
+```
+
+**Windows:**
+
+1. Download the appropriate `.exe` file
+2. Double-click to run, or use Command Prompt/PowerShell:
+
+```cmd
+chatrixcd-windows-x86_64.exe
+```
+
+**First Run:**
+
+On first run, the bot will create a sample configuration file if one doesn't exist. You'll need to:
+
+1. Stop the bot (Ctrl+C)
+2. Edit `config.json` with your Matrix and Semaphore credentials
+3. Restart the bot
+
+Continue to the [Configuration](#configuration) section below.
+
+## Method 2: Install from Source
+
+For development or if you prefer to run from source.
+
+### Prerequisites
+
+- Python 3.12 or higher (3.12, 3.13, 3.14 supported)
+- [uv](https://docs.astral.sh/uv/) - Fast Python package installer (recommended) or pip
+
+### Prerequisites
+
+- Python 3.12 or higher (3.12, 3.13, 3.14 supported)
+- [uv](https://docs.astral.sh/uv/) - Fast Python package installer (recommended) or pip
+
+### Install uv (if not already installed)
 
 ```bash
 # On Linux/macOS:
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # On Windows:
-# powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-### 2. Create Virtual Environment and Install Dependencies
+### Installation Steps
 
 ```bash
+# Clone the repository
+git clone https://github.com/CJFWeatherhead/ChatrixCD.git
+cd ChatrixCD
+
 # Create a virtual environment
 uv venv
 
@@ -24,7 +102,7 @@ uv venv
 # On Linux/macOS:
 source .venv/bin/activate
 # On Windows:
-# .venv\Scripts\activate
+.venv\Scripts\activate
 
 # Install dependencies
 uv pip install -r requirements.txt
@@ -33,17 +111,105 @@ uv pip install -r requirements.txt
 uv pip install -e .
 ```
 
-### 3. Configure the Bot
+## Method 3: Docker Installation
+
+For containerized deployments.
+
+### Using Docker Compose (Debian-based)
 
 ```bash
+# Clone the repository
+git clone https://github.com/CJFWeatherhead/ChatrixCD.git
+cd ChatrixCD
+
+# Create configuration file
 cp config.json.example config.json
 # Edit config.json with your settings
-nano config.json
+
+# Start with Docker Compose
+docker-compose up -d
+```
+
+### Using Docker Compose (Alpine Linux)
+
+For a minimal deployment:
+
+```bash
+docker-compose -f docker-compose.alpine.yml up -d
+```
+
+### Building Docker Image Manually
+
+**Debian-based:**
+```bash
+docker build -t chatrixcd:latest .
+docker run -v $(pwd)/config.json:/app/config.json -v $(pwd)/store:/app/store chatrixcd:latest
+```
+
+**Alpine Linux:**
+```bash
+docker build -f Dockerfile.alpine -t chatrixcd:alpine .
+docker run -v $(pwd)/config.json:/app/config.json -v $(pwd)/store:/app/store chatrixcd:alpine
+```
+
+## Configuration
+
+After installation (any method), you need to configure ChatrixCD.
+
+## Configuration
+
+After installation (any method), you need to configure ChatrixCD.
+
+### Create Configuration File
+
+**For binary installations:**
+The binary will look for `config.json` in the current directory. Create it from the example:
+
+```bash
+# Download example config
+wget https://raw.githubusercontent.com/CJFWeatherhead/ChatrixCD/main/config.json.example -O config.json
+
+# Or if you cloned the repo:
+cp config.json.example config.json
+```
+
+**For source/Docker installations:**
+```bash
+cp config.json.example config.json
+```
+
+Edit `config.json` with your settings:
+
+```bash
+nano config.json  # or use your preferred editor
 ```
 
 Configuration is done exclusively through JSON files (with HJSON support for comments).
 
-### 4. Run the Bot
+## Running the Bot
+
+### From Binary
+
+```bash
+# Linux/macOS (adjust filename for your platform)
+./chatrixcd-linux-x86_64
+
+# With options
+./chatrixcd-linux-x86_64 --help
+./chatrixcd-linux-x86_64 -c /path/to/config.json
+./chatrixcd-linux-x86_64 -L  # Log-only mode (no TUI)
+```
+
+```cmd
+rem Windows
+chatrixcd-windows-x86_64.exe
+
+rem With options
+chatrixcd-windows-x86_64.exe --help
+chatrixcd-windows-x86_64.exe -c C:\path\to\config.json
+```
+
+### From Source
 
 **Interactive Mode (with TUI):**
 
@@ -68,7 +234,9 @@ Or run directly:
 python -m chatrixcd.main
 ```
 
-For more control, use command-line options:
+### Command-Line Options
+
+All installation methods support these options:
 
 ```bash
 # Show help

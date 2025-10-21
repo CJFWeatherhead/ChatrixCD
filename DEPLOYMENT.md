@@ -4,15 +4,34 @@ This document provides an overview of deployment options for ChatrixCD.
 
 ## Quick Reference
 
-| Platform | Method | Init System | File |
-|----------|--------|-------------|------|
+| Method | Platform | Init System | File/Link |
+|--------|----------|-------------|-----------|
+| **Pre-built Binary** | Linux/Windows/macOS | systemd/manual | [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest) |
 | Docker | Debian-based | N/A | `Dockerfile` |
 | Docker | Alpine Linux | N/A | `Dockerfile.alpine` |
-| Debian/Ubuntu | Native | systemd | `chatrixcd-debian.service` |
-| RHEL/CentOS/Fedora | Native | systemd | `chatrixcd.service` |
-| Alpine Linux | Native | OpenRC | `chatrixcd.initd` |
+| Native | Debian/Ubuntu | systemd | `chatrixcd-debian.service` |
+| Native | RHEL/CentOS/Fedora | systemd | `chatrixcd.service` |
+| Native | Alpine Linux | OpenRC | `chatrixcd.initd` |
 
 ## Recommended Deployments
+
+### For Quick Deployment (Pre-built Binary)
+
+**Best for:**
+- Getting started quickly
+- Simple deployments
+- No Python installation needed
+- Testing and evaluation
+
+**Standalone executable:**
+- No dependencies required
+- Works on all major platforms
+- Easy updates (just replace the binary)
+- Smallest deployment footprint
+
+**Download:** [Latest Release](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest)
+
+See [INSTALL.md](INSTALL.md#method-1-pre-built-binary-recommended) for setup instructions.
 
 ### For Production (Docker)
 
@@ -46,35 +65,25 @@ This document provides an overview of deployment options for ChatrixCD.
 
 ## Feature Comparison
 
-| Feature | Docker (Debian) | Docker (Alpine) | Native (Debian) | Native (Alpine) |
-|---------|----------------|-----------------|-----------------|-----------------|
-| Image Size | ~200MB | ~100MB | N/A | N/A |
-| Build Time | Medium | Fast | N/A | N/A |
-| Memory Usage | Medium | Low | Low | Very Low |
-| Security Hardening | Good | Good | Excellent | Good |
-| Ease of Deployment | Very Easy | Very Easy | Medium | Medium |
-| Package Compatibility | Excellent | Good | Excellent | Good |
-
-## Detailed Instructions
-
-For complete deployment instructions, see [INSTALL.md](INSTALL.md):
-
-- [Docker Deployment](INSTALL.md#docker-deployment)
-- [Debian-Specific Deployment](INSTALL.md#debian-specific-deployment)
-- [Alpine Linux Deployment](INSTALL.md#alpine-linux-deployment)
-- [Systemd Service](INSTALL.md#systemd-service-linux)
-
-## Security Considerations
-
-All deployment methods include security best practices:
-
-1. **Isolated User**: Bot runs as dedicated `chatrixcd` user
-2. **Minimal Permissions**: Read-only filesystem where possible
-3. **Protected Store**: Encryption keys stored with restricted access
-4. **No New Privileges**: Security flags prevent privilege escalation
-5. **Private Temp**: Isolated temporary directories
+| Feature | Pre-built Binary | Docker (Debian) | Docker (Alpine) | Native (Debian) | Native (Alpine) |
+|---------|------------------|----------------|-----------------|-----------------|-----------------|
+| Setup Time | Instant | Fast | Fast | Medium | Medium |
+| Disk Usage | ~50-100MB | ~200MB | ~100MB | Minimal | Minimal |
+| Memory Usage | Low | Medium | Low | Low | Very Low |
+| Dependencies | None | Docker | Docker | Python + Deps | Python + Deps |
+| Updates | Replace file | Rebuild image | Rebuild image | Update code | Update code |
+| Security Hardening | Good | Good | Good | Excellent | Good |
+| Ease of Deployment | Very Easy | Very Easy | Very Easy | Medium | Medium |
+| Package Compatibility | Excellent | Excellent | Good | Excellent | Good |
 
 ## Choosing a Deployment Method
+
+### Use Pre-built Binary if:
+- You want the fastest setup
+- You don't want to install Python
+- You're testing or evaluating ChatrixCD
+- You prefer simple file-based updates
+- You're deploying on a single machine
 
 ### Use Docker (Debian) if:
 - You want the easiest deployment
@@ -95,6 +104,26 @@ All deployment methods include security best practices:
 - You need minimal system resources
 - You prefer OpenRC over systemd
 - You're running Alpine Linux
+
+## Detailed Instructions
+
+For complete deployment instructions, see:
+
+- [Pre-built Binary](INSTALL.md#method-1-pre-built-binary-recommended) - Quick start
+- [Docker Deployment](INSTALL.md#method-3-docker-installation) - Containerized
+- [Source Installation](INSTALL.md#method-2-install-from-source) - Development
+- [Systemd Service](INSTALL.md#systemd-service-linux) - Native Linux service
+
+## Security Considerations
+
+All deployment methods include security best practices:
+
+1. **Pre-built Binaries**: Statically linked, minimal attack surface
+2. **Isolated User**: Bot runs as dedicated `chatrixcd` user (Docker/Native)
+3. **Minimal Permissions**: Read-only filesystem where possible
+4. **Protected Store**: Encryption keys stored with restricted access
+5. **No New Privileges**: Security flags prevent privilege escalation
+6. **Private Temp**: Isolated temporary directories
 
 ## Support
 

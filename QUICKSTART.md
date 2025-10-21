@@ -2,19 +2,38 @@
 
 Get ChatrixCD up and running in 5 minutes!
 
-## Prerequisites
-
-- Python 3.12+ (3.12, 3.13, 3.14 supported)
-- [uv](https://docs.astral.sh/uv/) - Fast Python package installer
-- A Matrix account for the bot
-- Access to a Semaphore UI instance
-
 ## Installation
 
+### Option 1: Pre-built Binary (Fastest!)
+
+**No Python required!** Download and run:
+
+**Linux (x86_64):**
 ```bash
-# Install uv (if not already installed)
-# On Linux/macOS:
-curl -LsSf https://astral.sh/uv/install.sh | sh
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
+chmod +x chatrixcd-linux-x86_64
+./chatrixcd-linux-x86_64
+```
+
+**macOS (Universal):**
+```bash
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal
+chmod +x chatrixcd-macos-universal
+./chatrixcd-macos-universal
+```
+
+**Windows:**
+Download [chatrixcd-windows-x86_64.exe](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-x86_64.exe) and double-click to run.
+
+**Other platforms:** See [all available binaries](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest) for i686, ARM64, etc.
+
+### Option 2: From Source
+
+If you prefer to build from source or need the latest development version:
+
+```bash
+# Prerequisites: Python 3.12+, uv package manager
+curl -LsSf https://astral.sh/uv/install.sh | sh  # Install uv
 
 # Clone the repository
 git clone https://github.com/CJFWeatherhead/ChatrixCD.git
@@ -38,9 +57,13 @@ uv pip install -e .
 
 ## Configuration
 
+**For binary users:** Create `config.json` in the same directory as the binary.
+
+**For source users:** Create `config.json` in the repository root.
+
 Configuration is done through JSON files (with HJSON support for comments).
 
-### For Password Authentication
+### Quick Config (Password Authentication)
 
 Create a `config.json` file:
 
@@ -62,7 +85,7 @@ Create a `config.json` file:
 }
 ```
 
-### For OIDC/SSO Authentication
+### Alternative: OIDC/SSO Authentication
 
 If your Matrix server uses OIDC/Single Sign-On:
 
@@ -84,7 +107,7 @@ If your Matrix server uses OIDC/Single Sign-On:
 }
 ```
 
-When you start the bot:
+When you start the bot with OIDC:
 1. It will display an SSO authentication URL
 2. Open the URL in your browser
 3. Complete authentication with your OIDC provider
@@ -92,6 +115,21 @@ When you start the bot:
 5. Paste it back into the bot
 
 ## Running the Bot
+
+### From Binary
+
+```bash
+# Linux/macOS
+./chatrixcd-linux-x86_64      # or your platform's binary
+./chatrixcd-macos-universal
+```
+
+```cmd
+rem Windows
+chatrixcd-windows-x86_64.exe
+```
+
+### From Source
 
 **Interactive Mode (with TUI):**
 
