@@ -297,6 +297,11 @@ class StatusScreen(Screen):
                 
                 yield status_widget
                 yield Button("OK", id="ok_button", variant="primary")
+    
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Handle button press."""
+        if event.button.id == "ok_button":
+            self.app.pop_screen()
 
 
 class OptionsScreen(Screen):
