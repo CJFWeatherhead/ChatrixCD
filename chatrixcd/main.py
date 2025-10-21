@@ -345,7 +345,7 @@ def main():
         
         if use_tui_for_config:
             # Show config in TUI window
-            from chatrixcd.tui import show_config_tui
+            from chatrixcd.tui_turbo import show_config_tui
             try:
                 asyncio.run(show_config_tui(config))
             except KeyboardInterrupt:
@@ -379,7 +379,7 @@ def main():
     try:
         if use_tui:
             # Run with TUI interface
-            from chatrixcd.tui import run_tui
+            from chatrixcd.tui_turbo import run_tui
             asyncio.run(run_tui_with_bot(bot, config, args.color, args.mouse))
         else:
             # Run in classic log-only mode
