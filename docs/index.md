@@ -21,7 +21,10 @@ nav_order: 1
 
 - 🔐 **Native Matrix Authentication**: Support for password and OIDC/SSO authentication with Matrix servers
 - 🔒 **E2E Encryption**: Full support for end-to-end encrypted Matrix rooms with device verification
-- 🖥️ **Interactive TUI**: Text User Interface for bot management, monitoring, and configuration
+- 🖥️ **Interactive TUI**: Dual TUI modes - Turbo Vision-style (default) with menu bar and 3D windows, or classic interface
+- 🧵 **Threaded Responses**: All bot replies are threaded for organized conversations
+- 👍 **Reaction Confirmations**: Quick interactions with emoji reactions (👍/👎) for confirmations
+- 🎭 **Fun Personality**: Varied greetings and sassy responses with emoji throughout
 - 🚀 **Semaphore UI Integration**: Start and monitor CI/CD tasks via chat commands
 - 📊 **Real-time Updates**: Automatic status updates for running tasks
 - 🎯 **Command-based Interface**: Easy-to-use command system for task management

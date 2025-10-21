@@ -592,6 +592,30 @@ class TestCommandHandler(unittest.TestCase):
         # Test with invalid user ID
         result = self.handler._get_display_name('invalid')
         self.assertEqual(result, 'invalid')
+    
+    def test_get_greeting(self):
+        """Test getting random greeting for a user."""
+        # Test that greeting is generated
+        greeting = self.handler._get_greeting('@john:example.com')
+        self.assertIsInstance(greeting, str)
+        
+        # Test that greeting contains the user's name or just emoji
+        # (since we have one greeting that's just "👋")
+        self.assertTrue(len(greeting) > 0)
+        
+        # Test that multiple calls may return different greetings
+        # (though with randomness, we can't guarantee they'll be different)
+        greetings = set()
+        for _ in range(50):
+            greeting = self.handler._get_greeting('@test:example.com')
+            greetings.add(greeting)
+        
+        # With 16 different greetings, we should get multiple unique ones
+        self.assertGreater(len(greetings), 1)
+        
+        # Test with non-standard user ID
+        greeting = self.handler._get_greeting('someuser')
+        self.assertIsInstance(greeting, str)
 
     def test_format_description_with_paragraph_symbol(self):
         """Test formatting descriptions with ¶ symbol."""

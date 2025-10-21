@@ -11,6 +11,26 @@ from chatrixcd.aliases import AliasManager
 
 logger = logging.getLogger(__name__)
 
+# Greeting variations with emojis for personalized responses
+GREETINGS = [
+    "👋",  # Wave
+    "Hi {name}! 👋",
+    "Hello {name}! 😊",
+    "Hey {name}! 🙌",
+    "Yo {name}! 🤙",
+    "Sup {name}! 😎",
+    "Howdy {name}! 🤠",
+    "Hiya {name}! 👋",
+    "Heya {name}! ✨",
+    "G'day {name}! 🦘",
+    "Greetings {name}! 🖖",
+    "Welcome {name}! 🎉",
+    "Ahoy {name}! ⚓",
+    "Salutations {name}! 🎩",
+    "Hey there {name}! 👋",
+    "What's up {name}! 🌟",
+]
+
 
 class CommandHandler:
     """Handle bot commands."""
@@ -122,6 +142,19 @@ class CommandHandler:
             username = user_id[1:].split(':')[0]
             return username
         return user_id
+    
+    def _get_greeting(self, user_id: str) -> str:
+        """Get a random greeting for a user.
+        
+        Args:
+            user_id: User ID to greet
+            
+        Returns:
+            Random greeting with user's display name
+        """
+        name = self._get_display_name(user_id)
+        greeting = random.choice(GREETINGS)
+        return greeting.format(name=name)
 
     async def handle_reaction(self, room: MatrixRoom, sender: str, event_id: str, reaction_key: str):
         """Handle a reaction to a message.
@@ -280,10 +313,10 @@ class CommandHandler:
         elif command == 'scold':
             await self.handle_scold(room.room_id, event.sender, event.event_id)
         else:
-            user_name = self._get_display_name(event.sender)
+            greeting = self._get_greeting(event.sender)
             await self.bot.send_message(
                 room.room_id,
-                f"{user_name} 👋 - Unknown command: {command}. Type '{self.command_prefix} help' for available commands.",
+                f"{greeting} - Unknown command: {command}. Type '{self.command_prefix} help' for available commands.",
                 reply_to_event_id=event.event_id
             )
 
@@ -295,8 +328,8 @@ class CommandHandler:
             sender: User who requested help (for personalization)
             reply_to: Event ID to reply to (for threading)
         """
-        user_name = self._get_display_name(sender) if sender else "friend"
-        help_text = f"""{user_name} 👋 Here's what I can do for you! 🚀
+        greeting = self._get_greeting(sender) if sender else "friend 👋"
+        help_text = f"""{greeting} Here's what I can do for you! 🚀
 
 **ChatrixCD Bot Commands** 📚
 
@@ -327,13 +360,13 @@ class CommandHandler:
             sender: User who requested the list
             reply_to: Event ID to reply to (for threading)
         """
-        user_name = self._get_display_name(sender) if sender else "friend"
+        greeting = self._get_greeting(sender) if sender else "friend 👋"
         if not self.admin_users:
-            message = f"{user_name} 👋 Here's the admin roster! 👑\n\n"
+            message = f"{greeting} Here's the admin roster! 👑\n\n"
             message += "**Admin Users**\n\n"
             message += "[dim]No admin users configured. All users have admin access.[/dim]"
         else:
-            message = f"{user_name} 👋 Here are the bot overlords! 👑\n\n"
+            message = f"{greeting} Here are the bot overlords! 👑\n\n"
             message += "**Admin Users**\n\n"
             for admin in self.admin_users:
                 message += f"• {admin}\n"

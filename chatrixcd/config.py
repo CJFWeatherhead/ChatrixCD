@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 # Current configuration schema version
-CURRENT_CONFIG_VERSION = 3
+CURRENT_CONFIG_VERSION = 4
 
 
 class ConfigMigrator:
@@ -75,6 +75,22 @@ class ConfigMigrator:
         """
         # These fields are already handled by defaults in load_config
         # SSL settings were already in the default config but are now documented as part of v3
+        # This migration exists primarily to set the version number
+        # and document the changes between versions
+        return config
+    
+    @staticmethod
+    def _migrate_v3_to_v4(config: Dict[str, Any]) -> Dict[str, Any]:
+        """Migrate from version 3 to version 4.
+        
+        Changes in v4:
+        - Added bot.tui_mode for TUI selection (turbo/classic)
+        - Added bot.mouse_enabled for mouse support in TUI
+        - Added bot.color_enabled for colored output
+        - Added bot.color_theme for theme selection
+        - Added bot.verbosity for log verbosity level
+        """
+        # These fields are already handled by defaults in load_config
         # This migration exists primarily to set the version number
         # and document the changes between versions
         return config
@@ -164,6 +180,11 @@ class Config:
                 'startup_message': '🤖 ChatrixCD bot is now online and ready to help with CI/CD tasks!',
                 'shutdown_message': '👋 ChatrixCD bot is shutting down. See you later!',
                 'log_file': 'chatrixcd.log',
+                'tui_mode': 'turbo',  # Options: 'turbo' (new Turbo Vision style) or 'classic' (original TUI)
+                'mouse_enabled': False,  # Enable mouse support in TUI
+                'color_enabled': False,  # Enable colored output
+                'color_theme': 'default',  # Theme: 'default', 'midnight', 'grayscale', 'windows31', 'msdos'
+                'verbosity': 'info',  # Verbosity: 'silent', 'error', 'info', 'debug'
             },
         }
     
