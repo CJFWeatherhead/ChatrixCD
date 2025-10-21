@@ -284,6 +284,19 @@ def main():
     config = Config(config_file=args.config)
     log_file = config.get('bot.log_file', 'chatrixcd.log')
     
+    # Get config values with command-line overrides
+    # Verbosity: config verbosity is mapped to levels (silent=0, error=0, info=0, debug=1)
+    config_verbosity = config.get('bot.verbosity', 'info')
+    verbosity_map = {'silent': 0, 'error': 0, 'info': 0, 'debug': 1}
+    config_verbosity_level = verbosity_map.get(config_verbosity, 0)
+    verbosity = args.verbosity if args.verbosity > 0 else config_verbosity_level
+    
+    # Color: command-line -C flag overrides config
+    color_enabled = args.color or config.get('bot.color_enabled', False)
+    
+    # Mouse: command-line -m flag overrides config
+    mouse_enabled = args.mouse or config.get('bot.mouse_enabled', False)
+    
     # Determine if we'll use TUI mode (before setting up logging)
     # TUI is used when:
     # - Not in daemon mode (-d)
@@ -294,8 +307,8 @@ def main():
     # Setup logging with verbosity, color, and redaction options
     # In TUI mode, only log to file (no console output) to avoid interference
     setup_logging(
-        verbosity=args.verbosity, 
-        color=args.color, 
+        verbosity=verbosity, 
+        color=color_enabled, 
         redact=args.redact, 
         log_file=log_file,
         tui_mode=will_use_tui
@@ -387,15 +400,18 @@ def main():
     # Determine which TUI mode to use (command-line flag overrides config)
     tui_mode = args.tui_mode if args.tui_mode else config.get('bot.tui_mode', 'turbo')
     
+    # Get color theme from config
+    color_theme = config.get('bot.color_theme', 'default')
+    
     try:
         if use_tui:
             # Run with TUI interface (turbo or classic)
             if tui_mode == 'turbo':
                 logger.info("Using Turbo Vision-style TUI")
-                asyncio.run(run_tui_with_bot(bot, config, args.color, args.mouse, tui_type='turbo'))
+                asyncio.run(run_tui_with_bot(bot, config, color_enabled, mouse_enabled, tui_type='turbo', theme=color_theme))
             else:  # classic
                 logger.info("Using classic TUI")
-                asyncio.run(run_tui_with_bot(bot, config, args.color, args.mouse, tui_type='classic'))
+                asyncio.run(run_tui_with_bot(bot, config, color_enabled, mouse_enabled, tui_type='classic', theme=color_theme))
         else:
             # Run in classic log-only mode
             asyncio.run(bot.run())
@@ -412,7 +428,7 @@ def main():
         sys.exit(1)
 
 
-async def run_tui_with_bot(bot, config, use_color: bool, mouse: bool = False, tui_type: str = 'turbo'):
+async def run_tui_with_bot(bot, config, use_color: bool, mouse: bool = False, tui_type: str = 'turbo', theme: str = 'default'):
     """Run the bot with TUI interface.
     
     This function starts the TUI first, then performs login within the TUI context.
@@ -425,6 +441,7 @@ async def run_tui_with_bot(bot, config, use_color: bool, mouse: bool = False, tu
         use_color: Whether to use colors
         mouse: Whether to enable mouse support (default: False)
         tui_type: Type of TUI to use ('turbo' for Turbo Vision style, 'classic' for original)
+        theme: Color theme to use ('default', 'midnight', 'grayscale', 'windows31', 'msdos')
     """
     import logging
     from nio import SyncResponse
