@@ -1676,11 +1676,13 @@ class ChatrixTUI(App):
             use_color: Whether to use colors
             theme: Color theme to use ('default', 'midnight', 'grayscale', 'windows31', 'msdos')
         """
+        # Set theme_name before calling super().__init__ because get_css_variables is called during init
+        self.theme_name = theme if theme in self.THEMES else 'default'
+        
         super().__init__(**kwargs)
         self.bot = bot
         self.config = config
         self.use_color = use_color
-        self.theme_name = theme if theme in self.THEMES else 'default'
         self.start_time = time.time()
         self.messages_processed = 0
         self.errors = 0
