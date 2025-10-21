@@ -187,7 +187,7 @@ class MenuScreen(ModalScreen):
             # Call the action method on the app
             if hasattr(self.app, f"action_{action}"):
                 method = getattr(self.app, f"action_{action}")
-                self.app.call_from_thread(method)
+                method()
 
 
 class FileMenuScreen(MenuScreen):
@@ -463,22 +463,62 @@ class VersionScreen(Screen):
 class ChatrixTurboTUI(App):
     """ChatrixCD Turbo Vision-style Text User Interface."""
     
+    # Define color themes
+    THEMES = {
+        'default': {
+            'primary': '#4A9B7F',  # ChatrixCD brand green
+            'surface': '#1E1E1E',
+            'background': '#0D0D0D',
+            'text': '#FFFFFF',
+            'text-muted': '#808080',
+        },
+        'midnight': {
+            'primary': '#0078D7',  # Midnight Commander blue
+            'surface': '#000080',  # Dark blue
+            'background': '#000040',
+            'text': '#00FFFF',  # Cyan
+            'text-muted': '#5F9EA0',
+        },
+        'grayscale': {
+            'primary': '#808080',
+            'surface': '#2F2F2F',
+            'background': '#1A1A1A',
+            'text': '#FFFFFF',
+            'text-muted': '#A0A0A0',
+        },
+        'windows31': {
+            'primary': '#008080',  # Teal
+            'surface': '#C0C0C0',  # Silver
+            'background': '#808080',  # Gray
+            'text': '#000000',
+            'text-muted': '#404040',
+        },
+        'msdos': {
+            'primary': '#00AA00',  # Green
+            'surface': '#000000',
+            'background': '#000000',
+            'text': '#FFAA00',  # Amber
+            'text-muted': '#AA5500',
+        }
+    }
+    
     CSS = """
     Screen {
-        background: $surface;
+        background: $background;
     }
     
     TurboMenuBar {
-        background: #4A9B7F;
+        background: $primary;
     }
     
     TurboStatusBar {
-        background: #2D3238;
-        color: white;
+        background: $primary;
+        color: $text;
     }
     
     TurboWindow {
-        border: heavy #4A9B7F;
+        border: heavy $primary;
+        background: $surface;
     }
     
     Button {
@@ -487,23 +527,33 @@ class ChatrixTurboTUI(App):
     }
     
     Button.primary {
-        background: #4A9B7F;
-        color: white;
+        background: $primary;
+        color: $text;
     }
     
     Static#title {
         text-align: center;
         padding: 1;
+        color: $text;
     }
     
     Container {
         height: 100%;
         padding: 1;
+        background: $surface;
     }
     
     #main-content {
         height: 100%;
         align: center middle;
+    }
+    
+    Label {
+        color: $text;
+    }
+    
+    Static {
+        color: $text;
     }
     """
     
@@ -517,14 +567,18 @@ class ChatrixTurboTUI(App):
         Binding("f4", "show_help_menu", "Help", priority=True),
     ]
     
-    def __init__(self, bot, config, use_color: bool = True, **kwargs):
+    def __init__(self, bot, config, use_color: bool = True, theme: str = 'default', **kwargs):
         """Initialize the TUI.
         
         Args:
             bot: The ChatrixBot instance
             config: Configuration object
             use_color: Whether to use colors
+            theme: Color theme to use ('default', 'midnight', 'grayscale', 'windows31', 'msdos')
         """
+        # Set theme_name before calling super().__init__ because get_css_variables is called during init
+        self.theme_name = theme if theme in self.THEMES else 'default'
+        
         super().__init__(**kwargs)
         self.bot = bot
         self.config = config
@@ -537,6 +591,21 @@ class ChatrixTurboTUI(App):
         self.bot_task = None
         self.pending_verifications_count = 0
         self.last_notified_verifications = set()
+        
+    def get_css_variables(self) -> Dict[str, str]:
+        """Get CSS variables for the current theme.
+        
+        Returns:
+            Dictionary of CSS variable names and values
+        """
+        theme = self.THEMES.get(self.theme_name, self.THEMES['default'])
+        return {
+            'primary': theme['primary'],
+            'surface': theme['surface'],
+            'background': theme['background'],
+            'text': theme['text'],
+            'text-muted': theme['text-muted'],
+        }
     
     def compose(self) -> ComposeResult:
         """Create child widgets."""
