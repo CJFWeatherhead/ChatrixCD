@@ -120,9 +120,9 @@ jobs:
               PATCH=1
             else
               # Extract components from latest tag
-              PREV_MAJOR=$(echo $LATEST_TAG | cut -d. -f4)
-              PREV_MINOR=$(echo $LATEST_TAG | cut -d. -f5)
-              PREV_PATCH=$(echo $LATEST_TAG | cut -d. -f6)
+              PREV_MAJOR=$(echo "$LATEST_TAG" | cut -d. -f4)
+              PREV_MINOR=$(echo "$LATEST_TAG" | cut -d. -f5)
+              PREV_PATCH=$(echo "$LATEST_TAG" | cut -d. -f6)
               
               # Increment based on version type
               case "$VERSION_TYPE" in
@@ -132,22 +132,22 @@ jobs:
                   PATCH=0
                   ;;
                 minor)
-                  MAJOR=$PREV_MAJOR
+                  MAJOR="$PREV_MAJOR"
                   MINOR=$((PREV_MINOR + 1))
                   PATCH=0
                   ;;
                 patch)
-                  MAJOR=$PREV_MAJOR
-                  MINOR=$PREV_MINOR
+                  MAJOR="$PREV_MAJOR"
+                  MINOR="$PREV_MINOR"
                   PATCH=$((PREV_PATCH + 1))
                   ;;
               esac
             fi
           else
             # Extract current version components
-            CURRENT_MAJOR=$(echo $LATEST_TAG | cut -d. -f4)
-            CURRENT_MINOR=$(echo $LATEST_TAG | cut -d. -f5)
-            CURRENT_PATCH=$(echo $LATEST_TAG | cut -d. -f6)
+            CURRENT_MAJOR=$(echo "$LATEST_TAG" | cut -d. -f4)
+            CURRENT_MINOR=$(echo "$LATEST_TAG" | cut -d. -f5)
+            CURRENT_PATCH=$(echo "$LATEST_TAG" | cut -d. -f6)
             
             # Increment based on version type
             case "$VERSION_TYPE" in
@@ -157,13 +157,13 @@ jobs:
                 PATCH=0
                 ;;
               minor)
-                MAJOR=$CURRENT_MAJOR
+                MAJOR="$CURRENT_MAJOR"
                 MINOR=$((CURRENT_MINOR + 1))
                 PATCH=0
                 ;;
               patch)
-                MAJOR=$CURRENT_MAJOR
-                MINOR=$CURRENT_MINOR
+                MAJOR="$CURRENT_MAJOR"
+                MINOR="$CURRENT_MINOR"
                 PATCH=$((CURRENT_PATCH + 1))
                 ;;
             esac
@@ -218,7 +218,7 @@ jobs:
       - name: Build with Nuitka (i686 - using Docker)
         if: matrix.arch == 'i686'
         run: |
-          docker run --rm -v $PWD:/src -w /src i386/python:3.12-slim bash -c "
+          docker run --rm -v "$PWD":/src -w /src i386/python:3.12-slim bash -c "
           apt-get update && apt-get install -y gcc patchelf ccache &&
           pip install --upgrade pip &&
           pip install -r requirements.txt &&
@@ -235,7 +235,7 @@ jobs:
       - name: Build with Nuitka (arm64 - using Docker)
         if: matrix.arch == 'arm64'
         run: |
-          docker run --rm --platform linux/arm64 -v $PWD:/src -w /src arm64v8/python:3.12-slim bash -c "
+          docker run --rm --platform linux/arm64 -v "$PWD":/src -w /src arm64v8/python:3.12-slim bash -c "
           apt-get update && apt-get install -y gcc patchelf ccache &&
           pip install --upgrade pip &&
           pip install -r requirements.txt &&
@@ -320,9 +320,9 @@ jobs:
               PATCH=1
             else
               # Extract components from latest tag
-              PREV_MAJOR=$(echo $LATEST_TAG | cut -d. -f4)
-              PREV_MINOR=$(echo $LATEST_TAG | cut -d. -f5)
-              PREV_PATCH=$(echo $LATEST_TAG | cut -d. -f6)
+              PREV_MAJOR=$(echo "$LATEST_TAG" | cut -d. -f4)
+              PREV_MINOR=$(echo "$LATEST_TAG" | cut -d. -f5)
+              PREV_PATCH=$(echo "$LATEST_TAG" | cut -d. -f6)
               
               # Increment based on version type
               case "$VERSION_TYPE" in
@@ -332,22 +332,22 @@ jobs:
                   PATCH=0
                   ;;
                 minor)
-                  MAJOR=$PREV_MAJOR
+                  MAJOR="$PREV_MAJOR"
                   MINOR=$((PREV_MINOR + 1))
                   PATCH=0
                   ;;
                 patch)
-                  MAJOR=$PREV_MAJOR
-                  MINOR=$PREV_MINOR
+                  MAJOR="$PREV_MAJOR"
+                  MINOR="$PREV_MINOR"
                   PATCH=$((PREV_PATCH + 1))
                   ;;
               esac
             fi
           else
             # Extract current version components
-            CURRENT_MAJOR=$(echo $LATEST_TAG | cut -d. -f4)
-            CURRENT_MINOR=$(echo $LATEST_TAG | cut -d. -f5)
-            CURRENT_PATCH=$(echo $LATEST_TAG | cut -d. -f6)
+            CURRENT_MAJOR=$(echo "$LATEST_TAG" | cut -d. -f4)
+            CURRENT_MINOR=$(echo "$LATEST_TAG" | cut -d. -f5)
+            CURRENT_PATCH=$(echo "$LATEST_TAG" | cut -d. -f6)
             
             # Increment based on version type
             case "$VERSION_TYPE" in
@@ -357,13 +357,13 @@ jobs:
                 PATCH=0
                 ;;
               minor)
-                MAJOR=$CURRENT_MAJOR
+                MAJOR="$CURRENT_MAJOR"
                 MINOR=$((CURRENT_MINOR + 1))
                 PATCH=0
                 ;;
               patch)
-                MAJOR=$CURRENT_MAJOR
-                MINOR=$CURRENT_MINOR
+                MAJOR="$CURRENT_MAJOR"
+                MINOR="$CURRENT_MINOR"
                 PATCH=$((CURRENT_PATCH + 1))
                 ;;
             esac
@@ -490,9 +490,9 @@ jobs:
               PATCH=1
             else
               # Extract components from latest tag
-              PREV_MAJOR=$(echo $LATEST_TAG | cut -d. -f4)
-              PREV_MINOR=$(echo $LATEST_TAG | cut -d. -f5)
-              PREV_PATCH=$(echo $LATEST_TAG | cut -d. -f6)
+              PREV_MAJOR=$(echo "$LATEST_TAG" | cut -d. -f4)
+              PREV_MINOR=$(echo "$LATEST_TAG" | cut -d. -f5)
+              PREV_PATCH=$(echo "$LATEST_TAG" | cut -d. -f6)
               
               # Increment based on version type
               case "$VERSION_TYPE" in
@@ -502,22 +502,22 @@ jobs:
                   PATCH=0
                   ;;
                 minor)
-                  MAJOR=$PREV_MAJOR
+                  MAJOR="$PREV_MAJOR"
                   MINOR=$((PREV_MINOR + 1))
                   PATCH=0
                   ;;
                 patch)
-                  MAJOR=$PREV_MAJOR
-                  MINOR=$PREV_MINOR
+                  MAJOR="$PREV_MAJOR"
+                  MINOR="$PREV_MINOR"
                   PATCH=$((PREV_PATCH + 1))
                   ;;
               esac
             fi
           else
             # Extract current version components
-            CURRENT_MAJOR=$(echo $LATEST_TAG | cut -d. -f4)
-            CURRENT_MINOR=$(echo $LATEST_TAG | cut -d. -f5)
-            CURRENT_PATCH=$(echo $LATEST_TAG | cut -d. -f6)
+            CURRENT_MAJOR=$(echo "$LATEST_TAG" | cut -d. -f4)
+            CURRENT_MINOR=$(echo "$LATEST_TAG" | cut -d. -f5)
+            CURRENT_PATCH=$(echo "$LATEST_TAG" | cut -d. -f6)
             
             # Increment based on version type
             case "$VERSION_TYPE" in
@@ -527,13 +527,13 @@ jobs:
                 PATCH=0
                 ;;
               minor)
-                MAJOR=$CURRENT_MAJOR
+                MAJOR="$CURRENT_MAJOR"
                 MINOR=$((CURRENT_MINOR + 1))
                 PATCH=0
                 ;;
               patch)
-                MAJOR=$CURRENT_MAJOR
-                MINOR=$CURRENT_MINOR
+                MAJOR="$CURRENT_MAJOR"
+                MINOR="$CURRENT_MINOR"
                 PATCH=$((CURRENT_PATCH + 1))
                 ;;
             esac
@@ -655,9 +655,9 @@ jobs:
               PATCH=1
             else
               # Extract components from latest tag
-              PREV_MAJOR=$(echo $LATEST_TAG | cut -d. -f4)
-              PREV_MINOR=$(echo $LATEST_TAG | cut -d. -f5)
-              PREV_PATCH=$(echo $LATEST_TAG | cut -d. -f6)
+              PREV_MAJOR=$(echo "$LATEST_TAG" | cut -d. -f4)
+              PREV_MINOR=$(echo "$LATEST_TAG" | cut -d. -f5)
+              PREV_PATCH=$(echo "$LATEST_TAG" | cut -d. -f6)
               
               # Increment based on version type
               case "$VERSION_TYPE" in
@@ -667,22 +667,22 @@ jobs:
                   PATCH=0
                   ;;
                 minor)
-                  MAJOR=$PREV_MAJOR
+                  MAJOR="$PREV_MAJOR"
                   MINOR=$((PREV_MINOR + 1))
                   PATCH=0
                   ;;
                 patch)
-                  MAJOR=$PREV_MAJOR
-                  MINOR=$PREV_MINOR
+                  MAJOR="$PREV_MAJOR"
+                  MINOR="$PREV_MINOR"
                   PATCH=$((PREV_PATCH + 1))
                   ;;
               esac
             fi
           else
             # Extract current version components
-            CURRENT_MAJOR=$(echo $LATEST_TAG | cut -d. -f4)
-            CURRENT_MINOR=$(echo $LATEST_TAG | cut -d. -f5)
-            CURRENT_PATCH=$(echo $LATEST_TAG | cut -d. -f6)
+            CURRENT_MAJOR=$(echo "$LATEST_TAG" | cut -d. -f4)
+            CURRENT_MINOR=$(echo "$LATEST_TAG" | cut -d. -f5)
+            CURRENT_PATCH=$(echo "$LATEST_TAG" | cut -d. -f6)
             
             # Increment based on version type
             case "$VERSION_TYPE" in
@@ -692,13 +692,13 @@ jobs:
                 PATCH=0
                 ;;
               minor)
-                MAJOR=$CURRENT_MAJOR
+                MAJOR="$CURRENT_MAJOR"
                 MINOR=$((CURRENT_MINOR + 1))
                 PATCH=0
                 ;;
               patch)
-                MAJOR=$CURRENT_MAJOR
-                MINOR=$CURRENT_MINOR
+                MAJOR="$CURRENT_MAJOR"
+                MINOR="$CURRENT_MINOR"
                 PATCH=$((CURRENT_PATCH + 1))
                 ;;
             esac
@@ -738,7 +738,8 @@ jobs:
         if: steps.version.outputs.is_prerelease == 'false'
         run: |
           export VERSION="${{ steps.version.outputs.version }}"
-          export RELEASE_DATE=$(date +%Y-%m-%d)
+          RELEASE_DATE=$(date +%Y-%m-%d)
+          export RELEASE_DATE
           
           # Use Python to update the changelog in a more reliable way
           python3 << 'PYTHON_SCRIPT'
