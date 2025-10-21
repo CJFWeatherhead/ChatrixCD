@@ -1547,18 +1547,58 @@ class MessageScreen(Screen):
 class ChatrixTUI(App):
     """ChatrixCD Text User Interface."""
     
+    # Define color themes
+    THEMES = {
+        'default': {
+            'primary': '#4A9B7F',  # ChatrixCD brand green
+            'surface': '#1E1E1E',
+            'background': '#0D0D0D',
+            'text': '#FFFFFF',
+            'text-muted': '#808080',
+        },
+        'midnight': {
+            'primary': '#0078D7',  # Midnight Commander blue
+            'surface': '#000080',  # Dark blue
+            'background': '#000040',
+            'text': '#00FFFF',  # Cyan
+            'text-muted': '#5F9EA0',
+        },
+        'grayscale': {
+            'primary': '#808080',
+            'surface': '#2F2F2F',
+            'background': '#1A1A1A',
+            'text': '#FFFFFF',
+            'text-muted': '#A0A0A0',
+        },
+        'windows31': {
+            'primary': '#008080',  # Teal
+            'surface': '#C0C0C0',  # Silver
+            'background': '#808080',  # Gray
+            'text': '#000000',
+            'text-muted': '#404040',
+        },
+        'msdos': {
+            'primary': '#00AA00',  # Green
+            'surface': '#000000',
+            'background': '#000000',
+            'text': '#FFAA00',  # Amber
+            'text-muted': '#AA5500',
+        }
+    }
+    
     CSS = """
     Screen {
-        background: $surface;
+        background: $background;
     }
     
     Header {
-        background: #4A9B7F;
-        color: white;
+        background: $primary;
+        color: $text;
     }
     
     Footer {
-        background: #2D3238;
+        background: $primary;
+        color: $text;
     }
     
     Button {
@@ -1567,21 +1607,25 @@ class ChatrixTUI(App):
     }
     
     Button.primary {
-        background: #4A9B7F;
+        background: $primary;
+        color: $text;
     }
     
     Static#title {
         text-align: center;
         padding: 1;
+        color: $text;
     }
     
     Container {
         height: 100%;
         padding: 1;
+        background: $surface;
     }
     
     ListView {
         height: auto;
+        background: $surface;
     }
     
     Select {
@@ -1595,6 +1639,14 @@ class ChatrixTUI(App):
     TextArea {
         height: 80%;
         margin: 1;
+    }
+    
+    Label {
+        color: $text;
+    }
+    
+    Static {
+        color: $text;
     }
     """
     
@@ -1615,18 +1667,20 @@ class ChatrixTUI(App):
         Binding("x", "show_aliases", "Aliases"),
     ]
     
-    def __init__(self, bot, config, use_color: bool = True, **kwargs):
+    def __init__(self, bot, config, use_color: bool = True, theme: str = 'default', **kwargs):
         """Initialize the TUI.
         
         Args:
             bot: The ChatrixBot instance
             config: Configuration object
             use_color: Whether to use colors
+            theme: Color theme to use ('default', 'midnight', 'grayscale', 'windows31', 'msdos')
         """
         super().__init__(**kwargs)
         self.bot = bot
         self.config = config
         self.use_color = use_color
+        self.theme_name = theme if theme in self.THEMES else 'default'
         self.start_time = time.time()
         self.messages_processed = 0
         self.errors = 0
@@ -1635,6 +1689,21 @@ class ChatrixTUI(App):
         self.bot_task = None  # Will store the sync task
         self.pending_verifications_count = 0  # Track pending verification requests
         self.last_notified_verifications = set()  # Track which verifications we've notified about
+        
+    def get_css_variables(self) -> Dict[str, str]:
+        """Get CSS variables for the current theme.
+        
+        Returns:
+            Dictionary of CSS variable names and values
+        """
+        theme = self.THEMES.get(self.theme_name, self.THEMES['default'])
+        return {
+            'primary': theme['primary'],
+            'surface': theme['surface'],
+            'background': theme['background'],
+            'text': theme['text'],
+            'text-muted': theme['text-muted'],
+        }
         
     def compose(self) -> ComposeResult:
         """Create child widgets for main menu."""
