@@ -65,6 +65,9 @@ class CommandHandler:
         
         # Track message event IDs for threading reactions
         self.confirmation_message_ids: Dict[str, str] = {}
+        
+        # Track log tailing sessions: {room_id: {'task_id': int, 'project_id': int, 'last_log_size': int}}
+        self.log_tailing_sessions: Dict[str, Dict[str, Any]] = {}
 
     def is_allowed_room(self, room_id: str) -> bool:
         """Check if bot is allowed to respond in this room.
@@ -1158,36 +1161,98 @@ class CommandHandler:
             await self.bot.send_message(room_id, message, html_message, reply_to_event_id=reply_to)
 
     async def get_logs(self, room_id: str, args: list, sender: str = None, reply_to: str = None):
-        """Get logs for a task.
+        """Get logs for a task or control log tailing.
+        
+        Supports:
+        - !cd log - Get logs for last task (one-time)
+        - !cd log <task_id> - Get logs for specific task (one-time)
+        - !cd log on - Start tailing logs for last task
+        - !cd log off - Stop tailing logs
         
         Args:
             room_id: Room to send response to
-            args: Command arguments (task_id) - optional
+            args: Command arguments (on|off|task_id) - optional
             sender: User who requested the logs
             reply_to: Event ID to reply to (for threading)
         """
         user_name = self._get_display_name(sender) if sender else "friend"
         
+        # Check if this is a log tailing control command
+        if args and args[0].lower() == 'on':
+            # Start log tailing for the last task
+            if self.last_task_id is None:
+                logger.info(f"Log tailing 'on' requested but no last task found")
+                await self.bot.send_message(
+                    room_id,
+                    f"{user_name} 👋 - No task to tail logs for. Run a task first!",
+                    reply_to_event_id=reply_to
+                )
+                return
+            
+            # Start tailing
+            self.log_tailing_sessions[room_id] = {
+                'task_id': self.last_task_id,
+                'project_id': self.last_project_id,
+                'last_log_size': 0
+            }
+            
+            logger.info(f"Started log tailing for task {self.last_task_id} in room {room_id}")
+            await self.bot.send_message(
+                room_id,
+                f"{user_name} 👋 - Started tailing logs for task **{self.last_task_id}** 📋\n"
+                f"Use `{self.command_prefix} log off` to stop.",
+                reply_to_event_id=reply_to
+            )
+            
+            # Start the tailing task
+            asyncio.create_task(self.tail_logs(room_id, self.last_task_id, self.last_project_id))
+            return
+            
+        elif args and args[0].lower() == 'off':
+            # Stop log tailing
+            if room_id not in self.log_tailing_sessions:
+                logger.info(f"Log tailing 'off' requested but no active session in room {room_id}")
+                await self.bot.send_message(
+                    room_id,
+                    f"{user_name} 👋 - No active log tailing session.",
+                    reply_to_event_id=reply_to
+                )
+                return
+            
+            task_id = self.log_tailing_sessions[room_id]['task_id']
+            del self.log_tailing_sessions[room_id]
+            
+            logger.info(f"Stopped log tailing for task {task_id} in room {room_id}")
+            await self.bot.send_message(
+                room_id,
+                f"{user_name} 👋 - Stopped tailing logs for task **{task_id}** 🛑",
+                reply_to_event_id=reply_to
+            )
+            return
+        
+        # Regular log retrieval (one-time)
         # If no args, use last task
         if not args:
             if self.last_task_id is None:
+                logger.info(f"Log request with no args and no last task")
                 await self.bot.send_message(
                     room_id,
                     f"{user_name} 👋 - No task ID provided and no previous task found.\n"
-                    f"Usage: {self.command_prefix} logs <task_id>",
+                    f"Usage: {self.command_prefix} log [on|off|task_id]",
                     reply_to_event_id=reply_to
                 )
                 return
             task_id = self.last_task_id
             project_id = self.last_project_id
-            logger.info(f"Using last task ID: {task_id}")
+            logger.info(f"Using last task ID for logs: {task_id}")
         else:
             try:
                 task_id = int(args[0])
             except ValueError:
                 await self.bot.send_message(
                     room_id,
-                    f"{user_name} 👋 - Invalid task ID ❌",
+                    f"{user_name} 👋 - Invalid task ID ❌\n"
+                    f"Usage: {self.command_prefix} log [on|off|task_id]",
                     reply_to_event_id=reply_to
                 )
                 return
@@ -1201,14 +1266,16 @@ class CommandHandler:
             else:
                 # Try to get the project_id from semaphore if task exists
                 # For now, just inform the user to provide project info
+                logger.info(f"Task {task_id} not found in active tasks")
                 await self.bot.send_message(
                     room_id,
                     f"{user_name} 👋 - Task {task_id} not found in active tasks.\n"
-                    f"For finished tasks, use the last task with: `{self.command_prefix} logs`",
+                    f"For finished tasks, use the last task with: `{self.command_prefix} log`",
                     reply_to_event_id=reply_to
                 )
                 return
         
+        logger.info(f"Fetching logs for task {task_id}")
         logs = await self.semaphore.get_task_output(project_id, task_id)
         
         if logs:
@@ -1244,13 +1311,114 @@ class CommandHandler:
             
             html_message = f"{html_header}{html_logs}"
             
+            logger.info(f"Sending logs for task {task_id} ({len(log_lines)} lines, {len(logs)} bytes)")
             await self.bot.send_message(room_id, plain_message, html_message, reply_to_event_id=reply_to)
         else:
+            logger.info(f"No logs available for task {task_id}")
             await self.bot.send_message(
                 room_id,
                 f"{user_name} 👋 - No logs available for task {task_id} ❌",
                 reply_to_event_id=reply_to
             )
+
+    async def tail_logs(self, room_id: str, task_id: int, project_id: int):
+        """Tail logs for a running task and send updates to the room.
+        
+        Args:
+            room_id: Room to send log updates to
+            task_id: Task ID to tail
+            project_id: Project ID
+        """
+        logger.info(f"Starting log tailing task for task {task_id} in room {room_id}")
+        last_log_size = 0
+        
+        while room_id in self.log_tailing_sessions:
+            # Check if this is still the right task
+            if self.log_tailing_sessions[room_id]['task_id'] != task_id:
+                logger.info(f"Log tailing task {task_id} stopped - different task is being tailed")
+                break
+            
+            await asyncio.sleep(5)  # Check every 5 seconds
+            
+            try:
+                # Get current task status
+                task = await self.semaphore.get_task_status(project_id, task_id)
+                if not task:
+                    logger.warning(f"Could not get status for task {task_id}, continuing...")
+                    continue
+                
+                status = task.get('status')
+                
+                # If task is finished, send final logs and stop
+                if status in ('success', 'error', 'stopped'):
+                    logger.info(f"Task {task_id} finished with status {status}, sending final logs")
+                    
+                    # Get final logs
+                    logs = await self.semaphore.get_task_output(project_id, task_id)
+                    if logs and len(logs) > last_log_size:
+                        new_logs = logs[last_log_size:]
+                        await self._send_log_chunk(room_id, task_id, new_logs, final=True)
+                    
+                    # Stop tailing
+                    if room_id in self.log_tailing_sessions:
+                        del self.log_tailing_sessions[room_id]
+                    
+                    await self.bot.send_message(
+                        room_id,
+                        f"📋 Log tailing stopped for task **{task_id}** (status: {status})"
+                    )
+                    break
+                
+                # Get current logs
+                logs = await self.semaphore.get_task_output(project_id, task_id)
+                
+                if logs and len(logs) > last_log_size:
+                    # New logs available
+                    new_logs = logs[last_log_size:]
+                    last_log_size = len(logs)
+                    
+                    # Send new log chunk
+                    await self._send_log_chunk(room_id, task_id, new_logs)
+                    
+            except Exception as e:
+                logger.error(f"Error tailing logs for task {task_id}: {e}")
+                await asyncio.sleep(10)  # Wait longer on error
+        
+        logger.info(f"Log tailing task stopped for task {task_id} in room {room_id}")
+    
+    async def _send_log_chunk(self, room_id: str, task_id: int, log_chunk: str, final: bool = False):
+        """Send a chunk of logs to the room.
+        
+        Args:
+            room_id: Room to send to
+            task_id: Task ID
+            log_chunk: New log content
+            final: Whether this is the final log chunk
+        """
+        # Format logs
+        formatted_logs = self._format_task_logs(log_chunk)
+        
+        # Limit chunk size to avoid huge messages
+        max_lines = 50
+        log_lines = formatted_logs.split('\n')
+        if len(log_lines) > max_lines:
+            formatted_logs = '\n'.join(log_lines[-max_lines:])
+            header = f"📋 **Task {task_id}** (last {max_lines} lines)\n\n"
+        else:
+            header = f"📋 **Task {task_id}**\n\n"
+        
+        if final:
+            header = f"📋 **Task {task_id}** (FINAL)\n\n"
+        
+        # Create plain text version with markdown code block
+        plain_message = f"{header}```\n{formatted_logs}\n```"
+        
+        # Create HTML version with color formatting
+        html_header = self.markdown_to_html(header)
+        html_logs = self._format_task_logs_html(log_chunk if len(log_lines) <= max_lines else '\n'.join(log_chunk.split('\n')[-max_lines:]))
+        html_message = f"{html_header}{html_logs}"
+        
+        await self.bot.send_message(room_id, plain_message, html_message)
 
     def _ansi_to_html(self, text: str) -> str:
         """Convert ANSI color codes to HTML.
