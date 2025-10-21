@@ -48,7 +48,52 @@ nav_order: 1
 
 ## Getting Started
 
-ChatrixCD makes it easy to manage CI/CD tasks through Matrix chat. Once installed and configured, you can:
+ChatrixCD makes it easy to manage CI/CD tasks through Matrix chat. Choose your installation method:
+
+### Quick Install (Pre-built Binary)
+
+**No Python required!** Download the standalone executable:
+
+**Linux (x86_64):**
+```bash
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
+chmod +x chatrixcd-linux-x86_64
+./chatrixcd-linux-x86_64
+```
+
+**macOS (Universal):**
+```bash
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal
+chmod +x chatrixcd-macos-universal
+./chatrixcd-macos-universal
+```
+
+**Windows:** Download [chatrixcd-windows-x86_64.exe](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-x86_64.exe)
+
+**[See all platforms and architectures](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest)**
+
+### Install from Source
+
+For development or customization:
+
+### Install from Source
+
+For development or customization:
+
+```bash
+git clone https://github.com/CJFWeatherhead/ChatrixCD.git
+cd ChatrixCD
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pip install -e .
+```
+
+For detailed installation instructions, see the [Installation Guide](installation.html).
+
+### Basic Usage
+
+Once installed and configured, you can:
 
 1. Invite the bot to your Matrix room
 2. List available projects with `!cd projects`
@@ -60,11 +105,20 @@ ChatrixCD makes it easy to manage CI/CD tasks through Matrix chat. Once installe
 
 ### Prerequisites
 
-- Python 3.12 or higher (3.12, 3.13, 3.14 supported)
+- **For pre-built binaries**: None! Just download and run
+- **For source installation**: Python 3.12 or higher (3.12, 3.13, 3.14 supported)
 - Access to a Matrix homeserver
 - Access to a Semaphore UI instance with API access
 
-### Quick Install
+### Download Pre-built Binaries
+
+Choose your platform:
+
+- **Linux**: [x86_64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64) | [i686](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686) | [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64)
+- **Windows**: [x86_64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-x86_64.exe) | [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-arm64.exe)
+- **macOS**: [Universal](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal) (Intel + Apple Silicon)
+
+### Quick Install from Source
 
 ```bash
 git clone https://github.com/CJFWeatherhead/ChatrixCD.git

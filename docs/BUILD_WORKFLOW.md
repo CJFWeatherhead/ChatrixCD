@@ -231,6 +231,93 @@ To add a new platform:
 3. Update workflow tests to verify the new platform
 4. Update this documentation
 
+## Documentation Updates After Release
+
+When a new production release is created, the documentation contains direct download links that automatically point to the latest release. **These links require no manual updates** as they use GitHub's `/releases/latest/download/` URL pattern.
+
+### Download Link Format
+
+All documentation uses the following URL pattern:
+
+```
+https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/<artifact-name>
+```
+
+Examples:
+- `https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64`
+- `https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-x86_64.exe`
+- `https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal`
+
+GitHub automatically redirects these URLs to the latest non-pre-release version.
+
+### Files Containing Download Links
+
+The following files contain download links that are automatically updated by GitHub's URL resolution:
+
+1. **README.md** - Main repository documentation
+2. **INSTALL.md** - Installation guide
+3. **QUICKSTART.md** - Quick start guide
+4. **docs/index.md** - Documentation homepage
+5. **docs/installation.md** - Installation page (GitHub Pages)
+6. **docs/quickstart.md** - Quick start page (GitHub Pages)
+
+### Release Checklist
+
+When creating a new production release:
+
+- [ ] Trigger the build workflow manually (Actions → Build and Release)
+- [ ] Select version type (major/minor/patch)
+- [ ] Ensure "Mark as pre-release" is **unchecked**
+- [ ] Wait for build to complete (~15-25 minutes)
+- [ ] Verify all artifacts are attached to the release
+- [ ] **No documentation updates needed** - links auto-update!
+- [ ] Verify download links work by testing them
+- [ ] Announce release in appropriate channels
+
+### Testing Download Links
+
+After a release, verify the download links work:
+
+```bash
+# Test Linux x86_64 link
+curl -I https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
+
+# Should return HTTP 302 redirect to actual release URL
+# Followed by HTTP 200 OK
+```
+
+### Pre-release Notes
+
+Pre-releases (created automatically on PR merge):
+- Are marked as "pre-release" on GitHub
+- Have `-dev` suffix in version (e.g., `2025.10.21.0.0.1-dev`)
+- Are **NOT** included in `/releases/latest/` URLs
+- Are accessible via direct version URLs
+- Are intended for testing only
+
+### Manual Link Updates (If Needed)
+
+In the rare case that artifact names change, update the following pattern in all documentation files:
+
+**Old pattern:**
+```
+/releases/latest/download/chatrixcd-<platform>-<arch>
+```
+
+**Update in these files:**
+- README.md
+- INSTALL.md
+- QUICKSTART.md
+- docs/index.md
+- docs/installation.md
+- docs/quickstart.md
+
+**Search and replace example:**
+```bash
+# If renaming linux-x86_64 to linux-amd64
+find . -name "*.md" -exec sed -i 's/chatrixcd-linux-x86_64/chatrixcd-linux-amd64/g' {} \;
+```
+
 ## Security Considerations
 
 ### Credentials

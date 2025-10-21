@@ -8,16 +8,68 @@ nav_order: 2
 
 This guide covers all installation methods for ChatrixCD. For more detailed platform-specific instructions and troubleshooting, see the comprehensive [INSTALL.md](https://github.com/CJFWeatherhead/ChatrixCD/blob/main/INSTALL.md) in the repository root.
 
-## Prerequisites
+## Installation Methods
+
+Choose the method that best suits your needs:
+
+1. **Pre-built Binary** (Recommended) - Easiest, no Python required
+2. **From Source** - For development or custom modifications
+3. **Docker** - For containerized deployments
+
+## Method 1: Pre-built Binary (Recommended)
+
+The easiest way to get started - **no Python installation required!**
+
+### Download
+
+Download the appropriate binary for your platform:
+
+#### Linux
+- [x86_64 (64-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64) - Most common
+- [i686 (32-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
+- [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64) - Raspberry Pi, ARM servers
+
+#### Windows
+- [x86_64 (64-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-x86_64.exe)
+- [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-arm64.exe)
+
+#### macOS
+- [Universal Binary](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal) - Intel and Apple Silicon
+
+### Setup and Run
+
+**Linux/macOS:**
+
+```bash
+# Download (example for Linux x86_64)
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
+
+# Make executable
+chmod +x chatrixcd-linux-x86_64
+
+# Run
+./chatrixcd-linux-x86_64
+```
+
+**Windows:**
+
+1. Download the appropriate `.exe` file
+2. Double-click to run, or use Command Prompt/PowerShell
+
+On first run, create a `config.json` file in the same directory. See the [Configuration Guide](configuration.html) for details.
+
+## Method 2: Install from Source
+
+For development or if you prefer to run from source.
+
+### Prerequisites
 
 - Python 3.12 or higher (3.12, 3.13, 3.14 supported)
 - [uv](https://docs.astral.sh/uv/) - Fast Python package installer (recommended)
 - Access to a Matrix homeserver
 - Access to a Semaphore UI instance with API access
 
-## Installation Methods
-
-### Install from Source (Recommended)
+### Installation Steps
 
 ```bash
 # Clone the repository
@@ -40,7 +92,7 @@ uv pip install -r requirements.txt
 uv pip install -e .
 ```
 
-### Install with pip
+### Alternative: Install with pip
 
 ```bash
 # Create a virtual environment
@@ -54,7 +106,7 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-## Docker Installation
+## Method 3: Docker Installation
 
 ### Using Docker Compose (Debian-based)
 

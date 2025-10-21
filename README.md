@@ -42,26 +42,53 @@ ChatrixCD integrates with Semaphore UI to enable CI/CD automation through chat. 
 
 ## Installation
 
-### Pre-built Binaries
+### Option 1: Pre-built Binaries (Recommended)
 
-Pre-built standalone executables are available for download from [GitHub Releases](https://github.com/CJFWeatherhead/ChatrixCD/releases):
+**No Python installation required!** Download the standalone executable for your platform:
 
-- **Linux**: x86_64, i686 (32-bit), ARM64
-- **Windows**: x86_64, ARM64
-- **macOS**: Universal binary (x86_64 + ARM64)
+#### Linux
+- [x86_64 (64-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64) - Most common
+- [i686 (32-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
+- [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64) - For Raspberry Pi, ARM servers
 
-Download the appropriate binary for your platform and run it directly - no Python installation required!
+#### Windows
+- [x86_64 (64-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-x86_64.exe)
+- [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-arm64.exe) - For ARM-based Windows devices
 
-See [Build Workflow Documentation](docs/BUILD_WORKFLOW.md) for details on the automated build process.
+#### macOS
+- [Universal Binary](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal) - Works on both Intel and Apple Silicon
 
-### Prerequisites
+**Quick Start:**
 
-- Python 3.12 or higher (3.12, 3.13, 3.14 supported) - **not required for pre-built binaries**
+```bash
+# Linux/macOS - Download and make executable
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
+chmod +x chatrixcd-linux-x86_64
+./chatrixcd-linux-x86_64
+
+# Or for macOS
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal
+chmod +x chatrixcd-macos-universal
+./chatrixcd-macos-universal
+```
+
+**Windows:** Simply download the `.exe` file and double-click to run, or run from Command Prompt/PowerShell.
+
+See [Installation Guide](INSTALL.md) for detailed setup instructions including configuration.
+
+### Option 2: Install from Source
+
+**Prerequisites:**
+- Python 3.12 or higher (3.12, 3.13, 3.14 supported)
 - [uv](https://docs.astral.sh/uv/) - Fast Python package installer
+
+**Common Requirements (both options):**
 - Access to a Matrix homeserver
 - Access to a Semaphore UI instance with API access
 
 ### Install from source
+
+**Installation steps:**
 
 ```bash
 # Clone the repository
@@ -82,6 +109,16 @@ uv pip install -r requirements.txt
 
 # Install the application
 uv pip install -e .
+```
+
+**Running from source:**
+
+```bash
+# After installation, you can run:
+chatrixcd
+
+# Or directly:
+python -m chatrixcd.main
 ```
 
 ## Configuration
