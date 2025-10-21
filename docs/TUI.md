@@ -2,7 +2,12 @@
 
 ## Overview
 
-ChatrixCD includes a Text User Interface (TUI) that provides an interactive, menu-driven way to manage and monitor the bot. The TUI is built using the [Textual](https://textual.textualize.io/) framework and features:
+ChatrixCD includes two Text User Interface (TUI) styles that provide an interactive, menu-driven way to manage and monitor the bot:
+
+1. **Turbo Vision Style (Default)**: Classic 3D aesthetic with menu bar (File, Edit, Run, Help) and status bar
+2. **Classic Style**: Original TUI with status widgets and button-based navigation
+
+Both TUI modes are built using the [Textual](https://textual.textualize.io/) framework and feature:
 
 - Menu-driven navigation
 - Mouse support
@@ -17,7 +22,14 @@ ChatrixCD includes a Text User Interface (TUI) that provides an interactive, men
 The TUI launches automatically when running ChatrixCD in an interactive terminal:
 
 ```bash
+# Use Turbo Vision style (default)
 chatrixcd
+
+# Use classic TUI style
+chatrixcd -t classic
+
+# Or configure in config.json:
+# "bot": { "tui_mode": "classic" }
 ```
 
 To enable colored output:
@@ -32,7 +44,25 @@ To run without the TUI (classic log-only mode):
 chatrixcd -L
 ```
 
-## TUI Interface
+## TUI Modes
+
+### Turbo Vision Style (Default)
+
+The Turbo Vision style features:
+- Menu bar with File, Edit, Run, Help menus
+- 3D windowed appearance with drop shadows
+- Status bar at bottom showing task status
+- Keyboard shortcuts (F1-F4 for menus)
+
+### Classic Style
+
+The classic style features:
+- Button-based main menu
+- Status widgets for bot monitoring
+- Active task display
+- Keyboard shortcuts (s, a, r, x, etc.)
+
+## TUI Interface (Classic Style)
 
 ### Main Menu
 
