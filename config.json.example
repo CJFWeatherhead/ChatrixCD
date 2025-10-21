@@ -94,6 +94,12 @@
     
     // Path to log file (default: chatrixcd.log in current directory)
     // Can be absolute or relative path
-    "log_file": "chatrixcd.log"
+    "log_file": "chatrixcd.log",
+    
+    // TUI mode selection (default: "turbo")
+    // Options:
+    //   - "turbo": New Turbo Vision-style interface with menu bar and 3D windows
+    //   - "classic": Original TUI interface
+    "tui_mode": "turbo"
   }
 }

@@ -334,6 +334,8 @@ semaphore_url = config.get("semaphore.url")
 
 ### Update CHANGELOG.md
 
+**IMPORTANT**: Always update CHANGELOG.md when making code changes. This is a required step for every PR.
+
 When making changes, add entries to the "Unreleased" section of CHANGELOG.md:
 
 ```markdown
@@ -348,6 +350,13 @@ When making changes, add entries to the "Unreleased" section of CHANGELOG.md:
 ### Fixed
 - Bug fix description
 ```
+
+**Checklist for every change:**
+1. ✅ Make code changes
+2. ✅ Update tests
+3. ✅ **Update CHANGELOG.md** (don't forget this!)
+4. ✅ Update documentation if needed
+5. ✅ Test changes
 
 ## Git Workflow
 

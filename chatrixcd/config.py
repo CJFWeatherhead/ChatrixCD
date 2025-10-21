@@ -164,6 +164,7 @@ class Config:
                 'startup_message': '🤖 ChatrixCD bot is now online and ready to help with CI/CD tasks!',
                 'shutdown_message': '👋 ChatrixCD bot is shutting down. See you later!',
                 'log_file': 'chatrixcd.log',
+                'tui_mode': 'turbo',  # Options: 'turbo' (new Turbo Vision style) or 'classic' (original TUI)
             },
         }
     

@@ -168,6 +168,14 @@ def parse_args():
         help='Enable mouse support in TUI (default: disabled)'
     )
     
+    parser.add_argument(
+        '-t', '--tui-mode',
+        type=str,
+        choices=['turbo', 'classic'],
+        dest='tui_mode',
+        help='Select TUI mode: "turbo" for Turbo Vision-style (default) or "classic" for original TUI'
+    )
+    
     return parser.parse_args()
 
 
@@ -376,11 +384,18 @@ def main():
     # - Running in an interactive terminal
     use_tui = not args.daemon and not args.log_only and sys.stdin.isatty()
     
+    # Determine which TUI mode to use (command-line flag overrides config)
+    tui_mode = args.tui_mode if args.tui_mode else config.get('bot.tui_mode', 'turbo')
+    
     try:
         if use_tui:
-            # Run with TUI interface
-            from chatrixcd.tui_turbo import run_tui
-            asyncio.run(run_tui_with_bot(bot, config, args.color, args.mouse))
+            # Run with TUI interface (turbo or classic)
+            if tui_mode == 'turbo':
+                logger.info("Using Turbo Vision-style TUI")
+                asyncio.run(run_tui_with_bot(bot, config, args.color, args.mouse, tui_type='turbo'))
+            else:  # classic
+                logger.info("Using classic TUI")
+                asyncio.run(run_tui_with_bot(bot, config, args.color, args.mouse, tui_type='classic'))
         else:
             # Run in classic log-only mode
             asyncio.run(bot.run())
@@ -397,7 +412,7 @@ def main():
         sys.exit(1)
 
 
-async def run_tui_with_bot(bot, config, use_color: bool, mouse: bool = False):
+async def run_tui_with_bot(bot, config, use_color: bool, mouse: bool = False, tui_type: str = 'turbo'):
     """Run the bot with TUI interface.
     
     This function starts the TUI first, then performs login within the TUI context.
@@ -409,15 +424,22 @@ async def run_tui_with_bot(bot, config, use_color: bool, mouse: bool = False):
         config: Configuration object
         use_color: Whether to use colors
         mouse: Whether to enable mouse support (default: False)
+        tui_type: Type of TUI to use ('turbo' for Turbo Vision style, 'classic' for original)
     """
     import logging
-    from chatrixcd.tui import ChatrixTUI, OIDCAuthScreen
     from nio import SyncResponse
+    
+    # Import the appropriate TUI module based on type
+    if tui_type == 'turbo':
+        from chatrixcd.tui_turbo import ChatrixTurboTUI as TUIClass
+        from chatrixcd.tui import OIDCAuthScreen  # OIDC screen is shared
+    else:  # classic
+        from chatrixcd.tui import ChatrixTUI as TUIClass, OIDCAuthScreen
     
     logger = logging.getLogger(__name__)
     
     # Create TUI app
-    tui_app = ChatrixTUI(bot, config, use_color=use_color)
+    tui_app = TUIClass(bot, config, use_color=use_color)
     
     # Create OIDC callback that uses the TUI
     async def oidc_token_callback(sso_url: str, redirect_url: str, identity_providers: list) -> str:

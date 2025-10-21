@@ -15,6 +15,31 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Added
+- **Turbo Vision-Style TUI**: New classic TUI interface inspired by Turbo Vision
+  - Menu bar at the top with File, Edit, Run, Help menus
+  - 3D windowed appearance with drop shadows using box-drawing characters
+  - Status bar at bottom showing task status ("Idle" or "Running X task(s)")
+  - ChatrixCD brand colors (#4A9B7F green) throughout the interface
+  - Logical menu organization based on functionality
+  - All features from original TUI are available
+- **Threaded Responses**: All bot responses are now threaded replies for better conversation organization
+  - Commands are replied to in threads for cleaner room view
+  - Status updates and task notifications maintain conversation context
+- **Reaction-Based Confirmations**: Quick interaction with emoji reactions
+  - Users can confirm actions with 👍 (thumbs up) or 👎 (thumbs down)
+  - No need to type "yes" or "no" - just react to the confirmation message
+  - Reactions are processed instantly for faster workflow
+- **Enhanced Bot Personality**: Sassy and fun responses with emoji
+  - Personalized greetings addressing users by name (e.g., "username 👋")
+  - Varied and engaging response messages throughout commands
+  - Emoji-rich messages for better visual appeal
+
+### Changed
+- Default TUI is now the Turbo Vision-style interface (`tui_turbo`)
+- Original TUI is still available and can be selected via configuration
+- Bot responses are more conversational and engaging
+
 ## [2025.10.18.3.1.0] - 2025-10-18
 
 No changes recorded.
