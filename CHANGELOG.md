@@ -38,6 +38,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - **Threaded Responses**: All bot responses are now threaded replies for better conversation organization
   - Commands are replied to in threads for cleaner room view
   - Status updates and task notifications maintain conversation context
+  - Thread context detection in message logging for debugging
 - **Reaction-Based Confirmations**: Quick interaction with emoji reactions
   - Users can confirm actions with 👍 (thumbs up) or 👎 (thumbs down)
   - No need to type "yes" or "no" - just react to the confirmation message
@@ -47,6 +48,24 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - 16 varied greeting options: Hi, Hello, Yo, Sup, Howdy, Hiya, Heya, G'day, Greetings, Welcome, Ahoy, Salutations, Hey there, What's up
   - Varied and engaging response messages throughout commands
   - Emoji-rich messages for better visual appeal
+- **Non-Threaded Command Mode**: Added `!cda` command prefix for non-threaded responses
+  - All `!cd` commands work with `!cda` prefix
+  - `!cda` mode disables threaded replies for those who prefer traditional bot responses
+  - Help text updated to document both command modes
+- **Async Log Tailing**: Enhanced `!cd log` command with real-time log streaming
+  - `!cd log on` - Start tailing logs for the last task with real-time updates
+  - `!cd log off` - Stop tailing logs
+  - `!cd log <task_id>` - Get logs for a specific task (one-time)
+  - `!cd log` - Get logs for the last task (one-time, existing behavior)
+  - Log updates sent every 5 seconds while task is running
+  - Automatic stop when task completes with final logs
+  - Logs properly formatted with ANSI color codes converted to HTML
+- **Enhanced Logging for Debugging**: Comprehensive logging of bot actions
+  - Log when bot receives commands with full details
+  - Log command parameter resolution (auto-selection of projects/templates)
+  - Log all bot responses for easier debugging
+  - Thread context detection in message logging
+  - Command execution flow logged at each step
 
 ### Changed
 - Default TUI is now the Turbo Vision-style interface (`tui_turbo`)
@@ -54,6 +73,15 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - Bot responses are more conversational and engaging
 - Configuration file version updated to 4
 - Command-line flags now properly override config file settings for color, mouse, and verbosity
+- TUI themes now properly applied with correct text/background contrast
+- Both classic and turbo TUI support all 5 color themes
+
+### Fixed
+- **TUI Theme Support**: Fixed theme implementation in both TUI modes
+  - Themes now properly passed to TUI initialization
+  - Added `get_css_variables()` method for dynamic theme application
+  - Fixed text visibility issues with proper color contrast in all themes
+  - Resolved issue where turbo TUI default scheme had text same color as background
 
 ## [2025.10.18.3.1.0] - 2025-10-18
 

@@ -456,7 +456,7 @@ async def run_tui_with_bot(bot, config, use_color: bool, mouse: bool = False, tu
     logger = logging.getLogger(__name__)
     
     # Create TUI app
-    tui_app = TUIClass(bot, config, use_color=use_color)
+    tui_app = TUIClass(bot, config, use_color=use_color, theme=theme)
     
     # Create OIDC callback that uses the TUI
     async def oidc_token_callback(sso_url: str, redirect_url: str, identity_providers: list) -> str:
