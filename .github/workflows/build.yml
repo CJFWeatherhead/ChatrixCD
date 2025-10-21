@@ -170,8 +170,8 @@ jobs:
           fi
           
           VERSION="${YEAR}.${MONTH}.${DAY}.${MAJOR}.${MINOR}.${PATCH}${VERSION_SUFFIX}"
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "is_prerelease=${IS_PRERELEASE}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "is_prerelease=${IS_PRERELEASE}" >> "$GITHUB_OUTPUT"
           echo "Generated version: ${VERSION}"
           echo "Is prerelease: ${IS_PRERELEASE}"
       
@@ -370,8 +370,8 @@ jobs:
           fi
           
           VERSION="${YEAR}.${MONTH}.${DAY}.${MAJOR}.${MINOR}.${PATCH}${VERSION_SUFFIX}"
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "is_prerelease=${IS_PRERELEASE}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "is_prerelease=${IS_PRERELEASE}" >> "$GITHUB_OUTPUT"
           echo "Generated version: ${VERSION}"
           echo "Is prerelease: ${IS_PRERELEASE}"
       
@@ -540,8 +540,8 @@ jobs:
           fi
           
           VERSION="${YEAR}.${MONTH}.${DAY}.${MAJOR}.${MINOR}.${PATCH}${VERSION_SUFFIX}"
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "is_prerelease=${IS_PRERELEASE}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "is_prerelease=${IS_PRERELEASE}" >> "$GITHUB_OUTPUT"
           echo "Generated version: ${VERSION}"
           echo "Is prerelease: ${IS_PRERELEASE}"
       
@@ -705,8 +705,8 @@ jobs:
           fi
           
           VERSION="${YEAR}.${MONTH}.${DAY}.${MAJOR}.${MINOR}.${PATCH}${VERSION_SUFFIX}"
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "is_prerelease=${IS_PRERELEASE}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "is_prerelease=${IS_PRERELEASE}" >> "$GITHUB_OUTPUT"
           echo "Generated version: ${VERSION}"
           echo "Is prerelease: ${IS_PRERELEASE}"
       
@@ -839,7 +839,7 @@ jobs:
             COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges | head -20)
           else
             # Get commits since last tag
-            COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges | head -20)
+            COMMITS=$(git log "${LATEST_TAG}"..HEAD --pretty=format:"- %s (%h)" --no-merges | head -20)
           fi
           
           # Combine CHANGELOG.md content with commit log
