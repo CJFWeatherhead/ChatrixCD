@@ -1,6 +1,6 @@
 {
   // Configuration file version - do not modify
-  "_config_version": 3,
+  "_config_version": 4,
   
   // Matrix homeserver connection settings
   "matrix": {
@@ -94,6 +94,41 @@
     
     // Path to log file (default: chatrixcd.log in current directory)
     // Can be absolute or relative path
-    "log_file": "chatrixcd.log"
+    "log_file": "chatrixcd.log",
+    
+    // TUI mode selection (default: "turbo")
+    // Options:
+    //   - "turbo": New Turbo Vision-style interface with menu bar and 3D windows
+    //   - "classic": Original TUI interface
+    "tui_mode": "turbo",
+    
+    // Enable mouse support in TUI (default: false)
+    // When enabled, you can use mouse to click buttons and navigate menus
+    "mouse_enabled": false,
+    
+    // Enable colored output in logs and TUI (default: false)
+    // Requires colorlog package to be installed
+    // Command-line flag -C overrides this setting
+    "color_enabled": false,
+    
+    // Color theme for TUI and logs (default: "default")
+    // Available themes:
+    //   - "default": ChatrixCD brand colors (green #4A9B7F)
+    //   - "midnight": Midnight Commander-style (blue/cyan classic terminal look)
+    //   - "grayscale": Monochrome grayscale theme for accessibility
+    //   - "windows31": Windows 3.1-inspired theme (gray/blue vintage look)
+    //   - "msdos": MS-DOS-style theme (amber/green on black retro terminal)
+    // Note: Theme applies to both "turbo" and "classic" TUI modes
+    "color_theme": "default",
+    
+    // Logging verbosity level (default: "info")
+    // Options:
+    //   - "silent": No output (errors only to stderr)
+    //   - "error": Error messages only
+    //   - "info": Informational messages (recommended for normal operation)
+    //   - "debug": Detailed debug information (verbose logging)
+    // Command-line -v flags override this setting:
+    //   -v sets to "debug", -vv sets to "debug" with library logs
+    "verbosity": "info"
   }
 }

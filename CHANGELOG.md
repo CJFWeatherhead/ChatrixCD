@@ -15,6 +15,46 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Added
+- **Configuration Version 4**: Expanded configuration options with comprehensive settings
+  - Added `bot.mouse_enabled` for configurable mouse support in TUI
+  - Added `bot.color_enabled` for enabling colored output (overridable with -C flag)
+  - Added `bot.color_theme` with 5 theme options: 'default', 'midnight', 'grayscale', 'windows31', 'msdos'
+    - **default**: ChatrixCD brand colors (green #4A9B7F)
+    - **midnight**: Midnight Commander-style blue/cyan terminal theme
+    - **grayscale**: Monochrome theme for accessibility
+    - **windows31**: Windows 3.1-inspired gray/blue vintage theme
+    - **msdos**: MS-DOS-style amber/green on black retro terminal theme
+  - Added `bot.verbosity` with levels: 'silent', 'error', 'info', 'debug' (overridable with -v flags)
+  - Themes work with both Turbo Vision and Classic TUI modes
+- **Automatic Configuration Migration**: V3 to V4 migration for seamless upgrades
+- **Turbo Vision-Style TUI**: New classic TUI interface inspired by Turbo Vision
+  - Menu bar at the top with File, Edit, Run, Help menus
+  - 3D windowed appearance with drop shadows using box-drawing characters
+  - Status bar at bottom showing task status ("Idle" or "Running X task(s)")
+  - ChatrixCD brand colors (#4A9B7F green) throughout the interface
+  - Logical menu organization based on functionality
+  - All features from original TUI are available
+- **Threaded Responses**: All bot responses are now threaded replies for better conversation organization
+  - Commands are replied to in threads for cleaner room view
+  - Status updates and task notifications maintain conversation context
+- **Reaction-Based Confirmations**: Quick interaction with emoji reactions
+  - Users can confirm actions with 👍 (thumbs up) or 👎 (thumbs down)
+  - No need to type "yes" or "no" - just react to the confirmation message
+  - Reactions are processed instantly for faster workflow
+- **Enhanced Bot Personality**: Sassy and fun responses with emoji
+  - Personalized greetings addressing users by name (e.g., "username 👋")
+  - 16 varied greeting options: Hi, Hello, Yo, Sup, Howdy, Hiya, Heya, G'day, Greetings, Welcome, Ahoy, Salutations, Hey there, What's up
+  - Varied and engaging response messages throughout commands
+  - Emoji-rich messages for better visual appeal
+
+### Changed
+- Default TUI is now the Turbo Vision-style interface (`tui_turbo`)
+- Original TUI is still available and can be selected via configuration
+- Bot responses are more conversational and engaging
+- Configuration file version updated to 4
+- Command-line flags now properly override config file settings for color, mouse, and verbosity
+
 ## [2025.10.18.3.1.0] - 2025-10-18
 
 No changes recorded.

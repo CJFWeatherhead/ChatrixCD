@@ -24,7 +24,10 @@ ChatrixCD integrates with Semaphore UI to enable CI/CD automation through chat. 
 
 - 🔐 **Native Matrix Authentication**: Support for password and OIDC/SSO authentication with Matrix servers
 - 🔒 **E2E Encryption**: Full support for end-to-end encrypted Matrix rooms with device verification
-- 🖥️ **Interactive TUI**: Text User Interface for bot management, monitoring, and configuration
+- 🖥️ **Interactive TUI**: Dual TUI modes - Turbo Vision-style (default) with menu bar and 3D windows, or classic interface
+- 🧵 **Threaded Responses**: All bot replies are threaded for organized conversations
+- 👍 **Reaction Confirmations**: Quick interactions with emoji reactions (👍/👎) for confirmations
+- 🎭 **Fun Personality**: Varied greetings and sassy responses with emoji throughout
 - 🚀 **Semaphore UI Integration**: Start and monitor CI/CD tasks via chat commands
 - 📊 **Real-time Updates**: Automatic status updates for running tasks
 - 🎯 **Command-based Interface**: Easy-to-use command system for task management
@@ -192,6 +195,25 @@ The TUI provides a menu-driven interface with options for:
 - **SHOW** - View current configuration
 - **QUIT** - Gracefully exit
 
+**TUI Modes:**
+
+ChatrixCD offers two TUI styles:
+- **Turbo Vision (default)**: Classic 3D aesthetic with menu bar (File, Edit, Run, Help) and status bar
+- **Classic**: Original TUI interface with status widgets
+
+To select TUI mode:
+
+```bash
+# Use Turbo Vision style (default)
+chatrixcd
+
+# Use classic TUI style
+chatrixcd -t classic
+
+# Or configure in config.json:
+# "bot": { "tui_mode": "classic" }
+```
+
 **Classic Log Mode:**
 
 To run without the TUI (classic log-only mode):
@@ -231,6 +253,8 @@ chatrixcd [OPTIONS]
 - `-C, --color` - Enable colored logging output in TUI and logs (requires colorlog package)
 - `-R, --redact` - Redact sensitive information from logs (room names, usernames, IPs, tokens, etc.)
 - `-L, --log-only` - Run in classic log-only mode (no TUI, only show logs)
+- `-t MODE, --tui-mode MODE` - Select TUI mode: 'turbo' (Turbo Vision-style, default) or 'classic' (original TUI)
+- `-m, --mouse` - Enable mouse support in TUI (default: disabled)
 - `-D, --daemon` - Run in daemon mode (background process, Unix/Linux only)
 - `-s, --show-config` - Display current configuration with redacted credentials and exit
 - `-a USER, --admin USER` - Add admin user (can be specified multiple times)
@@ -242,8 +266,11 @@ chatrixcd [OPTIONS]
 # Show version
 chatrixcd --version
 
-# Run with interactive TUI (default)
+# Run with interactive TUI (default - Turbo Vision style)
 chatrixcd
+
+# Run with classic TUI style
+chatrixcd -t classic
 
 # Run with interactive TUI and colored output
 chatrixcd -C
@@ -299,6 +326,12 @@ Once the bot is running and invited to a room, you can use the following command
 
 #### Alias Commands
 - `!cd aliases` - List all configured command aliases
+
+**Threaded Responses**: All bot responses are sent as threaded replies to your command, keeping conversations organized and easy to follow in busy rooms.
+
+**Reaction Confirmations**: For confirmations (like running tasks or shutting down the bot), you can react with 👍 (thumbs up) to confirm or 👎 (thumbs down) to cancel, instead of typing a response. This makes interactions faster and more intuitive!
+
+**Fun Personality**: The bot greets you with varied responses like "Hi username! 👋", "Yo username! 🤙", "Sup username! 😎" and more, making interactions more engaging and personalized.
 
 **Admin Access**: When admin users are configured in `config.json`, only those users can run bot commands. Other users will receive a friendly brush-off message. Supports URL-encoded usernames (e.g., `@user%40domain.com`).
 
