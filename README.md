@@ -39,9 +39,21 @@ ChatrixCD integrates with Semaphore UI to enable CI/CD automation through chat. 
 
 ## Installation
 
+### Pre-built Binaries
+
+Pre-built standalone executables are available for download from [GitHub Releases](https://github.com/CJFWeatherhead/ChatrixCD/releases):
+
+- **Linux**: x86_64, i686 (32-bit), ARM64
+- **Windows**: x86_64, ARM64
+- **macOS**: Universal binary (x86_64 + ARM64)
+
+Download the appropriate binary for your platform and run it directly - no Python installation required!
+
+See [Build Workflow Documentation](docs/BUILD_WORKFLOW.md) for details on the automated build process.
+
 ### Prerequisites
 
-- Python 3.12 or higher (3.12, 3.13, 3.14 supported)
+- Python 3.12 or higher (3.12, 3.13, 3.14 supported) - **not required for pre-built binaries**
 - [uv](https://docs.astral.sh/uv/) - Fast Python package installer
 - Access to a Matrix homeserver
 - Access to a Semaphore UI instance with API access
@@ -489,7 +501,9 @@ Releases use a semantic calendar versioning system with the format `YYYY.MM.DD.M
 
 **Important:** Version numbers (MAJOR, MINOR, PATCH) always increment and never reset. This ensures each version is unique and comparable.
 
-To create a new release:
+#### Production Releases
+
+To create a new production release:
 
 1. Go to Actions → Build and Release workflow
 2. Click "Run workflow"
@@ -500,12 +514,21 @@ To create a new release:
 
 4. The workflow will:
    - Run all unit tests
+   - Build standalone executables for all platforms (Linux x86_64/i686/ARM64, Windows x86_64/ARM64, macOS Universal)
    - Calculate the new version based on current date and type
-   - Update version in code (`__init__.py` and `setup.py`)
+   - Update version in code files
    - Update `CHANGELOG.md` (move Unreleased content to new version section)
-   - Generate changelog from commits
-   - Commit all changes
-   - Create a GitHub release
+   - Create git tag
+   - Create a GitHub release with pre-built binaries
+
+#### Pre-releases (Automated)
+
+Pre-releases are automatically created when pull requests are merged to `main`:
+- Version includes `-dev` suffix (e.g., `2025.10.21.0.0.1-dev`)
+- Marked as pre-release on GitHub
+- Includes pre-built binaries for testing
+
+See [Build Workflow Documentation](docs/BUILD_WORKFLOW.md) for complete details on the build and release process.
 
 **Note**: Document changes in the `[Unreleased]` section of `CHANGELOG.md` as you develop. The release workflow will automatically move these changes to a versioned section.
 
