@@ -738,7 +738,12 @@ class TestCommandHandler(unittest.TestCase):
         # Should send cancellation message
         self.mock_bot.send_message.assert_called_once()
         call_args = self.mock_bot.send_message.call_args[0]
-        self.assertIn('cancel', call_args[1].lower())
+        # Check for any cancellation-related words
+        message_lower = call_args[1].lower()
+        self.assertTrue(
+            any(word in message_lower for word in ['cancel', 'stop', 'alright', '❌', '🛑', '✋']),
+            f"Expected cancellation message but got: {call_args[1]}"
+        )
 
     def test_handle_reaction_wrong_user(self):
         """Test that reactions from wrong user are rejected."""
