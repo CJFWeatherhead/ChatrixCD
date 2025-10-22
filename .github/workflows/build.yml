@@ -287,10 +287,10 @@ jobs:
           else
             # Manual trigger
             IS_PRERELEASE="${{ github.event.inputs.is_prerelease }}"
-            if [ "$IS_PRERELEASE" == "true" ]; then
-              VERSION_SUFFIX="-dev"
-            else
-              VERSION_SUFFIX=""
+              if [ "${IS_PRERELEASE}" = "true" ]; then
+                VERSION_SUFFIX="-dev"
+              else
+                VERSION_SUFFIX=""
             fi
           fi
           
