@@ -22,6 +22,15 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Success notifications with party emoji 🎉
   - Failure notifications with clear status indication
 
+### Changed
+- **Version Calculation System**: Complete refactoring for simplicity and robustness
+  - Created centralized version calculation script (`.github/scripts/calculate-version.sh`)
+  - Eliminated 269 lines of duplicate code across build jobs (32.5% reduction in workflow file size)
+  - Single source of truth for version logic - easier to maintain and debug
+  - Simplified workflow from 4 duplicate implementations to 4 calls to one script
+  - Automatic fallback to patch increment for empty/unknown version types
+  - Consistent behavior across all build platforms (Linux, Windows, macOS)
+
 ### Fixed
 - **Build and Release Workflow**: Comprehensive fixes for build process failures
   - Fixed invalid `grep -v '\-dev$'` pattern causing "invalid argument" errors (changed to `grep -v -- '-dev$'`)
