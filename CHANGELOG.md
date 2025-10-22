@@ -23,8 +23,9 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Failure notifications with clear status indication
 
 ### Removed
-- **Threaded Responses**: Reverted threaded reply functionality for improved usability
+- **Threaded Responses**: Completely removed all threading functionality for conventional message handling
   - All bot responses now sent as regular messages instead of thread replies
+  - Removed thread detection logic from message callback
   - Simpler conversation flow without threading complexity
   - Better compatibility with various Matrix clients
 - **!cda Command Mode**: Removed non-threaded command prefix as it's now redundant
@@ -84,7 +85,6 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Log when bot receives commands with full details
   - Log command parameter resolution (auto-selection of projects/templates)
   - Log all bot responses for easier debugging
-  - Thread context detection in message logging
   - Command execution flow logged at each step
 
 ### Changed

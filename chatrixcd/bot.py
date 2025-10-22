@@ -548,18 +548,7 @@ class ChatrixBot:
             )
             return
         
-        # Check if message is in a thread
-        is_threaded = False
-        thread_root = None
-        if hasattr(event, 'source') and 'content' in event.source:
-            content = event.source.get('content', {})
-            relates_to = content.get('m.relates_to', {})
-            if relates_to.get('rel_type') == 'm.thread':
-                is_threaded = True
-                thread_root = relates_to.get('event_id')
-        
-        thread_info = f" (in thread {thread_root})" if is_threaded else ""
-        logger.info(f"Message from {event.sender} in {room.display_name}{thread_info}: {event.body}")
+        logger.info(f"Message from {event.sender} in {room.display_name}: {event.body}")
         
         # Check if message is a command
         await self.command_handler.handle_message(room, event)
