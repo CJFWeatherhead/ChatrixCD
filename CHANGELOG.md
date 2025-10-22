@@ -16,13 +16,38 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Added
+- **Configuration Wizard**: Interactive configuration setup with `--init` flag
+  - Console-based wizard for creating/updating configuration
+  - Parses `config.json.example` for field descriptions and defaults
+  - Automatic config wizard prompt when `config.json` is missing
+  - Creates backups before overwriting existing configs
+  - Supports all config sections: Matrix, Semaphore, and Bot settings
+- **--no-greetings Flag**: New `-N/--no-greetings` command-line flag to skip startup/shutdown messages (useful for testing)
+- **Enhanced Bot Personality**: More sassy and fun responses throughout
+  - 20 greeting variations with name-first style for extra personality
+  - More varied and expressive timeout, cancellation, and task execution messages
+  - Sassy admin rejection messages
+  - Fun ping/pong responses
 - **PyYAML Dependency**: Added PyYAML to requirements.txt for workflow configuration tests
 - **Task Completion Notifications**: Users who initiate tasks are now notified when their task completes
   - Personalized completion messages addressing the user by name
   - Success notifications with party emoji 🎉
   - Failure notifications with clear status indication
 
+### Changed
+- **Configuration Migration**: Migration system now suggests running `--init` after automatic migration to review new settings
+- **Username Display**: User display names now keep the `@` symbol for proper Matrix user identification
+
 ### Fixed
+- **TUI CSS Error**: Fixed `$foreground` variable undefined error in Textual 6.x
+  - Added `foreground` CSS variable to both `tui.py` and `tui_turbo.py`
+  - Aliased to `text` color for compatibility
+- **Reaction Parsing**: Fixed reaction confirmation handling
+  - Strip Unicode variation selectors (0xFE00-0xFE0F) from emoji for proper matching
+  - Reactions like 👍️ with variation selectors now work correctly
+- **Command Response Formatting**: Fixed concatenated response messages
+  - Added missing commas in all response arrays (greetings, timeouts, cancellations, etc.)
+  - Commands like `!cd exit`, `!cd pet`, `!cd scold` now send single random responses instead of concatenated strings
 - **Build and Release Workflow**: Comprehensive fixes for build process failures
   - Fixed invalid `grep -v '\-dev$'` pattern causing "invalid argument" errors (changed to `grep -v -- '-dev$'`)
   - Added missing `git fetch --tags --force` step to Windows and macOS build jobs for complete tag history
