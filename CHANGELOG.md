@@ -27,6 +27,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Fixed invalid `grep -v '\-dev$'` pattern causing "invalid argument" errors (changed to `grep -v -- '-dev$'`)
   - Added missing `git fetch --tags --force` step to Windows and macOS build jobs for complete tag history
   - Removed Windows ARM64 build from matrix (not feasible on GitHub Actions x86_64 runners)
+  - **Added default case to version calculation scripts**: All 8 case statements now handle empty/unknown VERSION_TYPE by defaulting to patch increments
   - All version calculation scripts now work correctly across all build jobs
   - Ensures consistent version calculation and proper tag handling
 

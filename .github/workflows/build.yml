@@ -117,7 +117,8 @@ jobs:
                   MINOR=$((PREV_MINOR + 1))
                   PATCH=0
                   ;;
-                patch)
+                patch|*)
+                  # Default to patch for unknown/empty VERSION_TYPE
                   MAJOR="$PREV_MAJOR"
                   MINOR="$PREV_MINOR"
                   PATCH=$((PREV_PATCH + 1))
@@ -142,7 +143,8 @@ jobs:
                 MINOR=$((CURRENT_MINOR + 1))
                 PATCH=0
                 ;;
-              patch)
+              patch|*)
+                # Default to patch for unknown/empty VERSION_TYPE
                 MAJOR="$CURRENT_MAJOR"
                 MINOR="$CURRENT_MINOR"
                 PATCH=$((CURRENT_PATCH + 1))
@@ -304,7 +306,8 @@ jobs:
                   MINOR=$((PREV_MINOR + 1))
                   PATCH=0
                   ;;
-                patch)
+                patch|*)
+                  # Default to patch for unknown/empty VERSION_TYPE
                   MAJOR="$PREV_MAJOR"
                   MINOR="$PREV_MINOR"
                   PATCH=$((PREV_PATCH + 1))
@@ -329,7 +332,8 @@ jobs:
                 MINOR=$((CURRENT_MINOR + 1))
                 PATCH=0
                 ;;
-              patch)
+              patch|*)
+                # Default to patch for unknown/empty VERSION_TYPE
                 MAJOR="$CURRENT_MAJOR"
                 MINOR="$CURRENT_MINOR"
                 PATCH=$((CURRENT_PATCH + 1))
@@ -460,7 +464,8 @@ jobs:
                   MINOR=$((PREV_MINOR + 1))
                   PATCH=0
                   ;;
-                patch)
+                patch|*)
+                  # Default to patch for unknown/empty VERSION_TYPE
                   MAJOR="$PREV_MAJOR"
                   MINOR="$PREV_MINOR"
                   PATCH=$((PREV_PATCH + 1))
@@ -485,7 +490,8 @@ jobs:
                 MINOR=$((CURRENT_MINOR + 1))
                 PATCH=0
                 ;;
-              patch)
+              patch|*)
+                # Default to patch for unknown/empty VERSION_TYPE
                 MAJOR="$CURRENT_MAJOR"
                 MINOR="$CURRENT_MINOR"
                 PATCH=$((CURRENT_PATCH + 1))
@@ -611,7 +617,8 @@ jobs:
                   MINOR=$((PREV_MINOR + 1))
                   PATCH=0
                   ;;
-                patch)
+                patch|*)
+                  # Default to patch for unknown/empty VERSION_TYPE
                   MAJOR="$PREV_MAJOR"
                   MINOR="$PREV_MINOR"
                   PATCH=$((PREV_PATCH + 1))
@@ -636,7 +643,8 @@ jobs:
                 MINOR=$((CURRENT_MINOR + 1))
                 PATCH=0
                 ;;
-              patch)
+              patch|*)
+                # Default to patch for unknown/empty VERSION_TYPE
                 MAJOR="$CURRENT_MAJOR"
                 MINOR="$CURRENT_MINOR"
                 PATCH=$((CURRENT_PATCH + 1))
