@@ -24,21 +24,12 @@ ChatrixCD integrates with Semaphore UI to enable CI/CD automation through chat. 
 
 - 🔐 **Native Matrix Authentication**: Support for password and OIDC/SSO authentication with Matrix servers
 - 🔒 **E2E Encryption**: Full support for end-to-end encrypted Matrix rooms with device verification
-- 🖥️ **Interactive TUI**: Dual TUI modes - Turbo Vision-style (default) with menu bar and 3D windows, or classic interface
-- 🧵 **Threaded Responses**: All bot replies are threaded for organized conversations
-- 👍 **Reaction Confirmations**: Quick interactions with emoji reactions (👍/👎) for confirmations
-- 🎭 **Fun Personality**: Varied greetings and sassy responses with emoji throughout
 - 🚀 **Semaphore UI Integration**: Start and monitor CI/CD tasks via chat commands
 - 📊 **Real-time Updates**: Automatic status updates for running tasks
 - 🎯 **Command-based Interface**: Easy-to-use command system for task management
 - 🔖 **Command Aliases**: Create custom shortcuts for frequently used commands
 - ✅ **Task Confirmation**: Required confirmation before executing tasks with template details
 - 🎨 **Rich Formatting**: Markdown and HTML formatting in messages with emoji support
-- 🧠 **Smart Parameters**: Auto-fill project/template IDs when only one option available
-- 📝 **Enhanced Logs**: Formatted output for Ansible and Terraform with intelligent tailing
-- 🔧 **Flexible Configuration**: Support for HJSON config files (JSON with comments) with automatic migration
-- ✅ **Configuration Validation**: Built-in schema validation with clear error messages
-- 🔄 **Auto-Migration**: Automatic upgrade of configuration files when new features are added
 
 ## Installation
 
