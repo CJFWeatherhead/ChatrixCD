@@ -640,43 +640,35 @@ class TestCommandHandler(unittest.TestCase):
     def test_handle_pet_command(self):
         """Test the secret pet command."""
         self.loop.run_until_complete(
-            self.handler.handle_pet('!test:example.com', '@user:example.com', 'event123')
+            self.handler.handle_pet('!test:example.com', '@user:example.com')
         )
         
         # Should send a positive response
         self.mock_bot.send_message.assert_called_once()
         call_args = self.mock_bot.send_message.call_args
         message = call_args[0][1]
-        reply_to = call_args[1].get('reply_to_event_id')
         
         # Should include user name and be positive
         self.assertIn('user', message)
         self.assertTrue(any(emoji in message for emoji in ['🥰', '😊', '💙', '🤗', '😄', '🌟', '🐕', '💻', '😳', '☺️']))
-        
-        # Should reply to the original message
-        self.assertEqual(reply_to, 'event123')
 
     def test_handle_scold_command(self):
         """Test the secret scold command."""
         self.loop.run_until_complete(
-            self.handler.handle_scold('!test:example.com', '@user:example.com', 'event123')
+            self.handler.handle_scold('!test:example.com', '@user:example.com')
         )
         
         # Should send an apologetic response
         self.mock_bot.send_message.assert_called_once()
         call_args = self.mock_bot.send_message.call_args
         message = call_args[0][1]
-        reply_to = call_args[1].get('reply_to_event_id')
         
         # Should include user name and be apologetic
         self.assertIn('user', message)
         self.assertTrue(any(emoji in message for emoji in ['😢', '😔', '💔', '😞', '😭', '😐', '😟', '😓', '🥺', '😅']))
-        
-        # Should reply to the original message
-        self.assertEqual(reply_to, 'event123')
 
-    def test_handle_message_with_threading(self):
-        """Test that messages include threading support."""
+    def test_handle_message_basic(self):
+        """Test basic message handling."""
         # Create a mock event
         event = MagicMock()
         event.body = '!cd help'
@@ -691,13 +683,8 @@ class TestCommandHandler(unittest.TestCase):
             self.handler.handle_message(room, event)
         )
         
-        # Should send help message with reply_to_event_id
+        # Should send help message
         self.mock_bot.send_message.assert_called_once()
-        call_args = self.mock_bot.send_message.call_args
-        reply_to = call_args[1].get('reply_to_event_id')
-        
-        # Should reply to the original message
-        self.assertEqual(reply_to, 'event123')
 
     def test_handle_reaction_positive(self):
         """Test handling positive reaction to confirmation."""

@@ -548,18 +548,7 @@ class ChatrixBot:
             )
             return
         
-        # Check if message is in a thread
-        is_threaded = False
-        thread_root = None
-        if hasattr(event, 'source') and 'content' in event.source:
-            content = event.source.get('content', {})
-            relates_to = content.get('m.relates_to', {})
-            if relates_to.get('rel_type') == 'm.thread':
-                is_threaded = True
-                thread_root = relates_to.get('event_id')
-        
-        thread_info = f" (in thread {thread_root})" if is_threaded else ""
-        logger.info(f"Message from {event.sender} in {room.display_name}{thread_info}: {event.body}")
+        logger.info(f"Message from {event.sender} in {room.display_name}: {event.body}")
         
         # Check if message is a command
         await self.command_handler.handle_message(room, event)
@@ -745,15 +734,13 @@ class ChatrixBot:
         await self.command_handler.handle_reaction(room, event.sender, reacted_event_id, reaction_key)
 
     async def send_message(self, room_id: str, message: str, 
-                          formatted_message: Optional[str] = None,
-                          reply_to_event_id: Optional[str] = None):
-        """Send a message to a room, optionally as a threaded reply.
+                          formatted_message: Optional[str] = None):
+        """Send a message to a room.
         
         Args:
             room_id: ID of the room to send to
             message: Plain text message
             formatted_message: Optional HTML formatted message
-            reply_to_event_id: Optional event ID to reply to (creates a thread)
         """
         content = {
             "msgtype": "m.text",
@@ -763,17 +750,6 @@ class ChatrixBot:
         if formatted_message:
             content["format"] = "org.matrix.custom.html"
             content["formatted_body"] = formatted_message
-        
-        # Add threading relationship if replying to an event
-        if reply_to_event_id:
-            content["m.relates_to"] = {
-                "rel_type": "m.thread",
-                "event_id": reply_to_event_id,
-                "is_falling_back": True,
-                "m.in_reply_to": {
-                    "event_id": reply_to_event_id
-                }
-            }
             
         response = await self.client.room_send(
             room_id=room_id,

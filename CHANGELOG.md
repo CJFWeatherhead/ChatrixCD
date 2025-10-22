@@ -16,6 +16,35 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Added
+- **PyYAML Dependency**: Added PyYAML to requirements.txt for workflow configuration tests
+- **Task Completion Notifications**: Users who initiate tasks are now notified when their task completes
+  - Personalized completion messages addressing the user by name
+  - Success notifications with party emoji 🎉
+  - Failure notifications with clear status indication
+
+### Removed
+- **Threaded Responses**: Completely removed all threading functionality for conventional message handling
+  - All bot responses now sent as regular messages instead of thread replies
+  - Removed thread detection logic from message callback
+  - Simpler conversation flow without threading complexity
+  - Better compatibility with various Matrix clients
+- **!cda Command Mode**: Removed non-threaded command prefix as it's now redundant
+  - Only `!cd` command prefix is supported
+  - Help text updated to remove `!cda` references
+
+### Fixed
+- **Build Process**: Fixed test failures in CI/CD pipeline
+  - Added missing PyYAML dependency for test_workflow.py
+  - Resolved ModuleNotFoundError for yaml module in tests
+- **Reaction Processing**: Improved reaction handling for more consistent processing
+  - Reactions for confirmations work reliably
+  - Positive reactions (👍, ✅, etc.) and negative reactions (👎, ❌, etc.) properly recognized
+- **!cd log Command**: Verified log command functionality is working correctly
+  - One-time log retrieval with `!cd log [task_id]`
+  - Real-time log tailing with `!cd log on/off`
+  - Proper error messages for missing tasks
+
+### Added (Previous Features)
 - **Configuration Version 4**: Expanded configuration options with comprehensive settings
   - Added `bot.mouse_enabled` for configurable mouse support in TUI
   - Added `bot.color_enabled` for enabling colored output (overridable with -C flag)
@@ -35,10 +64,6 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - ChatrixCD brand colors (#4A9B7F green) throughout the interface
   - Logical menu organization based on functionality
   - All features from original TUI are available
-- **Threaded Responses**: All bot responses are now threaded replies for better conversation organization
-  - Commands are replied to in threads for cleaner room view
-  - Status updates and task notifications maintain conversation context
-  - Thread context detection in message logging for debugging
 - **Reaction-Based Confirmations**: Quick interaction with emoji reactions
   - Users can confirm actions with 👍 (thumbs up) or 👎 (thumbs down)
   - No need to type "yes" or "no" - just react to the confirmation message
@@ -48,10 +73,6 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - 16 varied greeting options: Hi, Hello, Yo, Sup, Howdy, Hiya, Heya, G'day, Greetings, Welcome, Ahoy, Salutations, Hey there, What's up
   - Varied and engaging response messages throughout commands
   - Emoji-rich messages for better visual appeal
-- **Non-Threaded Command Mode**: Added `!cda` command prefix for non-threaded responses
-  - All `!cd` commands work with `!cda` prefix
-  - `!cda` mode disables threaded replies for those who prefer traditional bot responses
-  - Help text updated to document both command modes
 - **Async Log Tailing**: Enhanced `!cd log` command with real-time log streaming
   - `!cd log on` - Start tailing logs for the last task with real-time updates
   - `!cd log off` - Stop tailing logs
@@ -64,7 +85,6 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Log when bot receives commands with full details
   - Log command parameter resolution (auto-selection of projects/templates)
   - Log all bot responses for easier debugging
-  - Thread context detection in message logging
   - Command execution flow logged at each step
 
 ### Changed
