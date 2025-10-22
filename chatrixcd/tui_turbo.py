@@ -605,6 +605,7 @@ class ChatrixTurboTUI(App):
             'background': theme['background'],
             'text': theme['text'],
             'text-muted': theme['text-muted'],
+            'foreground': theme['text'],  # Alias for Textual 6.x compatibility
         }
     
     def compose(self) -> ComposeResult:

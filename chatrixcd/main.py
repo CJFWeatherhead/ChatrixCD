@@ -176,6 +176,13 @@ def parse_args():
         help='Select TUI mode: "turbo" for Turbo Vision-style (default) or "classic" for original TUI'
     )
     
+    parser.add_argument(
+        '-N', '--no-greetings',
+        action='store_true',
+        dest='no_greetings',
+        help='Skip greeting messages on startup/shutdown (useful for testing)'
+    )
+    
     return parser.parse_args()
 
 
@@ -358,6 +365,11 @@ def main():
         all_rooms = list(set(existing_rooms + args.allowed_rooms))
         config.config.setdefault('bot', {})['allowed_rooms'] = all_rooms
         logger.info(f"Allowed rooms from command-line: {args.allowed_rooms}")
+    
+    if args.no_greetings:
+        # Disable greetings if --no-greetings flag is set
+        config.config.setdefault('bot', {})['greetings_enabled'] = False
+        logger.info("Greetings disabled via --no-greetings flag")
     
     # Show config and exit if requested
     if args.show_config:
