@@ -19,11 +19,6 @@ on:
           - patch
           - minor
           - major
-      is_prerelease:
-        description: 'Mark as pre-release'
-        required: false
-        default: false
-        type: boolean
 
 jobs:
   test:
@@ -80,20 +75,7 @@ jobs:
         id: version
         shell: bash
         run: |
-          # Determine if this is a pre-release build
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            # PR merge - mark as pre-release with -dev suffix
-            IS_PRERELEASE=true
-            VERSION_SUFFIX="-dev"
-          else
-            # Manual trigger
-            IS_PRERELEASE="${{ github.event.inputs.is_prerelease }}"
-            if [ "$IS_PRERELEASE" == "true" ]; then
-              VERSION_SUFFIX="-dev"
-            else
-              VERSION_SUFFIX=""
-            fi
-          fi
+        
           
           # Get current date components
           YEAR=$(date +%Y)
@@ -170,11 +152,10 @@ jobs:
             esac
           fi
           
-          VERSION="${YEAR}.${MONTH}.${DAY}.${MAJOR}.${MINOR}.${PATCH}${VERSION_SUFFIX}"
+          VERSION="${YEAR}.${MONTH}.${DAY}.${MAJOR}.${MINOR}.${PATCH}"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "is_prerelease=${IS_PRERELEASE}" >> "$GITHUB_OUTPUT"
           echo "Generated version: ${VERSION}"
-          echo "Is prerelease: ${IS_PRERELEASE}"
+
       
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -280,21 +261,6 @@ jobs:
         id: version
         shell: bash
         run: |
-          # Determine if this is a pre-release build
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            # PR merge - mark as pre-release with -dev suffix
-            IS_PRERELEASE=true
-            VERSION_SUFFIX="-dev"
-          else
-            # Manual trigger
-            IS_PRERELEASE="${{ github.event.inputs.is_prerelease }}"
-              if [ "${IS_PRERELEASE}" = "true" ]; then
-                VERSION_SUFFIX="-dev"
-              else
-                VERSION_SUFFIX=""
-            fi
-          fi
-          
           # Get current date components
           YEAR=$(date +%Y)
           MONTH=$(date +%m)
@@ -370,12 +336,9 @@ jobs:
             esac
           fi
           
-          VERSION="${YEAR}.${MONTH}.${DAY}.${MAJOR}.${MINOR}.${PATCH}${VERSION_SUFFIX}"
+          VERSION="${YEAR}.${MONTH}.${DAY}.${MAJOR}.${MINOR}.${PATCH}"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "is_prerelease=${IS_PRERELEASE}" >> "$GITHUB_OUTPUT"
-          echo "Generated version: ${VERSION}"
-          echo "Is prerelease: ${IS_PRERELEASE}"
-      
+          echo "Generated version: ${VERSION}"      
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -450,21 +413,6 @@ jobs:
         id: version
         shell: bash
         run: |
-          # Determine if this is a pre-release build
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            # PR merge - mark as pre-release with -dev suffix
-            IS_PRERELEASE=true
-            VERSION_SUFFIX="-dev"
-          else
-            # Manual trigger
-            IS_PRERELEASE="${{ github.event.inputs.is_prerelease }}"
-            if [ "$IS_PRERELEASE" == "true" ]; then
-              VERSION_SUFFIX="-dev"
-            else
-              VERSION_SUFFIX=""
-            fi
-          fi
-          
           # Get current date components
           YEAR=$(date +%Y)
           MONTH=$(date +%m)
@@ -540,11 +488,9 @@ jobs:
             esac
           fi
           
-          VERSION="${YEAR}.${MONTH}.${DAY}.${MAJOR}.${MINOR}.${PATCH}${VERSION_SUFFIX}"
+          VERSION="${YEAR}.${MONTH}.${DAY}.${MAJOR}.${MINOR}.${PATCH}"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "is_prerelease=${IS_PRERELEASE}" >> "$GITHUB_OUTPUT"
           echo "Generated version: ${VERSION}"
-          echo "Is prerelease: ${IS_PRERELEASE}"
       
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -615,20 +561,6 @@ jobs:
       - name: Calculate version
         id: version
         run: |
-          # Determine if this is a pre-release build
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            # PR merge - mark as pre-release with -dev suffix
-            IS_PRERELEASE=true
-            VERSION_SUFFIX="-dev"
-          else
-            # Manual trigger
-            IS_PRERELEASE="${{ github.event.inputs.is_prerelease }}"
-            if [ "$IS_PRERELEASE" == "true" ]; then
-              VERSION_SUFFIX="-dev"
-            else
-              VERSION_SUFFIX=""
-            fi
-          fi
           
           # Get current date components
           YEAR=$(date +%Y)
@@ -705,11 +637,9 @@ jobs:
             esac
           fi
           
-          VERSION="${YEAR}.${MONTH}.${DAY}.${MAJOR}.${MINOR}.${PATCH}${VERSION_SUFFIX}"
+          VERSION="${YEAR}.${MONTH}.${DAY}.${MAJOR}.${MINOR}.${PATCH}"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "is_prerelease=${IS_PRERELEASE}" >> "$GITHUB_OUTPUT"
           echo "Generated version: ${VERSION}"
-          echo "Is prerelease: ${IS_PRERELEASE}"
       
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -723,7 +653,6 @@ jobs:
           ls -lah release/
       
       - name: Update version in files (for release job)
-        if: steps.version.outputs.is_prerelease == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           
@@ -736,7 +665,6 @@ jobs:
           echo "Updated version to ${VERSION}"
       
       - name: Update CHANGELOG.md
-        if: steps.version.outputs.is_prerelease == 'false'
         run: |
           export VERSION="${{ steps.version.outputs.version }}"
           RELEASE_DATE=$(date +%Y-%m-%d)
@@ -865,7 +793,6 @@ jobs:
           echo "Generated changelog for version ${{ steps.version.outputs.version }}"
       
       - name: Commit version updates
-        if: steps.version.outputs.is_prerelease == 'false'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -888,7 +815,6 @@ jobs:
           name: ${{ steps.version.outputs.version }}
           body_path: release_changelog.md
           draft: false
-          prerelease: ${{ steps.version.outputs.is_prerelease }}
           files: |
             release/*
         env:
