@@ -22,6 +22,12 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Success notifications with party emoji 🎉
   - Failure notifications with clear status indication
 
+### Fixed
+- **Build and Release Workflow**: Fixed "Calculate Version" step failures in all build jobs
+  - Removed empty lines after `run: |` in Linux build and release jobs
+  - Fixed formatting in Windows build job
+  - Ensures proper YAML and bash script execution
+
 ### Removed
 - **Threaded Responses**: Completely removed all threading functionality for conventional message handling
   - All bot responses now sent as regular messages instead of thread replies

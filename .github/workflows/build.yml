@@ -75,8 +75,6 @@ jobs:
         id: version
         shell: bash
         run: |
-        
-          
           # Get current date components
           YEAR=$(date +%Y)
           MONTH=$(date +%m)
@@ -338,7 +336,8 @@ jobs:
           
           VERSION="${YEAR}.${MONTH}.${DAY}.${MAJOR}.${MINOR}.${PATCH}"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "Generated version: ${VERSION}"      
+          echo "Generated version: ${VERSION}"
+      
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -561,7 +560,6 @@ jobs:
       - name: Calculate version
         id: version
         run: |
-          
           # Get current date components
           YEAR=$(date +%Y)
           MONTH=$(date +%m)
