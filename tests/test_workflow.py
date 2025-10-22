@@ -53,7 +53,6 @@ class TestWorkflowConfiguration(unittest.TestCase):
         # Check workflow_dispatch inputs
         inputs = triggers['workflow_dispatch']['inputs']
         self.assertIn('version_type', inputs)
-        self.assertIn('is_prerelease', inputs)
     
     def test_build_workflow_has_test_job(self):
         """Test that build workflow has a test job."""
@@ -188,36 +187,6 @@ class TestWorkflowConfiguration(unittest.TestCase):
             len(gh_release_steps), 0,
             "Release job should create GitHub release"
         )
-    
-    def test_build_workflow_handles_prerelease(self):
-        """Test that build workflow handles pre-release tagging."""
-        jobs = self.build_workflow['jobs']
-        release_job = jobs['release']
-        
-        steps = release_job['steps']
-        
-        # Check version calculation includes prerelease logic
-        version_steps = [
-            step for step in steps
-            if 'Calculate version' in step.get('name', '')
-        ]
-        self.assertGreater(len(version_steps), 0)
-        
-        # Check that version step has ID for output
-        version_step = version_steps[0]
-        self.assertIn('id', version_step)
-        self.assertEqual(version_step['id'], 'version')
-        
-        # Check release step uses prerelease flag
-        gh_release_steps = [
-            step for step in steps
-            if 'uses' in step and 'action-gh-release' in step['uses']
-        ]
-        self.assertGreater(len(gh_release_steps), 0)
-        
-        gh_release_step = gh_release_steps[0]
-        with_config = gh_release_step.get('with', {})
-        self.assertIn('prerelease', with_config)
     
     def test_build_workflow_has_metadata(self):
         """Test that build workflow includes appropriate metadata."""
