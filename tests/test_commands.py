@@ -581,15 +581,15 @@ class TestCommandHandler(unittest.TestCase):
 
     def test_get_display_name(self):
         """Test getting display name from user ID."""
-        # Test with standard Matrix user ID
+        # Test with standard Matrix user ID - now keeps @ symbol
         result = self.handler._get_display_name('@john:example.com')
-        self.assertEqual(result, 'john')
+        self.assertEqual(result, '@john')
         
-        # Test with user ID containing @ symbol
+        # Test with user ID containing @ symbol in username
         result = self.handler._get_display_name('@user@domain.com:server.com')
-        self.assertEqual(result, 'user@domain.com')
+        self.assertEqual(result, '@user@domain.com')
         
-        # Test with invalid user ID
+        # Test with invalid user ID (no @ prefix)
         result = self.handler._get_display_name('invalid')
         self.assertEqual(result, 'invalid')
     

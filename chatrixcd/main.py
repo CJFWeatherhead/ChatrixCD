@@ -183,6 +183,13 @@ def parse_args():
         help='Skip greeting messages on startup/shutdown (useful for testing)'
     )
     
+    parser.add_argument(
+        '-I', '--init',
+        action='store_true',
+        dest='init_config',
+        help='Initialize or re-initialize configuration file interactively'
+    )
+    
     return parser.parse_args()
 
 
@@ -286,6 +293,63 @@ def main():
     """Main entry point."""
     # Parse command-line arguments
     args = parse_args()
+    
+    # Handle --init flag first (before loading config)
+    if args.init_config:
+        from chatrixcd.config_wizard import run_console_config_wizard, save_config
+        
+        print("\n" + "=" * 70)
+        print("ChatrixCD Configuration Initialization")
+        print("=" * 70)
+        
+        # Try to load existing config if it exists
+        existing_config = None
+        if os.path.exists(args.config):
+            try:
+                config_temp = Config(config_file=args.config)
+                existing_config = config_temp.config
+                print(f"\nFound existing configuration: {args.config}")
+                print("Existing values will be used as defaults.\n")
+            except Exception as e:
+                print(f"\nWarning: Could not load existing config: {e}")
+                print("Starting with default values.\n")
+        else:
+            print(f"\nNo existing configuration found at: {args.config}")
+            print("Creating new configuration.\n")
+        
+        # Run the wizard
+        new_config = run_console_config_wizard(existing_config)
+        
+        # Save the config
+        if save_config(new_config, args.config):
+            print("\n" + "=" * 70)
+            print("Configuration complete!")
+            print("=" * 70)
+            print(f"\nYou can now start ChatrixCD with: chatrixcd -c {args.config}")
+            sys.exit(0)
+        else:
+            sys.exit(1)
+    
+    # Check if config file exists; if not, offer to create it
+    if not os.path.exists(args.config):
+        print(f"\nConfiguration file not found: {args.config}")
+        print("\nWould you like to create it now?")
+        print(f"  1. Yes, run configuration wizard")
+        print(f"  2. No, use default values for this session")
+        
+        try:
+            choice = input("\nEnter choice [1-2]: ").strip()
+            if choice == '1':
+                from chatrixcd.config_wizard import run_console_config_wizard, save_config
+                
+                new_config = run_console_config_wizard(None)
+                if save_config(new_config, args.config):
+                    print("\nConfiguration saved! Starting ChatrixCD...\n")
+                else:
+                    print("\nFailed to save configuration. Exiting.")
+                    sys.exit(1)
+        except (EOFError, KeyboardInterrupt):
+            print("\n\nUsing default values for this session.")
     
     # Load configuration first to get log file path
     config = Config(config_file=args.config)
