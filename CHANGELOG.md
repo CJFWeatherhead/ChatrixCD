@@ -23,10 +23,12 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Failure notifications with clear status indication
 
 ### Fixed
-- **Build and Release Workflow**: Fixed "Calculate Version" step failures in all build jobs
-  - Removed empty lines after `run: |` in Linux build and release jobs
-  - Fixed formatting in Windows build job
-  - Ensures proper YAML and bash script execution
+- **Build and Release Workflow**: Comprehensive fixes for build process failures
+  - Fixed invalid `grep -v '\-dev$'` pattern causing "invalid argument" errors (changed to `grep -v -- '-dev$'`)
+  - Added missing `git fetch --tags --force` step to Windows and macOS build jobs for complete tag history
+  - Removed Windows ARM64 build from matrix (not feasible on GitHub Actions x86_64 runners)
+  - All version calculation scripts now work correctly across all build jobs
+  - Ensures consistent version calculation and proper tag handling
 
 ### Removed
 - **Threaded Responses**: Completely removed all threading functionality for conventional message handling
