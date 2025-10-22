@@ -16,4 +16,7 @@ textual>=0.47.0
 # QR code generation for device verification
 qrcode>=7.4.2
 
+# YAML parsing for tests
+PyYAML>=6.0
+
 
