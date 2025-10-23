@@ -71,18 +71,11 @@ jobs:
           fetch-depth: 0
       - name: Fetch all tags
         run: git fetch --tags --force
+      
       - name: Calculate version
         id: version
         shell: bash
         run: |
-          # Get current date components
-          YEAR=$(date +%Y)
-          MONTH=$(date +%m)
-          DAY=$(date +%d)
-          
-          # Get latest tag matching new version pattern (YYYY.MM.DD.MAJOR.MINOR.PATCH)
-          LATEST_TAG=$(git tag -l "${YEAR}.${MONTH}.${DAY}.*.*.*" | grep -v -- '-dev$' | sort -V | tail -n 1)
-          
           # Determine version type (default to patch for PR merges)
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             VERSION_TYPE="patch"
@@ -90,67 +83,8 @@ jobs:
             VERSION_TYPE="${{ github.event.inputs.version_type }}"
           fi
           
-          if [ -z "$LATEST_TAG" ]; then
-            # No tag for today yet - check for any tags with YYYY.MM.DD pattern
-            LATEST_TAG=$(git tag -l | grep -E '^[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.[0-9]+\.[0-9]+\.[0-9]+$' | grep -v -- '-dev$' | sort -V | tail -n 1)
-            
-            if [ -z "$LATEST_TAG" ]; then
-              # No tags at all with new format, start fresh
-              MAJOR=0
-              MINOR=0
-              PATCH=1
-            else
-              # Extract components from latest tag
-              PREV_MAJOR=$(echo "$LATEST_TAG" | cut -d. -f4)
-              PREV_MINOR=$(echo "$LATEST_TAG" | cut -d. -f5)
-              PREV_PATCH=$(echo "$LATEST_TAG" | cut -d. -f6)
-              
-              # Increment based on version type
-              case "$VERSION_TYPE" in
-                major)
-                  MAJOR=$((PREV_MAJOR + 1))
-                  MINOR=0
-                  PATCH=0
-                  ;;
-                minor)
-                  MAJOR="$PREV_MAJOR"
-                  MINOR=$((PREV_MINOR + 1))
-                  PATCH=0
-                  ;;
-                patch)
-                  MAJOR="$PREV_MAJOR"
-                  MINOR="$PREV_MINOR"
-                  PATCH=$((PREV_PATCH + 1))
-                  ;;
-              esac
-            fi
-          else
-            # Extract current version components
-            CURRENT_MAJOR=$(echo "$LATEST_TAG" | cut -d. -f4)
-            CURRENT_MINOR=$(echo "$LATEST_TAG" | cut -d. -f5)
-            CURRENT_PATCH=$(echo "$LATEST_TAG" | cut -d. -f6)
-            
-            # Increment based on version type
-            case "$VERSION_TYPE" in
-              major)
-                MAJOR=$((CURRENT_MAJOR + 1))
-                MINOR=0
-                PATCH=0
-                ;;
-              minor)
-                MAJOR="$CURRENT_MAJOR"
-                MINOR=$((CURRENT_MINOR + 1))
-                PATCH=0
-                ;;
-              patch)
-                MAJOR="$CURRENT_MAJOR"
-                MINOR="$CURRENT_MINOR"
-                PATCH=$((CURRENT_PATCH + 1))
-                ;;
-            esac
-          fi
-          
-          VERSION="${YEAR}.${MONTH}.${DAY}.${MAJOR}.${MINOR}.${PATCH}"
+          # Call centralized version calculation script
+          VERSION=$(.github/scripts/calculate-version.sh "${VERSION_TYPE}")
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Generated version: ${VERSION}"
 
@@ -262,14 +196,6 @@ jobs:
         id: version
         shell: bash
         run: |
-          # Get current date components
-          YEAR=$(date +%Y)
-          MONTH=$(date +%m)
-          DAY=$(date +%d)
-          
-          # Get latest tag matching new version pattern (YYYY.MM.DD.MAJOR.MINOR.PATCH)
-          LATEST_TAG=$(git tag -l "${YEAR}.${MONTH}.${DAY}.*.*.*" | grep -v -- '-dev$' | sort -V | tail -n 1)
-          
           # Determine version type (default to patch for PR merges)
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             VERSION_TYPE="patch"
@@ -277,70 +203,10 @@ jobs:
             VERSION_TYPE="${{ github.event.inputs.version_type }}"
           fi
           
-          if [ -z "$LATEST_TAG" ]; then
-            # No tag for today yet - check for any tags with YYYY.MM.DD pattern
-            LATEST_TAG=$(git tag -l | grep -E '^[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.[0-9]+\.[0-9]+\.[0-9]+$' | grep -v -- '-dev$' | sort -V | tail -n 1)
-            
-            if [ -z "$LATEST_TAG" ]; then
-              # No tags at all with new format, start fresh
-              MAJOR=0
-              MINOR=0
-              PATCH=1
-            else
-              # Extract components from latest tag
-              PREV_MAJOR=$(echo "$LATEST_TAG" | cut -d. -f4)
-              PREV_MINOR=$(echo "$LATEST_TAG" | cut -d. -f5)
-              PREV_PATCH=$(echo "$LATEST_TAG" | cut -d. -f6)
-              
-              # Increment based on version type
-              case "$VERSION_TYPE" in
-                major)
-                  MAJOR=$((PREV_MAJOR + 1))
-                  MINOR=0
-                  PATCH=0
-                  ;;
-                minor)
-                  MAJOR="$PREV_MAJOR"
-                  MINOR=$((PREV_MINOR + 1))
-                  PATCH=0
-                  ;;
-                patch)
-                  MAJOR="$PREV_MAJOR"
-                  MINOR="$PREV_MINOR"
-                  PATCH=$((PREV_PATCH + 1))
-                  ;;
-              esac
-            fi
-          else
-            # Extract current version components
-            CURRENT_MAJOR=$(echo "$LATEST_TAG" | cut -d. -f4)
-            CURRENT_MINOR=$(echo "$LATEST_TAG" | cut -d. -f5)
-            CURRENT_PATCH=$(echo "$LATEST_TAG" | cut -d. -f6)
-            
-            # Increment based on version type
-            case "$VERSION_TYPE" in
-              major)
-                MAJOR=$((CURRENT_MAJOR + 1))
-                MINOR=0
-                PATCH=0
-                ;;
-              minor)
-                MAJOR="$CURRENT_MAJOR"
-                MINOR=$((CURRENT_MINOR + 1))
-                PATCH=0
-                ;;
-              patch)
-                MAJOR="$CURRENT_MAJOR"
-                MINOR="$CURRENT_MINOR"
-                PATCH=$((CURRENT_PATCH + 1))
-                ;;
-            esac
-          fi
-          
-          VERSION="${YEAR}.${MONTH}.${DAY}.${MAJOR}.${MINOR}.${PATCH}"
+          # Call centralized version calculation script
+          VERSION=$(.github/scripts/calculate-version.sh "${VERSION_TYPE}")
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Generated version: ${VERSION}"
-      
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -418,14 +284,6 @@ jobs:
         id: version
         shell: bash
         run: |
-          # Get current date components
-          YEAR=$(date +%Y)
-          MONTH=$(date +%m)
-          DAY=$(date +%d)
-          
-          # Get latest tag matching new version pattern (YYYY.MM.DD.MAJOR.MINOR.PATCH)
-          LATEST_TAG=$(git tag -l "${YEAR}.${MONTH}.${DAY}.*.*.*" | grep -v -- '-dev$' | sort -V | tail -n 1)
-          
           # Determine version type (default to patch for PR merges)
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             VERSION_TYPE="patch"
@@ -433,70 +291,10 @@ jobs:
             VERSION_TYPE="${{ github.event.inputs.version_type }}"
           fi
           
-          if [ -z "$LATEST_TAG" ]; then
-            # No tag for today yet - check for any tags with YYYY.MM.DD pattern
-            LATEST_TAG=$(git tag -l | grep -E '^[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.[0-9]+\.[0-9]+\.[0-9]+$' | grep -v -- '-dev$' | sort -V | tail -n 1)
-            
-            if [ -z "$LATEST_TAG" ]; then
-              # No tags at all with new format, start fresh
-              MAJOR=0
-              MINOR=0
-              PATCH=1
-            else
-              # Extract components from latest tag
-              PREV_MAJOR=$(echo "$LATEST_TAG" | cut -d. -f4)
-              PREV_MINOR=$(echo "$LATEST_TAG" | cut -d. -f5)
-              PREV_PATCH=$(echo "$LATEST_TAG" | cut -d. -f6)
-              
-              # Increment based on version type
-              case "$VERSION_TYPE" in
-                major)
-                  MAJOR=$((PREV_MAJOR + 1))
-                  MINOR=0
-                  PATCH=0
-                  ;;
-                minor)
-                  MAJOR="$PREV_MAJOR"
-                  MINOR=$((PREV_MINOR + 1))
-                  PATCH=0
-                  ;;
-                patch)
-                  MAJOR="$PREV_MAJOR"
-                  MINOR="$PREV_MINOR"
-                  PATCH=$((PREV_PATCH + 1))
-                  ;;
-              esac
-            fi
-          else
-            # Extract current version components
-            CURRENT_MAJOR=$(echo "$LATEST_TAG" | cut -d. -f4)
-            CURRENT_MINOR=$(echo "$LATEST_TAG" | cut -d. -f5)
-            CURRENT_PATCH=$(echo "$LATEST_TAG" | cut -d. -f6)
-            
-            # Increment based on version type
-            case "$VERSION_TYPE" in
-              major)
-                MAJOR=$((CURRENT_MAJOR + 1))
-                MINOR=0
-                PATCH=0
-                ;;
-              minor)
-                MAJOR="$CURRENT_MAJOR"
-                MINOR=$((CURRENT_MINOR + 1))
-                PATCH=0
-                ;;
-              patch)
-                MAJOR="$CURRENT_MAJOR"
-                MINOR="$CURRENT_MINOR"
-                PATCH=$((CURRENT_PATCH + 1))
-                ;;
-            esac
-          fi
-          
-          VERSION="${YEAR}.${MONTH}.${DAY}.${MAJOR}.${MINOR}.${PATCH}"
+          # Call centralized version calculation script
+          VERSION=$(.github/scripts/calculate-version.sh "${VERSION_TYPE}")
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Generated version: ${VERSION}"
-      
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -568,15 +366,8 @@ jobs:
       
       - name: Calculate version
         id: version
+        shell: bash
         run: |
-          # Get current date components
-          YEAR=$(date +%Y)
-          MONTH=$(date +%m)
-          DAY=$(date +%d)
-          
-          # Get latest tag matching new version pattern (YYYY.MM.DD.MAJOR.MINOR.PATCH)
-          LATEST_TAG=$(git tag -l "${YEAR}.${MONTH}.${DAY}.*.*.*" | grep -v -- '-dev$' | sort -V | tail -n 1)
-          
           # Determine version type (default to patch for PR merges)
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             VERSION_TYPE="patch"
@@ -584,70 +375,10 @@ jobs:
             VERSION_TYPE="${{ github.event.inputs.version_type }}"
           fi
           
-          if [ -z "$LATEST_TAG" ]; then
-            # No tag for today yet - check for any tags with YYYY.MM.DD pattern
-            LATEST_TAG=$(git tag -l | grep -E '^[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.[0-9]+\.[0-9]+\.[0-9]+$' | grep -v -- '-dev$' | sort -V | tail -n 1)
-            
-            if [ -z "$LATEST_TAG" ]; then
-              # No tags at all with new format, start fresh
-              MAJOR=0
-              MINOR=0
-              PATCH=1
-            else
-              # Extract components from latest tag
-              PREV_MAJOR=$(echo "$LATEST_TAG" | cut -d. -f4)
-              PREV_MINOR=$(echo "$LATEST_TAG" | cut -d. -f5)
-              PREV_PATCH=$(echo "$LATEST_TAG" | cut -d. -f6)
-              
-              # Increment based on version type
-              case "$VERSION_TYPE" in
-                major)
-                  MAJOR=$((PREV_MAJOR + 1))
-                  MINOR=0
-                  PATCH=0
-                  ;;
-                minor)
-                  MAJOR="$PREV_MAJOR"
-                  MINOR=$((PREV_MINOR + 1))
-                  PATCH=0
-                  ;;
-                patch)
-                  MAJOR="$PREV_MAJOR"
-                  MINOR="$PREV_MINOR"
-                  PATCH=$((PREV_PATCH + 1))
-                  ;;
-              esac
-            fi
-          else
-            # Extract current version components
-            CURRENT_MAJOR=$(echo "$LATEST_TAG" | cut -d. -f4)
-            CURRENT_MINOR=$(echo "$LATEST_TAG" | cut -d. -f5)
-            CURRENT_PATCH=$(echo "$LATEST_TAG" | cut -d. -f6)
-            
-            # Increment based on version type
-            case "$VERSION_TYPE" in
-              major)
-                MAJOR=$((CURRENT_MAJOR + 1))
-                MINOR=0
-                PATCH=0
-                ;;
-              minor)
-                MAJOR="$CURRENT_MAJOR"
-                MINOR=$((CURRENT_MINOR + 1))
-                PATCH=0
-                ;;
-              patch)
-                MAJOR="$CURRENT_MAJOR"
-                MINOR="$CURRENT_MINOR"
-                PATCH=$((CURRENT_PATCH + 1))
-                ;;
-            esac
-          fi
-          
-          VERSION="${YEAR}.${MONTH}.${DAY}.${MAJOR}.${MINOR}.${PATCH}"
+          # Call centralized version calculation script
+          VERSION=$(.github/scripts/calculate-version.sh "${VERSION_TYPE}")
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Generated version: ${VERSION}"
-      
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:

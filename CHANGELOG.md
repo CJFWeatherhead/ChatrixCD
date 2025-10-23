@@ -37,6 +37,13 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ### Changed
 - **Configuration Migration**: Migration system now suggests running `--init` after automatic migration to review new settings
 - **Username Display**: User display names now keep the `@` symbol for proper Matrix user identification
+- **Version Calculation System**: Complete refactoring for simplicity and robustness
+  - Created centralized version calculation script (`.github/scripts/calculate-version.sh`)
+  - Eliminated 269 lines of duplicate code across build jobs (32.5% reduction in workflow file size)
+  - Single source of truth for version logic - easier to maintain and debug
+  - Simplified workflow from 4 duplicate implementations to 4 calls to one script
+  - Automatic fallback to patch increment for empty/unknown version types
+  - Consistent behavior across all build platforms (Linux, Windows, macOS)
 
 ### Fixed
 - **TUI CSS Error**: Fixed `$foreground` variable undefined error in Textual 6.x
