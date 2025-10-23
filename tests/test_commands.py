@@ -581,15 +581,15 @@ class TestCommandHandler(unittest.TestCase):
 
     def test_get_display_name(self):
         """Test getting display name from user ID."""
-        # Test with standard Matrix user ID
+        # Test with standard Matrix user ID - now keeps @ symbol
         result = self.handler._get_display_name('@john:example.com')
-        self.assertEqual(result, 'john')
+        self.assertEqual(result, '@john')
         
-        # Test with user ID containing @ symbol
+        # Test with user ID containing @ symbol in username
         result = self.handler._get_display_name('@user@domain.com:server.com')
-        self.assertEqual(result, 'user@domain.com')
+        self.assertEqual(result, '@user@domain.com')
         
-        # Test with invalid user ID
+        # Test with invalid user ID (no @ prefix)
         result = self.handler._get_display_name('invalid')
         self.assertEqual(result, 'invalid')
     
@@ -650,7 +650,7 @@ class TestCommandHandler(unittest.TestCase):
         
         # Should include user name and be positive
         self.assertIn('user', message)
-        self.assertTrue(any(emoji in message for emoji in ['🥰', '😊', '💙', '🤗', '😄', '🌟', '🐕', '💻', '😳', '☺️']))
+        self.assertTrue(any(emoji in message for emoji in ['🥰', '😊', '💙', '🤗', '😄', '🌟', '🐕', '💻', '😳', '☺️', '💕', '💖']))
 
     def test_handle_scold_command(self):
         """Test the secret scold command."""
@@ -749,10 +749,10 @@ class TestCommandHandler(unittest.TestCase):
         # Should send cancellation message
         self.mock_bot.send_message.assert_called_once()
         call_args = self.mock_bot.send_message.call_args[0]
-        # Check for any cancellation-related words
+        # Check for any cancellation-related words or new variations
         message_lower = call_args[1].lower()
         self.assertTrue(
-            any(word in message_lower for word in ['cancel', 'stop', 'alright', '❌', '🛑', '✋']),
+            any(word in message_lower for word in ['cancel', 'stop', 'alright', 'nevermind', 'changed', '❌', '🛑', '✋', '🙅', '🤷']),
             f"Expected cancellation message but got: {call_args[1]}"
         )
 

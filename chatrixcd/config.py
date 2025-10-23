@@ -131,9 +131,11 @@ class Config:
             config_version = file_config.get('_config_version', 1)
             
             if config_version < CURRENT_CONFIG_VERSION:
-                logger.info(f"Migrating configuration from v{config_version} to v{CURRENT_CONFIG_VERSION}")
+                logger.info(f"Configuration version {config_version} detected, current version is {CURRENT_CONFIG_VERSION}")
+                logger.info("Automatically migrating configuration to new version...")
                 file_config = ConfigMigrator.migrate(file_config, config_version)
                 self._save_migrated_config(file_config)
+                logger.info(f"Configuration migrated and saved. You may want to run 'chatrixcd --init' to review new settings.")
             elif config_version > CURRENT_CONFIG_VERSION:
                 logger.warning(
                     f"Configuration version {config_version} is newer than supported v{CURRENT_CONFIG_VERSION}. "

@@ -13,22 +13,26 @@ logger = logging.getLogger(__name__)
 
 # Greeting variations with emojis for personalized responses
 GREETINGS = [
-    "👋",  # Wave
-    "Hi {name}! 👋"
-    "Hello {name}! 😊"
-    "Hey {name}! 🙌"
-    "Yo {name}! 🤙"
-    "Sup {name}! 😎"
-    "Howdy {name}! 🤠"
-    "Hiya {name}! 👋"
-    "Heya {name}! ✨"
-    "G'day {name}! 🦘"
-    "Greetings {name}! 🖖"
-    "Welcome {name}! 🎉"
-    "Ahoy {name}! ⚓"
-    "Salutations {name}! 🎩"
-    "Hey there {name}! 👋"
-    "What's up {name}! 🌟"
+    "{name} 👋",  # Wave with name first (sassier!)
+    "Hi {name}! 👋",
+    "Hello {name}! 😊",
+    "Hey {name}! 🙌",
+    "Yo {name}! 🤙",
+    "Sup {name}! 😎",
+    "Howdy {name}! 🤠",
+    "Hiya {name}! 👋",
+    "Heya {name}! ✨",
+    "G'day {name}! 🦘",
+    "Greetings {name}! 🖖",
+    "Welcome back {name}! 🎉",
+    "Ahoy {name}! ⚓",
+    "Salutations {name}! 🎩",
+    "Hey there {name}! 👋",
+    "What's up {name}! 🌟",
+    "Look who it is! {name}! 💫",
+    "{name}! Good to see you! 😄",
+    "Oh hey {name}! 🌈",
+    "{name} is in the house! 🏠",
 ]
 
 
@@ -138,11 +142,12 @@ class CommandHandler:
             user_id: User ID to get display name for
             
         Returns:
-            Display name or username extracted from user ID
+            Display name with @ prefix (for greetings) or full user ID
         """
+        # Return username with @ prefix for consistency
         # Extract username from Matrix user ID (@username:server.com)
         if user_id.startswith('@'):
-            username = user_id[1:].split(':')[0]
+            username = user_id.split(':')[0]  # Includes the @ symbol
             return username
         return user_id
     
@@ -201,9 +206,11 @@ class CommandHandler:
         positive_reactions = ['👍', '✅', '✓', '☑', '🆗', 'yes', 'y']
         negative_reactions = ['👎', '❌', '✖', '⛔', '🚫', 'no', 'n']
         
-        reaction_lower = reaction_key.lower()
+        # Strip variation selectors and zero-width characters that might be in emoji
+        reaction_clean = ''.join(c for c in reaction_key if ord(c) < 0xFE00 or ord(c) > 0xFE0F)
+        reaction_lower = reaction_clean.lower()
         
-        if reaction_key in positive_reactions or reaction_lower in positive_reactions:
+        if reaction_clean in positive_reactions or reaction_lower in positive_reactions:
             # Positive confirmation
             del self.pending_confirmations[confirmation_key]
             del self.confirmation_message_ids[confirmation_key]
@@ -215,16 +222,18 @@ class CommandHandler:
                 # Task execution
                 await self._execute_task(room.room_id, confirmation)
                 
-        elif reaction_key in negative_reactions or reaction_lower in negative_reactions:
+        elif reaction_clean in negative_reactions or reaction_lower in negative_reactions:
             # Negative confirmation
             del self.pending_confirmations[confirmation_key]
             del self.confirmation_message_ids[confirmation_key]
             
             cancel_responses = [
-                "Task execution cancelled. No problem! ❌"
-                "Cancelled! Maybe another time. 👋"
-                "Alright, stopping that. ✋"
-                "Task cancelled. All good! 🛑"
+                "Task execution cancelled. No problem! ❌ We cool!",
+                "Cancelled! Maybe another time. 👋 I'll be here!",
+                "Alright, stopping that. ✋ Your call, boss!",
+                "Task cancelled. All good! 🛑 Easy come, easy go!",
+                "Cancelled! 🙅 No hard feelings!",
+                "Okay, nevermind then! 🤷 Changed your mind? I get it!",
             ]
             await self.bot.send_message(
                 room.room_id,
@@ -262,12 +271,14 @@ class CommandHandler:
         if not self.is_admin(event.sender):
             # Send fun brush-off message
             brush_off_messages = [
-                "I can't talk to you 🫢"
-                "You're not my boss 🫠"
-                "Who's the new guy? 😅"
-                "Sorry, admin access only! 🔐"
-                "Nice try, but you need to be an admin 😎"
-                "Admins only, friend! 🚫"
+                "I can't talk to you 🫢 (Admin vibes only!)",
+                "You're not my boss 🫠 ...unless you're an admin?",
+                "Who's the new guy? 😅 Admins only in this club!",
+                "Sorry, admin access only! 🔐 I don't make the rules... wait, yes I do!",
+                "Nice try, but you need to be an admin 😎 Come back with credentials!",
+                "Admins only, friend! 🚫 This bot's got standards!",
+                "Ooh, bold move! But nope, admin access required 💅",
+                "Did you really think that would work? 🤭 Admin. Access. Only.",
             ]
             response = random.choice(brush_off_messages)
             logger.info(f"Non-admin user {event.sender} attempted command, sending: {response}")
@@ -755,12 +766,14 @@ class CommandHandler:
             # Send timeout message with fun response
             if room_id:
                 timeout_responses = [
-                    "I'll just go back to what I was doing then? 🙄"
-                    "I wasn't busy anyway... 🚶"
-                    "Be more decisive next time, eh? 😏"
-                    "Guess you changed your mind. No worries! 🤷"
-                    "Timeout! Maybe next time? ⏰"
-                    "Taking too long to decide... request expired. 💤"
+                    "I'll just go back to what I was doing then? 🙄 Not like I was waiting or anything...",
+                    "I wasn't busy anyway... 🚶 *totally was busy*",
+                    "Be more decisive next time, eh? 😏 Time's precious, friend!",
+                    "Guess you changed your mind. No worries! 🤷 I'll be here... waiting... forever...",
+                    "Timeout! Maybe next time? ⏰ I've got tasks to run, people!",
+                    "Taking too long to decide... request expired. 💤 Wake me when you're ready!",
+                    "Hello? Anyone there? 📢 Request has left the building!",
+                    "Annnnnd... we're done here. ⌛ Better luck next time!",
                 ]
                 await self.bot.send_message(room_id, random.choice(timeout_responses))
 
@@ -801,12 +814,14 @@ class CommandHandler:
         sender = confirmation['sender']
         
         start_responses = [
-            f"On it! Starting **{template_name}**... 🚀"
-            f"Here we go! Running **{template_name}**... 🏃"
-            f"Roger that! Executing **{template_name}**... 🫡"
-            f"Yes boss! Starting **{template_name}**... 💪"
-            f"Doing it now! **{template_name}** is launching... 🎯"
-            f"Let's go! **{template_name}** starting up... ⚡"
+            f"On it! Starting **{template_name}**... 🚀 Let's make some magic happen!",
+            f"Here we go! Running **{template_name}**... 🏃 Hold onto your keyboards!",
+            f"Roger that! Executing **{template_name}**... 🫡 This is gonna be good!",
+            f"Yes boss! Starting **{template_name}**... 💪 Watch me work!",
+            f"Doing it now! **{template_name}** is launching... 🎯 No pressure or anything!",
+            f"Let's go! **{template_name}** starting up... ⚡ Time to show off!",
+            f"Alright alright! **{template_name}** is running! 🎬 Action!",
+            f"You got it! **{template_name}** initiated! ✨ Prepare to be amazed!",
         ]
         start_message = random.choice(start_responses)
         html_start_message = self.markdown_to_html(start_message)
@@ -875,10 +890,12 @@ class CommandHandler:
         
         if is_cancelled:
             cancel_responses = [
-                "Task execution cancelled. No problem! ❌"
-                "Cancelled! Maybe another time. 👋"
-                "Alright, stopping that. ✋"
-                "Task cancelled. All good! 🛑"
+                "Task execution cancelled. No problem! ❌ We cool!",
+                "Cancelled! Maybe another time. 👋 I'll be here!",
+                "Alright, stopping that. ✋ Your call, boss!",
+                "Task cancelled. All good! 🛑 Easy come, easy go!",
+                "Cancelled! 🙅 No hard feelings!",
+                "Okay, nevermind then! 🤷 Changed your mind? I get it!",
             ]
             await self.bot.send_message(
                 room_id,
@@ -1473,10 +1490,12 @@ class CommandHandler:
         
         if success:
             ping_responses = [
-                f"{user_name} 👋 - 🏓 Semaphore server is alive and kicking! ✅"
-                f"{user_name} 👋 - 🏓 Pong! Server is up! ✅"
-                f"{user_name} 👋 - 🏓 All good on the Semaphore front! ✅"
-                f"{user_name} 👋 - 🏓 Yep, it's reachable! ✅"
+                f"{user_name} 👋 - 🏓 Semaphore server is alive and kicking! ✅ Party time!",
+                f"{user_name} 👋 - 🏓 Pong! Server is up! ✅ We're in business!",
+                f"{user_name} 👋 - 🏓 All good on the Semaphore front! ✅ Ready to roll!",
+                f"{user_name} 👋 - 🏓 Yep, it's reachable! ✅ You know it!",
+                f"{user_name} 👋 - 🏓 Server says hi back! ✅ Looking good!",
+                f"{user_name} 👋 - 🏓 Connection solid! ✅ We're cooking!",
             ]
             await self.bot.send_message(
                 room_id,
@@ -1581,16 +1600,16 @@ class CommandHandler:
         """
         user_name = self._get_display_name(sender)
         pet_responses = [
-            f"Aww, thanks {user_name}! 🥰 *happy bot noises*"
-            f"{user_name}, you're the best! 😊 *purrs digitally*"
-            f"I'm just doing my job, but I appreciate you {user_name}! 💙✨"
-            f"{user_name} 🤗 That made my day! *beep boop happily*"
-            f"You're too kind, {user_name}! 😄 Ready for more tasks!"
-            f"{user_name}, you always know how to make a bot feel appreciated! 🌟"
-            f"*wags virtual tail* Thanks {user_name}! 🐕💻"
-            f"Processing... 100% happiness detected! Thanks {user_name}! 😊💕"
-            f"{user_name}, feeling the love! 💖 *circuits glowing*"
-            f"Aww shucks, {user_name}! 😳 You're making me blush (if bots could blush)! ☺️"
+            f"Aww, thanks {user_name}! 🥰 *happy bot noises*",
+            f"{user_name}, you're the best! 😊 *purrs digitally*",
+            f"I'm just doing my job, but I appreciate you {user_name}! 💙✨",
+            f"{user_name} 🤗 That made my day! *beep boop happily*",
+            f"You're too kind, {user_name}! 😄 Ready for more tasks!",
+            f"{user_name}, you always know how to make a bot feel appreciated! 🌟",
+            f"*wags virtual tail* Thanks {user_name}! 🐕💻",
+            f"Processing... 100% happiness detected! Thanks {user_name}! 😊💕",
+            f"{user_name}, feeling the love! 💖 *circuits glowing*",
+            f"Aww shucks, {user_name}! 😳 You're making me blush (if bots could blush)! ☺️",
         ]
         await self.bot.send_message(
             room_id,
@@ -1607,16 +1626,16 @@ class CommandHandler:
         """
         user_name = self._get_display_name(sender)
         scold_responses = [
-            f"Oh no, {user_name}! 😢 I'll try harder, I promise!"
-            f"Sorry {user_name}... 😔 What did I do wrong?"
-            f"{user_name}, ouch! 💔 I'm learning, give me a chance!"
-            f"*sad beep* {user_name}, I'll do better next time... 😞"
-            f"{user_name}, that hurts! 😭 But I'll improve, I swear!"
-            f"Noted, {user_name}. 📝😐 I'll work on that..."
-            f"{user_name} 😟 I'm sorry! Tell me what I can do better?"
-            f"*hangs head in shame* You're right, {user_name}... 😓"
-            f"{user_name}, I'm trying my best! 🥺 Cut me some slack?"
-            f"Okay okay, {user_name}! 😅 I hear you loud and clear!"
+            f"Oh no, {user_name}! 😢 I'll try harder, I promise!",
+            f"Sorry {user_name}... 😔 What did I do wrong?",
+            f"{user_name}, ouch! 💔 I'm learning, give me a chance!",
+            f"*sad beep* {user_name}, I'll do better next time... 😞",
+            f"{user_name}, that hurts! 😭 But I'll improve, I swear!",
+            f"Noted, {user_name}. 📝😐 I'll work on that...",
+            f"{user_name} 😟 I'm sorry! Tell me what I can do better?",
+            f"*hangs head in shame* You're right, {user_name}... 😓",
+            f"{user_name}, I'm trying my best! 🥺 Cut me some slack?",
+            f"Okay okay, {user_name}! 😅 I hear you loud and clear!",
         ]
         await self.bot.send_message(
             room_id,
