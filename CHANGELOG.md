@@ -15,6 +15,14 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Fixed
+- **Build and Release Workflow**: Fixed multiple critical build failures
+  - Updated Nuitka Action to use `mode=onefile` instead of deprecated `onefile/standalone` options
+  - Added QEMU setup for ARM64 cross-compilation on Linux
+  - Installed libolm build dependency via homebrew on macOS
+  - Setup CMake and libolm build environment on Windows
+  - Fixed compatibility issues with python-olm native extension builds
+
 ### Added
 - **Configuration Wizard**: Interactive configuration setup with `--init` flag
   - Console-based wizard for creating/updating configuration
