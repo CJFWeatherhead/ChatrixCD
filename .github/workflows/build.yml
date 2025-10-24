@@ -327,7 +327,7 @@ jobs:
           brew install libolm pkg-config
       
       - name: Set PKG_CONFIG_PATH for subsequent steps
-        run: echo "PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+        run: echo "PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig:${PKG_CONFIG_PATH}" >> "$GITHUB_ENV"
       
       - name: Install dependencies
         run: |
