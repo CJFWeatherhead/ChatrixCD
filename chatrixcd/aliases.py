@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import asyncio
 from typing import Dict, Optional, List
 
 logger = logging.getLogger(__name__)
@@ -11,15 +12,24 @@ logger = logging.getLogger(__name__)
 class AliasManager:
     """Manage command aliases for the bot."""
 
-    def __init__(self, aliases_file: str = "aliases.json"):
+    def __init__(self, aliases_file: str = "aliases.json", auto_reload: bool = False):
         """Initialize alias manager.
         
         Args:
             aliases_file: Path to aliases configuration file
+            auto_reload: If True, automatically reload aliases when file changes
         """
         self.aliases_file = aliases_file
         self.aliases: Dict[str, str] = {}
+        self.auto_reload = auto_reload
+        self._last_mtime: Optional[float] = None
+        self._reload_task: Optional[asyncio.Task] = None
+        
         self.load_aliases()
+        
+        # Start auto-reload if requested
+        if auto_reload:
+            self.start_auto_reload()
 
     def load_aliases(self):
         """Load aliases from file."""
@@ -31,6 +41,10 @@ class AliasManager:
         try:
             with open(self.aliases_file, 'r') as f:
                 self.aliases = json.load(f)
+            
+            # Update last modified time
+            self._last_mtime = os.path.getmtime(self.aliases_file)
+            
             logger.info(f"Loaded {len(self.aliases)} aliases from {self.aliases_file}")
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse aliases file: {e}")
@@ -131,6 +145,58 @@ class AliasManager:
             return aliased
 
         return command
+
+    def check_for_changes(self) -> bool:
+        """Check if the aliases file has been modified.
+        
+        Returns:
+            True if file has been modified, False otherwise
+        """
+        if not os.path.exists(self.aliases_file):
+            return False
+        
+        try:
+            current_mtime = os.path.getmtime(self.aliases_file)
+            if self._last_mtime is None or current_mtime > self._last_mtime:
+                return True
+        except Exception as e:
+            logger.warning(f"Failed to check file modification time: {e}")
+        
+        return False
+    
+    def start_auto_reload(self):
+        """Start automatic reloading of aliases when file changes."""
+        try:
+            # Only start if we have a running event loop
+            loop = asyncio.get_running_loop()
+            if self._reload_task is None or self._reload_task.done():
+                self._reload_task = asyncio.create_task(self._auto_reload_loop())
+                logger.info("Started auto-reload for aliases file")
+        except RuntimeError:
+            # No event loop running, will start later when needed
+            logger.debug("No event loop available yet, auto-reload will start when bot runs")
+            pass
+    
+    def stop_auto_reload(self):
+        """Stop automatic reloading."""
+        if self._reload_task and not self._reload_task.done():
+            self._reload_task.cancel()
+            logger.info("Stopped auto-reload for aliases file")
+    
+    async def _auto_reload_loop(self):
+        """Background task that checks for file changes and reloads."""
+        try:
+            while True:
+                await asyncio.sleep(5)  # Check every 5 seconds
+                
+                if self.check_for_changes():
+                    logger.info(f"Aliases file '{self.aliases_file}' has been modified, reloading...")
+                    self.load_aliases()
+                    
+        except asyncio.CancelledError:
+            logger.debug("Auto-reload task cancelled")
+        except Exception as e:
+            logger.error(f"Error in auto-reload loop: {e}")
 
     @staticmethod
     def validate_command(command: str) -> bool:

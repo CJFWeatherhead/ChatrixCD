@@ -931,6 +931,14 @@ class ChatrixBot:
         """Run the bot."""
         logger.info("Starting ChatrixCD bot...")
         
+        # Start auto-reload for config, aliases, and messages (if not already started)
+        if hasattr(self.config, 'start_auto_reload'):
+            self.config.start_auto_reload()
+        if hasattr(self.command_handler.alias_manager, 'start_auto_reload'):
+            self.command_handler.alias_manager.start_auto_reload()
+        if hasattr(self.command_handler.message_manager, 'start_auto_reload'):
+            self.command_handler.message_manager.start_auto_reload()
+        
         # Login
         if not await self.login():
             logger.error("Failed to login, exiting")
