@@ -131,8 +131,8 @@ class TestWorkflowConfiguration(unittest.TestCase):
             for nuitka_step in nuitka_steps:
                 with_config = nuitka_step.get('with', {})
                 self.assertIn('script-name', with_config)
-                self.assertIn('onefile', with_config)
-                self.assertIn('standalone', with_config)
+                self.assertIn('mode', with_config)
+                self.assertEqual(with_config['mode'], 'onefile')
     
     def test_build_workflow_has_version_calculation(self):
         """Test that build workflow calculates versions correctly."""
