@@ -41,6 +41,18 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Personalized completion messages addressing the user by name
   - Success notifications with party emoji 🎉
   - Failure notifications with clear status indication
+- **Message Customization System**: Externalized bot response messages for easy customization
+  - New `messages.json` file for all bot responses (greetings, confirmations, timeouts, etc.)
+  - `messages.json.example` provided as template
+  - MessageManager class handles loading and formatting messages
+  - Custom messages override defaults while preserving fallback behavior
+  - Hot-reload support: changes take effect without restarting bot
+- **Asynchronous File Watching**: Config files now auto-reload when modified
+  - `config.json` auto-reloads every 10 seconds
+  - `aliases.json` auto-reloads every 5 seconds  
+  - `messages.json` auto-reloads every 5 seconds
+  - Changes take effect without bot restart
+  - Thread-safe implementation using asyncio tasks
 
 ### Changed
 - **Configuration Migration**: Migration system now suggests running `--init` after automatic migration to review new settings
@@ -52,6 +64,10 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Simplified workflow from 4 duplicate implementations to 4 calls to one script
   - Automatic fallback to patch increment for empty/unknown version types
   - Consistent behavior across all build platforms (Linux, Windows, macOS)
+- **Bot Response Architecture**: Refactored command handler to use MessageManager
+  - Removed hardcoded message lists from commands.py
+  - All response messages now managed through MessageManager
+  - Improved testability with injectable message configurations
 
 ### Fixed
 - **TUI CSS Error**: Fixed `$foreground` variable undefined error in Textual 6.x

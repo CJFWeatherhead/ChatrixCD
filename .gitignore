@@ -157,8 +157,10 @@ venv.bak/
 config.yaml
 config.json
 aliases.json
+messages.json
 store/
 *.log
+demo_file_watching.py
 
 # Spyder project settings
 .spyderproject

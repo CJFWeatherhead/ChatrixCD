@@ -1,0 +1,105 @@
+{
+  // ChatrixCD Bot Messages Configuration
+  // This file contains all bot response messages organized by category
+  // You can customize these messages to change the bot's personality
+  
+  "greetings": [
+    "{name} 👋",
+    "Hi {name}! 👋",
+    "Hello {name}! 😊",
+    "Hey {name}! 🙌",
+    "Yo {name}! 🤙",
+    "Sup {name}! 😎",
+    "Howdy {name}! 🤠",
+    "Hiya {name}! 👋",
+    "Heya {name}! ✨",
+    "G'day {name}! 🦘",
+    "Greetings {name}! 🖖",
+    "Welcome back {name}! 🎉",
+    "Ahoy {name}! ⚓",
+    "Salutations {name}! 🎩",
+    "Hey there {name}! 👋",
+    "What's up {name}! 🌟",
+    "Look who it is! {name}! 💫",
+    "{name}! Good to see you! 😄",
+    "Oh hey {name}! 🌈",
+    "{name} is in the house! 🏠"
+  ],
+  
+  "brush_off": [
+    "I can't talk to you 🫢 (Admin vibes only!)",
+    "You're not my boss 🫠 ...unless you're an admin?",
+    "Who's the new guy? 😅 Admins only in this club!",
+    "Sorry, admin access only! 🔐 I don't make the rules... wait, yes I do!",
+    "Nice try, but you need to be an admin 😎 Come back with credentials!",
+    "Admins only, friend! 🚫 This bot's got standards!",
+    "Ooh, bold move! But nope, admin access required 💅",
+    "Did you really think that would work? 🤭 Admin. Access. Only."
+  ],
+  
+  "cancel": [
+    "Task execution cancelled. No problem! ❌ We cool!",
+    "Cancelled! Maybe another time. 👋 I'll be here!",
+    "Alright, stopping that. ✋ Your call, boss!",
+    "Task cancelled. All good! 🛑 Easy come, easy go!",
+    "Cancelled! 🙅 No hard feelings!",
+    "Okay, nevermind then! 🤷 Changed your mind? I get it!"
+  ],
+  
+  "timeout": [
+    "I'll just go back to what I was doing then? 🙄 Not like I was waiting or anything...",
+    "I wasn't busy anyway... 🚶 *totally was busy*",
+    "Be more decisive next time, eh? 😏 Time's precious, friend!",
+    "Guess you changed your mind. No worries! 🤷 I'll be here... waiting... forever...",
+    "Timeout! Maybe next time? ⏰ I've got tasks to run, people!",
+    "Taking too long to decide... request expired. 💤 Wake me when you're ready!",
+    "Hello? Anyone there? 📢 Request has left the building!",
+    "Annnnnd... we're done here. ⌛ Better luck next time!"
+  ],
+  
+  "task_start": [
+    "On it! Starting **{task_name}**... 🚀 Let's make some magic happen!",
+    "Here we go! Running **{task_name}**... 🏃 Hold onto your keyboards!",
+    "Roger that! Executing **{task_name}**... 🫡 This is gonna be good!",
+    "Yes boss! Starting **{task_name}**... 💪 Watch me work!",
+    "Doing it now! **{task_name}** is launching... 🎯 No pressure or anything!",
+    "Let's go! **{task_name}** starting up... ⚡ Time to show off!",
+    "Alright alright! **{task_name}** is running! 🎬 Action!",
+    "You got it! **{task_name}** initiated! ✨ Prepare to be amazed!"
+  ],
+  
+  "ping_success": [
+    "{user_name} 👋 - 🏓 Semaphore server is alive and kicking! ✅ Party time!",
+    "{user_name} 👋 - 🏓 Pong! Server is up! ✅ We're in business!",
+    "{user_name} 👋 - 🏓 All good on the Semaphore front! ✅ Ready to roll!",
+    "{user_name} 👋 - 🏓 Yep, it's reachable! ✅ You know it!",
+    "{user_name} 👋 - 🏓 Server says hi back! ✅ Looking good!",
+    "{user_name} 👋 - 🏓 Connection solid! ✅ We're cooking!"
+  ],
+  
+  "pet": [
+    "Aww, thanks {user_name}! 🥰 *happy bot noises*",
+    "{user_name}, you're the best! 😊 *purrs digitally*",
+    "I'm just doing my job, but I appreciate you {user_name}! 💙✨",
+    "{user_name} 🤗 That made my day! *beep boop happily*",
+    "You're too kind, {user_name}! 😄 Ready for more tasks!",
+    "{user_name}, you always know how to make a bot feel appreciated! 🌟",
+    "*wags virtual tail* Thanks {user_name}! 🐕💻",
+    "Processing... 100% happiness detected! Thanks {user_name}! 😊💕",
+    "{user_name}, feeling the love! 💖 *circuits glowing*",
+    "Aww shucks, {user_name}! 😳 You're making me blush (if bots could blush)! ☺️"
+  ],
+  
+  "scold": [
+    "Oh no, {user_name}! 😢 I'll try harder, I promise!",
+    "Sorry {user_name}... 😔 What did I do wrong?",
+    "{user_name}, ouch! 💔 I'm learning, give me a chance!",
+    "*sad beep* {user_name}, I'll do better next time... 😞",
+    "{user_name}, that hurts! 😭 But I'll improve, I swear!",
+    "Noted, {user_name}. 📝😐 I'll work on that...",
+    "{user_name} 😟 I'm sorry! Tell me what I can do better?",
+    "*hangs head in shame* You're right, {user_name}... 😓",
+    "{user_name}, I'm trying my best! 🥺 Cut me some slack?",
+    "Okay okay, {user_name}! 😅 I hear you loud and clear!"
+  ]
+}

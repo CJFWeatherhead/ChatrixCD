@@ -4,6 +4,7 @@ import hjson
 import os
 import logging
 import sys
+import asyncio
 from typing import Optional, Dict, Any, List
 from pathlib import Path
 
@@ -107,14 +108,26 @@ class Config:
     Environment variables are no longer supported to simplify configuration management.
     """
 
-    def __init__(self, config_file: str = "config.json"):
+    def __init__(self, config_file: str = "config.json", auto_reload: bool = False):
         """Initialize configuration from file.
         
         Supports JSON and HJSON (Human JSON with comments) configuration files.
+        
+        Args:
+            config_file: Path to configuration file
+            auto_reload: If True, automatically reload config when file changes
         """
         self.config_file = config_file
         self.config: Dict[str, Any] = {}
+        self.auto_reload = auto_reload
+        self._last_mtime: Optional[float] = None
+        self._reload_task: Optional[Any] = None  # asyncio.Task, but avoid import
+        
         self.load_config()
+        
+        # Start auto-reload if requested
+        if auto_reload:
+            self.start_auto_reload()
 
     def load_config(self):
         """Load configuration with clear priority: hardcoded defaults < file."""
@@ -144,6 +157,12 @@ class Config:
             
             # Merge file config (file values override defaults)
             self.config = self._deep_merge(self.config, file_config)
+            
+            # Update last modified time
+            try:
+                self._last_mtime = os.path.getmtime(self.config_file)
+            except Exception:
+                pass
         else:
             logger.warning(f"Configuration file '{self.config_file}' not found, using defaults only")
     
@@ -364,3 +383,60 @@ class Config:
             Configuration version number
         """
         return self.config.get('_config_version', 1)
+    
+    def check_for_changes(self) -> bool:
+        """Check if the config file has been modified.
+        
+        Returns:
+            True if file has been modified, False otherwise
+        """
+        if not os.path.exists(self.config_file):
+            return False
+        
+        try:
+            current_mtime = os.path.getmtime(self.config_file)
+            if self._last_mtime is None or current_mtime > self._last_mtime:
+                return True
+        except Exception as e:
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to check file modification time: {e}")
+        
+        return False
+    
+    def start_auto_reload(self):
+        """Start automatic reloading of config when file changes."""
+        logger = logging.getLogger(__name__)
+        try:
+            # Only start if we have a running event loop
+            loop = asyncio.get_running_loop()
+            if self._reload_task is None or self._reload_task.done():
+                self._reload_task = asyncio.create_task(self._auto_reload_loop())
+                logger.info("Started auto-reload for config file")
+        except RuntimeError:
+            # No event loop running, will start later when needed
+            logger.debug("No event loop available yet, auto-reload will start when bot runs")
+            pass
+    
+    def stop_auto_reload(self):
+        """Stop automatic reloading."""
+        if self._reload_task and not self._reload_task.done():
+            self._reload_task.cancel()
+            logger = logging.getLogger(__name__)
+            logger.info("Stopped auto-reload for config file")
+    
+    async def _auto_reload_loop(self):
+        """Background task that checks for file changes and reloads."""
+        logger = logging.getLogger(__name__)
+        try:
+            while True:
+                await asyncio.sleep(10)  # Check every 10 seconds (less frequent for config)
+                
+                if self.check_for_changes():
+                    logger.info(f"Config file '{self.config_file}' has been modified, reloading...")
+                    self.load_config()
+                    logger.info("Configuration reloaded successfully")
+                    
+        except asyncio.CancelledError:
+            logger.debug("Auto-reload task cancelled")
+        except Exception as e:
+            logger.error(f"Error in auto-reload loop: {e}")
