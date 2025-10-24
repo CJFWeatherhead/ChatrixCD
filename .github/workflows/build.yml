@@ -132,8 +132,7 @@ jobs:
           enable-plugins: anti-bloat
           assume-yes-for-downloads: true
           linux-icon: assets/icon.png
-          include-data-dir: |
-            assets=assets
+          include-data-dir: assets=assets
       
       - name: Build with Nuitka (i686 - using Docker)
         if: matrix.arch == 'i686'
@@ -228,15 +227,22 @@ jobs:
           # Download and build libolm (pinned to v3.2.16 for reproducible builds)
           git clone --branch 3.2.16 --depth 1 https://gitlab.matrix.org/matrix-org/olm.git C:\olm
           cd C:\olm
-          cmake -S . -B build -DCMAKE_INSTALL_PREFIX=C:\olm-install -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B build -DCMAKE_INSTALL_PREFIX=C:\olm-install -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF
           cmake --build build --config Release
           cmake --install build --config Release
+          
+          # Debug: Show what files were created
+          Write-Host "Contents of C:\olm-install\lib:"
+          Get-ChildItem -Path C:\olm-install\lib -Recurse
+          Write-Host "Contents of C:\olm\build:"
+          Get-ChildItem -Path C:\olm\build -Recurse -Include *.lib
+          
           # Set environment variables for python-olm build
           # Include both the include and lib paths, and also set CMAKE_PREFIX_PATH for FindOlm
           echo "INCLUDE=C:\olm-install\include;$env:INCLUDE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "LIB=C:\olm-install\lib;$env:LIB" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "CMAKE_PREFIX_PATH=C:\olm-install;$env:CMAKE_PREFIX_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          # Also set PATH to find olm.dll at runtime
+          # Also set PATH to find any DLLs at runtime
           echo "PATH=C:\olm-install\bin;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       
       - name: Install dependencies
@@ -277,8 +283,7 @@ jobs:
           windows-icon-from-ico: assets/icon.ico
           onefile-tempdir-spec: "%TEMP%\\chatrixcd"
           windows-console-mode: force
-          include-data-dir: |
-            assets=assets
+          include-data-dir: assets=assets
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -328,8 +333,8 @@ jobs:
       
       - name: Install build dependencies (macOS)
         run: |
-          # Install libolm from homebrew to avoid building from source
-          brew install libolm pkg-config
+          # Install libolm and cmake from homebrew to avoid building from source
+          brew install libolm pkg-config cmake
       
       - name: Set PKG_CONFIG_PATH for subsequent steps
         run: |
@@ -370,8 +375,7 @@ jobs:
           macos-app-name: "ChatrixCD"
           macos-app-version: ${{ steps.version.outputs.version }}
           macos-target-arch: universal2
-          include-data-dir: |
-            assets=assets
+          include-data-dir: assets=assets
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
