@@ -72,6 +72,12 @@ jobs:
       - name: Fetch all tags
         run: git fetch --tags --force
       
+      - name: Set up QEMU for ARM64 emulation
+        if: matrix.arch == 'arm64'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+      
       - name: Calculate version
         id: version
         shell: bash
@@ -120,8 +126,7 @@ jobs:
         with:
           nuitka-version: main
           script-name: chatrixcd/main.py
-          onefile: true
-          standalone: true
+          mode: onefile
           output-file: chatrixcd-linux-x86_64
           enable-plugins: anti-bloat
           assume-yes-for-downloads: true
@@ -137,7 +142,7 @@ jobs:
           pip install --upgrade pip &&
           pip install -r requirements.txt &&
           pip install nuitka ordered-set &&
-          python -m nuitka --onefile --standalone \
+          python -m nuitka --mode=onefile \
             --output-filename=chatrixcd-linux-i686 \
             --enable-plugin=anti-bloat \
             --assume-yes-for-downloads \
@@ -154,7 +159,7 @@ jobs:
           pip install --upgrade pip &&
           pip install -r requirements.txt &&
           pip install nuitka ordered-set &&
-          python -m nuitka --onefile --standalone \
+          python -m nuitka --mode=onefile \
             --output-filename=chatrixcd-linux-arm64 \
             --enable-plugin=anti-bloat \
             --assume-yes-for-downloads \
@@ -213,6 +218,22 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
       
+      - name: Setup CMake
+        uses: lukka/get-cmake@latest
+      
+      - name: Install libolm (Windows)
+        shell: pwsh
+        run: |
+          # Download and build libolm
+          git clone https://gitlab.matrix.org/matrix-org/olm.git C:\olm
+          cd C:\olm
+          cmake -S . -B build -DCMAKE_INSTALL_PREFIX=C:\olm-install
+          cmake --build build --config Release
+          cmake --install build
+          # Set environment variables for python-olm build
+          echo "INCLUDE=C:\olm-install\include;$env:INCLUDE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "LIB=C:\olm-install\lib;$env:LIB" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -238,8 +259,7 @@ jobs:
         with:
           nuitka-version: main
           script-name: chatrixcd/main.py
-          onefile: true
-          standalone: true
+          mode: onefile
           output-file: chatrixcd-windows-${{ matrix.arch }}.exe
           enable-plugins: anti-bloat
           assume-yes-for-downloads: true
@@ -250,7 +270,7 @@ jobs:
           file-description: "Matrix bot for CI/CD automation with Semaphore UI"
           copyright: "Copyright (c) 2024 ChatrixCD Contributors"
           windows-icon-from-ico: assets/icon.ico
-          windows-onefile-tempdir-spec: "%TEMP%\\chatrixcd"
+          onefile-tempdir-spec: "%TEMP%\\chatrixcd"
           windows-console-mode: force
           include-data-dir: |
             assets=assets
@@ -301,9 +321,16 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
       
+      - name: Install build dependencies (macOS)
+        run: |
+          # Install libolm from homebrew to avoid building from source
+          brew install libolm pkg-config
+      
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          # Set PKG_CONFIG_PATH to find homebrew's libolm
+          export PKG_CONFIG_PATH="/opt/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH"
           pip install -r requirements.txt
       
       - name: Update version in files
@@ -325,8 +352,7 @@ jobs:
         with:
           nuitka-version: main
           script-name: chatrixcd/main.py
-          onefile: true
-          standalone: true
+          mode: onefile
           output-file: chatrixcd-macos-universal
           enable-plugins: anti-bloat
           assume-yes-for-downloads: true
