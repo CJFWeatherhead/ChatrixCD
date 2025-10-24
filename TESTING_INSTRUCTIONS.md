@@ -2,29 +2,35 @@
 
 ## ⚠️ IMPORTANT: Action Required
 
-The build workflow fixes have been implemented and committed to the `copilot/build-windows-macos-binary` branch. However, **the workflow must be tested before this PR can be merged**.
+The build workflow fixes have been implemented and committed to the `copilot/build-windows-macos-binary` branch. **The workflow will automatically run when this PR is opened/updated**.
 
-The workflow does not automatically run on feature branch pushes. It only triggers on:
-1. Pull request merge to `main`
-2. Manual workflow dispatch
+The workflow triggers on:
+1. Pull requests to `main` (opens/updates) - **This is how to test before merge**
+2. Pull request merge to `main` (for actual release creation)
+3. Manual workflow dispatch (from default branch only)
 
 ## How to Test
 
-### Option 1: Manual Workflow Dispatch (Recommended)
+### Option 1: Test via Pull Request (Recommended)
 
-1. Navigate to the GitHub Actions tab: https://github.com/CJFWeatherhead/ChatrixCD/actions
-2. Click on "Build and Release" workflow in the left sidebar
-3. Click the "Run workflow" button (top right)
-4. In the dropdown:
-   - **Branch:** Select `copilot/build-windows-macos-binary`
-   - **Version type:** Select `patch` (or any option)
-5. Click "Run workflow" button
+The workflow is configured to run on pull requests to `main`. If a PR exists for this branch:
 
-This will trigger a full build across all platforms without merging to main.
+1. Navigate to the Pull Request page
+2. The workflow should run automatically when the PR is opened/updated
+3. Check the "Checks" tab at the bottom of the PR to see the workflow status
+4. All 7 jobs should complete successfully
 
-### Option 2: View in Pull Request
+**Note:** The workflow runs on the `pull_request` trigger when the PR is opened or updated, but it will only proceed to the "Create Release" step if the PR is actually merged.
 
-If a PR already exists for this branch, the workflow should run automatically on the PR. Check the PR page for the workflow status.
+### Option 2: Manual Workflow Dispatch (From Main Branch)
+
+The manual workflow dispatch only works from branches where the workflow file exists. To test from the feature branch:
+
+1. First, ensure this PR is created (which you've already done)
+2. The workflow will automatically run on the PR
+3. Alternatively, you can merge the PR to `main` (after review) and then use workflow dispatch from `main` for future releases
+
+**Important:** GitHub Actions workflow dispatch only shows branches where the workflow file exists. Since this is a feature branch with workflow changes, the PR-based testing is the primary method.
 
 ## What to Verify
 
@@ -132,5 +138,5 @@ If the workflow fails or you encounter any issues:
 ---
 
 **Prepared by:** GitHub Copilot Workspace Agent
-**Date:** October 24, 2025
+**Date:** October 24, 2024
 **Branch:** `copilot/build-windows-macos-binary`

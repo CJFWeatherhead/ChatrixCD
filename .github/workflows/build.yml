@@ -231,7 +231,10 @@ jobs:
           # Download and build libolm (pinned to v3.2.16 for reproducible builds)
           git clone --branch 3.2.16 --depth 1 https://gitlab.matrix.org/matrix-org/olm.git C:\olm
           cd C:\olm
-          cmake -S . -B build -DCMAKE_INSTALL_PREFIX=C:\olm-install -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF
+          cmake -S . -B build `
+            -DCMAKE_INSTALL_PREFIX=C:\olm-install `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DBUILD_SHARED_LIBS=OFF
           cmake --build build --config Release
           cmake --install build --config Release
           
@@ -244,6 +247,9 @@ jobs:
           if (Test-Path "C:\olm-install\lib\olm_static.lib") {
             Copy-Item "C:\olm-install\lib\olm_static.lib" "C:\olm-install\lib\olm.lib"
             Write-Host "Copied olm_static.lib to olm.lib"
+          } else {
+            Write-Error "ERROR: olm_static.lib not found in C:\olm-install\lib. Build cannot continue."
+            exit 1
           }
           
           # Set environment variables for python-olm build
