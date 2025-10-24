@@ -221,12 +221,16 @@ jobs:
           # Download and build libolm (pinned to v3.2.16 for reproducible builds)
           git clone --branch 3.2.16 --depth 1 https://gitlab.matrix.org/matrix-org/olm.git C:\olm
           cd C:\olm
-          cmake -S . -B build -DCMAKE_INSTALL_PREFIX=C:\olm-install
+          cmake -S . -B build -DCMAKE_INSTALL_PREFIX=C:\olm-install -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release
-          cmake --install build
+          cmake --install build --config Release
           # Set environment variables for python-olm build
+          # Include both the include and lib paths, and also set CMAKE_PREFIX_PATH for FindOlm
           echo "INCLUDE=C:\olm-install\include;$env:INCLUDE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "LIB=C:\olm-install\lib;$env:LIB" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "CMAKE_PREFIX_PATH=C:\olm-install;$env:CMAKE_PREFIX_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          # Also set PATH to find olm.dll at runtime
+          echo "PATH=C:\olm-install\bin;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       
       - name: Install dependencies
         run: |
@@ -321,7 +325,10 @@ jobs:
           brew install libolm pkg-config
       
       - name: Set PKG_CONFIG_PATH for subsequent steps
-        run: echo "PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig:${PKG_CONFIG_PATH}" >> "$GITHUB_ENV"
+        run: |
+          # Detect homebrew prefix (Apple Silicon uses /opt/homebrew, Intel uses /usr/local)
+          HOMEBREW_PREFIX=$(brew --prefix)
+          echo "PKG_CONFIG_PATH=${HOMEBREW_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH}" >> "$GITHUB_ENV"
       
       - name: Install dependencies
         run: |
