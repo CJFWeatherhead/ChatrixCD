@@ -25,6 +25,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Enhanced Windows libolm build configuration with CMAKE_BUILD_TYPE and proper install paths
   - Added CMAKE_PREFIX_PATH and PATH environment variables for Windows python-olm builds
   - Fixed macOS PKG_CONFIG_PATH detection to support both Apple Silicon and Intel architectures
+  - Re-added pull_request trigger to build workflow for automatic builds on PR merge
 
 ### Added
 - **Configuration Wizard**: Interactive configuration setup with `--init` flag

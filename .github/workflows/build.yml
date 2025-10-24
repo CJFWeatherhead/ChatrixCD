@@ -1,6 +1,13 @@
 name: Build and Release
 
 on:
+  # Trigger on PR merge to main
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+  
   # Manual trigger for releases
   workflow_dispatch:
     inputs:
