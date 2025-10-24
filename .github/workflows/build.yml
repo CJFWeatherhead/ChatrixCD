@@ -224,8 +224,8 @@ jobs:
       - name: Install libolm (Windows)
         shell: pwsh
         run: |
-          # Download and build libolm
-          git clone https://gitlab.matrix.org/matrix-org/olm.git C:\olm
+          # Download and build libolm (pinned to v3.2.16 for reproducible builds)
+          git clone --branch 3.2.16 --depth 1 https://gitlab.matrix.org/matrix-org/olm.git C:\olm
           cd C:\olm
           cmake -S . -B build -DCMAKE_INSTALL_PREFIX=C:\olm-install
           cmake --build build --config Release
@@ -326,11 +326,12 @@ jobs:
           # Install libolm from homebrew to avoid building from source
           brew install libolm pkg-config
       
+      - name: Set PKG_CONFIG_PATH for subsequent steps
+        run: echo "PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+      
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # Set PKG_CONFIG_PATH to find homebrew's libolm
-          export PKG_CONFIG_PATH="/opt/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH"
           pip install -r requirements.txt
       
       - name: Update version in files
