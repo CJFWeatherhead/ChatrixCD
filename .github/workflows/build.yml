@@ -364,11 +364,13 @@ jobs:
         run: |
           # Detect homebrew prefix (Apple Silicon uses /opt/homebrew, Intel uses /usr/local)
           HOMEBREW_PREFIX=$(brew --prefix)
-          echo "PKG_CONFIG_PATH=${HOMEBREW_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH}" >> "$GITHUB_ENV"
           
-          # Set compiler flags to use homebrew libolm instead of building from source
-          echo "CFLAGS=-I${HOMEBREW_PREFIX}/include" >> "$GITHUB_ENV"
-          echo "LDFLAGS=-L${HOMEBREW_PREFIX}/lib" >> "$GITHUB_ENV"
+          # Set environment variables for subsequent steps
+          {
+            echo "PKG_CONFIG_PATH=${HOMEBREW_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH}"
+            echo "CFLAGS=-I${HOMEBREW_PREFIX}/include"
+            echo "LDFLAGS=-L${HOMEBREW_PREFIX}/lib"
+          } >> "$GITHUB_ENV"
       
       - name: Install dependencies
         run: |
