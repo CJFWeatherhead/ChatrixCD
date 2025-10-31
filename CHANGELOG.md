@@ -21,11 +21,23 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Added QEMU setup for ARM64 cross-compilation on Linux
   - Installed libolm build dependency via homebrew on macOS
   - Setup CMake and libolm build environment on Windows
+  - **Windows Build**: Patched libolm CMakeLists.txt to require CMake 3.5+ for compatibility
   - Fixed compatibility issues with python-olm native extension builds
   - Enhanced Windows libolm build configuration with CMAKE_BUILD_TYPE and proper install paths
   - Added CMAKE_PREFIX_PATH and PATH environment variables for Windows python-olm builds
   - Fixed macOS PKG_CONFIG_PATH detection to support both Apple Silicon and Intel architectures
   - Re-added pull_request trigger to build workflow for automatic builds on PR merge
+- **Log Formatting**: Fixed `!cd log` command rendering issues
+  - Added `_ansi_to_html_for_pre()` function that preserves newlines in `<pre>` tags
+  - Fixed log output to properly render with line breaks and color formatting
+  - Logs now display correctly in Matrix clients without all content on one line
+- **Markdown Rendering**: Fixed markdown not being rendered in messages
+  - Added HTML conversion to log tailing messages
+  - Bold (`**text**`), italic (`*text*`), and code (`` `text` ``) now render properly
+- **User Mentions**: Fixed inconsistent username highlighting
+  - Updated `_get_display_name()` to return full Matrix IDs (@user:server.com)
+  - Enhanced `markdown_to_html()` to convert mentions to clickable HTML links
+  - Users are now properly highlighted when mentioned in messages
 
 ### Added
 - **Configuration Wizard**: Interactive configuration setup with `--init` flag
@@ -57,8 +69,19 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - `messages.json` auto-reloads every 5 seconds
   - Changes take effect without bot restart
   - Thread-safe implementation using asyncio tasks
+- **Test Coverage Improvements**: Added tests for new functionality
+  - Test for `_ansi_to_html_for_pre()` verifying newline preservation in `<pre>` tags
+  - Tests for markdown mention conversion to HTML links
+  - Test for `_get_display_name()` returning full Matrix IDs for proper mentions
+  - All new code paths now have corresponding unit tests
 
 ### Changed
+- **Documentation Cleanup**: Removed outdated and redundant documentation files
+  - Removed 11 old summary files (AUDIT_SUMMARY.md, BUILD_FIX_SUMMARY.md, etc.) from previous development iterations
+  - Removed overly detailed design documents (TUI_TURBO_VISION_DESIGN.md, TUI_MIGRATION_GUIDE.md, BUILD_WORKFLOW.md)
+  - Removed redundant architecture docs (CONCURRENT_ARCHITECTURE.md merged into ARCHITECTURE.md, BRANDING.md)
+  - Repository is now cleaner with focus on essential, user-facing documentation
+  - Over 4000 lines of documentation bloat removed
 - **Configuration Migration**: Migration system now suggests running `--init` after automatic migration to review new settings
 - **Username Display**: User display names now keep the `@` symbol for proper Matrix user identification
 - **Version Calculation System**: Complete refactoring for simplicity and robustness
