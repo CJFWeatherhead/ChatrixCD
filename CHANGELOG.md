@@ -22,6 +22,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Installed libolm build dependency via homebrew on macOS
   - Setup CMake and libolm build environment on Windows
   - **Windows Build**: Patched libolm CMakeLists.txt to require CMake 3.5+ for compatibility
+  - **macOS Build**: Set CFLAGS and LDFLAGS to use homebrew libolm instead of building from source
   - Fixed compatibility issues with python-olm native extension builds
   - Enhanced Windows libolm build configuration with CMAKE_BUILD_TYPE and proper install paths
   - Added CMAKE_PREFIX_PATH and PATH environment variables for Windows python-olm builds
