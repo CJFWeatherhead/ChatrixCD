@@ -73,10 +73,16 @@ For development or if you prefer to run from source.
 - Python 3.12 or higher (3.12, 3.13, 3.14 supported)
 - [uv](https://docs.astral.sh/uv/) - Fast Python package installer (recommended) or pip
 
-### Prerequisites
+#### macOS-Specific Prerequisites
 
-- Python 3.12 or higher (3.12, 3.13, 3.14 supported)
-- [uv](https://docs.astral.sh/uv/) - Fast Python package installer (recommended) or pip
+On macOS, you must install libolm and pkg-config via Homebrew **before** installing Python dependencies to avoid build failures:
+
+```bash
+# Install libolm and build dependencies via Homebrew
+brew install libolm pkg-config cmake
+```
+
+This is required because `python-olm` (a dependency of `matrix-nio[e2e]`) bundles an older version of libolm with a CMakeLists.txt that is incompatible with modern CMake. Installing libolm via Homebrew ensures the Python package uses the system library instead of building from source.
 
 ### Install uv (if not already installed)
 
@@ -94,6 +100,9 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 # Clone the repository
 git clone https://github.com/CJFWeatherhead/ChatrixCD.git
 cd ChatrixCD
+
+# macOS ONLY: Install libolm first (if not already done in prerequisites)
+# brew install libolm pkg-config cmake
 
 # Create a virtual environment
 uv venv
@@ -604,6 +613,20 @@ Alpine Linux uses OpenRC instead of systemd. This is a lightweight deployment op
 - The `store` directory must persist between restarts
 - Ensure the bot account has verified its device
 - Check file permissions on the store directory
+
+### macOS Build Failures
+
+If you encounter CMake errors when installing dependencies on macOS (e.g., "Compatibility with CMake < 3.5 has been removed"), you need to install libolm via Homebrew:
+
+```bash
+# Install libolm and build dependencies
+brew install libolm pkg-config cmake
+
+# Then retry installing Python dependencies
+pip install -r requirements.txt
+```
+
+This error occurs because `python-olm` bundles an older version of libolm with an outdated CMakeLists.txt. Installing libolm via Homebrew ensures the Python package uses the system library instead of building from source.
 
 ## Security Best Practices
 
