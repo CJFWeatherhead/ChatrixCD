@@ -101,6 +101,14 @@ class CommandHandler:
         Returns:
             HTML formatted text
         """
+        # Convert Matrix user mentions (@username:server.com) to HTML links for proper highlighting
+        # This makes Matrix clients properly highlight the mentioned user
+        text = re.sub(
+            r'(@[a-zA-Z0-9._=-]+:[a-zA-Z0-9.-]+)',
+            r'<a href="https://matrix.to/#/\1">\1</a>',
+            text
+        )
+        
         # Convert bold **text** to <strong>text</strong>
         text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
         # Convert italic *text* to <em>text</em>
@@ -118,17 +126,17 @@ class CommandHandler:
     def _get_display_name(self, user_id: str) -> str:
         """Get a friendly display name for a user.
         
+        Returns the full Matrix ID for proper highlighting/mentions in messages.
+        The markdown_to_html function will convert it to a clickable mention link.
+        
         Args:
             user_id: User ID to get display name for
             
         Returns:
-            Display name with @ prefix (for greetings) or full user ID
+            Full Matrix user ID (e.g., @username:server.com) for proper mentions
         """
-        # Return username with @ prefix for consistency
-        # Extract username from Matrix user ID (@username:server.com)
-        if user_id.startswith('@'):
-            username = user_id.split(':')[0]  # Includes the @ symbol
-            return username
+        # Return the full Matrix ID for proper mentions
+        # The markdown_to_html function will convert it to an HTML link
         return user_id
     
     def _get_greeting(self, user_id: str) -> str:
@@ -1084,11 +1092,12 @@ class CommandHandler:
             }
             
             logger.info(f"Started log tailing for task {self.last_task_id} in room {room_id}")
+            message = (f"{user_name} 👋 - Started tailing logs for task **{self.last_task_id}** 📋\n"
+                      f"Use `{self.command_prefix} log off` to stop.")
             await self.bot.send_message(
                 room_id,
-                f"{user_name} 👋 - Started tailing logs for task **{self.last_task_id}** 📋\n"
-                f"Use `{self.command_prefix} log off` to stop."
-                
+                message,
+                self.markdown_to_html(message)
             )
             
             # Start the tailing task
@@ -1110,10 +1119,11 @@ class CommandHandler:
             del self.log_tailing_sessions[room_id]
             
             logger.info(f"Stopped log tailing for task {task_id} in room {room_id}")
+            message = f"{user_name} 👋 - Stopped tailing logs for task **{task_id}** 🛑"
             await self.bot.send_message(
                 room_id,
-                f"{user_name} 👋 - Stopped tailing logs for task **{task_id}** 🛑"
-                
+                message,
+                self.markdown_to_html(message)
             )
             return
         
@@ -1357,6 +1367,58 @@ class CommandHandler:
         
         return result
 
+    def _ansi_to_html_for_pre(self, text: str) -> str:
+        """Convert ANSI color codes to HTML for use in <pre> tags.
+        
+        This version does NOT replace newlines with <br> since <pre> tags
+        preserve newlines naturally.
+        
+        Args:
+            text: Text with ANSI color codes
+            
+        Returns:
+            HTML formatted text (without <br> tags)
+        """
+        # ANSI color code to HTML color mapping
+        ansi_colors = {
+            '30': 'black',
+            '31': 'red',
+            '32': 'green',
+            '33': 'yellow',
+            '34': 'blue',
+            '35': 'magenta',
+            '36': 'cyan',
+            '37': 'white',
+            '90': 'gray',
+            '91': 'lightred',
+            '92': 'lightgreen',
+            '93': 'lightyellow',
+            '94': 'lightblue',
+            '95': 'lightmagenta',
+            '96': 'lightcyan',
+            '97': 'white'
+        }
+        
+        # Convert color codes
+        result = text
+        
+        # Handle bold (1m)
+        result = re.sub(r'\x1b\[1m', '<strong>', result)
+        
+        # Handle color codes (e.g., 31m for red)
+        for code, color in ansi_colors.items():
+            result = re.sub(rf'\x1b\[{code}m', f'<span style="color: {color}">', result)
+        
+        # Handle reset codes (0m)
+        result = re.sub(r'\x1b\[0m', '</span></strong>', result)
+        
+        # Clean up any remaining ANSI codes
+        result = re.sub(r'\x1b\[[0-9;]*m', '', result)
+        
+        # Do NOT replace newlines - <pre> tags preserve them naturally
+        
+        return result
+
     def _format_task_logs(self, raw_logs: str) -> str:
         """Format raw task logs for better readability.
         
@@ -1405,10 +1467,10 @@ class CommandHandler:
         # Remove excessive blank lines first
         logs = re.sub(r'\n{3,}', '\n\n', raw_logs)
         
-        # Convert ANSI codes to HTML
-        html_logs = self._ansi_to_html(logs)
+        # Convert ANSI codes to HTML (but keep newlines as-is for <pre> tag)
+        html_logs = self._ansi_to_html_for_pre(logs)
         
-        # Wrap in pre tag for monospace formatting
+        # Wrap in pre tag for monospace formatting (newlines are preserved in <pre>)
         return f'<pre>{html_logs}</pre>'
 
     async def ping_semaphore(self, room_id: str, sender: str = None):

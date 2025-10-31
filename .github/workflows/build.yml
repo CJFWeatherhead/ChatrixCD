@@ -231,6 +231,10 @@ jobs:
           # Download and build libolm (pinned to v3.2.16 for reproducible builds)
           git clone --branch 3.2.16 --depth 1 https://gitlab.matrix.org/matrix-org/olm.git C:\olm
           cd C:\olm
+          
+          # Patch CMakeLists.txt to require CMake 3.5+ (for compatibility with modern CMake)
+          (Get-Content CMakeLists.txt) -replace 'cmake_minimum_required\(VERSION [0-9.]+\)', 'cmake_minimum_required(VERSION 3.5)' | Set-Content CMakeLists.txt
+          
           cmake -S . -B build `
             -DCMAKE_INSTALL_PREFIX=C:\olm-install `
             -DCMAKE_BUILD_TYPE=Release `
