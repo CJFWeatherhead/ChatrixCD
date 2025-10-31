@@ -253,15 +253,13 @@ jobs:
           Write-Host "Contents of C:\olm-install\lib:"
           Get-ChildItem -Path C:\olm-install\lib -Recurse
           
-          # python-olm expects olm.lib, but CMake creates olm_static.lib when BUILD_SHARED_LIBS=OFF
-          # Copy the static library with the expected name
-          if (Test-Path "C:\olm-install\lib\olm_static.lib") {
-            Copy-Item "C:\olm-install\lib\olm_static.lib" "C:\olm-install\lib\olm.lib"
-            Write-Host "Copied olm_static.lib to olm.lib"
-          } else {
-            Write-Error "ERROR: olm_static.lib not found in C:\olm-install\lib. Build cannot continue."
+          # Verify that olm.lib was created successfully
+          # CMake with BUILD_SHARED_LIBS=OFF creates olm.lib directly
+          if (-not (Test-Path "C:\olm-install\lib\olm.lib")) {
+            Write-Error "ERROR: olm.lib not found in C:\olm-install\lib. Build cannot continue."
             exit 1
           }
+          Write-Host "Successfully built olm.lib"
           
           # Set environment variables for python-olm build
           # Include both the include and lib paths, and also set CMAKE_PREFIX_PATH for FindOlm
