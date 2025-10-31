@@ -101,9 +101,6 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 git clone https://github.com/CJFWeatherhead/ChatrixCD.git
 cd ChatrixCD
 
-# macOS ONLY: Install libolm first (if not already done in prerequisites)
-# brew install libolm pkg-config cmake
-
 # Create a virtual environment
 uv venv
 
@@ -623,6 +620,10 @@ If you encounter CMake errors when installing dependencies on macOS (e.g., "Comp
 brew install libolm pkg-config cmake
 
 # Then retry installing Python dependencies
+# If using uv (recommended):
+uv pip install -r requirements.txt
+
+# Or if using pip:
 pip install -r requirements.txt
 ```
 
