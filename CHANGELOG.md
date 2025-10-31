@@ -15,6 +15,10 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Changed
+- **Bot Messages**: Updated task start confirmation to use proper British Army Voice Procedure
+  - Changed "Roger that!" to "Roger!" (single word affirmative as per military radio protocol)
+
 ### Fixed
 - **Build and Release Workflow**: Fixed multiple critical build failures
   - Updated Nuitka Action to use `mode=onefile` instead of deprecated `onefile/standalone` options
