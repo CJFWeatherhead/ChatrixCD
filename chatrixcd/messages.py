@@ -68,7 +68,7 @@ DEFAULT_MESSAGES = {
     'task_start': [
         "On it! Starting **{task_name}**... 🚀 Let's make some magic happen!",
         "Here we go! Running **{task_name}**... 🏃 Hold onto your keyboards!",
-        "Roger that! Executing **{task_name}**... 🫡 This is gonna be good!",
+        "Roger! Executing **{task_name}**... 🫡 This is gonna be good!",
         "Yes boss! Starting **{task_name}**... 💪 Watch me work!",
         "Doing it now! **{task_name}** is launching... 🎯 No pressure or anything!",
         "Let's go! **{task_name}** starting up... ⚡ Time to show off!",
