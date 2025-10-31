@@ -16,6 +16,10 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Fixed
+- **Build Workflow**: Fixed Windows and macOS build failures in GitHub Actions
+  - **Windows**: Fixed incorrect check for `olm_static.lib` - CMake creates `olm.lib`, not `olm_static.lib`
+  - **macOS**: Added `CMAKE_ARGS` to prevent python-olm from building bundled libolm source
+  - Both platforms now correctly use pre-built/system libolm libraries
 - **macOS Installation Documentation**: Fixed python-olm build failures on macOS
   - Added macOS-specific prerequisites section in INSTALL.md requiring libolm installation via Homebrew
   - Added troubleshooting section for macOS build failures with clear instructions

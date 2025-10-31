@@ -253,15 +253,12 @@ jobs:
           Write-Host "Contents of C:\olm-install\lib:"
           Get-ChildItem -Path C:\olm-install\lib -Recurse
           
-          # python-olm expects olm.lib, but CMake creates olm_static.lib when BUILD_SHARED_LIBS=OFF
-          # Copy the static library with the expected name
-          if (Test-Path "C:\olm-install\lib\olm_static.lib") {
-            Copy-Item "C:\olm-install\lib\olm_static.lib" "C:\olm-install\lib\olm.lib"
-            Write-Host "Copied olm_static.lib to olm.lib"
-          } else {
-            Write-Error "ERROR: olm_static.lib not found in C:\olm-install\lib. Build cannot continue."
+          # Verify that olm.lib was created
+          if (-not (Test-Path "C:\olm-install\lib\olm.lib")) {
+            Write-Error "ERROR: olm.lib not found in C:\olm-install\lib. Build cannot continue."
             exit 1
           }
+          Write-Host "Successfully built olm.lib"
           
           # Set environment variables for python-olm build
           # Include both the include and lib paths, and also set CMAKE_PREFIX_PATH for FindOlm
@@ -370,6 +367,8 @@ jobs:
             echo "PKG_CONFIG_PATH=${HOMEBREW_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH}"
             echo "CFLAGS=-I${HOMEBREW_PREFIX}/include"
             echo "LDFLAGS=-L${HOMEBREW_PREFIX}/lib"
+            # Tell python-olm to use system libolm instead of building bundled version
+            echo "CMAKE_ARGS=-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
           } >> "$GITHUB_ENV"
       
       - name: Install dependencies
