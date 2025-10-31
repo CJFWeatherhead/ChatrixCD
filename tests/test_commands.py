@@ -832,6 +832,11 @@ class TestCommandHandler(unittest.TestCase):
         result = self.handler.markdown_to_html(text)
         self.assertIn('<a href="https://matrix.to/#/@user1:example.com">@user1:example.com</a>', result)
         self.assertIn('<a href="https://matrix.to/#/@user2:example.org">@user2:example.org</a>', result)
+        
+        # Test mention with special characters (underscore, plus, equals)
+        text = "@user_name+test=foo:matrix.example.org"
+        result = self.handler.markdown_to_html(text)
+        self.assertIn('<a href="https://matrix.to/#/@user_name+test=foo:matrix.example.org">@user_name+test=foo:matrix.example.org</a>', result)
 
     def test_get_display_name_returns_full_id(self):
         """Test that _get_display_name returns full Matrix ID for proper mentions."""

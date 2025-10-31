@@ -103,8 +103,9 @@ class CommandHandler:
         """
         # Convert Matrix user mentions (@username:server.com) to HTML links for proper highlighting
         # This makes Matrix clients properly highlight the mentioned user
+        # Matrix spec allows: lowercase letters, digits, hyphens, dots, underscores, equals, and plus
         text = re.sub(
-            r'(@[a-zA-Z0-9._=-]+:[a-zA-Z0-9.-]+)',
+            r'(@[a-zA-Z0-9._=+-]+:[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})',
             r'<a href="https://matrix.to/#/\1">\1</a>',
             text
         )
