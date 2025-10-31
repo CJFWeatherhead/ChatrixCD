@@ -20,6 +20,17 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Changed "Roger that!" to "Roger!" (single word affirmative as per military radio protocol)
 
 ### Fixed
+- **Build Workflow**: Fixed Windows and macOS build failures in GitHub Actions
+  - **Windows**: Fixed incorrect check for `olm_static.lib` - CMake creates `olm.lib`, not `olm_static.lib`
+  - **macOS**: Added `CMAKE_ARGS` to prevent python-olm from building bundled libolm source
+  - Both platforms now correctly use pre-built/system libolm libraries
+- **macOS Installation Documentation**: Fixed python-olm build failures on macOS
+  - Added macOS-specific prerequisites section in INSTALL.md requiring libolm installation via Homebrew
+  - Added troubleshooting section for macOS build failures with clear instructions
+  - Documented requirement to install libolm before installing Python dependencies
+  - Prevents CMake compatibility errors when building python-olm from source
+  - Issue: `python-olm` bundles older libolm with CMakeLists.txt incompatible with modern CMake
+  - Solution: Install libolm via Homebrew so python-olm uses system library instead
 - **Build and Release Workflow**: Fixed multiple critical build failures
   - Updated Nuitka Action to use `mode=onefile` instead of deprecated `onefile/standalone` options
   - Added QEMU setup for ARM64 cross-compilation on Linux
