@@ -28,9 +28,10 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Fixed macOS PKG_CONFIG_PATH detection to support both Apple Silicon and Intel architectures
   - Re-added pull_request trigger to build workflow for automatic builds on PR merge
 - **Log Formatting**: Fixed `!cd log` command rendering issues
-  - Added `_ansi_to_html_for_pre()` function that preserves newlines in `<pre>` tags
-  - Fixed log output to properly render with line breaks and color formatting
+  - Added `_ansi_to_html_for_pre()` function that strips ANSI codes and preserves newlines in `<pre>` tags
+  - Fixed log output to properly render with line breaks (newlines preserved in HTML `<pre>` tags)
   - Logs now display correctly in Matrix clients without all content on one line
+  - ANSI color codes are stripped for better readability in Matrix clients
 - **Markdown Rendering**: Fixed markdown not being rendered in messages
   - Added HTML conversion to log tailing messages
   - Bold (`**text**`), italic (`*text*`), and code (`` `text` ``) now render properly

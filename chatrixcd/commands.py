@@ -1371,7 +1371,8 @@ class CommandHandler:
         """Convert ANSI color codes to HTML for use in <pre> tags.
         
         This version does NOT replace newlines with <br> since <pre> tags
-        preserve newlines naturally.
+        preserve newlines naturally. Uses a simplified conversion that strips
+        ANSI codes for readability rather than perfect HTML structure.
         
         Args:
             text: Text with ANSI color codes
@@ -1379,41 +1380,10 @@ class CommandHandler:
         Returns:
             HTML formatted text (without <br> tags)
         """
-        # ANSI color code to HTML color mapping
-        ansi_colors = {
-            '30': 'black',
-            '31': 'red',
-            '32': 'green',
-            '33': 'yellow',
-            '34': 'blue',
-            '35': 'magenta',
-            '36': 'cyan',
-            '37': 'white',
-            '90': 'gray',
-            '91': 'lightred',
-            '92': 'lightgreen',
-            '93': 'lightyellow',
-            '94': 'lightblue',
-            '95': 'lightmagenta',
-            '96': 'lightcyan',
-            '97': 'white'
-        }
-        
-        # Convert color codes
-        result = text
-        
-        # Handle bold (1m)
-        result = re.sub(r'\x1b\[1m', '<strong>', result)
-        
-        # Handle color codes (e.g., 31m for red)
-        for code, color in ansi_colors.items():
-            result = re.sub(rf'\x1b\[{code}m', f'<span style="color: {color}">', result)
-        
-        # Handle reset codes (0m)
-        result = re.sub(r'\x1b\[0m', '</span></strong>', result)
-        
-        # Clean up any remaining ANSI codes
-        result = re.sub(r'\x1b\[[0-9;]*m', '', result)
+        # For logs in <pre> tags, we prioritize readability over perfect formatting.
+        # Simply strip ANSI codes and preserve the text structure.
+        # Most logs are readable without color formatting in Matrix clients.
+        result = re.sub(r'\x1b\[[0-9;]*m', '', text)
         
         # Do NOT replace newlines - <pre> tags preserve them naturally
         

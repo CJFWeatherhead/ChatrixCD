@@ -233,7 +233,7 @@ jobs:
           cd C:\olm
           
           # Patch CMakeLists.txt to require CMake 3.5+ (for compatibility with modern CMake)
-          (Get-Content CMakeLists.txt) -replace 'cmake_minimum_required\(VERSION [0-9.]+\)', 'cmake_minimum_required(VERSION 3.5)' | Set-Content CMakeLists.txt
+          (Get-Content CMakeLists.txt) -replace 'cmake_minimum_required\(VERSION [0-9]+\.[0-9]+(?:\.[0-9]+)?\)', 'cmake_minimum_required(VERSION 3.5)' | Set-Content CMakeLists.txt
           
           cmake -S . -B build `
             -DCMAKE_INSTALL_PREFIX=C:\olm-install `

@@ -790,22 +790,29 @@ class TestCommandHandler(unittest.TestCase):
 
     def test_ansi_to_html_for_pre(self):
         """Test ANSI to HTML conversion for use in pre tags."""
-        # Test basic color conversion
+        # Test that ANSI codes are stripped for readability
         text_with_color = "\x1b[31mRed text\x1b[0m"
         result = self.handler._ansi_to_html_for_pre(text_with_color)
-        self.assertIn('<span style="color: red">Red text</span></strong>', result)
+        self.assertEqual(result, "Red text")
+        self.assertNotIn('\x1b', result)  # No ANSI codes
         self.assertNotIn('<br>', result)  # Should NOT have br tags
         
-        # Test bold
+        # Test bold ANSI codes are stripped
         text_with_bold = "\x1b[1mBold text\x1b[0m"
         result = self.handler._ansi_to_html_for_pre(text_with_bold)
-        self.assertIn('<strong>Bold text</span></strong>', result)
+        self.assertEqual(result, "Bold text")
+        self.assertNotIn('\x1b', result)
         
         # Test that newlines are preserved (not replaced with <br>)
         text_with_newlines = "Line 1\nLine 2\nLine 3"
         result = self.handler._ansi_to_html_for_pre(text_with_newlines)
-        self.assertIn('Line 1\nLine 2\nLine 3', result)
+        self.assertEqual(result, "Line 1\nLine 2\nLine 3")
         self.assertNotIn('<br>', result)
+        
+        # Test mixed ANSI codes and text
+        text_mixed = "Normal \x1b[32mgreen\x1b[0m text"
+        result = self.handler._ansi_to_html_for_pre(text_mixed)
+        self.assertEqual(result, "Normal green text")
 
     def test_markdown_to_html_with_mentions(self):
         """Test markdown to HTML conversion with Matrix mentions."""
