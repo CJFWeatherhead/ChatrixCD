@@ -788,5 +788,56 @@ class TestCommandHandler(unittest.TestCase):
         self.assertIn('Only', call_args[1])
 
 
+    def test_ansi_to_html_for_pre(self):
+        """Test ANSI to HTML conversion for use in pre tags."""
+        # Test basic color conversion
+        text_with_color = "\x1b[31mRed text\x1b[0m"
+        result = self.handler._ansi_to_html_for_pre(text_with_color)
+        self.assertIn('<span style="color: red">Red text</span></strong>', result)
+        self.assertNotIn('<br>', result)  # Should NOT have br tags
+        
+        # Test bold
+        text_with_bold = "\x1b[1mBold text\x1b[0m"
+        result = self.handler._ansi_to_html_for_pre(text_with_bold)
+        self.assertIn('<strong>Bold text</span></strong>', result)
+        
+        # Test that newlines are preserved (not replaced with <br>)
+        text_with_newlines = "Line 1\nLine 2\nLine 3"
+        result = self.handler._ansi_to_html_for_pre(text_with_newlines)
+        self.assertIn('Line 1\nLine 2\nLine 3', result)
+        self.assertNotIn('<br>', result)
+
+    def test_markdown_to_html_with_mentions(self):
+        """Test markdown to HTML conversion with Matrix mentions."""
+        # Test Matrix user mention conversion
+        text = "Hello @user:example.com how are you?"
+        result = self.handler.markdown_to_html(text)
+        self.assertIn('<a href="https://matrix.to/#/@user:example.com">@user:example.com</a>', result)
+        
+        # Test bold with mentions
+        text = "Hello @user:example.com **bold text** here"
+        result = self.handler.markdown_to_html(text)
+        self.assertIn('<a href="https://matrix.to/#/@user:example.com">@user:example.com</a>', result)
+        self.assertIn('<strong>bold text</strong>', result)
+        
+        # Test multiple mentions
+        text = "@user1:example.com and @user2:example.org"
+        result = self.handler.markdown_to_html(text)
+        self.assertIn('<a href="https://matrix.to/#/@user1:example.com">@user1:example.com</a>', result)
+        self.assertIn('<a href="https://matrix.to/#/@user2:example.org">@user2:example.org</a>', result)
+
+    def test_get_display_name_returns_full_id(self):
+        """Test that _get_display_name returns full Matrix ID for proper mentions."""
+        # Test with full Matrix ID
+        user_id = "@user:example.com"
+        result = self.handler._get_display_name(user_id)
+        self.assertEqual(result, "@user:example.com")
+        
+        # Test with another format
+        user_id = "@john.doe:matrix.org"
+        result = self.handler._get_display_name(user_id)
+        self.assertEqual(result, "@john.doe:matrix.org")
+
+
 if __name__ == '__main__':
     unittest.main()
