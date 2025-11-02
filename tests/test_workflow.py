@@ -86,32 +86,16 @@ class TestWorkflowConfiguration(unittest.TestCase):
         self.assertIn('i686', linux_archs, "Should build for Linux i686")
         self.assertIn('arm64', linux_archs, "Should build for Linux arm64")
         
-        # Should have Windows build job
-        self.assertIn('build-windows', jobs)
-        windows_job = jobs['build-windows']
-        self.assertIn('strategy', windows_job)
-        self.assertIn('matrix', windows_job['strategy'])
-        windows_archs = windows_job['strategy']['matrix']['arch']
-        self.assertIn('x86_64', windows_archs, "Should build for Windows x86_64")
-        # Note: ARM64 Windows builds are not feasible on GitHub Actions without ARM64 runners
-        
-        # Should have macOS build job
-        self.assertIn('build-macos', jobs)
-        macos_job = jobs['build-macos']
-        # macOS builds universal binary, check in steps
-        macos_steps = macos_job['steps']
-        macos_step_names = [step.get('name', '') for step in macos_steps]
-        self.assertTrue(
-            any('nuitka' in name.lower() for name in macos_step_names),
-            "macOS job should include Nuitka build step"
-        )
+        # Windows and macOS build jobs removed due to python-olm build issues
+        self.assertNotIn('build-windows', jobs, "Windows builds removed")
+        self.assertNotIn('build-macos', jobs, "macOS builds removed")
     
     def test_build_workflow_uses_nuitka_action(self):
         """Test that build workflow uses Nuitka-Action."""
         jobs = self.build_workflow['jobs']
         
-        # Check each build job for Nuitka-Action usage
-        for job_name in ['build-linux', 'build-windows', 'build-macos']:
+        # Check Linux build job for Nuitka-Action usage (Windows/macOS removed)
+        for job_name in ['build-linux']:
             job = jobs[job_name]
             steps = job['steps']
             
@@ -138,8 +122,8 @@ class TestWorkflowConfiguration(unittest.TestCase):
         """Test that build workflow calculates versions correctly."""
         jobs = self.build_workflow['jobs']
         
-        # Check each build job has version calculation
-        for job_name in ['build-linux', 'build-windows', 'build-macos']:
+        # Check Linux build job has version calculation (Windows/macOS removed)
+        for job_name in ['build-linux']:
             job = jobs[job_name]
             steps = job['steps']
             
@@ -160,12 +144,13 @@ class TestWorkflowConfiguration(unittest.TestCase):
         
         release_job = jobs['release']
         
-        # Should depend on all build jobs
+        # Should depend on all build jobs (Linux only)
         self.assertIn('needs', release_job)
         needs = release_job['needs']
         self.assertIn('build-linux', needs)
-        self.assertIn('build-windows', needs)
-        self.assertIn('build-macos', needs)
+        # Windows and macOS builds removed due to python-olm build issues
+        self.assertNotIn('build-windows', needs)
+        self.assertNotIn('build-macos', needs)
         
         # Should download artifacts
         steps = release_job['steps']
@@ -189,33 +174,17 @@ class TestWorkflowConfiguration(unittest.TestCase):
         )
     
     def test_build_workflow_has_metadata(self):
-        """Test that build workflow includes appropriate metadata."""
-        jobs = self.build_workflow['jobs']
-        
-        # Check Windows build for metadata
-        windows_job = jobs['build-windows']
-        steps = windows_job['steps']
-        
-        nuitka_steps = [
-            step for step in steps
-            if 'uses' in step and 'Nuitka' in step['uses']
-        ]
-        
-        for nuitka_step in nuitka_steps:
-            with_config = nuitka_step.get('with', {})
-            # Should have metadata
-            self.assertIn('company-name', with_config)
-            self.assertIn('product-name', with_config)
-            self.assertIn('file-description', with_config)
-            self.assertIn('copyright', with_config)
-            # Should have icon
-            self.assertIn('windows-icon-from-ico', with_config)
+        """Test that build workflow includes appropriate metadata (Windows build removed)."""
+        # Windows and macOS builds removed due to python-olm build issues
+        # This test is kept for potential future re-enablement but currently skipped
+        self.skipTest("Windows and macOS builds removed - test no longer applicable")
     
     def test_build_workflow_includes_assets(self):
         """Test that build workflow includes assets directory."""
         jobs = self.build_workflow['jobs']
         
-        for job_name in ['build-linux', 'build-windows', 'build-macos']:
+        # Check Linux build job for assets (Windows/macOS removed)
+        for job_name in ['build-linux']:
             job = jobs[job_name]
             steps = job['steps']
             
