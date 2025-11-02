@@ -125,10 +125,29 @@ jobs:
           echo "CMAKE_PREFIX_PATH=C:\olm-install;$env:CMAKE_PREFIX_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       
       - name: Install dependencies
+        shell: pwsh
         run: |
           python -m pip install --upgrade pip
-          # Install python-olm as binary wheel to avoid CMake build issues
-          pip install python-olm~=3.2 --only-binary=python-olm || echo "No binary wheel available, will try source build"
+          
+          # Download python-olm source and patch embedded libolm CMakeLists.txt
+          pip download python-olm~=3.2 --no-binary=:all: --no-deps
+          $tarball = Get-ChildItem python-olm-*.tar.gz | Select-Object -First 1
+          tar -xzf $tarball
+          $olmDir = Get-ChildItem -Directory python-olm-* | Select-Object -First 1
+          
+          # Patch the embedded CMakeLists.txt
+          $cmakeFile = Join-Path $olmDir.FullName "lib\cmake\CMakeLists.txt"
+          if (Test-Path $cmakeFile) {
+            $content = Get-Content $cmakeFile -Raw
+            $content = $content -replace 'cmake_minimum_required\(VERSION [0-9]+\.[0-9]+(?:\.[0-9]+)?\)', 'cmake_minimum_required(VERSION 3.5)'
+            Set-Content $cmakeFile $content
+            Write-Host "Patched embedded CMakeLists.txt in python-olm"
+          }
+          
+          # Install from patched source
+          pip install $olmDir.FullName
+          
+          # Install remaining dependencies
           pip install -r requirements.txt
       
       - name: Update version in files
@@ -238,8 +257,23 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # Install python-olm as binary wheel to avoid CMake build issues
-          pip install python-olm~=3.2 --only-binary=python-olm || echo "No binary wheel available, will try source build"
+          
+          # Download python-olm source and patch embedded libolm CMakeLists.txt
+          pip download python-olm~=3.2 --no-binary=:all: --no-deps
+          tar -xzf python-olm-*.tar.gz
+          OLM_DIR=$(ls -d python-olm-*/ | head -n 1)
+          
+          # Patch the embedded CMakeLists.txt
+          CMAKE_FILE="${OLM_DIR}lib/cmake/CMakeLists.txt"
+          if [ -f "$CMAKE_FILE" ]; then
+            sed -i '' 's/cmake_minimum_required(VERSION [0-9]*\.[0-9]*)/cmake_minimum_required(VERSION 3.5)/' "$CMAKE_FILE"
+            echo "Patched embedded CMakeLists.txt in python-olm"
+          fi
+          
+          # Install from patched source
+          pip install "$OLM_DIR"
+          
+          # Install remaining dependencies
           pip install -r requirements.txt
       
       - name: Update version in files
