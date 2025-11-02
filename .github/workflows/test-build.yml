@@ -1,7 +1,12 @@
 name: Test Build (No Publish)
 
 on:
-  # Manual trigger only - no automatic triggers to avoid approval issues
+  # Trigger on push to this branch for automatic testing
+  push:
+    branches:
+      - copilot/duplicate-workflow-discard-artifacts
+  
+  # Manual trigger also available
   workflow_dispatch:
 
 jobs:
