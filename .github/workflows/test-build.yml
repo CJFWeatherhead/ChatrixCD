@@ -1,34 +1,13 @@
-name: Build and Release
+name: Test Build (No Publish)
 
 on:
-  # Trigger on PR merge to main
-  pull_request:
-    branches:
-      - main
-    types:
-      - closed
-  
-  # Manual trigger for releases
+  # Manual trigger only - no automatic triggers to avoid approval issues
   workflow_dispatch:
-    inputs:
-      version_type:
-        description: 'Version type (minor or patch)'
-        required: true
-        default: 'patch'
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
 
 jobs:
   test:
     name: Run Unit Tests
     runs-on: ubuntu-latest
-    # Only run tests if PR was merged or workflow is manually triggered
-    if: |
-      (github.event_name == 'pull_request' && github.event.pull_request.merged == true) ||
-      github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
     
@@ -63,7 +42,7 @@ jobs:
         arch: [x86_64, i686, arm64]
     
     permissions:
-      contents: write
+      contents: read
     
     steps:
       - name: Checkout code
@@ -87,18 +66,10 @@ jobs:
         id: version
         shell: bash
         run: |
-          # Determine version type (default to patch for PR merges)
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            VERSION_TYPE="patch"
-          else
-            VERSION_TYPE="${{ github.event.inputs.version_type }}"
-          fi
-          
-          # Call centralized version calculation script
-          VERSION=$(.github/scripts/calculate-version.sh "${VERSION_TYPE}")
+          # Use test version for test builds
+          VERSION="test-$(date +%Y%m%d-%H%M%S)"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Generated version: ${VERSION}"
-
       
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -172,13 +143,24 @@ jobs:
             chatrixcd/main.py
           "
       
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: chatrixcd-linux-${{ matrix.arch }}
-          path: |
-            chatrixcd-linux-${{ matrix.arch }}
-          retention-days: 90
+      - name: Verify build and show evidence
+        run: |
+          BINARY="chatrixcd-linux-${{ matrix.arch }}"
+          if [ -f "$BINARY" ]; then
+            echo "========================================="
+            echo "✅ Build successful for Linux ${{ matrix.arch }}"
+            echo "========================================="
+            ls -lh "$BINARY"
+            echo ""
+            echo "SHA256 Checksum:"
+            sha256sum "$BINARY"
+            echo ""
+            echo "File Size: $(stat -c%s "$BINARY") bytes ($(ls -lh "$BINARY" | awk '{print $5}'))"
+            echo "========================================="
+          else
+            echo "❌ Build failed - binary not found"
+            exit 1
+          fi
 
   build-windows:
     name: Build Windows ${{ matrix.arch }}
@@ -190,7 +172,7 @@ jobs:
         arch: [x86_64]
     
     permissions:
-      contents: write
+      contents: read
     
     steps:
       - name: Checkout code
@@ -205,17 +187,11 @@ jobs:
         id: version
         shell: bash
         run: |
-          # Determine version type (default to patch for PR merges)
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            VERSION_TYPE="patch"
-          else
-            VERSION_TYPE="${{ github.event.inputs.version_type }}"
-          fi
-          
-          # Call centralized version calculation script
-          VERSION=$(.github/scripts/calculate-version.sh "${VERSION_TYPE}")
+          # Use test version for test builds
+          VERSION="test-$(date +%Y%m%d-%H%M%S)"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Generated version: ${VERSION}"
+      
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -309,13 +285,25 @@ jobs:
           windows-console-mode: force
           include-data-dir: assets=assets
       
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: chatrixcd-windows-${{ matrix.arch }}
-          path: |
-            chatrixcd-windows-${{ matrix.arch }}.exe
-          retention-days: 90
+      - name: Verify build and show evidence
+        shell: bash
+        run: |
+          BINARY="chatrixcd-windows-${{ matrix.arch }}.exe"
+          if [ -f "$BINARY" ]; then
+            echo "========================================="
+            echo "✅ Build successful for Windows ${{ matrix.arch }}"
+            echo "========================================="
+            ls -lh "$BINARY"
+            echo ""
+            echo "SHA256 Checksum:"
+            sha256sum "$BINARY"
+            echo ""
+            echo "File Size: $(stat -c%s "$BINARY") bytes ($(ls -lh "$BINARY" | awk '{print $5}'))"
+            echo "========================================="
+          else
+            echo "❌ Build failed - binary not found"
+            exit 1
+          fi
 
   build-macos:
     name: Build macOS Universal
@@ -323,7 +311,7 @@ jobs:
     runs-on: macos-latest
     
     permissions:
-      contents: write
+      contents: read
     
     steps:
       - name: Checkout code
@@ -338,17 +326,11 @@ jobs:
         id: version
         shell: bash
         run: |
-          # Determine version type (default to patch for PR merges)
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            VERSION_TYPE="patch"
-          else
-            VERSION_TYPE="${{ github.event.inputs.version_type }}"
-          fi
-          
-          # Call centralized version calculation script
-          VERSION=$(.github/scripts/calculate-version.sh "${VERSION_TYPE}")
+          # Use test version for test builds
+          VERSION="test-$(date +%Y%m%d-%H%M%S)"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Generated version: ${VERSION}"
+      
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -407,222 +389,70 @@ jobs:
           macos-target-arch: universal2
           include-data-dir: assets=assets
       
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: chatrixcd-macos-universal
-          path: |
-            chatrixcd-macos-universal
-            ChatrixCD.app/**/*
-          retention-days: 90
+      - name: Verify build and show evidence
+        run: |
+          echo "========================================="
+          echo "macOS Universal Build Verification"
+          echo "========================================="
+          
+          # Check for binary
+          BINARY="chatrixcd-macos-universal"
+          if [ -f "$BINARY" ]; then
+            echo ""
+            echo "✅ Standalone binary build successful"
+            ls -lh "$BINARY"
+            echo ""
+            echo "SHA256 Checksum:"
+            shasum -a 256 "$BINARY"
+            echo ""
+            echo "File Size: $(stat -f%z "$BINARY") bytes ($(ls -lh "$BINARY" | awk '{print $5}'))"
+          else
+            echo "⚠️  Standalone binary not found"
+          fi
+          
+          echo ""
+          echo "========================================="
+          
+          # Check for app bundle
+          if [ -d "ChatrixCD.app" ]; then
+            echo ""
+            echo "✅ App bundle build successful"
+            du -sh ChatrixCD.app
+            echo ""
+            echo "App bundle contents (first 10 files with checksums):"
+            find ChatrixCD.app -type f | head -10 | while read file; do
+              echo "  $(shasum -a 256 "$file")"
+            done
+            echo ""
+            echo "App bundle size: $(du -sh ChatrixCD.app | awk '{print $1}')"
+          else
+            echo "❌ App bundle not found"
+            exit 1
+          fi
+          
+          echo "========================================="
 
-  release:
-    name: Create Release
+  # Summary job to show all results
+  summary:
+    name: Build Summary
     needs: [build-linux, build-windows, build-macos]
     runs-on: ubuntu-latest
-    if: success()
-    permissions:
-      contents: write
+    if: always()
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      - name: Fetch all tags
-        run: git fetch --tags --force
-      
-      - name: Calculate version
-        id: version
-        shell: bash
+      - name: Display results
         run: |
-          # Determine version type (default to patch for PR merges)
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            VERSION_TYPE="patch"
-          else
-            VERSION_TYPE="${{ github.event.inputs.version_type }}"
-          fi
-          
-          # Call centralized version calculation script
-          VERSION=$(.github/scripts/calculate-version.sh "${VERSION_TYPE}")
-          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "Generated version: ${VERSION}"
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-      
-      - name: Prepare release artifacts
-        run: |
-          mkdir -p release
-          find artifacts -type f -exec cp {} release/ \;
-          ls -lah release/
-      
-      - name: Update version in files (for release job)
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          
-          # Update __init__.py
-          sed -i "s/__version__ = \".*\"/__version__ = \"${VERSION}\"/" chatrixcd/__init__.py
-          
-          # Update setup.py
-          sed -i "s/version=\".*\"/version=\"${VERSION}\"/" setup.py
-          
-          echo "Updated version to ${VERSION}"
-      
-      - name: Update CHANGELOG.md
-        run: |
-          export VERSION="${{ steps.version.outputs.version }}"
-          RELEASE_DATE=$(date +%Y-%m-%d)
-          export RELEASE_DATE
-          
-          # Use Python to update the changelog in a more reliable way
-          python3 << 'PYTHON_SCRIPT'
-          import re
-          from datetime import datetime
-          import os
-          
-          version = os.environ['VERSION']
-          release_date = os.environ['RELEASE_DATE']
-          
-          # Read the current CHANGELOG.md
-          with open('CHANGELOG.md', 'r') as f:
-              content = f.read()
-          
-          # Find the Unreleased section
-          # Pattern: ## [Unreleased] followed by content until next ## heading
-          unreleased_pattern = r'## \[Unreleased\]\n(.*?)(?=\n## |\Z)'
-          match = re.search(unreleased_pattern, content, re.DOTALL)
-          
-          if match:
-              unreleased_content = match.group(1).strip()
-              
-              # If there's no content, add a placeholder
-              if not unreleased_content:
-                  unreleased_content = "No changes recorded."
-              
-              # Create the new version section
-              new_version_section = f"\n## [{version}] - {release_date}\n\n{unreleased_content}\n"
-              
-              # Replace the Unreleased section with an empty one and add the new version
-              # Find position where to insert: after ## [Unreleased] line
-              unreleased_header_end = match.start() + len("## [Unreleased]\n")
-              next_section_start = match.end()
-              
-              new_content = (
-                  content[:unreleased_header_end] + 
-                  new_version_section + 
-                  content[next_section_start:]
-              )
-              
-              # Update Version History section if it exists
-              version_history_pattern = r'(## Version History\s*\n)'
-              if re.search(version_history_pattern, new_content):
-                  new_content = re.sub(
-                      version_history_pattern,
-                      f'\\1\n- **{version}** ({release_date})\n',
-                      new_content
-                  )
-              
-              # Write the updated content
-              with open('CHANGELOG.md', 'w') as f:
-                  f.write(new_content)
-              
-              print(f"Updated CHANGELOG.md with version {version}")
-          else:
-              print("Warning: Could not find Unreleased section in CHANGELOG.md")
-          PYTHON_SCRIPT
-      
-      - name: Generate changelog
-        id: changelog
-        run: |
-          export VERSION="${{ steps.version.outputs.version }}"
-          
-          # Get the latest tag (if any)
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          
-          # Extract the version-specific content from CHANGELOG.md
-          python3 << 'PYTHON_SCRIPT'
-          import re
-          import os
-          
-          version = os.environ['VERSION']
-          
-          # Read CHANGELOG.md
-          with open('CHANGELOG.md', 'r') as f:
-              changelog_content = f.read()
-          
-          # Find the section for this version
-          # Pattern: ## [VERSION] - DATE followed by content until next ## heading
-          version_pattern = rf'## \[{re.escape(version)}\].*?\n(.*?)(?=\n## |\Z)'
-          match = re.search(version_pattern, changelog_content, re.DOTALL)
-          
-          if match:
-              version_notes = match.group(1).strip()
-              with open('version_notes.md', 'w') as f:
-                  f.write(version_notes)
-              print(f"Extracted version notes for {version}")
-          else:
-              print(f"Warning: Could not find version notes for {version}")
-              with open('version_notes.md', 'w') as f:
-                  f.write("No release notes found in CHANGELOG.md")
-          PYTHON_SCRIPT
-          
-          # Generate changelog from commits
-          if [ -z "$LATEST_TAG" ]; then
-            # No previous tag, get all commits
-            COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges | head -20)
-          else
-            # Get commits since last tag
-            COMMITS=$(git log "${LATEST_TAG}"..HEAD --pretty=format:"- %s (%h)" --no-merges | head -20)
-          fi
-          
-          # Combine CHANGELOG.md content with commit log
-          export COMMITS
-          export LATEST_TAG
-          cat version_notes.md > release_changelog.md
-          if [ -n "$COMMITS" ]; then
-            cat >> release_changelog.md << EOF
-          
-          ## Commit Log
-          
-          ${COMMITS}
-          EOF
-          fi
-          if [ -n "$LATEST_TAG" ]; then
-            cat >> release_changelog.md << EOF
-          
-          **Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG}...${{ steps.version.outputs.version }}
-          EOF
-          fi
-          
-          echo "Generated changelog for version ${{ steps.version.outputs.version }}"
-      
-      - name: Commit version updates
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add chatrixcd/__init__.py setup.py CHANGELOG.md
-          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}" || true
-          git push || true
-      
-      - name: Create Git tag
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "${VERSION}" -m "${VERSION}" || true
-          git push origin "${VERSION}" || true
-      
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.version.outputs.version }}
-          name: ${{ steps.version.outputs.version }}
-          body_path: release_changelog.md
-          draft: false
-          files: |
-            release/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "========================================="
+          echo "Build Test Results Summary"
+          echo "========================================="
+          echo ""
+          echo "This test workflow verifies that all binaries can be built successfully."
+          echo "Artifacts are NOT published - they are discarded after verification."
+          echo ""
+          echo "Check the logs of each build job above for:"
+          echo "  - Binary file sizes"
+          echo "  - SHA256 checksums"
+          echo "  - Build success confirmation"
+          echo ""
+          echo "If all jobs passed, the build process is working correctly."
+          echo "========================================="
