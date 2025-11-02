@@ -129,9 +129,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           
-          # Download python-olm source
-          Write-Host "Downloading python-olm source..."
-          pip download python-olm~=3.2 --no-binary=:all: --no-deps
+          # Download python-olm source directly (avoid pip download which triggers build)
+          Write-Host "Downloading python-olm source tarball..."
+          curl -L -o python-olm-3.2.16.tar.gz https://files.pythonhosted.org/packages/9e/29/0cc0c80196de69073eb8e42d95d9a33c2f18cd6745cd66c7c9d0bdfc2f18/python-olm-3.2.16.tar.gz
           
           # Extract tarball
           Write-Host "Extracting python-olm tarball..."
@@ -267,9 +267,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           
-          # Download python-olm source
-          echo "Downloading python-olm source..."
-          pip download python-olm~=3.2 --no-binary=:all: --no-deps
+          # Download python-olm source directly (avoid pip download which triggers build)
+          echo "Downloading python-olm source tarball..."
+          curl -L -o python-olm-3.2.16.tar.gz https://files.pythonhosted.org/packages/9e/29/0cc0c80196de69073eb8e42d95d9a33c2f18cd6745cd66c7c9d0bdfc2f18/python-olm-3.2.16.tar.gz
           
           # Extract tarball
           echo "Extracting python-olm tarball..."
