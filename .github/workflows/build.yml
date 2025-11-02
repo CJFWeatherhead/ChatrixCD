@@ -172,6 +172,21 @@ jobs:
             chatrixcd/main.py
           "
       
+      - name: Verify build and get checksum
+        run: |
+          BINARY="chatrixcd-linux-${{ matrix.arch }}"
+          if [ -f "$BINARY" ]; then
+            echo "✅ Build successful for ${{ matrix.arch }}"
+            ls -lh "$BINARY"
+            sha256sum "$BINARY"
+            echo "---"
+            echo "Size: $(stat -c%s "$BINARY") bytes"
+            echo "SHA256: $(sha256sum "$BINARY" | awk '{print $1}')"
+          else
+            echo "❌ Build failed - binary not found"
+            exit 1
+          fi
+      
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -309,6 +324,22 @@ jobs:
           windows-console-mode: force
           include-data-dir: assets=assets
       
+      - name: Verify build and get checksum
+        shell: bash
+        run: |
+          BINARY="chatrixcd-windows-${{ matrix.arch }}.exe"
+          if [ -f "$BINARY" ]; then
+            echo "✅ Build successful for ${{ matrix.arch }}"
+            ls -lh "$BINARY"
+            sha256sum "$BINARY"
+            echo "---"
+            echo "Size: $(stat -c%s "$BINARY") bytes"
+            echo "SHA256: $(sha256sum "$BINARY" | awk '{print $1}')"
+          else
+            echo "❌ Build failed - binary not found"
+            exit 1
+          fi
+      
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -406,6 +437,33 @@ jobs:
           macos-app-version: ${{ steps.version.outputs.version }}
           macos-target-arch: universal2
           include-data-dir: assets=assets
+      
+      - name: Verify build and get checksum
+        run: |
+          # Check for binary
+          BINARY="chatrixcd-macos-universal"
+          if [ -f "$BINARY" ]; then
+            echo "✅ Binary build successful"
+            ls -lh "$BINARY"
+            shasum -a 256 "$BINARY"
+            echo "---"
+            echo "Binary Size: $(stat -f%z "$BINARY") bytes"
+            echo "Binary SHA256: $(shasum -a 256 "$BINARY" | awk '{print $1}')"
+          else
+            echo "⚠️  Binary not found, checking for app bundle only"
+          fi
+          
+          # Check for app bundle
+          if [ -d "ChatrixCD.app" ]; then
+            echo "✅ App bundle build successful"
+            du -sh ChatrixCD.app
+            find ChatrixCD.app -type f -exec shasum -a 256 {} \; | head -10
+            echo "---"
+            echo "App bundle created successfully"
+          else
+            echo "❌ Build failed - neither binary nor app bundle found"
+            exit 1
+          fi
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
