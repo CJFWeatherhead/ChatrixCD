@@ -131,7 +131,7 @@ jobs:
           
           # Download python-olm source directly (avoid pip download which triggers build)
           Write-Host "Downloading python-olm source tarball..."
-          Invoke-WebRequest -Uri "https://files.pythonhosted.org/packages/9e/29/0cc0c80196de69073eb8e42d95d9a33c2f18cd6745cd66c7c9d0bdfc2f18/python-olm-3.2.16.tar.gz" -OutFile "python-olm-3.2.16.tar.gz"
+          Invoke-WebRequest -Uri "https://files.pythonhosted.org/packages/b8/eb/23ca73cbdc8c7466a774e515dfd917d9fbe747c1257059246fdc63093f04/python-olm-3.2.16.tar.gz" -OutFile "python-olm-3.2.16.tar.gz"
           
           # Extract tarball
           Write-Host "Extracting python-olm tarball..."
@@ -269,7 +269,7 @@ jobs:
           
           # Download python-olm source directly (avoid pip download which triggers build)
           echo "Downloading python-olm source tarball..."
-          curl -L -o python-olm-3.2.16.tar.gz --fail --show-error https://files.pythonhosted.org/packages/9e/29/0cc0c80196de69073eb8e42d95d9a33c2f18cd6745cd66c7c9d0bdfc2f18/python-olm-3.2.16.tar.gz
+          curl -L -o python-olm-3.2.16.tar.gz --fail --show-error https://files.pythonhosted.org/packages/b8/eb/23ca73cbdc8c7466a774e515dfd917d9fbe747c1257059246fdc63093f04/python-olm-3.2.16.tar.gz
           
           # Extract tarball
           echo "Extracting python-olm tarball..."
