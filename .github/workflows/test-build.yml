@@ -357,6 +357,7 @@ jobs:
             echo "PKG_CONFIG_PATH=${HOMEBREW_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH}"
             echo "CFLAGS=-I${HOMEBREW_PREFIX}/include"
             echo "LDFLAGS=-L${HOMEBREW_PREFIX}/lib"
+            echo "USE_SYSTEM_LIBOLM=1"
           } >> "$GITHUB_ENV"
       
       - name: Install dependencies
