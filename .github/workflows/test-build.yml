@@ -149,14 +149,18 @@ jobs:
             Write-Host "⚠ CMakeLists.txt not found at $cmakeFile"
           }
           
-          # Install from patched source directory
+          # Install from patched source directory FIRST (before requirements.txt)
           Write-Host "Installing python-olm from patched source..."
           cd python-olm-3.2.16
           pip install . --verbose
           cd ..
           
-          # Install remaining dependencies
+          # Install remaining dependencies (pip will skip python-olm since it's already installed)
           Write-Host "Installing remaining dependencies..."
+          pip install -r requirements.txt --no-deps
+          
+          # Now install dependencies of requirements.txt packages
+          Write-Host "Installing dependencies of requirements.txt packages..."
           pip install -r requirements.txt
       
       - name: Update version in files
@@ -285,14 +289,18 @@ jobs:
             echo "⚠ CMakeLists.txt not found at $CMAKE_FILE"
           fi
           
-          # Install from patched source directory
+          # Install from patched source directory FIRST (before requirements.txt)
           echo "Installing python-olm from patched source..."
           cd python-olm-3.2.16
           pip install . --verbose
           cd ..
           
-          # Install remaining dependencies
+          # Install remaining dependencies (pip will skip python-olm since it's already installed)
           echo "Installing remaining dependencies..."
+          pip install -r requirements.txt --no-deps
+          
+          # Now install dependencies of requirements.txt packages
+          echo "Installing dependencies of requirements.txt packages..."
           pip install -r requirements.txt
       
       - name: Update version in files
