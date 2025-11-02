@@ -364,26 +364,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          
-          # Install all dependencies except python-olm first
-          grep -v "python-olm" requirements.txt > /tmp/requirements-no-olm.txt || true
-          pip install -r /tmp/requirements-no-olm.txt
-          
-          # For python-olm, patch the embedded libolm CMake requirement before building
-          # Download python-olm source
-          pip download --no-deps --no-binary :all: python-olm~=3.2
-          tar -xzf python-olm-*.tar.gz
-          cd python-olm-*/
-          
-          # Patch the CMakeLists.txt that python-olm embeds
-          if [ -f "olm-sys-3/olm/CMakeLists.txt" ]; then
-            sed -i '' 's/cmake_minimum_required(VERSION [0-9.]*)/cmake_minimum_required(VERSION 3.5)/' olm-sys-3/olm/CMakeLists.txt
-          fi
-          
-          # Build and install python-olm with patched source
-          pip install .
-          cd ..
-          rm -rf python-olm-*
+          pip install -r requirements.txt
       
       - name: Update version in files
         run: |
