@@ -129,25 +129,34 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           
-          # Download python-olm source and patch embedded libolm CMakeLists.txt
+          # Download python-olm source
+          Write-Host "Downloading python-olm source..."
           pip download python-olm~=3.2 --no-binary=:all: --no-deps
-          $tarball = Get-ChildItem python-olm-*.tar.gz | Select-Object -First 1
-          tar -xzf $tarball
-          $olmDir = Get-ChildItem -Directory python-olm-* | Select-Object -First 1
+          
+          # Extract tarball
+          Write-Host "Extracting python-olm tarball..."
+          tar -xzf python-olm-3.2.16.tar.gz
           
           # Patch the embedded CMakeLists.txt
-          $cmakeFile = Join-Path $olmDir.FullName "lib\cmake\CMakeLists.txt"
+          $cmakeFile = "python-olm-3.2.16\lib\cmake\CMakeLists.txt"
+          Write-Host "Patching $cmakeFile"
           if (Test-Path $cmakeFile) {
             $content = Get-Content $cmakeFile -Raw
             $content = $content -replace 'cmake_minimum_required\(VERSION [0-9]+\.[0-9]+(?:\.[0-9]+)?\)', 'cmake_minimum_required(VERSION 3.5)'
             Set-Content $cmakeFile $content
-            Write-Host "Patched embedded CMakeLists.txt in python-olm"
+            Write-Host "✓ Patched embedded CMakeLists.txt"
+          } else {
+            Write-Host "⚠ CMakeLists.txt not found at $cmakeFile"
           }
           
-          # Install from patched source
-          pip install $olmDir.FullName
+          # Install from patched source directory
+          Write-Host "Installing python-olm from patched source..."
+          cd python-olm-3.2.16
+          pip install . --verbose
+          cd ..
           
           # Install remaining dependencies
+          Write-Host "Installing remaining dependencies..."
           pip install -r requirements.txt
       
       - name: Update version in files
@@ -258,22 +267,32 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           
-          # Download python-olm source and patch embedded libolm CMakeLists.txt
+          # Download python-olm source
+          echo "Downloading python-olm source..."
           pip download python-olm~=3.2 --no-binary=:all: --no-deps
-          tar -xzf python-olm-*.tar.gz
-          OLM_DIR=$(ls -d python-olm-*/ | head -n 1)
+          
+          # Extract tarball
+          echo "Extracting python-olm tarball..."
+          tar -xzf python-olm-3.2.16.tar.gz
           
           # Patch the embedded CMakeLists.txt
-          CMAKE_FILE="${OLM_DIR}lib/cmake/CMakeLists.txt"
+          CMAKE_FILE="python-olm-3.2.16/lib/cmake/CMakeLists.txt"
+          echo "Patching $CMAKE_FILE"
           if [ -f "$CMAKE_FILE" ]; then
             sed -i '' 's/cmake_minimum_required(VERSION [0-9]*\.[0-9]*)/cmake_minimum_required(VERSION 3.5)/' "$CMAKE_FILE"
-            echo "Patched embedded CMakeLists.txt in python-olm"
+            echo "✓ Patched embedded CMakeLists.txt"
+          else
+            echo "⚠ CMakeLists.txt not found at $CMAKE_FILE"
           fi
           
-          # Install from patched source
-          pip install "$OLM_DIR"
+          # Install from patched source directory
+          echo "Installing python-olm from patched source..."
+          cd python-olm-3.2.16
+          pip install . --verbose
+          cd ..
           
           # Install remaining dependencies
+          echo "Installing remaining dependencies..."
           pip install -r requirements.txt
       
       - name: Update version in files
