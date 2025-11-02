@@ -10,29 +10,22 @@ Choose the method that best suits your needs:
 2. **From Source** - For development or custom modifications
 3. **Docker** - For containerized deployments
 
-## Method 1: Pre-built Binary (Recommended)
+## Method 1: Pre-built Binary (Recommended for Linux)
 
-The easiest way to get started - no Python installation required!
+The easiest way to get started on Linux - no Python installation required!
 
 ### Download
 
-Download the appropriate binary for your platform:
+Download the appropriate binary for your Linux platform:
 
 #### Linux
 - [x86_64 (64-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64) - Most common
 - [i686 (32-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
 - [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64) - Raspberry Pi, ARM servers
 
-#### Windows
-- [x86_64 (64-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-x86_64.exe)
-- [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-arm64.exe)
-
-#### macOS
-- [Universal Binary](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal) - Intel and Apple Silicon
-
 ### Setup and Run
 
-**Linux/macOS:**
+**Linux:**
 
 ```bash
 # Download (example for Linux x86_64)
@@ -45,15 +38,6 @@ chmod +x chatrixcd-linux-x86_64
 ./chatrixcd-linux-x86_64
 ```
 
-**Windows:**
-
-1. Download the appropriate `.exe` file
-2. Double-click to run, or use Command Prompt/PowerShell:
-
-```cmd
-chatrixcd-windows-x86_64.exe
-```
-
 **First Run:**
 
 On first run, the bot will create a sample configuration file if one doesn't exist. You'll need to:
@@ -64,19 +48,66 @@ On first run, the bot will create a sample configuration file if one doesn't exi
 
 Continue to the [Configuration](#configuration) section below.
 
+### Windows and macOS Users
+
+Pre-built binaries are not currently available for Windows and macOS due to build complexity with native dependencies. Please use one of these alternatives:
+
+#### Windows Installation Options
+
+**Option A: Install from Source (Recommended)**
+- Requires Python 3.12+ (see Method 2 below)
+- Native Windows installation with full TUI support
+
+**Option B: Windows Subsystem for Linux (WSL2)**
+```powershell
+# Install WSL2 (run as Administrator)
+wsl --install
+
+# After reboot, in WSL terminal:
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
+chmod +x chatrixcd-linux-x86_64
+./chatrixcd-linux-x86_64
+```
+
+**Option C: Docker Desktop**
+- Install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/)
+- See Method 3 below for Docker instructions
+
+#### macOS Installation Options
+
+**Option A: Install from Source (Recommended)**
+- Requires Python 3.12+ and homebrew (see Method 2 below)
+- Native macOS installation with full TUI support
+
+**Option B: Docker Desktop**
+- Install [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop/)
+- See Method 3 below for Docker instructions
+
 ## Method 2: Install from Source
 
-For development or if you prefer to run from source.
+For development, Windows/macOS users, or if you prefer to run from source.
 
 ### Prerequisites
 
 - Python 3.12 or higher (3.12, 3.13, 3.14 supported)
 - [uv](https://docs.astral.sh/uv/) - Fast Python package installer (recommended) or pip
+- Platform-specific dependencies (see below)
 
-### Prerequisites
+### Platform-Specific Prerequisites
 
-- Python 3.12 or higher (3.12, 3.13, 3.14 supported)
-- [uv](https://docs.astral.sh/uv/) - Fast Python package installer (recommended) or pip
+**macOS:**
+```bash
+# Install system dependencies via homebrew
+brew install libolm pkg-config
+```
+
+**Windows:**
+- libolm will be installed automatically via pip
+- If you encounter build issues, consider using WSL2 or Docker instead
+
+**Linux:**
+- Most distributions include required dependencies
+- If libolm is missing: `sudo apt install libolm-dev` (Debian/Ubuntu) or `sudo yum install libolm-devel` (RHEL/CentOS)
 
 ### Install uv (if not already installed)
 
@@ -84,7 +115,7 @@ For development or if you prefer to run from source.
 # On Linux/macOS:
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# On Windows:
+# On Windows (PowerShell):
 powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
