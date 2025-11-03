@@ -153,10 +153,18 @@ class MenuScreen(ModalScreen):
         background: $primary;
         color: white;
     }
+    
+    MenuScreen Button:focus {
+        background: $primary;
+        color: white;
+    }
     """
     
     BINDINGS = [
         Binding("escape", "dismiss", "Close", priority=True),
+        Binding("up", "focus_previous", "Previous", show=False),
+        Binding("down", "focus_next", "Next", show=False),
+        Binding("enter", "select_focused", "Select", show=False),
     ]
     
     def __init__(self, menu_items: List[tuple], x_offset: int = 0, **kwargs):
@@ -189,6 +197,14 @@ class MenuScreen(ModalScreen):
             if hasattr(self.app, f"action_{action}"):
                 method = getattr(self.app, f"action_{action}")
                 method()
+    
+    def action_select_focused(self) -> None:
+        """Select the currently focused button."""
+        # Get the currently focused widget
+        focused = self.focused
+        if focused and isinstance(focused, Button):
+            # Trigger the button press
+            focused.press()
 
 
 class FileMenuScreen(MenuScreen):
@@ -614,7 +630,14 @@ class ChatrixTurboTUI(App):
         )
         
         # Generate all CSS variables (163 variables including scrollbar-*)
-        return color_system.generate()
+        variables = color_system.generate()
+        
+        # Add custom theme variables for text colors
+        # These override the auto-generated 'text' variable which is "auto 87%"
+        variables['text'] = theme.get('text', '#FFFFFF')
+        variables['text-muted'] = theme.get('text-muted', '#808080')
+        
+        return variables
     
     def compose(self) -> ComposeResult:
         """Create child widgets."""

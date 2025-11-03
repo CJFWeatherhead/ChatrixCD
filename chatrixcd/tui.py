@@ -1714,7 +1714,14 @@ class ChatrixTUI(App):
         )
         
         # Generate all CSS variables (163 variables including scrollbar-*)
-        return color_system.generate()
+        variables = color_system.generate()
+        
+        # Add custom theme variables for text colors
+        # These override the auto-generated 'text' variable which is "auto 87%"
+        variables['text'] = theme.get('text', '#FFFFFF')
+        variables['text-muted'] = theme.get('text-muted', '#808080')
+        
+        return variables
         
     def compose(self) -> ComposeResult:
         """Create child widgets for main menu."""
