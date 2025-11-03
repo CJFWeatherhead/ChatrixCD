@@ -141,8 +141,8 @@ jobs:
       - name: Move x86_64 artifact to root
         if: matrix.arch == 'x86_64'
         run: |
-          mv build/chatrixcd-linux-x86_64 ./chatrixcd-linux-x86_64
-          ls -lah chatrixcd-linux-x86_64
+          mv build/chatrixcd-linux-x86_64 ./chatrixcd-linux-x86_64 || { echo 'Error: Failed to move x86_64 artifact from build/ directory'; exit 1; }
+          ls -lah chatrixcd-linux-x86_64 || { echo 'Warning: Artifact file not found after move'; exit 1; }
       
       - name: Build with Nuitka (i686 - using Docker)
         if: matrix.arch == 'i686'
