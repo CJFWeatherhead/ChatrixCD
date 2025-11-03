@@ -884,26 +884,31 @@ class ChatrixTurboTUI(App):
     def action_previous_menu(self):
         """Navigate to the previous menu (left arrow key)."""
         # Cycle to previous menu
-        self.current_menu_index = (self.current_menu_index - 1) % len(self.menu_order)
-        self._show_current_menu()
+        new_index = (self.current_menu_index - 1) % len(self.menu_order)
+        self._show_menu_by_index(new_index)
     
     def action_next_menu(self):
         """Navigate to the next menu (right arrow key)."""
         # Cycle to next menu
-        self.current_menu_index = (self.current_menu_index + 1) % len(self.menu_order)
-        self._show_current_menu()
+        new_index = (self.current_menu_index + 1) % len(self.menu_order)
+        self._show_menu_by_index(new_index)
     
-    def _show_current_menu(self):
-        """Show the menu at the current index."""
-        menu_name = self.menu_order[self.current_menu_index]
-        if menu_name == 'file':
-            self.push_screen(FileMenuScreen())
-        elif menu_name == 'edit':
-            self.push_screen(EditMenuScreen())
-        elif menu_name == 'run':
-            self.push_screen(RunMenuScreen())
-        elif menu_name == 'help':
-            self.push_screen(HelpMenuScreen())
+    def _show_menu_by_index(self, index: int):
+        """Show the menu at the specified index.
+        
+        Args:
+            index: Menu index (0=file, 1=edit, 2=run, 3=help)
+        """
+        # Map indices to their corresponding action methods
+        menu_actions = [
+            self.action_show_file_menu,
+            self.action_show_edit_menu,
+            self.action_show_run_menu,
+            self.action_show_help_menu,
+        ]
+        
+        if 0 <= index < len(menu_actions):
+            menu_actions[index]()
 
 
 async def run_tui(bot, config, use_color: bool = True, mouse: bool = False):
