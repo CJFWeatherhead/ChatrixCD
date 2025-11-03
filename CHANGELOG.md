@@ -15,6 +15,12 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Changed
+- **Build Workflow**: Changed build and release workflow to on-demand only
+  - Removed automatic trigger on pull request merge to main
+  - Workflow now only runs via manual workflow_dispatch trigger
+  - Simplified version calculation logic to use workflow input directly
+
 ### Fixed
 - **Build Workflow**: Fixed artifact upload paths in build-release workflow
   - Added step to move x86_64 Nuitka-Action output from `build/` directory to root directory
@@ -24,8 +30,6 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Added missing `$panel` CSS variable to both classic and turbo TUI themes
   - Resolves "reference to undefined variable '$panel'" error when starting TUI with `-t classic` or `-t turbo` options
   - Maps `panel` to `surface` color for consistent UI appearance
-
-### Changed
 - **Bot Messages**: Updated task start confirmation to use proper British Army Voice Procedure
   - Changed "Roger that!" to "Roger!" (single word affirmative as per military radio protocol)
 - **Platform Support**: Removed Windows and macOS pre-built binary support

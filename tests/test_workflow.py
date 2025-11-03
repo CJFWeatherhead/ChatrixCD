@@ -39,20 +39,16 @@ class TestWorkflowConfiguration(unittest.TestCase):
         self.assertIn(True, self.build_workflow)
         triggers = self.build_workflow[True]
         
-        # Should have pull_request trigger
-        self.assertIn('pull_request', triggers)
-        self.assertIn('branches', triggers['pull_request'])
-        self.assertIn('main', triggers['pull_request']['branches'])
-        self.assertIn('types', triggers['pull_request'])
-        self.assertIn('closed', triggers['pull_request']['types'])
-        
-        # Should have workflow_dispatch for manual triggers
+        # Should have workflow_dispatch for manual triggers (on-demand only)
         self.assertIn('workflow_dispatch', triggers)
         self.assertIn('inputs', triggers['workflow_dispatch'])
         
         # Check workflow_dispatch inputs
         inputs = triggers['workflow_dispatch']['inputs']
         self.assertIn('version_type', inputs)
+        
+        # Should NOT have pull_request trigger (on-demand only)
+        self.assertNotIn('pull_request', triggers)
     
     def test_build_workflow_has_test_job(self):
         """Test that build workflow has a test job."""
