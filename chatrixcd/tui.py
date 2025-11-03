@@ -20,6 +20,7 @@ from textual.screen import Screen, ModalScreen
 from textual.binding import Binding
 from textual import events
 from textual.reactive import reactive
+from textual.design import ColorSystem
 from chatrixcd.verification import DeviceVerificationManager
 from nio.crypto import Sas
 
@@ -1699,15 +1700,21 @@ class ChatrixTUI(App):
             Dictionary of CSS variable names and values
         """
         theme = self.THEMES.get(self.theme_name, self.THEMES['default'])
-        return {
-            'primary': theme['primary'],
-            'surface': theme['surface'],
-            'background': theme['background'],
-            'text': theme['text'],
-            'text-muted': theme['text-muted'],
-            'foreground': theme['text'],  # Alias for Textual 6.x compatibility
-            'panel': theme['surface'],  # Panel color for Textual 6.x compatibility
-        }
+        
+        # Use Textual's ColorSystem to generate all required CSS variables
+        # This ensures compatibility with built-in widgets that expect
+        # scrollbar-background, scrollbar-hover, etc.
+        color_system = ColorSystem(
+            primary=theme['primary'],
+            secondary=theme.get('secondary', theme['surface']),
+            background=theme['background'],
+            surface=theme['surface'],
+            panel=theme['surface'],
+            accent=theme.get('accent', theme['primary'])
+        )
+        
+        # Generate all CSS variables (163 variables including scrollbar-*)
+        return color_system.generate()
         
     def compose(self) -> ComposeResult:
         """Create child widgets for main menu."""

@@ -22,6 +22,12 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Simplified version calculation logic to use workflow input directly
 
 ### Fixed
+- **TUI CSS Compatibility**: Fixed stylesheet errors with undefined CSS variables
+  - Updated `get_css_variables()` to use Textual's `ColorSystem.generate()` for complete variable set
+  - Now generates all 163 CSS variables including scrollbar-background, scrollbar-hover, etc.
+  - Resolves "reference to undefined variable '$scrollbar-background'" errors in both classic and turbo TUI modes
+  - All themes (default, midnight, grayscale, windows31, msdos) now fully compatible with Textual 6.x
+  - Added comprehensive CSS compatibility tests to prevent future regressions
 - **Build Workflow**: Fixed artifact upload paths in build-release workflow
   - Added step to move x86_64 Nuitka-Action output from `build/` directory to root directory
   - Ensures artifacts are correctly located for upload to GitHub Releases
