@@ -15,6 +15,12 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Fixed
+- **TUI Compatibility**: Fixed stylesheet error with Textual 6.x
+  - Added missing `$panel` CSS variable to both classic and turbo TUI themes
+  - Resolves "reference to undefined variable '$panel'" error when starting TUI with `-t classic` or `-t turbo` options
+  - Maps `panel` to `surface` color for consistent UI appearance
+
 ### Changed
 - **Bot Messages**: Updated task start confirmation to use proper British Army Voice Procedure
   - Changed "Roger that!" to "Roger!" (single word affirmative as per military radio protocol)
