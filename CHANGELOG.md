@@ -15,6 +15,15 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Fixed
+- **Turbo TUI Menus**: Fixed dropdown menu readability and keyboard navigation
+  - Fixed CSS color variables resolving to "auto 87%" instead of actual theme colors
+  - Added arrow key navigation (up/down) to dropdown menus (F1-F4)
+  - Added Enter key support to select focused menu items
+  - Added :focus CSS state for better keyboard navigation visibility
+  - Menus now properly readable in all themes (default, midnight, grayscale, windows31, msdos)
+  - Both classic and turbo TUI modes now override auto-generated text variables with theme-specific colors
+
 ### Changed
 - **Build Workflow**: Changed build and release workflow to on-demand only
   - Removed automatic trigger on pull request merge to main
