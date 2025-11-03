@@ -362,6 +362,10 @@ class TestTurboTUIComponents(unittest.TestCase):
 class TestCSSCompatibility(unittest.TestCase):
     """Test CSS compatibility with Textual design system."""
     
+    # Textual's ColorSystem.generate() returns 163 CSS variables
+    # This includes all design system colors, scrollbar variables, etc.
+    EXPECTED_CSS_VARIABLE_COUNT = 163
+    
     def test_tui_css_variables_complete(self):
         """Test that TUI provides all required CSS variables for Textual widgets."""
         from chatrixcd.tui import ChatrixTUI
@@ -377,9 +381,9 @@ class TestCSSCompatibility(unittest.TestCase):
         tui = ChatrixTUI(mock_bot, mock_config, use_color=True)
         css_vars = tui.get_css_variables()
         
-        # Verify we have a comprehensive set of CSS variables
-        self.assertGreater(len(css_vars), 100, 
-                          "Should have comprehensive CSS variables (>100)")
+        # Verify we have the complete set of CSS variables from ColorSystem
+        self.assertEqual(len(css_vars), self.EXPECTED_CSS_VARIABLE_COUNT,
+                        f"Should have {self.EXPECTED_CSS_VARIABLE_COUNT} CSS variables from ColorSystem.generate()")
         
         # Verify critical scrollbar variables are present
         required_scrollbar_vars = [
@@ -411,9 +415,9 @@ class TestCSSCompatibility(unittest.TestCase):
         tui = ChatrixTurboTUI(mock_bot, mock_config, use_color=True)
         css_vars = tui.get_css_variables()
         
-        # Verify we have a comprehensive set of CSS variables
-        self.assertGreater(len(css_vars), 100,
-                          "Should have comprehensive CSS variables (>100)")
+        # Verify we have the complete set of CSS variables from ColorSystem
+        self.assertEqual(len(css_vars), self.EXPECTED_CSS_VARIABLE_COUNT,
+                        f"Should have {self.EXPECTED_CSS_VARIABLE_COUNT} CSS variables from ColorSystem.generate()")
         
         # Verify critical scrollbar variables are present
         required_scrollbar_vars = [
@@ -450,9 +454,9 @@ class TestCSSCompatibility(unittest.TestCase):
                 tui = ChatrixTUI(mock_bot, mock_config, theme=theme_name)
                 css_vars = tui.get_css_variables()
                 
-                # Each theme should provide comprehensive variables
-                self.assertGreater(len(css_vars), 100,
-                                  f"Theme '{theme_name}' should have >100 CSS variables")
+                # Each theme should provide the complete set of CSS variables
+                self.assertEqual(len(css_vars), self.EXPECTED_CSS_VARIABLE_COUNT,
+                                f"Theme '{theme_name}' should have {self.EXPECTED_CSS_VARIABLE_COUNT} CSS variables")
                 
                 # Each theme should have scrollbar variables
                 self.assertIn('scrollbar-background', css_vars,

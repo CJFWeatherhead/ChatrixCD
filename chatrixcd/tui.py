@@ -20,6 +20,7 @@ from textual.screen import Screen, ModalScreen
 from textual.binding import Binding
 from textual import events
 from textual.reactive import reactive
+from textual.design import ColorSystem
 from chatrixcd.verification import DeviceVerificationManager
 from nio.crypto import Sas
 
@@ -1698,8 +1699,6 @@ class ChatrixTUI(App):
         Returns:
             Dictionary of CSS variable names and values
         """
-        from textual.design import ColorSystem
-        
         theme = self.THEMES.get(self.theme_name, self.THEMES['default'])
         
         # Use Textual's ColorSystem to generate all required CSS variables
