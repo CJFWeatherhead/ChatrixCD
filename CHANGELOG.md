@@ -16,6 +16,12 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Fixed
+- **TUI CSS Compatibility**: Fixed stylesheet errors with undefined CSS variables
+  - Updated `get_css_variables()` to use Textual's `ColorSystem.generate()` for complete variable set
+  - Now generates all 163 CSS variables including scrollbar-background, scrollbar-hover, etc.
+  - Resolves "reference to undefined variable '$scrollbar-background'" errors in both classic and turbo TUI modes
+  - All themes (default, midnight, grayscale, windows31, msdos) now fully compatible with Textual 6.x
+  - Added comprehensive CSS compatibility tests to prevent future regressions
 - **TUI Compatibility**: Fixed stylesheet error with Textual 6.x
   - Added missing `$panel` CSS variable to both classic and turbo TUI themes
   - Resolves "reference to undefined variable '$panel'" error when starting TUI with `-t classic` or `-t turbo` options

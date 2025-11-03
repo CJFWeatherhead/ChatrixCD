@@ -359,6 +359,106 @@ class TestTurboTUIComponents(unittest.TestCase):
         self.assertIsNotNone(version_screen)
 
 
+class TestCSSCompatibility(unittest.TestCase):
+    """Test CSS compatibility with Textual design system."""
+    
+    def test_tui_css_variables_complete(self):
+        """Test that TUI provides all required CSS variables for Textual widgets."""
+        from chatrixcd.tui import ChatrixTUI
+        
+        mock_bot = Mock()
+        mock_bot.client = None
+        mock_bot.semaphore = None
+        
+        mock_config = Mock()
+        mock_config.get_bot_config.return_value = {}
+        mock_config.get.return_value = "default"
+        
+        tui = ChatrixTUI(mock_bot, mock_config, use_color=True)
+        css_vars = tui.get_css_variables()
+        
+        # Verify we have a comprehensive set of CSS variables
+        self.assertGreater(len(css_vars), 100, 
+                          "Should have comprehensive CSS variables (>100)")
+        
+        # Verify critical scrollbar variables are present
+        required_scrollbar_vars = [
+            'scrollbar-background',
+            'scrollbar-background-hover', 
+            'scrollbar-background-active',
+            'scrollbar',
+            'scrollbar-hover',
+            'scrollbar-active',
+            'scrollbar-corner-color'
+        ]
+        
+        for var in required_scrollbar_vars:
+            self.assertIn(var, css_vars, 
+                         f"Missing required CSS variable: {var}")
+    
+    def test_turbo_tui_css_variables_complete(self):
+        """Test that Turbo TUI provides all required CSS variables."""
+        from chatrixcd.tui_turbo import ChatrixTurboTUI
+        
+        mock_bot = Mock()
+        mock_bot.client = None
+        mock_bot.semaphore = None
+        
+        mock_config = Mock()
+        mock_config.get_bot_config.return_value = {}
+        mock_config.get.return_value = "default"
+        
+        tui = ChatrixTurboTUI(mock_bot, mock_config, use_color=True)
+        css_vars = tui.get_css_variables()
+        
+        # Verify we have a comprehensive set of CSS variables
+        self.assertGreater(len(css_vars), 100,
+                          "Should have comprehensive CSS variables (>100)")
+        
+        # Verify critical scrollbar variables are present
+        required_scrollbar_vars = [
+            'scrollbar-background',
+            'scrollbar-background-hover',
+            'scrollbar-background-active',
+            'scrollbar',
+            'scrollbar-hover',
+            'scrollbar-active',
+            'scrollbar-corner-color'
+        ]
+        
+        for var in required_scrollbar_vars:
+            self.assertIn(var, css_vars,
+                         f"Missing required CSS variable: {var}")
+    
+    def test_all_themes_provide_css_variables(self):
+        """Test that all themes provide complete CSS variables."""
+        from chatrixcd.tui import ChatrixTUI
+        
+        mock_bot = Mock()
+        mock_bot.client = None
+        mock_bot.semaphore = None
+        
+        mock_config = Mock()
+        mock_config.get_bot_config.return_value = {}
+        mock_config.get.return_value = "default"
+        
+        # Test all available themes
+        themes = ['default', 'midnight', 'grayscale', 'windows31', 'msdos']
+        
+        for theme_name in themes:
+            with self.subTest(theme=theme_name):
+                tui = ChatrixTUI(mock_bot, mock_config, theme=theme_name)
+                css_vars = tui.get_css_variables()
+                
+                # Each theme should provide comprehensive variables
+                self.assertGreater(len(css_vars), 100,
+                                  f"Theme '{theme_name}' should have >100 CSS variables")
+                
+                # Each theme should have scrollbar variables
+                self.assertIn('scrollbar-background', css_vars,
+                             f"Theme '{theme_name}' missing scrollbar-background")
+
+
 class TestErrorHandling(unittest.TestCase):
     """Test error handling in main module."""
     
