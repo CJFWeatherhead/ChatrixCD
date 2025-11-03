@@ -26,6 +26,11 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - These hidden commands are now properly protected from being overridden by aliases
   - Commands are recognized as valid for command validation
   - Maintains easter egg status while ensuring proper functionality
+- **Turbo TUI Menu Text Visibility**: Fixed invisible/hidden text in dropdown menus
+  - Changed MenuScreen button text color from `$text` variable to `auto` for proper automatic contrast
+  - Textual's `auto` color automatically calculates appropriate text color based on background
+  - Ensures text is visible in all themes without hardcoding specific colors
+  - Resolves issue where CSS variables weren't being inherited properly by ModalScreens
 - **Turbo TUI Menus**: Fixed dropdown menu readability and keyboard navigation
   - Fixed CSS color variables resolving to "auto 87%" instead of actual theme colors
   - Added arrow key navigation (up/down) to dropdown menus (F1-F4)

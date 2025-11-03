@@ -142,7 +142,7 @@ class MenuScreen(ModalScreen):
     MenuScreen Button {
         width: 100%;
         background: $surface;
-        color: $text;
+        color: auto;
         border: none;
         text-align: left;
         padding: 0 2;
