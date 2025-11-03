@@ -16,6 +16,10 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Fixed
+- **Build Workflow**: Fixed artifact upload paths in build-release workflow
+  - Added step to move x86_64 Nuitka-Action output from `build/` directory to root directory
+  - Ensures artifacts are correctly located for upload to GitHub Releases
+  - Resolves "No files were found with the provided path" error during artifact upload
 - **TUI Compatibility**: Fixed stylesheet error with Textual 6.x
   - Added missing `$panel` CSS variable to both classic and turbo TUI themes
   - Resolves "reference to undefined variable '$panel'" error when starting TUI with `-t classic` or `-t turbo` options

@@ -138,6 +138,12 @@ jobs:
           linux-icon: assets/icon.png
           include-data-dir: assets=assets
       
+      - name: Move x86_64 artifact to root
+        if: matrix.arch == 'x86_64'
+        run: |
+          mv build/chatrixcd-linux-x86_64 ./chatrixcd-linux-x86_64
+          ls -lah chatrixcd-linux-x86_64
+      
       - name: Build with Nuitka (i686 - using Docker)
         if: matrix.arch == 'i686'
         run: |
