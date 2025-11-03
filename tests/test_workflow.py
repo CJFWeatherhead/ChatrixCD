@@ -205,6 +205,35 @@ class TestWorkflowConfiguration(unittest.TestCase):
                     self.assertTrue(
                         any('assets' in item for item in include_data)
                     )
+    
+    def test_build_workflow_moves_x86_64_artifact(self):
+        """Test that build workflow moves x86_64 artifact from build/ directory."""
+        jobs = self.build_workflow['jobs']
+        linux_job = jobs['build-linux']
+        steps = linux_job['steps']
+        
+        # Find the move step for x86_64
+        move_steps = [
+            step for step in steps
+            if 'Move x86_64 artifact to root' in step.get('name', '')
+        ]
+        
+        self.assertGreater(
+            len(move_steps), 0,
+            "Linux build should have a step to move x86_64 artifact to root"
+        )
+        
+        # Verify the move step has the correct if condition
+        move_step = move_steps[0]
+        self.assertIn('if', move_step)
+        self.assertIn('x86_64', move_step['if'])
+        
+        # Verify the move step has the correct run command
+        self.assertIn('run', move_step)
+        run_command = move_step['run']
+        self.assertIn('mv', run_command)
+        self.assertIn('build/chatrixcd-linux-x86_64', run_command)
+        self.assertIn('./chatrixcd-linux-x86_64', run_command)
 
 
 class TestIconFiles(unittest.TestCase):
