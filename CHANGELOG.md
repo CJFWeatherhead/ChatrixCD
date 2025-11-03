@@ -15,6 +15,12 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Changed
+- **Build Workflow**: Changed build and release workflow to on-demand only
+  - Removed automatic trigger on pull request merge to main
+  - Workflow now only runs via manual workflow_dispatch trigger
+  - Simplified version calculation logic to use workflow input directly
+
 ### Fixed
 - **TUI CSS Compatibility**: Fixed stylesheet errors with undefined CSS variables
   - Updated `get_css_variables()` to use Textual's `ColorSystem.generate()` for complete variable set
@@ -22,12 +28,14 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Resolves "reference to undefined variable '$scrollbar-background'" errors in both classic and turbo TUI modes
   - All themes (default, midnight, grayscale, windows31, msdos) now fully compatible with Textual 6.x
   - Added comprehensive CSS compatibility tests to prevent future regressions
+- **Build Workflow**: Fixed artifact upload paths in build-release workflow
+  - Added step to move x86_64 Nuitka-Action output from `build/` directory to root directory
+  - Ensures artifacts are correctly located for upload to GitHub Releases
+  - Resolves "No files were found with the provided path" error during artifact upload
 - **TUI Compatibility**: Fixed stylesheet error with Textual 6.x
   - Added missing `$panel` CSS variable to both classic and turbo TUI themes
   - Resolves "reference to undefined variable '$panel'" error when starting TUI with `-t classic` or `-t turbo` options
   - Maps `panel` to `surface` color for consistent UI appearance
-
-### Changed
 - **Bot Messages**: Updated task start confirmation to use proper British Army Voice Procedure
   - Changed "Roger that!" to "Roger!" (single word affirmative as per military radio protocol)
 - **Platform Support**: Removed Windows and macOS pre-built binary support
