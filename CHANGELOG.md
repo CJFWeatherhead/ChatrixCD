@@ -15,6 +15,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+## [2025.11.03.4.0.0] - 2025-11-03
+
 ### Fixed
 - **Turbo TUI Menus**: Fixed dropdown menu readability and keyboard navigation
   - Fixed CSS color variables resolving to "auto 87%" instead of actual theme colors
@@ -797,6 +799,8 @@ ChatrixCD/
 
 
 
+
+- **2025.11.03.4.0.0** (2025-11-03)
 - **2025.10.18.3.1.0** (2025-10-18)
 - **2025.10.17.3.0.0** (2025-10-17)
 - **2025.10.17.2.0.0** (2025-10-17)
