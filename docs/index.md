@@ -50,9 +50,9 @@ nav_order: 1
 
 ChatrixCD makes it easy to manage CI/CD tasks through Matrix chat. Choose your installation method:
 
-### Quick Install (Pre-built Binary)
+### Quick Install (Pre-built Binary - Linux Only)
 
-**No Python required!** Download the standalone executable:
+**No Python required!** Download the standalone executable for Linux:
 
 **Linux (x86_64):**
 ```bash
@@ -61,16 +61,11 @@ chmod +x chatrixcd-linux-x86_64
 ./chatrixcd-linux-x86_64
 ```
 
-**macOS (Universal):**
-```bash
-wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal
-chmod +x chatrixcd-macos-universal
-./chatrixcd-macos-universal
-```
+**Other Linux architectures:**
+- [i686 (32-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
+- [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64) - For Raspberry Pi, ARM servers
 
-**Windows:** Download [chatrixcd-windows-x86_64.exe](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-x86_64.exe)
-
-**[See all platforms and architectures](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest)**
+**Windows and macOS:** Pre-built binaries are not available. Use [source installation](installation.html#method-2-install-from-source), [Docker](installation.html#method-3-docker), or WSL2 (Windows only). See the [Installation Guide](installation.html) for details.
 
 ### Install from Source
 

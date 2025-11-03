@@ -18,19 +18,25 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ### Changed
 - **Bot Messages**: Updated task start confirmation to use proper British Army Voice Procedure
   - Changed "Roger that!" to "Roger!" (single word affirmative as per military radio protocol)
+- **Platform Support**: Removed Windows and macOS pre-built binary support
+  - Linux binaries (x86_64, i686, arm64) remain fully supported
+  - Windows and macOS users can install from source, use Docker, or use WSL2 (Windows only)
+  - See [INSTALL.md](INSTALL.md) for detailed alternative installation methods
+- **Documentation**: Updated all documentation to reflect Linux-only binary support
+  - README.md: Added alternative installation methods for Windows/macOS
+  - INSTALL.md: Added comprehensive platform-specific installation guides
+  - docs/: Updated GitHub Pages documentation with alternative installation options
+
+### Removed
+- **Build Workflow**: Removed Windows and macOS build jobs from CI/CD pipeline
+  - Windows and macOS builds encountered persistent issues with python-olm native dependency compilation
+  - After 14 iterations, decided to focus on Linux-only binary releases
+  - Windows/macOS users can still install from source with appropriate dependencies
 
 ### Fixed
-- **Build and Release Workflow**: Fixed multiple critical build failures
+- **Build and Release Workflow**: Fixed Linux build configuration
   - Updated Nuitka Action to use `mode=onefile` instead of deprecated `onefile/standalone` options
   - Added QEMU setup for ARM64 cross-compilation on Linux
-  - Installed libolm build dependency via homebrew on macOS
-  - Setup CMake and libolm build environment on Windows
-  - **Windows Build**: Patched libolm CMakeLists.txt to require CMake 3.5+ for compatibility
-  - **macOS Build**: Set CFLAGS and LDFLAGS to use homebrew libolm instead of building from source
-  - Fixed compatibility issues with python-olm native extension builds
-  - Enhanced Windows libolm build configuration with CMAKE_BUILD_TYPE and proper install paths
-  - Added CMAKE_PREFIX_PATH and PATH environment variables for Windows python-olm builds
-  - Fixed macOS PKG_CONFIG_PATH detection to support both Apple Silicon and Intel architectures
   - Re-added pull_request trigger to build workflow for automatic builds on PR merge
 - **Log Formatting**: Fixed `!cd log` command rendering issues
   - Added `_ansi_to_html_for_pre()` function that strips ANSI codes and preserves newlines in `<pre>` tags

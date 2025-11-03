@@ -33,7 +33,7 @@ ChatrixCD integrates with Semaphore UI to enable CI/CD automation through chat. 
 
 ## Installation
 
-### Option 1: Pre-built Binaries (Recommended)
+### Option 1: Pre-built Binaries (Recommended for Linux)
 
 **No Python installation required!** Download the standalone executable for your platform:
 
@@ -42,28 +42,27 @@ ChatrixCD integrates with Semaphore UI to enable CI/CD automation through chat. 
 - [i686 (32-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
 - [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64) - For Raspberry Pi, ARM servers
 
-#### Windows
-- [x86_64 (64-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-x86_64.exe)
-- [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-arm64.exe) - For ARM-based Windows devices
-
-#### macOS
-- [Universal Binary](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal) - Works on both Intel and Apple Silicon
-
-**Quick Start:**
+**Quick Start (Linux):**
 
 ```bash
-# Linux/macOS - Download and make executable
+# Download and make executable
 wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
 chmod +x chatrixcd-linux-x86_64
 ./chatrixcd-linux-x86_64
-
-# Or for macOS
-wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal
-chmod +x chatrixcd-macos-universal
-./chatrixcd-macos-universal
 ```
 
-**Windows:** Simply download the `.exe` file and double-click to run, or run from Command Prompt/PowerShell.
+#### Windows and macOS
+
+Pre-built binaries are not currently available for Windows and macOS due to build complexity with native dependencies. Please use one of the following alternatives:
+
+**Windows:**
+- **Option A (Recommended)**: Install from source (see below) using Python 3.12+
+- **Option B**: Use [Docker Desktop](https://www.docker.com/products/docker-desktop/) with the Linux containers (see [INSTALL.md](INSTALL.md))
+- **Option C**: Use [WSL2 (Windows Subsystem for Linux)](https://learn.microsoft.com/en-us/windows/wsl/install) and run the Linux binary
+
+**macOS:**
+- **Option A (Recommended)**: Install from source (see below) using Python 3.12+ and homebrew dependencies
+- **Option B**: Use [Docker Desktop](https://www.docker.com/products/docker-desktop/) with the Linux containers (see [INSTALL.md](INSTALL.md))
 
 See [Installation Guide](INSTALL.md) for detailed setup instructions including configuration.
 
@@ -71,13 +70,18 @@ See [Installation Guide](INSTALL.md) for detailed setup instructions including c
 
 **Prerequisites:**
 - Python 3.12 or higher (3.12, 3.13, 3.14 supported)
-- [uv](https://docs.astral.sh/uv/) - Fast Python package installer
-
-**Common Requirements (both options):**
+- [uv](https://docs.astral.sh/uv/) - Fast Python package installer (recommended) or pip
 - Access to a Matrix homeserver
 - Access to a Semaphore UI instance with API access
 
-### Install from source
+**Platform-specific prerequisites:**
+
+**macOS:** Install system dependencies via homebrew:
+```bash
+brew install libolm pkg-config
+```
+
+**Windows:** libolm will be installed automatically via pip. If you encounter issues, consider using WSL2 or Docker instead.
 
 **Installation steps:**
 
@@ -92,8 +96,10 @@ uv venv
 # Activate the virtual environment
 # On Linux/macOS:
 source .venv/bin/activate
-# On Windows:
-# .venv\Scripts\activate
+# On Windows (PowerShell):
+# .venv\Scripts\Activate.ps1
+# On Windows (Command Prompt):
+# .venv\Scripts\activate.bat
 
 # Install dependencies
 uv pip install -r requirements.txt
