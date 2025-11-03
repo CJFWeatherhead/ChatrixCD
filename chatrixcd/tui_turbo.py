@@ -205,6 +205,9 @@ class MenuScreen(ModalScreen):
         if focused and isinstance(focused, Button):
             # Trigger the button press
             focused.press()
+        elif focused:
+            # Log unexpected focus state for debugging
+            logger.debug(f"MenuScreen: focused widget is not a Button: {type(focused).__name__}")
 
 
 class FileMenuScreen(MenuScreen):
