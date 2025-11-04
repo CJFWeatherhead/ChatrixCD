@@ -15,6 +15,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+## [2025.11.04.4.0.1] - 2025-11-04
+
 ### Added
 - **Comprehensive TUI Automated Testing with Textual Pilot** (94 new tests!)
   - Added 44 core pilot tests for regular TUI main app, screens, and widgets (`test_tui_pilot.py`)
@@ -69,6 +71,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Left/right arrow keys now cycle through File (F1), Edit (F2), Run (F3), and Help (F4) menus
   - Menu position tracking maintained when using F-keys or arrow keys
   - Complements existing up/down navigation within dropdown menus
+
 ## [2025.11.03.4.0.0] - 2025-11-03
 
 ### Fixed
@@ -863,6 +866,8 @@ ChatrixCD/
 
 
 
+
+- **2025.11.04.4.0.1** (2025-11-04)
 - **2025.11.03.4.0.0** (2025-11-03)
 - **2025.10.18.3.1.0** (2025-10-18)
 - **2025.10.17.3.0.0** (2025-10-17)
