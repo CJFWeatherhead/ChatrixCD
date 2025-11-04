@@ -16,16 +16,41 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Added
+- **Comprehensive TUI Automated Testing with Textual Pilot** (61 new tests!)
+  - Added 44 core pilot tests for main app, screens, and widgets (`test_tui_pilot.py`)
+    - Main app startup, rendering, and navigation
+    - All keyboard bindings (q, s, a, r, e, m, l, t, c, x)
+    - Button navigation for all menu options
+    - Theme application and switching (5 themes tested)
+    - Screen display and back navigation for all screens
+    - Widget rendering and data updates
+  - Added 17 interactive workflow tests (`test_tui_pilot_interactive.py`)
+    - Alias management workflows and navigation
+    - Multi-screen navigation sequences
+    - Rapid navigation stress testing
+    - Screen stack integrity verification
+    - Theme system validation and CSS completeness
+    - Widget dynamic updates testing
+    - Error handling for missing components
+    - All keyboard shortcuts functionality
+    - Application lifecycle validation
+  - Total TUI tests increased from 40 to 101
+  - Total test suite now includes 388 tests (up from 327)
+  - Uses Textual's pilot feature for automated, reproducible TUI testing
+  
 - Comprehensive end-to-end (E2E) tests for main entry point with input/output verification
   - 21 E2E tests for CLI argument parsing and configuration handling
   - 14 E2E workflow tests for complete user scenarios
   - Tests use subprocess for true end-to-end validation
   - Improved main.py test coverage from 0% to 23%
-  - Total test suite now includes 327 tests (35 new E2E tests)
 
 ### Changed
-- Updated TESTING.md documentation with new E2E test information
-  - Added test file organization section
+- Updated TESTING.md documentation with comprehensive TUI testing information
+  - Documented all 61 new TUI pilot tests
+  - Added test file organization for pilot tests
+  - Updated test suite composition (388 total tests)
+  - Documented TUI test coverage improvements
+  - Added detailed breakdown of core and interactive tests
   - Updated coverage statistics and goals
   - Documented E2E testing approach
 
