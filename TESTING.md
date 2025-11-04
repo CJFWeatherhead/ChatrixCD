@@ -30,27 +30,40 @@ pytest tests/ --cov=chatrixcd --cov-report=html
 
 ## Test Coverage Summary
 
-### Overall Coverage: 64%
+### Overall Coverage: 40%
 
 | Module | Coverage | Lines | Tested | Description |
 |--------|----------|-------|--------|-------------|
 | `__init__.py` | 100% | 1 | 1 | Package initialization |
-| `config.py` | 87% | 142 | 123 | Configuration management |
-| `auth.py` | 38% | 95 | 36 | Authentication (password, OIDC) |
-| `semaphore.py` | 87% | 94 | 82 | Semaphore API client |
-| `bot.py` | 72% | 143 | 103 | Matrix bot core and lifecycle |
-| `commands.py` | 84% | 185 | 155 | Command handlers |
-| `main.py` | 0% | 123 | 0 | Entry point (requires integration tests) |
+| `config.py` | 71% | 200 | 142 | Configuration management |
+| `auth.py` | 100% | 22 | 22 | Authentication (password, OIDC) |
+| `semaphore.py` | 68% | 143 | 97 | Semaphore API client |
+| `bot.py` | 52% | 537 | 281 | Matrix bot core and lifecycle |
+| `commands.py` | 55% | 704 | 384 | Command handlers |
+| `main.py` | 23% | 294 | 67 | Entry point (E2E tests added!) |
+| `verification.py` | 56% | 235 | 132 | Device verification |
+| `messages.py` | 69% | 88 | 61 | Message templates |
+| `redactor.py` | 93% | 69 | 64 | Sensitive information redaction |
+| `aliases.py` | 71% | 111 | 79 | Command aliases |
 
 ### Test Suite Composition
 
-- **Total Tests**: 112
+- **Total Tests**: 327
 - **Configuration Tests**: 18
 - **Authentication Tests**: 10
 - **Bot Tests**: 17
 - **CLI Tests**: 10
 - **Command Handler Tests**: 38
 - **Semaphore Client Tests**: 19
+- **Verification Tests**: 19
+- **Verification E2E Tests**: 20
+- **Message Tests**: 10
+- **Aliases Tests**: 14
+- **TUI Tests**: 4
+- **Redactor Tests**: 9
+- **Workflow Tests**: 104
+- **Main Entry Point E2E Tests**: 21
+- **Workflow E2E Tests**: 14
 
 ## Test Categories
 
@@ -107,6 +120,28 @@ pytest tests/ --cov=chatrixcd --cov-report=html
 - ✅ Room invite handling
 - ✅ Message sending (plain text, HTML formatted)
 
+### End-to-End Tests (New!)
+
+Comprehensive E2E tests have been added for:
+
+#### Main Entry Point (`main.py`)
+- ✅ CLI argument parsing (--version, --help, flags)
+- ✅ Configuration file loading and validation
+- ✅ Show-config mode with output verification
+- ✅ Verbose logging levels
+- ✅ Color and redaction flags
+- ✅ Admin users and allowed rooms flags
+- ✅ Combined flag scenarios
+- ✅ Error handling and user feedback
+
+#### Workflow Tests
+- ✅ Configuration wizard flow
+- ✅ Multi-step command sequences
+- ✅ Configuration migration scenarios
+- ✅ Output formatting verification
+- ✅ Error message clarity
+- ✅ First-time user workflows
+
 ### Integration Tests (Future)
 
 The following areas require integration testing with live services:
@@ -160,10 +195,22 @@ When adding new functionality:
 ```
 tests/
 ├── __init__.py
-├── test_config.py       # Configuration tests
-├── test_auth.py         # Authentication tests
-├── test_semaphore.py    # Semaphore client tests
-└── test_bot.py          # (Future) Bot integration tests
+├── test_config.py            # Configuration tests
+├── test_auth.py              # Authentication tests
+├── test_semaphore.py         # Semaphore client tests
+├── test_bot.py               # Bot tests
+├── test_commands.py          # Command handler tests
+├── test_messages.py          # Message template tests
+├── test_aliases.py           # Command aliases tests
+├── test_redactor.py          # Sensitive info redaction tests
+├── test_verification.py      # Device verification tests
+├── test_verification_e2e.py  # Verification E2E tests
+├── test_tui.py               # TUI tests
+├── test_tui_menu_fixes.py    # TUI menu tests
+├── test_cli.py               # CLI argument tests
+├── test_workflow.py          # GitHub workflow tests
+├── test_e2e_main.py          # Main entry point E2E tests (NEW!)
+└── test_e2e_workflow.py      # Workflow E2E tests (NEW!)
 ```
 
 ## Continuous Integration
@@ -178,31 +225,38 @@ See `.github/workflows/test.yml` for CI configuration.
 ## Coverage Goals
 
 ### Current Status
-- ✅ Config: 87%
-- ⏳ Auth: 38% (needs OIDC integration tests)
-- ✅ Semaphore: 87% (all API methods tested)
-- ✅ Bot: 72% (core functionality tested)
-- ✅ Commands: 84% (comprehensive command tests)
-- ✅ Overall: 64%
+- ✅ Config: 71% (comprehensive unit tests)
+- ✅ Auth: 100% (full password and OIDC coverage)
+- ⏳ Semaphore: 68% (API methods tested, needs edge cases)
+- ⏳ Bot: 52% (core functionality tested, needs more coverage)
+- ⏳ Commands: 55% (command tests, needs workflow coverage)
+- ✅ Main: 23% (E2E tests added! Up from 0%)
+- ✅ Verification: 56% (device verification tested)
+- ✅ Redactor: 93% (excellent coverage)
+- ✅ Messages: 69% (message templates tested)
+- ✅ Aliases: 71% (alias handling tested)
+- ✅ Overall: 40%
 
 ### Next Release Goals
-- ⏳ Auth: 70%+ (full OIDC flow testing with mock server)
-- ⏳ Bot: 80%+ (additional edge cases)
-- ⏳ Overall: 70%+
-- ⏳ Integration tests for task monitoring workflows
+- ⏳ Bot: 60%+ (additional edge cases and async flows)
+- ⏳ Commands: 65%+ (more workflow coverage)
+- ⏳ Main: 40%+ (more TUI and daemon mode E2E tests)
+- ⏳ Overall: 50%+
 
 ### Long-term (Future)
-- ⏳ Overall: 80%+
+- ⏳ Overall: 70%+
 - ⏳ Full integration tests with Matrix server
 - ⏳ End-to-end testing with Semaphore instance
 - ⏳ Performance and stress testing
+- ⏳ TUI interaction tests with textual pilot
 
 ## Known Limitations
 
 1. **Async Mocking Complexity**: Some async tests with aiohttp are simplified to avoid complex mocking issues
-2. **Matrix Server Required**: Bot and command tests require a test Matrix server
-3. **Semaphore Server Required**: Full Semaphore tests need a test Semaphore instance
-4. **No End-to-End Tests**: Currently no full workflow tests from command to task completion
+2. **Matrix Server Required**: Full bot integration tests require a test Matrix server
+3. **Semaphore Server Required**: Full Semaphore integration tests need a test Semaphore instance
+4. **TUI Testing**: TUI tests have lower coverage (15%) due to interactive nature - textual pilot could be used for more coverage
+5. **Config Wizard Testing**: Configuration wizard (0% coverage) requires interactive input testing
 
 ## Contributing Tests
 

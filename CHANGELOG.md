@@ -16,6 +16,19 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Added
+- Comprehensive end-to-end (E2E) tests for main entry point with input/output verification
+  - 21 E2E tests for CLI argument parsing and configuration handling
+  - 14 E2E workflow tests for complete user scenarios
+  - Tests use subprocess for true end-to-end validation
+  - Improved main.py test coverage from 0% to 23%
+  - Total test suite now includes 327 tests (35 new E2E tests)
+
+### Changed
+- Updated TESTING.md documentation with new E2E test information
+  - Added test file organization section
+  - Updated coverage statistics and goals
+  - Documented E2E testing approach
+
 - **TUI Navigation**: Added left/right arrow key navigation to cycle between menus in turbo TUI
   - Left/right arrow keys now cycle through File (F1), Edit (F2), Run (F3), and Help (F4) menus
   - Menu position tracking maintained when using F-keys or arrow keys
