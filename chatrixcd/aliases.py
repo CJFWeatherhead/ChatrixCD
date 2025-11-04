@@ -79,7 +79,7 @@ class AliasManager:
             True if added successfully, False otherwise
         """
         # Validate that alias doesn't conflict with existing commands
-        reserved_commands = ['help', 'projects', 'templates', 'run', 'status', 'stop', 'logs', 'ping', 'info']
+        reserved_commands = ['help', 'projects', 'templates', 'run', 'status', 'stop', 'logs', 'ping', 'info', 'pet', 'scold']
         if alias.lower() in reserved_commands:
             logger.warning(f"Cannot create alias '{alias}': conflicts with built-in command")
             return False
@@ -208,7 +208,7 @@ class AliasManager:
         Returns:
             True if valid, False otherwise
         """
-        valid_commands = ['help', 'projects', 'templates', 'run', 'status', 'stop', 'logs', 'ping', 'info']
+        valid_commands = ['help', 'projects', 'templates', 'run', 'status', 'stop', 'logs', 'ping', 'info', 'pet', 'scold']
         parts = command.strip().split()
         if not parts:
             return False

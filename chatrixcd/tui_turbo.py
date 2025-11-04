@@ -142,7 +142,7 @@ class MenuScreen(ModalScreen):
     MenuScreen Button {
         width: 100%;
         background: $surface;
-        color: $text;
+        color: auto;
         border: none;
         text-align: left;
         padding: 0 2;
@@ -585,6 +585,8 @@ class ChatrixTurboTUI(App):
         Binding("f2", "show_edit_menu", "Edit", priority=True),
         Binding("f3", "show_run_menu", "Run", priority=True),
         Binding("f4", "show_help_menu", "Help", priority=True),
+        Binding("left", "previous_menu", "Previous Menu", show=False),
+        Binding("right", "next_menu", "Next Menu", show=False),
     ]
     
     def __init__(self, bot, config, use_color: bool = True, theme: str = 'default', **kwargs):
@@ -611,6 +613,10 @@ class ChatrixTurboTUI(App):
         self.bot_task = None
         self.pending_verifications_count = 0
         self.last_notified_verifications = set()
+        
+        # Menu navigation state for left/right arrow keys
+        self.menu_order = ['file', 'edit', 'run', 'help']
+        self.current_menu_index = 0
         
     def get_css_variables(self) -> Dict[str, str]:
         """Get CSS variables for the current theme.
@@ -784,18 +790,22 @@ class ChatrixTurboTUI(App):
     # Menu actions
     def action_show_file_menu(self):
         """Show File menu."""
+        self.current_menu_index = 0
         self.push_screen(FileMenuScreen())
     
     def action_show_edit_menu(self):
         """Show Edit menu."""
+        self.current_menu_index = 1
         self.push_screen(EditMenuScreen())
     
     def action_show_run_menu(self):
         """Show Run menu."""
+        self.current_menu_index = 2
         self.push_screen(RunMenuScreen())
     
     def action_show_help_menu(self):
         """Show Help menu."""
+        self.current_menu_index = 3
         self.push_screen(HelpMenuScreen())
     
     # File menu actions
@@ -870,6 +880,35 @@ class ChatrixTurboTUI(App):
     def action_show_version(self):
         """Show version screen."""
         self.push_screen(VersionScreen())
+    
+    def action_previous_menu(self):
+        """Navigate to the previous menu (left arrow key)."""
+        # Cycle to previous menu
+        new_index = (self.current_menu_index - 1) % len(self.menu_order)
+        self._show_menu_by_index(new_index)
+    
+    def action_next_menu(self):
+        """Navigate to the next menu (right arrow key)."""
+        # Cycle to next menu
+        new_index = (self.current_menu_index + 1) % len(self.menu_order)
+        self._show_menu_by_index(new_index)
+    
+    def _show_menu_by_index(self, index: int):
+        """Show the menu at the specified index.
+        
+        Args:
+            index: Menu index (0=file, 1=edit, 2=run, 3=help)
+        """
+        # Map indices to their corresponding action methods
+        menu_actions = [
+            self.action_show_file_menu,
+            self.action_show_edit_menu,
+            self.action_show_run_menu,
+            self.action_show_help_menu,
+        ]
+        
+        if 0 <= index < len(menu_actions):
+            menu_actions[index]()
 
 
 async def run_tui(bot, config, use_color: bool = True, mouse: bool = False):
