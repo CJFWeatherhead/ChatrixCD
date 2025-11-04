@@ -16,15 +16,15 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Added
-- **Comprehensive TUI Automated Testing with Textual Pilot** (61 new tests!)
-  - Added 44 core pilot tests for main app, screens, and widgets (`test_tui_pilot.py`)
+- **Comprehensive TUI Automated Testing with Textual Pilot** (94 new tests!)
+  - Added 44 core pilot tests for regular TUI main app, screens, and widgets (`test_tui_pilot.py`)
     - Main app startup, rendering, and navigation
     - All keyboard bindings (q, s, a, r, e, m, l, t, c, x)
     - Button navigation for all menu options
     - Theme application and switching (5 themes tested)
     - Screen display and back navigation for all screens
     - Widget rendering and data updates
-  - Added 17 interactive workflow tests (`test_tui_pilot_interactive.py`)
+  - Added 17 interactive workflow tests for regular TUI (`test_tui_pilot_interactive.py`)
     - Alias management workflows and navigation
     - Multi-screen navigation sequences
     - Rapid navigation stress testing
@@ -34,8 +34,19 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
     - Error handling for missing components
     - All keyboard shortcuts functionality
     - Application lifecycle validation
-  - Total TUI tests increased from 40 to 101
-  - Total test suite now includes 388 tests (up from 327)
+  - Added 33 comprehensive pilot tests for Turbo TUI (`test_tui_turbo_pilot.py`)
+    - Main app startup with menu bar and status bar
+    - F-key bindings (F1-F4) for menu navigation
+    - Arrow key navigation (left/right menu cycling)
+    - Theme application and validation (5 themes)
+    - Menu screen navigation (File, Edit, Run, Help)
+    - Multi-menu navigation workflows
+    - Rapid menu navigation stress testing
+    - Active tasks widget and status bar integration
+    - Error handling for missing components
+    - Application lifecycle validation
+  - Total TUI tests increased from 40 to 134
+  - Total test suite now includes 433 tests (up from 327)
   - Uses Textual's pilot feature for automated, reproducible TUI testing
   
 - Comprehensive end-to-end (E2E) tests for main entry point with input/output verification
@@ -46,11 +57,11 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ### Changed
 - Updated TESTING.md documentation with comprehensive TUI testing information
-  - Documented all 61 new TUI pilot tests
+  - Documented all 94 new TUI pilot tests (regular + turbo)
   - Added test file organization for pilot tests
-  - Updated test suite composition (388 total tests)
+  - Updated test suite composition (433 total tests)
   - Documented TUI test coverage improvements
-  - Added detailed breakdown of core and interactive tests
+  - Added detailed breakdown of core, interactive, and turbo tests
   - Updated coverage statistics and goals
   - Documented E2E testing approach
 

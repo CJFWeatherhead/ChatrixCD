@@ -48,7 +48,7 @@ pytest tests/ --cov=chatrixcd --cov-report=html
 
 ### Test Suite Composition
 
-- **Total Tests**: 388
+- **Total Tests**: 433
 - **Configuration Tests**: 18
 - **Authentication Tests**: 10
 - **Bot Tests**: 17
@@ -59,10 +59,11 @@ pytest tests/ --cov=chatrixcd --cov-report=html
 - **Verification E2E Tests**: 20
 - **Message Tests**: 10
 - **Aliases Tests**: 14
-- **TUI Tests**: 101 (⬆️ increased from 40!)
+- **TUI Tests**: 134 (⬆️ increased from 40!)
   - **Unit Tests**: 40 (component creation and imports)
-  - **Pilot Core Tests**: 44 (main app, screens, widgets)
-  - **Pilot Interactive Tests**: 17 (workflows, navigation, error handling)
+  - **Regular TUI Pilot Core Tests**: 44 (main app, screens, widgets)
+  - **Regular TUI Pilot Interactive Tests**: 17 (workflows, navigation, error handling)
+  - **Turbo TUI Pilot Tests**: 33 (menu system, navigation, themes)
 - **Redactor Tests**: 9
 - **Workflow Tests**: 104
 - **Main Entry Point E2E Tests**: 21
@@ -202,6 +203,38 @@ Using Textual's pilot feature for automated TUI testing:
   - ✅ Metrics initialization
   - ✅ Login task handling
 
+##### Turbo TUI Pilot Tests (`tests/test_tui_turbo_pilot.py` - 33 tests)
+- ✅ Main app startup and rendering
+- ✅ Menu bar and status bar rendering
+- ✅ F-key bindings (F1-F4) for menu navigation
+- ✅ Arrow key navigation (left/right menu cycling)
+- ✅ Theme application and validation
+  - ✅ Default theme
+  - ✅ Midnight theme
+  - ✅ Grayscale theme
+  - ✅ Windows 3.1 theme
+  - ✅ MS-DOS theme
+  - ✅ Invalid theme fallback
+- ✅ Menu screen navigation
+  - ✅ FileMenuScreen display
+  - ✅ EditMenuScreen display
+  - ✅ RunMenuScreen display
+  - ✅ HelpMenuScreen display
+  - ✅ Escape key navigation
+- ✅ Multi-menu navigation workflows
+- ✅ Rapid menu navigation stress testing
+- ✅ Menu cycling with arrow keys
+- ✅ Active tasks widget integration
+- ✅ Status bar updates
+- ✅ Error handling
+  - ✅ Graceful handling of missing bot
+  - ✅ Graceful handling of missing Matrix client
+- ✅ Application lifecycle
+  - ✅ App startup validation
+  - ✅ Metrics initialization
+  - ✅ Login task handling
+  - ✅ Menu navigation state tracking
+
 ##### Existing Unit Tests (40 tests)
 - ✅ Component creation and imports
 - ✅ CSS compatibility across themes
@@ -275,8 +308,9 @@ tests/
 ├── test_tui.py                    # TUI unit tests
 ├── test_tui_menu_fixes.py         # TUI menu tests
 ├── test_tui_navigation.py         # TUI navigation tests
-├── test_tui_pilot.py              # TUI pilot tests (NEW! 44 tests)
-├── test_tui_pilot_interactive.py  # TUI interactive workflow tests (NEW! 17 tests)
+├── test_tui_pilot.py              # Regular TUI pilot tests (NEW! 44 tests)
+├── test_tui_pilot_interactive.py  # Regular TUI interactive workflow tests (NEW! 17 tests)
+├── test_tui_turbo_pilot.py        # Turbo TUI pilot tests (NEW! 33 tests)
 ├── test_cli.py                    # CLI argument tests
 ├── test_workflow.py               # GitHub workflow tests
 ├── test_e2e_main.py               # Main entry point E2E tests
@@ -305,7 +339,7 @@ See `.github/workflows/test.yml` for CI configuration.
 - ✅ Redactor: 93% (excellent coverage)
 - ✅ Messages: 69% (message templates tested)
 - ✅ Aliases: 71% (alias handling tested)
-- ✅ TUI: Significantly improved with Textual pilot tests (61 new automated tests!)
+- ✅ TUI: Significantly improved with Textual pilot tests (94 new automated tests!)
 - ✅ Overall: 40% (and improving!)
 
 ### Next Release Goals
