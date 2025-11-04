@@ -170,7 +170,10 @@ class TestMainEntryPointE2E(unittest.TestCase):
             
             # Output should contain configuration (but with redacted credentials)
             output = result.stdout + result.stderr
-            self.assertIn('matrix', output.lower() or 'configuration' in output.lower())
+            self.assertTrue(
+                'matrix' in output.lower() or 'configuration' in output.lower(),
+                "Config output should contain 'matrix' or 'configuration'"
+            )
             
             # Credentials should be redacted
             if 'REDACTED' in output or '***' in output:
@@ -671,7 +674,10 @@ class TestErrorHandling(unittest.TestCase):
         
         # Error message should mention the invalid flag
         output = result.stdout + result.stderr
-        self.assertIn('--invalid-flag', output or 'unrecognized' in output.lower())
+        self.assertTrue(
+            '--invalid-flag' in output or 'unrecognized' in output.lower(),
+            "Error should mention invalid flag or be unrecognized"
+        )
     
     def test_permission_denied_config(self):
         """Test handling of config file with no read permissions."""

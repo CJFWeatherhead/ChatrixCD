@@ -43,7 +43,10 @@ class TestConfigurationWizardWorkflow(unittest.TestCase):
             
             # Check that wizard was invoked
             output = result.stdout + result.stderr
-            self.assertIn('Configuration', output or 'ChatrixCD' in output)
+            self.assertTrue(
+                'Configuration' in output or 'ChatrixCD' in output,
+                f"Expected wizard output, got: {output[:200]}"
+            )
     
     def test_config_validation_error_messages(self):
         """Test that configuration validation provides clear error messages."""
@@ -129,7 +132,10 @@ class TestCommandLineWorkflows(unittest.TestCase):
             self.assertEqual(result.returncode, 0)
             
             output = result.stdout + result.stderr
-            self.assertIn('Configuration', output or 'matrix' in output.lower())
+            self.assertTrue(
+                'Configuration' in output or 'matrix' in output.lower(),
+                f"Expected config output, got: {output[:200]}"
+            )
         finally:
             os.unlink(temp_config)
     
@@ -305,7 +311,10 @@ class TestOutputVerification(unittest.TestCase):
         self.assertIn('usage', output.lower())
         
         # Should describe the program
-        self.assertIn('Matrix bot', output or 'CI/CD' in output)
+        self.assertTrue(
+            'Matrix bot' in output or 'CI/CD' in output,
+            "Help should describe the program"
+        )
         
         # Should list flags
         flags = ['-v', '--verbose', '-c', '--config', '-s', '--show-config']
@@ -381,7 +390,10 @@ class TestOutputVerification(unittest.TestCase):
             )
             
             # Should mention the config file
-            self.assertIn(temp_config, output or 'config' in output.lower())
+            self.assertTrue(
+                temp_config in output or 'config' in output.lower(),
+                "Error message should mention config file"
+            )
         finally:
             os.unlink(temp_config)
     
@@ -501,7 +513,10 @@ class TestIntegrationScenarios(unittest.TestCase):
             
             output = result.stdout + result.stderr
             # Should show migrated config with version
-            self.assertIn('_config_version', output or 'matrix' in output.lower())
+            self.assertTrue(
+                '_config_version' in output or 'matrix' in output.lower(),
+                "Config output should show version or matrix section"
+            )
         finally:
             os.unlink(temp_config)
     
