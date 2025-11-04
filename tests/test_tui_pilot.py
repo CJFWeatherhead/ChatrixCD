@@ -330,8 +330,9 @@ class TestChatrixTUIMainApp(unittest.IsolatedAsyncioTestCase):
         async with app.run_test() as pilot:
             await pilot.pause()
             
-            # Wait for update
-            await asyncio.sleep(0.5)
+            # Wait for widget to render and initialize
+            WIDGET_UPDATE_WAIT = 0.5  # Seconds to wait for widget updates
+            await asyncio.sleep(WIDGET_UPDATE_WAIT)
             
             # Get active tasks widget
             widget = app.query_one("#active_tasks", ActiveTasksWidget)

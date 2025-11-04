@@ -273,8 +273,9 @@ class TestWidgetUpdates(unittest.IsolatedAsyncioTestCase):
                 '123': {'project_id': 1, 'status': 'running'}
             }
             
-            # Wait for update interval
-            await asyncio.sleep(6)  # Update interval is 5 seconds
+            # Wait for update interval (set_interval in TUI is 5 seconds)
+            UPDATE_INTERVAL = 5  # Seconds - matches set_interval in ChatrixTUI
+            await asyncio.sleep(UPDATE_INTERVAL + 1)  # Wait slightly longer than interval
             
             # Widget should have been updated
             # Note: Actual update happens asynchronously
