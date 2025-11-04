@@ -20,6 +20,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Left/right arrow keys now cycle through File (F1), Edit (F2), Run (F3), and Help (F4) menus
   - Menu position tracking maintained when using F-keys or arrow keys
   - Complements existing up/down navigation within dropdown menus
+## [2025.11.03.4.0.0] - 2025-11-03
 
 ### Fixed
 - **Easter Egg Commands**: Added `pet` and `scold` to reserved and valid command lists
@@ -812,6 +813,8 @@ ChatrixCD/
 
 
 
+
+- **2025.11.03.4.0.0** (2025-11-03)
 - **2025.10.18.3.1.0** (2025-10-18)
 - **2025.10.17.3.0.0** (2025-10-17)
 - **2025.10.17.2.0.0** (2025-10-17)
