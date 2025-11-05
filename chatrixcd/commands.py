@@ -6,11 +6,13 @@ import re
 import random
 import platform
 import socket
+import psutil
 from typing import Dict, Any, Optional
 from nio import MatrixRoom, RoomMessageText
 from chatrixcd.semaphore import SemaphoreClient
 from chatrixcd.aliases import AliasManager
 from chatrixcd.messages import MessageManager
+from chatrixcd import __version__
 
 logger = logging.getLogger(__name__)
 
@@ -1490,9 +1492,6 @@ class CommandHandler:
             room_id: Room to send response to
             sender: User who requested the info
         """
-        import psutil
-        from chatrixcd import __version__
-        
         user_name = self._get_display_name(sender) if sender else "friend"
         
         # Get Semaphore info
