@@ -1,5 +1,6 @@
 """Command handling for the bot."""
 
+import html
 import logging
 import asyncio
 import re
@@ -1348,6 +1349,7 @@ class CommandHandler:
         
         This implementation properly handles ANSI codes and converts them to styled spans
         with proper color codes for better rendering in Matrix clients like Element.
+        Handles combined codes like '\x1b[1;31m' (bold red) correctly.
         
         Args:
             text: Text with ANSI color codes
@@ -1355,15 +1357,12 @@ class CommandHandler:
         Returns:
             HTML formatted text with proper color styling
         """
-        import html
-        
         # Escape HTML special characters first
         text = html.escape(text)
         
         # ANSI color code mappings to CSS colors (using terminal color palette)
+        # Note: '0' and '1' are handled separately in the logic
         ansi_colors = {
-            '0': ('reset', ''),  # Reset
-            '1': ('bold', 'font-weight: bold;'),  # Bold
             '30': ('black', 'color: #000000;'),
             '31': ('red', 'color: #cc0000;'),
             '32': ('green', 'color: #4e9a06;'),
@@ -1390,21 +1389,23 @@ class CommandHandler:
             codes = match.group(1).split(';') if match.group(1) else ['0']
             result = ''
             
+            # Process all codes in the sequence (handles combined codes like '1;31' for bold red)
             for code in codes:
+                code = code.strip()
                 if code == '0' or code == '':
                     # Reset - close all open tags
                     while open_tags:
                         result += '</span>'
                         open_tags.pop()
                 elif code == '1':
-                    # Bold
+                    # Bold - apply bold styling
                     result += '<span style="font-weight: bold;">'
                     open_tags.append('bold')
                 elif code in ansi_colors:
+                    # Color code - apply color styling
                     name, style = ansi_colors[code]
-                    if style and style != '':
-                        result += f'<span style="{style}">'
-                        open_tags.append(name)
+                    result += f'<span style="{style}">'
+                    open_tags.append(name)
             
             return result
         
