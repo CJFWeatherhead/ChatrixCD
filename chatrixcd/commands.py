@@ -508,9 +508,11 @@ class CommandHandler:
         user_name = self._get_display_name(sender) if sender else "friend"
         
         if not projects:
+            # Check if this is an empty list (successful connection) or an error
+            # Empty list means successful connection but no projects
             await self.bot.send_message(
                 room_id,
-                f"{user_name} 👋 - No projects found or error accessing Semaphore. ❌"
+                f"{user_name} 👋 - No projects found. Create a project in Semaphore UI first! 📋"
                 
             )
             return
@@ -619,6 +621,12 @@ class CommandHandler:
                     template_id = templates[0].get('id')
                     logger.info(f"Auto-selected project {project_id} and template {template_id}")
                     args = [str(project_id), str(template_id)]
+                elif len(templates) == 0:
+                    response = (f"{user_name} 👋 - No templates found for project {project_id}.\n"
+                        f"Create a template in Semaphore UI first!")
+                    logger.info(f"No templates found for auto-selection, sending: {response}")
+                    await self.bot.send_message(room_id, response)
+                    return
                 else:
                     response = (f"{user_name} 👋 - Multiple templates available for project {project_id}.\n"
                         f"Use `{self.command_prefix} templates {project_id}` to list them.")
@@ -648,6 +656,12 @@ class CommandHandler:
                 template_id = templates[0].get('id')
                 logger.info(f"Auto-selected template {template_id}")
                 args.append(str(template_id))
+            elif len(templates) == 0:
+                response = (f"{user_name} 👋 - No templates found for project {project_id}.\n"
+                    f"Create a template in Semaphore UI first!")
+                logger.info(f"No templates found for auto-selection, sending: {response}")
+                await self.bot.send_message(room_id, response)
+                return
             else:
                 response = (f"{user_name} 👋 - Multiple templates available for project {project_id}.\n"
                     f"Use `{self.command_prefix} templates {project_id}` to list them.")
@@ -1468,19 +1482,77 @@ class CommandHandler:
             )
 
     async def get_semaphore_info(self, room_id: str, sender: str = None):
-        """Get Semaphore and Matrix server info.
+        """Get Semaphore, Matrix server, and bot system info.
         
         Args:
             room_id: Room to send response to
             sender: User who requested the info
         """
+        import platform
+        import psutil
+        import socket
+        from chatrixcd import __version__
+        
         user_name = self._get_display_name(sender) if sender else "friend"
         
         # Get Semaphore info
         semaphore_info = await self.semaphore.get_info()
         
         message = f"{user_name} 👋 Here's the technical stuff! ℹ️\n\n"
-        message += "**Server Information**\n\n"
+        message += "**System Information**\n\n"
+        
+        # Bot information
+        message += "**ChatrixCD Bot** 🤖\n"
+        message += f"• **Version:** {__version__}\n"
+        message += f"• **Platform:** {platform.system()} {platform.release()}\n"
+        message += f"• **Architecture:** {platform.machine()}\n"
+        message += f"• **Python:** {platform.python_version()}\n"
+        
+        # System resources
+        try:
+            cpu_percent = psutil.cpu_percent(interval=0.1)
+            memory = psutil.virtual_memory()
+            message += f"• **CPU Usage:** {cpu_percent:.1f}%\n"
+            message += f"• **Memory Usage:** {memory.percent:.1f}% ({memory.used // (1024**2)} MB / {memory.total // (1024**2)} MB)\n"
+        except Exception as e:
+            logger.debug(f"Could not get system resources: {e}")
+        
+        # Network information (only if not redacting)
+        # Check if redaction is enabled in bot config
+        redact_enabled = self.config.get('bot.redact', False)
+        if not redact_enabled:
+            try:
+                hostname = socket.gethostname()
+                message += f"• **Hostname:** {hostname}\n"
+                
+                # Get IP addresses
+                try:
+                    # Get all network interfaces
+                    addrs = psutil.net_if_addrs()
+                    ipv4_addrs = []
+                    ipv6_addrs = []
+                    
+                    for interface, addr_list in addrs.items():
+                        for addr in addr_list:
+                            if addr.family == socket.AF_INET:
+                                # IPv4 address
+                                if not addr.address.startswith('127.'):
+                                    ipv4_addrs.append(addr.address)
+                            elif addr.family == socket.AF_INET6:
+                                # IPv6 address
+                                if not addr.address.startswith('::1') and not addr.address.startswith('fe80'):
+                                    ipv6_addrs.append(addr.address.split('%')[0])  # Remove interface suffix
+                    
+                    if ipv4_addrs:
+                        message += f"• **IPv4:** {', '.join(ipv4_addrs)}\n"
+                    if ipv6_addrs:
+                        message += f"• **IPv6:** {', '.join(ipv6_addrs[:2])}\n"  # Show first 2 IPv6 addresses
+                except Exception as e:
+                    logger.debug(f"Could not get IP addresses: {e}")
+            except Exception as e:
+                logger.debug(f"Could not get network info: {e}")
+        
+        message += "\n"
         
         # Matrix information
         message += "**Matrix Server** 🌐\n"
