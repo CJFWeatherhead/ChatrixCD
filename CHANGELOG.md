@@ -15,6 +15,17 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Changed
+- **Complete reimplementation of `!cd log` command for better readability and async performance**
+  - ANSI color codes now properly converted to HTML with CSS styling instead of being stripped
+  - Logs render beautifully in Matrix clients like Element with colored, styled code blocks
+  - Dark theme code blocks with proper syntax highlighting colors
+  - Improved async log tailing with 2-second polling interval (was 5 seconds)
+  - More frequent, smaller updates during tailing (30 lines vs 50 lines per chunk)
+  - Better one-time log display showing 150 lines (was 100 lines)
+  - HTML code blocks now use proper monospace fonts with readable styling
+  - Better error, success, and info message color differentiation
+
 ## [2025.11.04.4.0.1] - 2025-11-04
 
 ### Added

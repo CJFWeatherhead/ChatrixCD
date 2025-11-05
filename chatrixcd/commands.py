@@ -1180,36 +1180,36 @@ class CommandHandler:
             task_name = self.active_tasks.get(task_id, {}).get('template_name')
             task_display = f"{task_name} ({task_id})" if task_name else str(task_id)
             
-            # Parse and format logs for plain text
+            # Parse and format logs for plain text (strip ANSI codes)
             formatted_logs = self._format_task_logs(logs)
             
-            # Tail only the last portion to avoid truncation
-            max_lines = 100
+            # Tail only the last portion to avoid message size limits
+            max_lines = 150
             log_lines = formatted_logs.split('\n')
+            
             if len(log_lines) > max_lines:
+                # Show last N lines for large logs
                 formatted_logs = '\n'.join(log_lines[-max_lines:])
-                header = f"{user_name} 👋 Here are the logs! (last {max_lines} lines) 📋\n\n"
+                tailed_raw_logs = '\n'.join(logs.split('\n')[-max_lines:])
+                
+                header = f"{user_name} 👋 Here are the logs! (showing last {max_lines} of {len(log_lines)} lines) 📋\n\n"
                 header += f"**Logs for Task {task_display}**\n\n"
+                header += f"💡 *Tip: Use `{self.command_prefix} log on` to tail logs in real-time*\n\n"
             else:
+                # Show all logs for small outputs
+                tailed_raw_logs = logs
                 header = f"{user_name} 👋 Here are the logs! 📋\n\n"
                 header += f"**Logs for Task {task_display}**\n\n"
             
             # Create plain text version with markdown code block
             plain_message = f"{header}```\n{formatted_logs}\n```"
             
-            # Create HTML version with color formatting
+            # Create HTML version with improved color formatting and styling
             html_header = self.markdown_to_html(header)
-            html_logs = self._format_task_logs_html(logs)
-            
-            # Tail HTML logs too if needed
-            if len(log_lines) > max_lines:
-                # Re-process with HTML formatting for tailed version
-                tailed_raw_logs = '\n'.join(logs.split('\n')[-max_lines:])
-                html_logs = self._format_task_logs_html(tailed_raw_logs)
-            
+            html_logs = self._format_task_logs_html(tailed_raw_logs)
             html_message = f"{html_header}{html_logs}"
             
-            logger.info(f"Sending logs for task {task_id} ({len(log_lines)} lines, {len(logs)} bytes)")
+            logger.info(f"Sending logs for task {task_id} ({len(log_lines)} total lines, showing {min(len(log_lines), max_lines)} lines, {len(logs)} bytes)")
             await self.bot.send_message(room_id, plain_message, html_message)
         else:
             logger.info(f"No logs available for task {task_id}")
@@ -1220,151 +1220,201 @@ class CommandHandler:
             )
 
     async def tail_logs(self, room_id: str, task_id: int, project_id: int):
-        """Tail logs for a running task and send updates to the room.
+        """Tail logs for a running task and send incremental updates to the room.
+        
+        This implementation polls the Semaphore API asynchronously and sends
+        only new log content as it becomes available, providing a near real-time
+        streaming experience.
         
         Args:
             room_id: Room to send log updates to
             task_id: Task ID to tail
             project_id: Project ID
         """
-        logger.info(f"Starting log tailing task for task {task_id} in room {room_id}")
+        logger.info(f"Starting log tailing for task {task_id} in room {room_id}")
         last_log_size = 0
+        poll_interval = 2  # Check every 2 seconds for more responsive tailing
         
         while room_id in self.log_tailing_sessions:
             # Check if this is still the right task
             if self.log_tailing_sessions[room_id]['task_id'] != task_id:
-                logger.info(f"Log tailing task {task_id} stopped - different task is being tailed")
+                logger.info(f"Log tailing for task {task_id} stopped - different task is being tailed")
                 break
-            
-            await asyncio.sleep(5)  # Check every 5 seconds
             
             try:
                 # Get current task status
                 task = await self.semaphore.get_task_status(project_id, task_id)
                 if not task:
-                    logger.warning(f"Could not get status for task {task_id}, continuing...")
+                    logger.warning(f"Could not get status for task {task_id}, retrying...")
+                    await asyncio.sleep(poll_interval)
                     continue
                 
                 status = task.get('status')
                 
-                # If task is finished, send final logs and stop
-                if status in ('success', 'error', 'stopped'):
-                    logger.info(f"Task {task_id} finished with status {status}, sending final logs")
+                # Get current logs
+                logs = await self.semaphore.get_task_output(project_id, task_id)
+                
+                # Check if there are new logs to send
+                if logs and len(logs) > last_log_size:
+                    # New logs available - extract only the new content
+                    new_logs = logs[last_log_size:]
+                    last_log_size = len(logs)
                     
-                    # Get final logs
-                    logs = await self.semaphore.get_task_output(project_id, task_id)
-                    if logs and len(logs) > last_log_size:
-                        new_logs = logs[last_log_size:]
-                        await self._send_log_chunk(room_id, task_id, new_logs, final=True)
+                    # Send new log chunk asynchronously
+                    is_final = status in ('success', 'error', 'stopped')
+                    await self._send_log_chunk(room_id, task_id, new_logs, final=is_final)
+                    
+                    logger.debug(f"Sent {len(new_logs)} bytes of new logs for task {task_id}")
+                
+                # If task is finished, stop tailing
+                if status in ('success', 'error', 'stopped'):
+                    logger.info(f"Task {task_id} finished with status {status}, stopping log tailing")
                     
                     # Stop tailing
                     if room_id in self.log_tailing_sessions:
                         del self.log_tailing_sessions[room_id]
                     
-                    await self.bot.send_message(
-                        room_id,
-                        f"📋 Log tailing stopped for task **{task_id}** (status: {status})"
-                    )
+                    # Send completion message
+                    status_emoji = {
+                        'success': '✅',
+                        'error': '❌',
+                        'stopped': '🛑'
+                    }.get(status, '📋')
+                    
+                    message = f"{status_emoji} Log tailing completed for task **{task_id}** (status: **{status}**)"
+                    html_message = self.markdown_to_html(message)
+                    await self.bot.send_message(room_id, message, html_message)
                     break
                 
-                # Get current logs
-                logs = await self.semaphore.get_task_output(project_id, task_id)
-                
-                if logs and len(logs) > last_log_size:
-                    # New logs available
-                    new_logs = logs[last_log_size:]
-                    last_log_size = len(logs)
-                    
-                    # Send new log chunk
-                    await self._send_log_chunk(room_id, task_id, new_logs)
+                # Wait before next poll
+                await asyncio.sleep(poll_interval)
                     
             except Exception as e:
-                logger.error(f"Error tailing logs for task {task_id}: {e}")
-                await asyncio.sleep(10)  # Wait longer on error
+                logger.error(f"Error tailing logs for task {task_id}: {e}", exc_info=True)
+                # Wait longer on error before retrying
+                await asyncio.sleep(poll_interval * 2)
         
-        logger.info(f"Log tailing task stopped for task {task_id} in room {room_id}")
+        logger.info(f"Log tailing stopped for task {task_id} in room {room_id}")
     
     async def _send_log_chunk(self, room_id: str, task_id: int, log_chunk: str, final: bool = False):
-        """Send a chunk of logs to the room.
+        """Send a chunk of logs to the room with proper formatting.
+        
+        Sends incremental log updates as they become available, with proper
+        HTML/markdown formatting for excellent rendering in Matrix clients.
         
         Args:
             room_id: Room to send to
             task_id: Task ID
-            log_chunk: New log content
+            log_chunk: New log content (incremental update)
             final: Whether this is the final log chunk
         """
-        # Format logs
+        # Skip empty chunks
+        if not log_chunk or not log_chunk.strip():
+            return
+        
+        # Format logs for plain text (strip ANSI codes)
         formatted_logs = self._format_task_logs(log_chunk)
         
-        # Limit chunk size to avoid huge messages
-        max_lines = 50
+        # Limit chunk size to avoid overwhelming messages
+        # For tailing, we want smaller, more frequent updates
+        max_lines = 30
         log_lines = formatted_logs.split('\n')
-        if len(log_lines) > max_lines:
-            formatted_logs = '\n'.join(log_lines[-max_lines:])
-            header = f"📋 **Task {task_id}** (last {max_lines} lines)\n\n"
-        else:
-            header = f"📋 **Task {task_id}**\n\n"
         
-        if final:
-            header = f"📋 **Task {task_id}** (FINAL)\n\n"
+        if len(log_lines) > max_lines:
+            # If chunk is too large, only show the last N lines
+            formatted_logs = '\n'.join(log_lines[-max_lines:])
+            truncated_chunk = '\n'.join(log_chunk.split('\n')[-max_lines:])
+            header = f"📋 **Task {task_id}** (showing last {max_lines} lines of {len(log_lines)} total)\n\n"
+        else:
+            truncated_chunk = log_chunk
+            if final:
+                header = f"📋 **Task {task_id}** (FINAL)\n\n"
+            else:
+                header = f"📋 **Task {task_id}** (update)\n\n"
         
         # Create plain text version with markdown code block
         plain_message = f"{header}```\n{formatted_logs}\n```"
         
-        # Create HTML version with color formatting
+        # Create HTML version with proper color formatting and styling
         html_header = self.markdown_to_html(header)
-        html_logs = self._format_task_logs_html(log_chunk if len(log_lines) <= max_lines else '\n'.join(log_chunk.split('\n')[-max_lines:]))
+        html_logs = self._format_task_logs_html(truncated_chunk)
         html_message = f"{html_header}{html_logs}"
         
+        # Send the message asynchronously
         await self.bot.send_message(room_id, plain_message, html_message)
 
     def _ansi_to_html(self, text: str) -> str:
-        """Convert ANSI color codes to HTML.
+        """Convert ANSI color codes to HTML with proper styling.
+        
+        This implementation properly handles ANSI codes and converts them to styled spans
+        with proper color codes for better rendering in Matrix clients like Element.
         
         Args:
             text: Text with ANSI color codes
             
         Returns:
-            HTML formatted text
+            HTML formatted text with proper color styling
         """
-        # ANSI color code to HTML color mapping
+        import html
+        
+        # Escape HTML special characters first
+        text = html.escape(text)
+        
+        # ANSI color code mappings to CSS colors (using terminal color palette)
         ansi_colors = {
-            '30': 'black',
-            '31': 'red',
-            '32': 'green',
-            '33': 'yellow',
-            '34': 'blue',
-            '35': 'magenta',
-            '36': 'cyan',
-            '37': 'white',
-            '90': 'gray',
-            '91': 'lightred',
-            '92': 'lightgreen',
-            '93': 'lightyellow',
-            '94': 'lightblue',
-            '95': 'lightmagenta',
-            '96': 'lightcyan',
-            '97': 'white'
+            '0': ('reset', ''),  # Reset
+            '1': ('bold', 'font-weight: bold;'),  # Bold
+            '30': ('black', 'color: #000000;'),
+            '31': ('red', 'color: #cc0000;'),
+            '32': ('green', 'color: #4e9a06;'),
+            '33': ('yellow', 'color: #c4a000;'),
+            '34': ('blue', 'color: #3465a4;'),
+            '35': ('magenta', 'color: #75507b;'),
+            '36': ('cyan', 'color: #06989a;'),
+            '37': ('white', 'color: #d3d7cf;'),
+            '90': ('bright-black', 'color: #555753;'),
+            '91': ('bright-red', 'color: #ef2929;'),
+            '92': ('bright-green', 'color: #8ae234;'),
+            '93': ('bright-yellow', 'color: #fce94f;'),
+            '94': ('bright-blue', 'color: #729fcf;'),
+            '95': ('bright-magenta', 'color: #ad7fa8;'),
+            '96': ('bright-cyan', 'color: #34e2e2;'),
+            '97': ('bright-white', 'color: #eeeeec;'),
         }
         
-        # Convert color codes
-        result = text
+        # Stack to track open tags
+        open_tags = []
         
-        # Handle bold (1m)
-        result = re.sub(r'\x1b\[1m', '<strong>', result)
+        def replace_code(match):
+            nonlocal open_tags
+            codes = match.group(1).split(';') if match.group(1) else ['0']
+            result = ''
+            
+            for code in codes:
+                if code == '0' or code == '':
+                    # Reset - close all open tags
+                    while open_tags:
+                        result += '</span>'
+                        open_tags.pop()
+                elif code == '1':
+                    # Bold
+                    result += '<span style="font-weight: bold;">'
+                    open_tags.append('bold')
+                elif code in ansi_colors:
+                    name, style = ansi_colors[code]
+                    if style and style != '':
+                        result += f'<span style="{style}">'
+                        open_tags.append(name)
+            
+            return result
         
-        # Handle color codes (e.g., 31m for red)
-        for code, color in ansi_colors.items():
-            result = re.sub(rf'\x1b\[{code}m', f'<span style="color: {color}">', result)
+        # Replace ANSI codes
+        result = re.sub(r'\x1b\[([0-9;]*)m', replace_code, text)
         
-        # Handle reset codes (0m)
-        result = re.sub(r'\x1b\[0m', '</span></strong>', result)
-        
-        # Clean up any remaining ANSI codes
-        result = re.sub(r'\x1b\[[0-9;]*m', '', result)
-        
-        # Replace newlines with <br> for HTML
-        result = result.replace('\n', '<br>')
+        # Close any remaining open tags
+        while open_tags:
+            result += '</span>'
+            open_tags.pop()
         
         return result
 
@@ -1372,23 +1422,17 @@ class CommandHandler:
         """Convert ANSI color codes to HTML for use in <pre> tags.
         
         This version does NOT replace newlines with <br> since <pre> tags
-        preserve newlines naturally. Uses a simplified conversion that strips
-        ANSI codes for readability rather than perfect HTML structure.
+        preserve newlines naturally. Converts ANSI codes to proper HTML spans
+        with color styling.
         
         Args:
             text: Text with ANSI color codes
             
         Returns:
-            HTML formatted text (without <br> tags)
+            HTML formatted text (without <br> tags, preserves newlines)
         """
-        # For logs in <pre> tags, we prioritize readability over perfect formatting.
-        # Simply strip ANSI codes and preserve the text structure.
-        # Most logs are readable without color formatting in Matrix clients.
-        result = re.sub(r'\x1b\[[0-9;]*m', '', text)
-        
-        # Do NOT replace newlines - <pre> tags preserve them naturally
-        
-        return result
+        # Use the improved ANSI to HTML conversion
+        return self._ansi_to_html(text)
 
     def _format_task_logs(self, raw_logs: str) -> str:
         """Format raw task logs for better readability.
@@ -1425,24 +1469,41 @@ class CommandHandler:
     def _format_task_logs_html(self, raw_logs: str) -> str:
         """Format raw task logs with HTML formatting, preserving colors.
         
+        Creates a styled code block with proper ANSI-to-HTML color conversion
+        for excellent rendering in Matrix clients like Element.
+        
         Args:
             raw_logs: Raw log output with ANSI codes
             
         Returns:
-            HTML formatted log output
+            HTML formatted log output with styled pre/code block
         """
-        # Detect log type
-        is_ansible = 'TASK [' in raw_logs or 'PLAY [' in raw_logs
-        is_terraform = 'Terraform' in raw_logs or 'terraform' in raw_logs
-        
         # Remove excessive blank lines first
         logs = re.sub(r'\n{3,}', '\n\n', raw_logs)
         
-        # Convert ANSI codes to HTML (but keep newlines as-is for <pre> tag)
+        # Convert ANSI codes to HTML (preserves newlines for <pre> tag)
         html_logs = self._ansi_to_html_for_pre(logs)
         
-        # Wrap in pre tag for monospace formatting (newlines are preserved in <pre>)
-        return f'<pre>{html_logs}</pre>'
+        # Wrap in a styled pre/code block for better rendering in Element
+        # Dark theme with proper monospace font and readable colors
+        styled_html = (
+            '<pre style="'
+            'background-color: #1e1e1e; '
+            'color: #d4d4d4; '
+            'padding: 12px; '
+            'border-radius: 6px; '
+            'overflow-x: auto; '
+            'font-family: \'Courier New\', Consolas, Monaco, monospace; '
+            'font-size: 13px; '
+            'line-height: 1.5; '
+            'margin: 8px 0; '
+            'border: 1px solid #3e3e3e;'
+            '">'
+            f'<code>{html_logs}</code>'
+            '</pre>'
+        )
+        
+        return styled_html
 
     async def ping_semaphore(self, room_id: str, sender: str = None):
         """Ping Semaphore server.

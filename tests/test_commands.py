@@ -573,10 +573,10 @@ class TestCommandHandler(unittest.TestCase):
             self.handler.get_logs('!test:example.com', ['123'])
         )
         
-        # Should send truncated logs (last 100 lines)
+        # Should send truncated logs (last 150 lines - updated implementation)
         self.mock_bot.send_message.assert_called_once()
         call_args = self.mock_bot.send_message.call_args[0]
-        self.assertIn('last 100 lines', call_args[1])
+        self.assertIn('last 150', call_args[1])
 
 
     def test_get_display_name(self):
@@ -790,17 +790,19 @@ class TestCommandHandler(unittest.TestCase):
 
     def test_ansi_to_html_for_pre(self):
         """Test ANSI to HTML conversion for use in pre tags."""
-        # Test that ANSI codes are stripped for readability
+        # Test that ANSI codes are converted to HTML spans with proper colors
         text_with_color = "\x1b[31mRed text\x1b[0m"
         result = self.handler._ansi_to_html_for_pre(text_with_color)
-        self.assertEqual(result, "Red text")
-        self.assertNotIn('\x1b', result)  # No ANSI codes
+        # Should contain HTML span with red color
+        self.assertIn('<span style="color: #cc0000;">Red text</span>', result)
+        self.assertNotIn('\x1b', result)  # No ANSI codes remaining
         self.assertNotIn('<br>', result)  # Should NOT have br tags
         
-        # Test bold ANSI codes are stripped
+        # Test bold ANSI codes are converted to HTML
         text_with_bold = "\x1b[1mBold text\x1b[0m"
         result = self.handler._ansi_to_html_for_pre(text_with_bold)
-        self.assertEqual(result, "Bold text")
+        # Should contain HTML span with bold style
+        self.assertIn('<span style="font-weight: bold;">Bold text</span>', result)
         self.assertNotIn('\x1b', result)
         
         # Test that newlines are preserved (not replaced with <br>)
@@ -812,7 +814,10 @@ class TestCommandHandler(unittest.TestCase):
         # Test mixed ANSI codes and text
         text_mixed = "Normal \x1b[32mgreen\x1b[0m text"
         result = self.handler._ansi_to_html_for_pre(text_mixed)
-        self.assertEqual(result, "Normal green text")
+        # Should contain HTML span for green text
+        self.assertIn('<span style="color: #4e9a06;">green</span>', result)
+        self.assertIn('Normal', result)
+        self.assertIn('text', result)
 
     def test_markdown_to_html_with_mentions(self):
         """Test markdown to HTML conversion with Matrix mentions."""
