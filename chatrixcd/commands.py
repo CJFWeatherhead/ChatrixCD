@@ -1519,7 +1519,7 @@ class CommandHandler:
         
         # Network information (only if not redacting)
         # Check if redaction is enabled in bot config
-        redact_enabled = self.config.get('bot.redact', False)
+        redact_enabled = self.config.get('redact', False)
         if not redact_enabled:
             try:
                 hostname = socket.gethostname()

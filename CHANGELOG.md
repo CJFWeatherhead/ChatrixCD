@@ -15,6 +15,23 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Fixed
+- Fixed misleading error message when no projects exist in Semaphore - now shows clear message to create a project instead of connection error
+- Fixed incorrect "multiple templates" message when no templates exist - now shows clear message to create templates with proper handling for 0, 1, and multiple template cases
+
+### Added
+- Enhanced `!cd info` command with comprehensive bot system information:
+  - Bot version, platform, architecture, and Python version
+  - CPU and memory usage statistics
+  - Hostname and IP addresses (IPv4 and IPv6) - only shown when --redact flag is not used
+- Added psutil dependency for system information gathering
+- Added 3 new tests for edge cases and redaction behavior
+
+### Changed
+- Improved consistency of --redact (-R) flag application - now properly passed to command handler for IP address redaction in info command
+- Updated documentation to accurately reflect Linux-only pre-built binaries (removed outdated Windows/macOS binary references)
+- Clarified platform availability in docs/index.md, docs/quickstart.md, and QUICKSTART.md
+
 ## [2025.11.04.4.0.1] - 2025-11-04
 
 ### Added
