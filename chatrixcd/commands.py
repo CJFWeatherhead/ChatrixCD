@@ -4,6 +4,8 @@ import logging
 import asyncio
 import re
 import random
+import platform
+import socket
 from typing import Dict, Any, Optional
 from nio import MatrixRoom, RoomMessageText
 from chatrixcd.semaphore import SemaphoreClient
@@ -1488,9 +1490,7 @@ class CommandHandler:
             room_id: Room to send response to
             sender: User who requested the info
         """
-        import platform
         import psutil
-        import socket
         from chatrixcd import __version__
         
         user_name = self._get_display_name(sender) if sender else "friend"
