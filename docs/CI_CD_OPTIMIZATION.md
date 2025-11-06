@@ -175,7 +175,7 @@ validate-build:
 ### ARM64 Runner Not Available
 **Symptom**: Build fails with "runner not found"
 
-**Solution**: GitHub ARM64 runners require GitHub Enterprise or Team plan. If unavailable:
+**Solution**: GitHub ARM64 runners require GitHub Team or Enterprise Cloud plan. If unavailable:
 1. Revert to QEMU with optimizations
 2. Or use self-hosted ARM64 runners
 
@@ -215,7 +215,7 @@ Use `ccache` with network storage for sharing cache across runners.
 
 ## Related Documentation
 
-- [GitHub Actions - Runners](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners) (ARM64 runners available for GitHub Team/Enterprise)
+- [GitHub Actions - Runners](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners) (ARM64 runners available for GitHub Team and Enterprise Cloud plans)
 - [Nuitka Performance Options](https://nuitka.net/doc/user-manual.html#performance-options)
 - [ccache Manual](https://ccache.dev/manual/latest.html)
 - [BuildKit Documentation](https://docs.docker.com/build/buildkit/)
