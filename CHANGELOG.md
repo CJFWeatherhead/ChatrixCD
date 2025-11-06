@@ -15,6 +15,12 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Fixed
+- **Build Workflow**: Fixed PEP 668 "externally-managed-environment" error in GitHub Actions build workflow
+  - Replaced `--break-system-packages` workaround with Python virtual environments for all architectures (x86_64, i686, arm64)
+  - Now uses `python3 -m venv /venv` and activates the venv before installing dependencies
+  - This is the recommended best practice per PEP 668, providing better isolation and compatibility with modern Linux distributions
+
 ### Changed
 - **Global Log Tailing Mode**: Redesigned `!cd log on/off` commands for better usability
   - `!cd log on` and `!cd log off` are now **global functions** that enable/disable automatic log streaming for all tasks in a room

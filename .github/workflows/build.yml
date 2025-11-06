@@ -116,6 +116,8 @@ jobs:
           docker run --rm --platform linux/amd64 -v "$PWD":/src -w /src amd64/alpine:3.22 sh -c "
           apk add --no-cache python3 py3-pip gcc g++ musl-dev patchelf ccache linux-headers  \
             libffi-dev openssl-dev rust cargo git build-base python3-dev gcc musl-dev linux-headers &&
+          python3 -m venv /venv &&
+          source /venv/bin/activate &&
           pip install --upgrade pip &&
           pip install -r requirements.txt &&
           pip install nuitka ordered-set &&
@@ -136,9 +138,11 @@ jobs:
           docker run --rm --platform linux/386 -v "$PWD":/src -w /src i386/alpine:3.22 sh -c "
           apk add --no-cache python3 py3-pip gcc g++ musl-dev patchelf ccache linux-headers  \
             libffi-dev openssl-dev rust cargo git build-base python3-dev gcc musl-dev linux-headers &&
-          pip3 install --break-system-packages --upgrade pip &&
-          pip3 install --break-system-packages -r requirements.txt &&
-          pip3 install --break-system-packages nuitka ordered-set &&
+          python3 -m venv /venv &&
+          source /venv/bin/activate &&
+          pip install --upgrade pip &&
+          pip install -r requirements.txt &&
+          pip install nuitka ordered-set &&
           python3 -m nuitka --mode=onefile \
             --output-filename=chatrixcd-linux-i686 \
             --enable-plugin=anti-bloat \
@@ -156,9 +160,11 @@ jobs:
           docker run --rm --platform linux/arm64 -v "$PWD":/src -w /src arm64v8/alpine:3.22 sh -c "
           apk add --no-cache python3 py3-pip gcc g++ musl-dev patchelf ccache build-base python3-dev gcc musl-dev linux-headers \
             libffi-dev openssl-dev rust cargo git make &&
-          pip3 install --break-system-packages --upgrade pip &&
-          pip3 install --break-system-packages -r requirements.txt &&
-          pip3 install --break-system-packages nuitka ordered-set &&
+          python3 -m venv /venv &&
+          source /venv/bin/activate &&
+          pip install --upgrade pip &&
+          pip install -r requirements.txt &&
+          pip install nuitka ordered-set &&
           python3 -m nuitka --mode=onefile \
             --output-filename=chatrixcd-linux-arm64 \
             --enable-plugin=anti-bloat \
