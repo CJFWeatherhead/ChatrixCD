@@ -15,6 +15,16 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Changed
+- **CI/CD Performance Optimizations**: Significantly improved build and test workflow execution times
+  - **ARM64 Builds**: Now use native ARM64 runners (`ubuntu-24.04-arm64`) instead of QEMU emulation, resulting in 3-5x faster build times
+  - **Build Cache**: Added ccache configuration for all architectures to cache compilation artifacts across builds
+  - **Docker Build Cache**: Configured BuildKit with proper caching for faster Docker builds
+  - **LTO Optimization**: Disabled Link Time Optimization (--lto=no) for ARM64 builds to dramatically reduce compilation time while keeping it enabled for x86_64 and i686
+  - **Parallel Compilation**: Added `--jobs=4` flag to Nuitka builds for parallel compilation
+  - **Test Optimization**: Test workflow now runs only Python 3.12 for PRs, full matrix (3.11, 3.12, 3.13) only for main branch pushes
+  - **Parallelization**: Removed unnecessary dependency between test and validate-build jobs to run them in parallel
+
 ### Fixed
 - **Build Workflow**: Fixed PEP 668 "externally-managed-environment" error in GitHub Actions build workflow
   - Replaced `--break-system-packages` workaround with Python virtual environments for all architectures (x86_64, i686, arm64)

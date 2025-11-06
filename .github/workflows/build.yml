@@ -45,7 +45,7 @@ jobs:
   build-linux:
     name: Build Linux ${{ matrix.arch }}
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm64' || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
@@ -62,15 +62,12 @@ jobs:
       - name: Fetch all tags
         run: git fetch --tags --force
       
-      - name: Set up QEMU for ARM64 emulation
-        if: matrix.arch == 'arm64'
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: linux/arm64
-      
       - name: Set up Docker Buildx
-        if: matrix.arch == 'amd64' || matrix.arch == 'arm64' || matrix.arch == 'i686'
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            image=moby/buildkit:latest
+            network=host
       
       - name: Calculate version
         id: version
@@ -110,12 +107,23 @@ jobs:
           print(f'Updated version to {version}')
           "
       
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: .ccache
+          key: ccache-${{ matrix.arch }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ matrix.arch }}-
+      
       - name: Build with Nuitka (x86_64 - using Alpine/musl)
         if: matrix.arch == 'x86_64'
         run: |
           docker run --rm --platform linux/amd64 -v "$PWD":/src -w /src amd64/alpine:3.22 sh -c "
           apk add --no-cache python3 py3-pip gcc g++ musl-dev patchelf ccache linux-headers  \
-            libffi-dev openssl-dev rust cargo git build-base python3-dev gcc musl-dev linux-headers &&
+            libffi-dev openssl-dev rust cargo git build-base python3-dev &&
+          export CCACHE_DIR=/src/.ccache &&
+          export CC='ccache gcc' &&
+          export CXX='ccache g++' &&
           python3 -m venv /venv &&
           source /venv/bin/activate &&
           pip install --upgrade pip &&
@@ -127,6 +135,7 @@ jobs:
             --assume-yes-for-downloads \
             --static-libpython=yes \
             --lto=yes \
+            --jobs=4 \
             --linux-icon=assets/icon.png \
             --include-data-dir=assets=assets \
             chatrixcd/main.py
@@ -137,7 +146,10 @@ jobs:
         run: |
           docker run --rm --platform linux/386 -v "$PWD":/src -w /src i386/alpine:3.22 sh -c "
           apk add --no-cache python3 py3-pip gcc g++ musl-dev patchelf ccache linux-headers  \
-            libffi-dev openssl-dev rust cargo git build-base python3-dev gcc musl-dev linux-headers &&
+            libffi-dev openssl-dev rust cargo git build-base python3-dev &&
+          export CCACHE_DIR=/src/.ccache &&
+          export CC='ccache gcc' &&
+          export CXX='ccache g++' &&
           python3 -m venv /venv &&
           source /venv/bin/activate &&
           pip install --upgrade pip &&
@@ -149,6 +161,7 @@ jobs:
             --assume-yes-for-downloads \
             --static-libpython=yes \
             --lto=yes \
+            --jobs=4 \
             --linux-icon=assets/icon.png \
             --include-data-dir=assets=assets \
             chatrixcd/main.py
@@ -158,8 +171,11 @@ jobs:
         if: matrix.arch == 'arm64'
         run: |
           docker run --rm --platform linux/arm64 -v "$PWD":/src -w /src arm64v8/alpine:3.22 sh -c "
-          apk add --no-cache python3 py3-pip gcc g++ musl-dev patchelf ccache build-base python3-dev gcc musl-dev linux-headers \
+          apk add --no-cache python3 py3-pip gcc g++ musl-dev patchelf ccache build-base python3-dev \
             libffi-dev openssl-dev rust cargo git make &&
+          export CCACHE_DIR=/src/.ccache &&
+          export CC='ccache gcc' &&
+          export CXX='ccache g++' &&
           python3 -m venv /venv &&
           source /venv/bin/activate &&
           pip install --upgrade pip &&
@@ -170,7 +186,8 @@ jobs:
             --enable-plugin=anti-bloat \
             --assume-yes-for-downloads \
             --static-libpython=yes \
-            --lto=yes \
+            --lto=no \
+            --jobs=4 \
             --linux-icon=assets/icon.png \
             --include-data-dir=assets=assets \
             chatrixcd/main.py
