@@ -119,8 +119,8 @@ jobs:
         if: matrix.arch == 'x86_64'
         run: |
           docker run --rm --platform linux/amd64 -v "$PWD":/src -w /src amd64/alpine:3.22 sh -c "
-          apk add --no-cache python3 py3-pip gcc g++ musl-dev patchelf ccache linux-headers  \
-            libffi-dev openssl-dev rust cargo git build-base python3-dev &&
+          apk add --no-cache python3 py3-pip build-base python3-dev gcc g++ musl-dev \
+            patchelf ccache linux-headers libffi-dev openssl-dev rust cargo git &&
           export CCACHE_DIR=/src/.ccache &&
           export CC='ccache gcc' &&
           export CXX='ccache g++' &&
@@ -145,8 +145,8 @@ jobs:
         if: matrix.arch == 'i686'
         run: |
           docker run --rm --platform linux/386 -v "$PWD":/src -w /src i386/alpine:3.22 sh -c "
-          apk add --no-cache python3 py3-pip gcc g++ musl-dev patchelf ccache linux-headers  \
-            libffi-dev openssl-dev rust cargo git build-base python3-dev &&
+          apk add --no-cache python3 py3-pip build-base python3-dev gcc g++ musl-dev \
+            patchelf ccache linux-headers libffi-dev openssl-dev rust cargo git &&
           export CCACHE_DIR=/src/.ccache &&
           export CC='ccache gcc' &&
           export CXX='ccache g++' &&
@@ -171,8 +171,8 @@ jobs:
         if: matrix.arch == 'arm64'
         run: |
           docker run --rm --platform linux/arm64 -v "$PWD":/src -w /src arm64v8/alpine:3.22 sh -c "
-          apk add --no-cache python3 py3-pip gcc g++ musl-dev patchelf ccache build-base python3-dev \
-            libffi-dev openssl-dev rust cargo git make &&
+          apk add --no-cache python3 py3-pip build-base python3-dev gcc g++ musl-dev \
+            patchelf ccache linux-headers libffi-dev openssl-dev rust cargo git make &&
           export CCACHE_DIR=/src/.ccache &&
           export CC='ccache gcc' &&
           export CXX='ccache g++' &&
