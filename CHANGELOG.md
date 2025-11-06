@@ -15,6 +15,23 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Changed
+- **Global Log Tailing Mode**: Redesigned `!cd log on/off` commands for better usability
+  - `!cd log on` and `!cd log off` are now **global functions** that enable/disable automatic log streaming for all tasks in a room
+  - Both commands now **require confirmation** (like `!cd run` and `!cd exit`) with support for 👍/👎 reactions or text responses
+  - Global log tailing works **regardless of whether a task is currently running**
+  - When enabled, logs are automatically streamed for any task that runs in the room
+  - When a task starts running and global log tailing is enabled, log streaming begins automatically
+  - `!cd log` still shows logs for the last task (one-time retrieval)
+  - `!cd log <task_id>` still shows logs for a specific task (one-time retrieval)
+
+### Fixed
+- **Log Output Parsing for Ansible**: Fixed `!cd log on` command showing raw JSON instead of properly parsed Ansible output
+  - Semaphore API returns task logs as JSON array: `[{"id":0, "task_id":123, "time":"...", "output":"log line"}, ...]`
+  - Updated `get_task_output()` in `semaphore.py` to parse JSON and extract `"output"` field from each log entry
+  - ANSI color codes now properly preserved and converted to Matrix-compatible HTML with `data-mx-color` attributes
+  - Logs now display with correct formatting and colors instead of showing raw JSON with encoded escape sequences
+
 ### Added
 - **Enhanced message formatting with m.notice, colors, semantic emojis, and tables**
   - **m.notice support**: Informational commands now use `m.notice` message type for non-urgent notifications (help, info, projects, templates, status, rooms, admins, aliases, ping)

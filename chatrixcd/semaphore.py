@@ -201,6 +201,12 @@ class SemaphoreClient:
     async def get_task_output(self, project_id: int, task_id: int) -> Optional[str]:
         """Get output logs for a specific task.
         
+        Semaphore returns task output as a JSON array of log entries with structure:
+        [{"id": 0, "task_id": 123, "time": "...", "output": "log line"}, ...]
+        
+        This method parses the JSON and extracts the "output" field from each entry,
+        joining them with newlines to create a complete log string.
+        
         Args:
             project_id: ID of the project
             task_id: ID of the task
@@ -214,8 +220,18 @@ class SemaphoreClient:
                 f"{self.base_url}/api/project/{project_id}/tasks/{task_id}/output"
             ) as resp:
                 if resp.status == 200:
-                    output = await resp.text()
-                    return output
+                    # Semaphore returns JSON array of log entries
+                    log_entries = await resp.json()
+                    
+                    # Extract "output" field from each log entry and join with newlines
+                    if isinstance(log_entries, list):
+                        log_lines = [entry.get('output', '') for entry in log_entries]
+                        output = '\n'.join(log_lines)
+                        return output
+                    else:
+                        # Fallback: if response is not a list, treat as plain text
+                        logger.warning("Task output is not a JSON array, treating as plain text")
+                        return str(log_entries)
                 else:
                     logger.error(f"Failed to get task output: {resp.status}")
                     return None
