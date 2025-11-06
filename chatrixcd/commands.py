@@ -1348,8 +1348,8 @@ class CommandHandler:
         """Convert ANSI color codes to Matrix-compatible HTML.
         
         This implementation converts ANSI codes to Matrix-supported HTML using
-        data-mx-color attributes on <font> tags, which Element and other Matrix
-        clients properly render. Does NOT use inline style attributes which are
+        data-mx-color attributes on <span> tags, which is the recommended approach
+        per Matrix v1.10+ spec. Does NOT use inline style attributes which are
         stripped by Matrix clients for security.
         
         Handles combined codes like '\x1b[1;31m' (bold red) correctly.
@@ -1402,15 +1402,15 @@ class CommandHandler:
                         if tag_type == 'bold':
                             result += '</strong>'
                         else:  # color
-                            result += '</font>'
+                            result += '</span>'
                 elif code == '1':
                     # Bold - use <strong> tag (Matrix-supported)
                     result += '<strong>'
                     open_tags.append(('bold', 'bold'))
                 elif code in ansi_colors:
-                    # Color code - use <font> with data-mx-color (Matrix-supported)
+                    # Color code - use <span> with data-mx-color (Matrix v1.10+ recommended)
                     color = ansi_colors[code]
-                    result += f'<font data-mx-color="{color}">'
+                    result += f'<span data-mx-color="{color}">'
                     open_tags.append(('color', code))
             
             return result
@@ -1424,7 +1424,7 @@ class CommandHandler:
             if tag_type == 'bold':
                 result += '</strong>'
             else:  # color
-                result += '</font>'
+                result += '</span>'
         
         return result
 

@@ -793,8 +793,8 @@ class TestCommandHandler(unittest.TestCase):
         # Test that ANSI codes are converted to Matrix-compatible HTML with data-mx-color
         text_with_color = "\x1b[31mRed text\x1b[0m"
         result = self.handler._ansi_to_html_for_pre(text_with_color)
-        # Should contain HTML font tag with data-mx-color attribute
-        self.assertIn('<font data-mx-color="#cc0000">Red text</font>', result)
+        # Should contain HTML span tag with data-mx-color attribute (Matrix v1.10+ recommended)
+        self.assertIn('<span data-mx-color="#cc0000">Red text</span>', result)
         self.assertNotIn('\x1b', result)  # No ANSI codes remaining
         self.assertNotIn('style=', result)  # No inline CSS styles
         
@@ -814,8 +814,8 @@ class TestCommandHandler(unittest.TestCase):
         # Test mixed ANSI codes and text
         text_mixed = "Normal \x1b[32mgreen\x1b[0m text"
         result = self.handler._ansi_to_html_for_pre(text_mixed)
-        # Should contain HTML font tag for green text
-        self.assertIn('<font data-mx-color="#4e9a06">green</font>', result)
+        # Should contain HTML span tag for green text
+        self.assertIn('<span data-mx-color="#4e9a06">green</span>', result)
         self.assertIn('Normal', result)
         self.assertIn('text', result)
 
