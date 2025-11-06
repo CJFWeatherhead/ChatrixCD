@@ -258,13 +258,20 @@ class TestSemaphoreClient(unittest.TestCase):
         self.assertIsNone(result)
 
     def test_get_task_output_success(self):
-        """Test successful task output retrieval."""
-        async def mock_text():
-            return "Task output logs here"
+        """Test successful task output retrieval with JSON array format."""
+        async def mock_json():
+            # Semaphore returns JSON array of log entries
+            return [
+                {"id": 0, "task_id": 123, "time": "2025-11-06T17:35:21.360703911Z", "output": ""},
+                {"id": 1, "task_id": 123, "time": "2025-11-06T17:35:21.360797727Z", "output": "PLAY [Set global variables] ****************************************************"},
+                {"id": 2, "task_id": 123, "time": "2025-11-06T17:35:21.366692799Z", "output": ""},
+                {"id": 3, "task_id": 123, "time": "2025-11-06T17:35:21.366763205Z", "output": "TASK [Add sync service host to inventory] **************************************"},
+                {"id": 4, "task_id": 123, "time": "2025-11-06T17:35:21.38092541Z", "output": "\u001b[0;33mchanged: [localhost]\u001b[0m"},
+            ]
         
         mock_response = MagicMock()
         mock_response.status = 200
-        mock_response.text = mock_text
+        mock_response.json = mock_json
         
         mock_session = MagicMock()
         mock_session.closed = False
@@ -274,7 +281,9 @@ class TestSemaphoreClient(unittest.TestCase):
         self.client.session = mock_session
         result = self.loop.run_until_complete(self.client.get_task_output(1, 123))
         
-        self.assertEqual(result, "Task output logs here")
+        # Verify the output field from each log entry is extracted and joined
+        expected = "\nPLAY [Set global variables] ****************************************************\n\nTASK [Add sync service host to inventory] **************************************\n\u001b[0;33mchanged: [localhost]\u001b[0m"
+        self.assertEqual(result, expected)
 
     def test_get_task_output_failure(self):
         """Test task output retrieval failure."""
@@ -290,6 +299,26 @@ class TestSemaphoreClient(unittest.TestCase):
         result = self.loop.run_until_complete(self.client.get_task_output(1, 999))
         
         self.assertIsNone(result)
+
+    def test_get_task_output_fallback_plain_text(self):
+        """Test task output retrieval with non-array JSON (fallback to string)."""
+        async def mock_json():
+            # If API returns non-array response, treat as plain text
+            return "Plain text output"
+        
+        mock_response = MagicMock()
+        mock_response.status = 200
+        mock_response.json = mock_json
+        
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.get = MagicMock(return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response)))
+        mock_session.close = AsyncMock()
+        
+        self.client.session = mock_session
+        result = self.loop.run_until_complete(self.client.get_task_output(1, 123))
+        
+        self.assertEqual(result, "Plain text output")
 
     def test_stop_task_success(self):
         """Test successful task stop."""

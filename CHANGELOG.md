@@ -15,6 +15,13 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Fixed
+- **Log Output Parsing for Ansible**: Fixed `!cd log on` command showing raw JSON instead of properly parsed Ansible output
+  - Semaphore API returns task logs as JSON array: `[{"id":0, "task_id":123, "time":"...", "output":"log line"}, ...]`
+  - Updated `get_task_output()` in `semaphore.py` to parse JSON and extract `"output"` field from each log entry
+  - ANSI color codes now properly preserved and converted to Matrix-compatible HTML with `data-mx-color` attributes
+  - Logs now display with correct formatting and colors instead of showing raw JSON with encoded escape sequences
+
 ### Added
 - **Enhanced message formatting with m.notice, colors, semantic emojis, and tables**
   - **m.notice support**: Informational commands now use `m.notice` message type for non-urgent notifications (help, info, projects, templates, status, rooms, admins, aliases, ping)
