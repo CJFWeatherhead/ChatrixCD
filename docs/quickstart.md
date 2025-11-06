@@ -12,7 +12,9 @@ Get ChatrixCD up and running in minutes. For more detailed examples, configurati
 
 ### Option 1: Pre-built Binary (Linux Only)
 
-**No Python required!** Download and run:
+**No Python required!** Download and run the statically-compiled binary:
+
+**Features:** Fully static, no external dependencies, works on any Linux distribution
 
 **Linux (x86_64):**
 ```bash

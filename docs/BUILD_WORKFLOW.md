@@ -194,6 +194,78 @@ docker run --rm --platform linux/arm64 -v "$PWD":/src -w /src arm64v8/alpine:3.1
 
 The binary will be created in the current directory.
 
+## Verifying Static Compilation
+
+To verify that a binary is statically linked, you can use the following commands:
+
+### Check for Dynamic Dependencies
+
+```bash
+# Should show "not a dynamic executable" for static binaries
+ldd chatrixcd-linux-x86_64
+
+# Expected output for static binary:
+#   not a dynamic executable
+```
+
+### Check for musl libc
+
+```bash
+# Should find "musl" in the binary strings
+strings chatrixcd-linux-x86_64 | grep musl
+
+# Expected output:
+#   musl libc (...)
+```
+
+### Check File Type
+
+```bash
+file chatrixcd-linux-x86_64
+
+# Expected output should mention:
+#   ELF 64-bit LSB executable, statically linked
+```
+
+### Verification Script
+
+You can also use this comprehensive verification script:
+
+```bash
+#!/bin/bash
+BINARY="chatrixcd-linux-x86_64"
+
+echo "Verifying static compilation of $BINARY"
+echo "========================================"
+echo ""
+
+# Check file type
+echo "1. File type:"
+file "$BINARY"
+echo ""
+
+# Check for dynamic dependencies
+echo "2. Dynamic dependencies:"
+ldd "$BINARY" 2>&1 || echo "✅ Binary is statically linked"
+echo ""
+
+# Check for musl
+echo "3. C library:"
+if strings "$BINARY" | grep -q "musl"; then
+    echo "✅ Built with musl libc"
+else
+    echo "⚠️  Not built with musl"
+fi
+echo ""
+
+# Size
+echo "4. Binary size:"
+du -h "$BINARY"
+echo ""
+
+echo "✅ Verification complete"
+```
+
 ## Troubleshooting
 
 ### Build Fails with Missing Dependencies
@@ -209,6 +281,7 @@ gcc g++ musl-dev patchelf ccache linux-headers libffi-dev openssl-dev rust cargo
 2. Ensure execute permissions: `chmod +x chatrixcd-linux-*`
 3. Check architecture: `uname -m` must match binary architecture
 4. Try running with `--version` flag to test basic functionality
+5. Verify static compilation using commands above
 
 ### Binary Size Concerns
 

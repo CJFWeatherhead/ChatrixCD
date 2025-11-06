@@ -52,7 +52,13 @@ ChatrixCD makes it easy to manage CI/CD tasks through Matrix chat. Choose your i
 
 ### Quick Install (Pre-built Binary - Linux Only)
 
-**No Python required!** Download the standalone executable for Linux:
+**No Python required!** Download the statically-compiled, standalone executable for Linux:
+
+**Features:**
+- 🚀 **Fully static binaries** - No external dependencies
+- 🔒 **Maximum portability** - Works on any Linux distribution
+- 📦 **Self-contained** - All libraries included
+- ⚡ **Built with musl** - No glibc version conflicts
 
 **Linux (x86_64):**
 ```bash

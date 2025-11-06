@@ -87,32 +87,50 @@ class TestWorkflowConfiguration(unittest.TestCase):
         self.assertNotIn('build-macos', jobs, "macOS builds removed")
     
     def test_build_workflow_uses_nuitka_action(self):
-        """Test that build workflow uses Nuitka-Action."""
+        """Test that build workflow uses Nuitka for building (Docker-based with Alpine/musl)."""
         jobs = self.build_workflow['jobs']
         
-        # Check Linux build job for Nuitka-Action usage (Windows/macOS removed)
+        # Check Linux build job for Nuitka usage in Docker containers
         for job_name in ['build-linux']:
             job = jobs[job_name]
             steps = job['steps']
             
-            # Find Nuitka build steps
+            # Find Nuitka build steps (now run via Docker with Alpine/musl)
             nuitka_steps = [
                 step for step in steps
-                if 'uses' in step and 'Nuitka' in step['uses']
+                if 'Build with Nuitka' in step.get('name', '')
             ]
             
-            # Should have at least one Nuitka step
+            # Should have build steps for all architectures
             self.assertGreater(
                 len(nuitka_steps), 0,
-                f"{job_name} should use Nuitka-Action"
+                f"{job_name} should have Nuitka build steps"
             )
             
-            # Check Nuitka configuration
+            # Check that steps use Alpine Linux (musl) and static compilation
             for nuitka_step in nuitka_steps:
-                with_config = nuitka_step.get('with', {})
-                self.assertIn('script-name', with_config)
-                self.assertIn('mode', with_config)
-                self.assertEqual(with_config['mode'], 'onefile')
+                step_name = nuitka_step.get('name', '')
+                run_command = nuitka_step.get('run', '')
+                
+                # Verify Alpine/musl is used
+                self.assertIn('alpine', run_command.lower(), 
+                             f"{step_name} should use Alpine Linux")
+                
+                # Verify Nuitka is used
+                self.assertIn('nuitka', run_command.lower(),
+                             f"{step_name} should use Nuitka")
+                
+                # Verify static compilation flags
+                self.assertIn('--static-libpython=yes', run_command,
+                             f"{step_name} should use static libpython")
+                
+                # Verify LTO is enabled
+                self.assertIn('--lto=yes', run_command,
+                             f"{step_name} should use LTO")
+                
+                # Verify onefile mode
+                self.assertIn('--mode=onefile', run_command,
+                             f"{step_name} should use onefile mode")
     
     def test_build_workflow_has_version_calculation(self):
         """Test that build workflow calculates versions correctly."""
@@ -203,33 +221,33 @@ class TestWorkflowConfiguration(unittest.TestCase):
                     )
     
     def test_build_workflow_moves_x86_64_artifact(self):
-        """Test that build workflow moves x86_64 artifact from build/ directory."""
+        """Test that build workflow creates artifacts correctly (Docker builds directly in source)."""
         jobs = self.build_workflow['jobs']
         linux_job = jobs['build-linux']
         steps = linux_job['steps']
         
-        # Find the move step for x86_64
-        move_steps = [
+        # With Docker-based builds, artifacts are created directly in the source directory
+        # No move step is needed. Instead, verify that build steps create the correct output files.
+        
+        # Find build steps
+        build_steps = [
             step for step in steps
-            if 'Move x86_64 artifact to root' in step.get('name', '')
+            if 'Build with Nuitka' in step.get('name', '')
         ]
         
         self.assertGreater(
-            len(move_steps), 0,
-            "Linux build should have a step to move x86_64 artifact to root"
+            len(build_steps), 0,
+            "Linux build should have Nuitka build steps"
         )
         
-        # Verify the move step has the correct if condition
-        move_step = move_steps[0]
-        self.assertIn('if', move_step)
-        self.assertIn('x86_64', move_step['if'])
-        
-        # Verify the move step has the correct run command
-        self.assertIn('run', move_step)
-        run_command = move_step['run']
-        self.assertIn('mv', run_command)
-        self.assertIn('build/chatrixcd-linux-x86_64', run_command)
-        self.assertIn('./chatrixcd-linux-x86_64', run_command)
+        # Verify that build steps specify correct output filenames
+        for build_step in build_steps:
+            run_command = build_step.get('run', '')
+            step_name = build_step.get('name', '')
+            
+            # Check that output filename is specified in Nuitka command
+            self.assertIn('--output-filename=chatrixcd-linux-', run_command,
+                         f"{step_name} should specify output filename")
 
 
 class TestIconFiles(unittest.TestCase):
