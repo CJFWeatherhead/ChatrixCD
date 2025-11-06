@@ -8,7 +8,7 @@ import random
 import platform
 import socket
 import psutil
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from nio import MatrixRoom, RoomMessageText
 from chatrixcd.semaphore import SemaphoreClient
 from chatrixcd.aliases import AliasManager
@@ -128,6 +128,66 @@ class CommandHandler:
         # Convert line breaks to <br>
         text = text.replace('\n', '<br/>\n')
         return text
+    
+    def _colorize(self, text: str, color: str, bg_color: Optional[str] = None) -> str:
+        """Add Matrix-compatible color to text using data-mx-color attribute.
+        
+        Args:
+            text: Text to colorize
+            color: Foreground color (hex format like #ff0000)
+            bg_color: Optional background color (hex format)
+            
+        Returns:
+            HTML span with color attributes
+        """
+        attributes = f'data-mx-color="{color}"'
+        if bg_color:
+            attributes += f' data-mx-bg-color="{bg_color}"'
+        return f'<span {attributes}>{text}</span>'
+    
+    def _color_success(self, text: str) -> str:
+        """Color text as success (green)."""
+        return self._colorize(text, '#4e9a06')
+    
+    def _color_error(self, text: str) -> str:
+        """Color text as error (red)."""
+        return self._colorize(text, '#cc0000')
+    
+    def _color_warning(self, text: str) -> str:
+        """Color text as warning (yellow)."""
+        return self._colorize(text, '#c4a000')
+    
+    def _color_info(self, text: str) -> str:
+        """Color text as info (blue)."""
+        return self._colorize(text, '#3465a4')
+    
+    def _create_table(self, headers: List[str], rows: List[List[str]]) -> str:
+        """Create an HTML table for Matrix.
+        
+        Args:
+            headers: List of column headers
+            rows: List of rows, each row is a list of cell values
+            
+        Returns:
+            HTML table string
+        """
+        # Start table with border
+        html = '<table><thead><tr>'
+        
+        # Add headers
+        for header in headers:
+            html += f'<th>{html.escape(header)}</th>'
+        html += '</tr></thead><tbody>'
+        
+        # Add rows
+        for row in rows:
+            html += '<tr>'
+            for cell in row:
+                html += f'<td>{html.escape(str(cell))}</td>'
+            html += '</tr>'
+        
+        html += '</tbody></table>'
+        return html
 
     def _get_display_name(self, user_id: str) -> str:
         """Get a friendly display name for a user.
@@ -322,6 +382,7 @@ class CommandHandler:
         """
         greeting = self._get_greeting(sender) if sender else "friend 👋"
         
+        # Plain text version for clients without HTML support
         help_text = f"""{greeting} Here's what I can do for you! 🚀
 
 **ChatrixCD Bot Commands** 📚
@@ -342,10 +403,43 @@ class CommandHandler:
 
 💡 **Tip:** You can react to confirmations with 👍/👎 instead of replying!
 """
-        html_text = self.markdown_to_html(help_text)
+        
+        # HTML version with table
+        greeting_html = self.markdown_to_html(greeting)
+        
+        # Create table for commands
+        commands = [
+            ['help', 'Show this help message', 'ℹ️'],
+            ['admins', 'List admin users', '👑'],
+            ['rooms [join|part <room_id>]', 'List or manage rooms', '🏠'],
+            ['exit', 'Exit the bot (requires confirmation)', '🚪'],
+            ['projects', 'List available projects', '📋'],
+            ['templates <project_id>', 'List templates for a project', '📝'],
+            ['run <project_id> <template_id>', 'Run a task from template', '🚀'],
+            ['status [task_id]', 'Check task status (uses last task if no ID)', '📊'],
+            ['stop <task_id>', 'Stop a running task', '🛑'],
+            ['logs [on|off|task_id]', 'Get/tail task logs (uses last task if no ID)', '📋'],
+            ['ping', 'Ping Semaphore server', '🏓'],
+            ['info', 'Get Semaphore server and bot info', 'ℹ️'],
+            ['aliases', 'List command aliases', '🔖'],
+        ]
+        
+        rows_html = ''
+        for cmd, desc, emoji in commands:
+            rows_html += f'<tr><td><code>{self.command_prefix} {cmd}</code></td><td>{desc}</td><td>{emoji}</td></tr>'
+        
+        html_text = f"""{greeting_html} Here's what I can do for you! 🚀<br/><br/>
+<strong>ChatrixCD Bot Commands</strong> 📚<br/><br/>
+<table>
+<thead><tr><th>Command</th><th>Description</th><th></th></tr></thead>
+<tbody>{rows_html}</tbody>
+</table><br/>
+💡 <strong>Tip:</strong> You can react to confirmations with 👍/👎 instead of replying!
+"""
+        
         response_msg = f"Help requested by {sender}, sending response"
         logger.info(response_msg)
-        await self.bot.send_message(room_id, help_text, html_text)
+        await self.bot.send_message(room_id, help_text, html_text, msgtype="m.notice")
 
     async def list_admins(self, room_id: str, sender: str = None):
         """List admin users.
@@ -355,18 +449,32 @@ class CommandHandler:
             sender: User who requested the list
         """
         greeting = self._get_greeting(sender) if sender else "friend 👋"
+        
+        # Plain text version
         if not self.admin_users:
             message = f"{greeting} Here's the admin roster! 👑\n\n"
             message += "**Admin Users**\n\n"
-            message += "[dim]No admin users configured. All users have admin access.[/dim]"
+            message += "No admin users configured. All users have admin access."
         else:
             message = f"{greeting} Here are the bot overlords! 👑\n\n"
             message += "**Admin Users**\n\n"
             for admin in self.admin_users:
                 message += f"• {admin}\n"
         
-        html_message = self.markdown_to_html(message)
-        await self.bot.send_message(room_id, message, html_message)
+        # HTML version with table
+        greeting_html = self.markdown_to_html(greeting)
+        
+        if not self.admin_users:
+            html_message = f"{greeting_html} Here's the admin roster! 👑<br/><br/><strong>Admin Users</strong><br/><br/>{self._color_info('ℹ️ No admin users configured. All users have admin access.')}"
+        else:
+            # Create table for admins
+            table_html = '<table><thead><tr><th>Admin User</th></tr></thead><tbody>'
+            for admin in self.admin_users:
+                table_html += f'<tr><td>{html.escape(admin)}</td></tr>'
+            table_html += '</tbody></table>'
+            html_message = f"{greeting_html} Here are the bot overlords! 👑<br/><br/><strong>Admin Users</strong><br/><br/>{table_html}"
+        
+        await self.bot.send_message(room_id, message, html_message, msgtype="m.notice")
     
     async def manage_rooms(self, room_id: str, args: list, sender: str = None):
         """Manage bot rooms (list, join, part).
@@ -382,21 +490,34 @@ class CommandHandler:
             # List rooms
             rooms = self.bot.client.rooms
             if not rooms:
+                plain_msg = f"{user_name} 👋 - Not currently in any rooms. 🏠"
+                html_msg = self.markdown_to_html(plain_msg)
                 await self.bot.send_message(
                     room_id,
-                    f"{user_name} 👋 - Not currently in any rooms. 🏠"
-                    
+                    plain_msg,
+                    html_msg,
+                    msgtype="m.notice"
                 )
                 return
             
+            # Plain text version
             message = f"{user_name} 👋 Here's where I hang out! 🏠\n\n"
             message += "**Rooms I'm In**\n\n"
             for room_id_key, room in rooms.items():
                 room_name = room.display_name or "Unknown"
                 message += f"• **{room_name}**\n  `{room_id_key}`\n"
             
-            html_message = self.markdown_to_html(message)
-            await self.bot.send_message(room_id, message, html_message)
+            # HTML version with table
+            greeting_html = self.markdown_to_html(user_name)
+            table_html = '<table><thead><tr><th>Room Name</th><th>Room ID</th></tr></thead><tbody>'
+            for room_id_key, room in rooms.items():
+                room_name = html.escape(room.display_name or "Unknown")
+                table_html += f'<tr><td><strong>{room_name}</strong></td><td><code>{html.escape(room_id_key)}</code></td></tr>'
+            table_html += '</tbody></table>'
+            
+            html_message = f"{greeting_html} 👋 Here's where I hang out! 🏠<br/><br/><strong>Rooms I'm In</strong><br/><br/>{table_html}"
+            
+            await self.bot.send_message(room_id, message, html_message, msgtype="m.notice")
             return
         
         action = args[0].lower()
@@ -515,13 +636,17 @@ class CommandHandler:
         if not projects:
             # Check if this is an empty list (successful connection) or an error
             # Empty list means successful connection but no projects
+            plain_msg = f"{user_name} 👋 - No projects found. Create a project in Semaphore UI first! 📋"
+            html_msg = self.markdown_to_html(plain_msg)
             await self.bot.send_message(
                 room_id,
-                f"{user_name} 👋 - No projects found. Create a project in Semaphore UI first! 📋"
-                
+                plain_msg,
+                html_msg,
+                msgtype="m.notice"
             )
             return
         
+        # Plain text version
         message = f"{user_name} 👋 Here's what we can work with! 📋\n\n"
         message += "**Available Projects:**\n\n"
         for project in projects:
@@ -529,8 +654,18 @@ class CommandHandler:
             proj_id = project.get('id')
             message += f"• **{name}** (ID: {proj_id})\n"
         
-        html_message = self.markdown_to_html(message)
-        await self.bot.send_message(room_id, message, html_message)
+        # HTML version with table
+        greeting_html = self.markdown_to_html(user_name)
+        table_html = '<table><thead><tr><th>Project Name</th><th>ID</th></tr></thead><tbody>'
+        for project in projects:
+            name = html.escape(project.get('name', ''))
+            proj_id = project.get('id', '')
+            table_html += f'<tr><td><strong>{name}</strong></td><td>{proj_id}</td></tr>'
+        table_html += '</tbody></table>'
+        
+        html_message = f"{greeting_html} 👋 Here's what we can work with! 📋<br/><br/><strong>Available Projects:</strong><br/><br/>{table_html}"
+        
+        await self.bot.send_message(room_id, message, html_message, msgtype="m.notice")
 
     def _format_description(self, description: str) -> str:
         """Format a description by parsing ¶ as paragraph breaks and markdown.
@@ -587,13 +722,17 @@ class CommandHandler:
         templates = await self.semaphore.get_project_templates(project_id)
         
         if not templates:
+            plain_msg = f"{user_name} 👋 - No templates found for project {project_id} ❌"
+            html_msg = self.markdown_to_html(plain_msg.replace('❌', self._color_error('❌')))
             await self.bot.send_message(
                 room_id,
-                f"{user_name} 👋 - No templates found for project {project_id} ❌"
-                
+                plain_msg,
+                html_msg,
+                msgtype="m.notice"
             )
             return
-            
+        
+        # Plain text version
         message = f"{user_name} 👋 Here are the templates for project {project_id}! 📝\n\n"
         message += "**Templates:**\n\n"
         for template in templates:
@@ -602,8 +741,19 @@ class CommandHandler:
                 desc = self._format_description(template.get('description'))
                 message += f"  {desc}\n"
         
-        html_message = self.markdown_to_html(message)
-        await self.bot.send_message(room_id, message, html_message)
+        # HTML version with table
+        greeting_html = self.markdown_to_html(user_name)
+        table_html = '<table><thead><tr><th>Template Name</th><th>ID</th><th>Description</th></tr></thead><tbody>'
+        for template in templates:
+            name = html.escape(template.get('name', ''))
+            temp_id = template.get('id', '')
+            desc = html.escape(self._format_description(template.get('description', 'No description')))
+            table_html += f'<tr><td><strong>{name}</strong></td><td>{temp_id}</td><td>{desc}</td></tr>'
+        table_html += '</tbody></table>'
+        
+        html_message = f"{greeting_html} 👋 Here are the templates for project {project_id}! 📝<br/><br/><strong>Templates:</strong><br/><br/>{table_html}"
+        
+        await self.bot.send_message(room_id, message, html_message, msgtype="m.notice")
 
     async def run_task(self, room_id: str, sender: str, args: list):
         """Run a task from a template.
@@ -1003,16 +1153,21 @@ class CommandHandler:
         task_name = self.active_tasks.get(task_id, {}).get('template_name')
         task_display = f"{task_name} ({task_id})" if task_name else str(task_id)
         
-        # Choose emoji based on status
+        # Choose semantic emoji based on status
         status_emoji = {
-            'waiting': '⏸️',
-            'running': '🔄',
-            'success': '✅',
-            'error': '❌',
-            'stopped': '🛑',
-            'unknown': '❓'
+            'waiting': '⏸️',  # waiting
+            'running': '🔄',  # running/in progress
+            'success': '✅',  # ok/success
+            'error': '❌',    # failed/error
+            'stopped': '🛑',  # stopped
+            'skipped': '⏭️',  # skipped
+            'rescued': '🛟',  # rescued
+            'ignored': '🙈',  # ignored
+            'unreachable': '🔒',  # unreachable
+            'unknown': '❓'   # unknown
         }.get(status, '❓')
         
+        # Plain text version
         message = f"{user_name} 👋 Here's the scoop! {status_emoji}\n\n"
         message += f"**Task {task_display} Status:** {status}\n\n"
         
@@ -1021,8 +1176,30 @@ class CommandHandler:
         if task.get('end'):
             message += f"**Ended:** {task.get('end')}\n"
         
-        html_message = self.markdown_to_html(message)
-        await self.bot.send_message(room_id, message, html_message)
+        # HTML version with colored status
+        greeting_html = self.markdown_to_html(user_name)
+        
+        # Color the status based on type
+        if status == 'success':
+            status_colored = self._color_success(f'{status_emoji} {status}')
+        elif status in ('error', 'stopped'):
+            status_colored = self._color_error(f'{status_emoji} {status}')
+        elif status == 'running':
+            status_colored = self._color_info(f'{status_emoji} {status}')
+        elif status == 'waiting':
+            status_colored = self._color_warning(f'{status_emoji} {status}')
+        else:
+            status_colored = f'{status_emoji} {status}'
+        
+        html_message = f"{greeting_html} 👋 Here's the scoop!<br/><br/>"
+        html_message += f"<strong>Task {html.escape(task_display)} Status:</strong> {status_colored}<br/><br/>"
+        
+        if task.get('start'):
+            html_message += f"<strong>Started:</strong> {html.escape(str(task.get('start')))}<br/>"
+        if task.get('end'):
+            html_message += f"<strong>Ended:</strong> {html.escape(str(task.get('end')))}<br/>"
+        
+        await self.bot.send_message(room_id, message, html_message, msgtype="m.notice")
 
     async def stop_task(self, room_id: str, sender: str, args: list):
         """Stop a running task.
@@ -1541,16 +1718,24 @@ class CommandHandler:
         success = await self.semaphore.ping()
         
         if success:
+            plain_msg = self.message_manager.get_random_message('ping_success', user_name=user_name)
+            # Add color to success message
+            html_msg = self.markdown_to_html(plain_msg.replace('✅', self._color_success('✅')))
             await self.bot.send_message(
                 room_id,
-                self.message_manager.get_random_message('ping_success', user_name=user_name)
-                
+                plain_msg,
+                html_msg,
+                msgtype="m.notice"
             )
         else:
+            plain_msg = f"{user_name} 👋 - ❌ Uh oh! Failed to ping Semaphore server 😟"
+            # Add color to error message
+            html_msg = self.markdown_to_html(plain_msg.replace('❌', self._color_error('❌')))
             await self.bot.send_message(
                 room_id,
-                f"{user_name} 👋 - ❌ Uh oh! Failed to ping Semaphore server 😟"
-                
+                plain_msg,
+                html_msg,
+                msgtype="m.notice"
             )
 
     async def get_semaphore_info(self, room_id: str, sender: str = None):
@@ -1565,6 +1750,7 @@ class CommandHandler:
         # Get Semaphore info
         semaphore_info = await self.semaphore.get_info()
         
+        # Plain text version
         message = f"{user_name} 👋 Here's the technical stuff! ℹ️\n\n"
         message += "**System Information**\n\n"
         
@@ -1576,6 +1762,8 @@ class CommandHandler:
         message += f"• **Python:** {platform.python_version()}\n"
         
         # System resources
+        cpu_percent = None
+        memory = None
         try:
             cpu_percent = psutil.cpu_percent(interval=0.1)
             memory = psutil.virtual_memory()
@@ -1587,6 +1775,9 @@ class CommandHandler:
         # Network information (only if not redacting)
         # Check if redaction is enabled in bot config
         redact_enabled = self.config.get('redact', False)
+        hostname = None
+        ipv4_addrs = []
+        ipv6_addrs = []
         if not redact_enabled:
             try:
                 hostname = socket.gethostname()
@@ -1596,8 +1787,6 @@ class CommandHandler:
                 try:
                     # Get all network interfaces
                     addrs = psutil.net_if_addrs()
-                    ipv4_addrs = []
-                    ipv6_addrs = []
                     
                     for interface, addr_list in addrs.items():
                         for addr in addr_list:
@@ -1623,6 +1812,8 @@ class CommandHandler:
         
         # Matrix information
         message += "**Matrix Server** 🌐\n"
+        matrix_connected = False
+        matrix_encrypted = False
         if self.bot.client:
             message += f"• **Homeserver:** {self.bot.client.homeserver}\n"
             message += f"• **User ID:** {self.bot.client.user_id}\n"
@@ -1632,12 +1823,14 @@ class CommandHandler:
             # Connection status
             if hasattr(self.bot.client, 'logged_in') and self.bot.client.logged_in:
                 message += f"• **Status:** Connected ✅\n"
+                matrix_connected = True
             else:
                 message += f"• **Status:** Disconnected ❌\n"
             
             # Encryption status
             if hasattr(self.bot.client, 'olm') and self.bot.client.olm:
                 message += f"• **E2E Encryption:** Enabled 🔒\n"
+                matrix_encrypted = True
             else:
                 message += f"• **E2E Encryption:** Disabled\n"
         
@@ -1659,8 +1852,77 @@ class CommandHandler:
             message += "**Semaphore Server** 🔧\n"
             message += "• Failed to get Semaphore info ❌\n"
         
-        html_message = self.markdown_to_html(message)
-        await self.bot.send_message(room_id, message, html_message)
+        # HTML version with tables
+        greeting_html = self.markdown_to_html(user_name)
+        
+        # Bot info table
+        bot_rows = [
+            ['Version', __version__],
+            ['Platform', f"{platform.system()} {platform.release()}"],
+            ['Architecture', platform.machine()],
+            ['Python', platform.python_version()],
+        ]
+        if cpu_percent is not None:
+            bot_rows.append(['CPU Usage', f"{cpu_percent:.1f}%"])
+        if memory is not None:
+            bot_rows.append(['Memory Usage', f"{memory.percent:.1f}% ({memory.used // (1024**2)} MB / {memory.total // (1024**2)} MB)"])
+        if hostname and not redact_enabled:
+            bot_rows.append(['Hostname', hostname])
+        if ipv4_addrs and not redact_enabled:
+            bot_rows.append(['IPv4', ', '.join(ipv4_addrs)])
+        if ipv6_addrs and not redact_enabled:
+            bot_rows.append(['IPv6', ', '.join(ipv6_addrs[:2])])
+        
+        bot_table_html = '<table><thead><tr><th colspan="2">ChatrixCD Bot 🤖</th></tr></thead><tbody>'
+        for key, value in bot_rows:
+            bot_table_html += f'<tr><td><strong>{html.escape(key)}</strong></td><td>{html.escape(str(value))}</td></tr>'
+        bot_table_html += '</tbody></table>'
+        
+        # Matrix info table
+        matrix_rows = []
+        if self.bot.client:
+            matrix_rows.append(['Homeserver', self.bot.client.homeserver])
+            matrix_rows.append(['User ID', self.bot.client.user_id])
+            if hasattr(self.bot.client, 'device_id') and self.bot.client.device_id:
+                matrix_rows.append(['Device ID', self.bot.client.device_id])
+            
+            # Connection status with color
+            if matrix_connected:
+                matrix_rows.append(['Status', self._color_success('Connected ✅')])
+            else:
+                matrix_rows.append(['Status', self._color_error('Disconnected ❌')])
+            
+            # Encryption status
+            if matrix_encrypted:
+                matrix_rows.append(['E2E Encryption', 'Enabled 🔒'])
+            else:
+                matrix_rows.append(['E2E Encryption', 'Disabled'])
+        
+        matrix_table_html = '<table><thead><tr><th colspan="2">Matrix Server 🌐</th></tr></thead><tbody>'
+        for key, value in matrix_rows:
+            matrix_table_html += f'<tr><td><strong>{html.escape(key)}</strong></td><td>{value}</td></tr>'
+        matrix_table_html += '</tbody></table>'
+        
+        # Semaphore info table
+        semaphore_table_html = '<table><thead><tr><th colspan="2">Semaphore Server 🔧</th></tr></thead><tbody>'
+        if semaphore_info:
+            if 'version' in semaphore_info:
+                semaphore_table_html += f'<tr><td><strong>Version</strong></td><td>{html.escape(str(semaphore_info.get("version")))}</td></tr>'
+            for key, value in semaphore_info.items():
+                if key not in ['version']:
+                    semaphore_table_html += f'<tr><td><strong>{html.escape(key.replace("_", " ").title())}</strong></td><td>{html.escape(str(value))}</td></tr>'
+        else:
+            semaphore_table_html += f'<tr><td colspan="2">{self._color_error("Failed to get Semaphore info ❌")}</td></tr>'
+        semaphore_table_html += '</tbody></table>'
+        
+        html_message = f"""{greeting_html} 👋 Here's the technical stuff! ℹ️<br/><br/>
+<strong>System Information</strong><br/><br/>
+{bot_table_html}<br/>
+{matrix_table_html}<br/>
+{semaphore_table_html}
+"""
+        
+        await self.bot.send_message(room_id, message, html_message, msgtype="m.notice")
 
     async def list_command_aliases(self, room_id: str, sender: str = None):
         """List all command aliases.
@@ -1673,20 +1935,32 @@ class CommandHandler:
         user_name = self._get_display_name(sender) if sender else "friend"
         
         if not aliases:
+            plain_msg = f"{user_name} 👋 - No command aliases configured. 🔖"
+            html_msg = self.markdown_to_html(plain_msg)
             await self.bot.send_message(
                 room_id,
-                f"{user_name} 👋 - No command aliases configured. 🔖"
-                
+                plain_msg,
+                html_msg,
+                msgtype="m.notice"
             )
             return
         
+        # Plain text version
         message = f"{user_name} 👋 Here are your command shortcuts! 🔖\n\n"
         message += "**Command Aliases**\n\n"
         for alias, command in aliases.items():
             message += f"• **{alias}** → `{command}`\n"
         
-        html_message = self.markdown_to_html(message)
-        await self.bot.send_message(room_id, message, html_message)
+        # HTML version with table
+        greeting_html = self.markdown_to_html(user_name)
+        table_html = '<table><thead><tr><th>Alias</th><th>Command</th></tr></thead><tbody>'
+        for alias, command in aliases.items():
+            table_html += f'<tr><td><strong>{html.escape(alias)}</strong></td><td><code>{html.escape(command)}</code></td></tr>'
+        table_html += '</tbody></table>'
+        
+        html_message = f"{greeting_html} 👋 Here are your command shortcuts! 🔖<br/><br/><strong>Command Aliases</strong><br/><br/>{table_html}"
+        
+        await self.bot.send_message(room_id, message, html_message, msgtype="m.notice")
 
     async def handle_pet(self, room_id: str, sender: str):
         """Handle the secret 'pet' command (positive reinforcement).
