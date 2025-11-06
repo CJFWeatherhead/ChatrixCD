@@ -30,7 +30,7 @@ nav_order: 1
 - 🎯 **Command-based Interface**: Easy-to-use command system for task management
 - 🔖 **Command Aliases**: Create custom shortcuts for frequently used commands
 - ✅ **Task Confirmation**: Required confirmation before executing tasks with template details
-- 🎨 **Rich Formatting**: Markdown and HTML formatting in messages with emoji support
+- 🎨 **Rich Formatting**: Markdown and HTML formatting with semantic emojis, colored status indicators, and tables for structured data
 - 🧠 **Smart Parameters**: Auto-fill project/template IDs when only one option available
 - 📝 **Enhanced Logs**: Formatted output for Ansible and Terraform with intelligent tailing
 - 🔧 **Flexible Configuration**: Support for HJSON config files (JSON with comments) with automatic migration
