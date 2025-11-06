@@ -1345,44 +1345,47 @@ class CommandHandler:
         await self.bot.send_message(room_id, plain_message, html_message)
 
     def _ansi_to_html(self, text: str) -> str:
-        """Convert ANSI color codes to HTML with proper styling.
+        """Convert ANSI color codes to Matrix-compatible HTML.
         
-        This implementation properly handles ANSI codes and converts them to styled spans
-        with proper color codes for better rendering in Matrix clients like Element.
+        This implementation converts ANSI codes to Matrix-supported HTML using
+        data-mx-color attributes on <font> tags, which Element and other Matrix
+        clients properly render. Does NOT use inline style attributes which are
+        stripped by Matrix clients for security.
+        
         Handles combined codes like '\x1b[1;31m' (bold red) correctly.
         
         Args:
             text: Text with ANSI color codes
             
         Returns:
-            HTML formatted text with proper color styling
+            Matrix-compatible HTML with proper color tags
         """
         # Escape HTML special characters first
         text = html.escape(text)
         
-        # ANSI color code mappings to CSS colors (using terminal color palette)
+        # ANSI color code mappings to hex colors (using terminal color palette)
         # Note: '0' and '1' are handled separately in the logic
         ansi_colors = {
-            '30': ('black', 'color: #000000;'),
-            '31': ('red', 'color: #cc0000;'),
-            '32': ('green', 'color: #4e9a06;'),
-            '33': ('yellow', 'color: #c4a000;'),
-            '34': ('blue', 'color: #3465a4;'),
-            '35': ('magenta', 'color: #75507b;'),
-            '36': ('cyan', 'color: #06989a;'),
-            '37': ('white', 'color: #d3d7cf;'),
-            '90': ('bright-black', 'color: #555753;'),
-            '91': ('bright-red', 'color: #ef2929;'),
-            '92': ('bright-green', 'color: #8ae234;'),
-            '93': ('bright-yellow', 'color: #fce94f;'),
-            '94': ('bright-blue', 'color: #729fcf;'),
-            '95': ('bright-magenta', 'color: #ad7fa8;'),
-            '96': ('bright-cyan', 'color: #34e2e2;'),
-            '97': ('bright-white', 'color: #eeeeec;'),
+            '30': '#000000',  # black
+            '31': '#cc0000',  # red
+            '32': '#4e9a06',  # green
+            '33': '#c4a000',  # yellow
+            '34': '#3465a4',  # blue
+            '35': '#75507b',  # magenta
+            '36': '#06989a',  # cyan
+            '37': '#d3d7cf',  # white
+            '90': '#555753',  # bright-black
+            '91': '#ef2929',  # bright-red
+            '92': '#8ae234',  # bright-green
+            '93': '#fce94f',  # bright-yellow
+            '94': '#729fcf',  # bright-blue
+            '95': '#ad7fa8',  # bright-magenta
+            '96': '#34e2e2',  # bright-cyan
+            '97': '#eeeeec',  # bright-white
         }
         
-        # Stack to track open tags
-        open_tags = []
+        # Stack to track open tags and their types
+        open_tags = []  # List of tuples: (tag_type, tag_name)
         
         def replace_code(match):
             nonlocal open_tags
@@ -1395,17 +1398,20 @@ class CommandHandler:
                 if code == '0' or code == '':
                     # Reset - close all open tags
                     while open_tags:
-                        result += '</span>'
-                        open_tags.pop()
+                        tag_type, _ = open_tags.pop()
+                        if tag_type == 'bold':
+                            result += '</strong>'
+                        else:  # color
+                            result += '</font>'
                 elif code == '1':
-                    # Bold - apply bold styling
-                    result += '<span style="font-weight: bold;">'
-                    open_tags.append('bold')
+                    # Bold - use <strong> tag (Matrix-supported)
+                    result += '<strong>'
+                    open_tags.append(('bold', 'bold'))
                 elif code in ansi_colors:
-                    # Color code - apply color styling
-                    name, style = ansi_colors[code]
-                    result += f'<span style="{style}">'
-                    open_tags.append(name)
+                    # Color code - use <font> with data-mx-color (Matrix-supported)
+                    color = ansi_colors[code]
+                    result += f'<font data-mx-color="{color}">'
+                    open_tags.append(('color', code))
             
             return result
         
@@ -1414,8 +1420,11 @@ class CommandHandler:
         
         # Close any remaining open tags
         while open_tags:
-            result += '</span>'
-            open_tags.pop()
+            tag_type, _ = open_tags.pop()
+            if tag_type == 'bold':
+                result += '</strong>'
+            else:  # color
+                result += '</font>'
         
         return result
 
@@ -1468,43 +1477,40 @@ class CommandHandler:
             return logs.strip()
     
     def _format_task_logs_html(self, raw_logs: str) -> str:
-        """Format raw task logs with HTML formatting, preserving colors.
+        """Format raw task logs with Matrix-compatible HTML formatting.
         
-        Creates a styled code block with proper ANSI-to-HTML color conversion
-        for excellent rendering in Matrix clients like Element.
+        Converts ANSI codes to Matrix-supported HTML using data-mx-color attributes
+        instead of inline CSS styles. Uses <code> blocks for monospace rendering
+        and <br/> for line breaks. This format is properly rendered by Element and
+        other Matrix clients.
         
         Args:
             raw_logs: Raw log output with ANSI codes
             
         Returns:
-            HTML formatted log output with styled pre/code block
+            Matrix-compatible HTML formatted log output
         """
         # Remove excessive blank lines first
         logs = re.sub(r'\n{3,}', '\n\n', raw_logs)
         
-        # Convert ANSI codes to HTML (preserves newlines for <pre> tag)
+        # Convert ANSI codes to Matrix-compatible HTML with data-mx-color attributes
         html_logs = self._ansi_to_html_for_pre(logs)
         
-        # Wrap in a styled pre/code block for better rendering in Element
-        # Dark theme with proper monospace font and readable colors
-        styled_html = (
-            '<pre style="'
-            'background-color: #1e1e1e; '
-            'color: #d4d4d4; '
-            'padding: 12px; '
-            'border-radius: 6px; '
-            'overflow-x: auto; '
-            'font-family: \'Courier New\', Consolas, Monaco, monospace; '
-            'font-size: 13px; '
-            'line-height: 1.5; '
-            'margin: 8px 0; '
-            'border: 1px solid #3e3e3e;'
-            '">'
-            f'<code>{html_logs}</code>'
-            '</pre>'
-        )
+        # Split into lines and wrap each in <code> for monospace, separated by <br/>
+        # This is the Matrix-compatible way to display multi-line code
+        lines = html_logs.split('\n')
+        formatted_lines = []
         
-        return styled_html
+        for line in lines:
+            if line.strip():  # Non-empty line
+                # Wrap in <code> for monospace rendering
+                formatted_lines.append(f'<code>{line}</code>')
+            else:
+                # Empty line - just add a break
+                formatted_lines.append('')
+        
+        # Join with <br/> tags for line breaks
+        return '<br/>'.join(formatted_lines)
 
     async def ping_semaphore(self, room_id: str, sender: str = None):
         """Ping Semaphore server.

@@ -789,20 +789,20 @@ class TestCommandHandler(unittest.TestCase):
 
 
     def test_ansi_to_html_for_pre(self):
-        """Test ANSI to HTML conversion for use in pre tags."""
-        # Test that ANSI codes are converted to HTML spans with proper colors
+        """Test ANSI to HTML conversion for Matrix-compatible output."""
+        # Test that ANSI codes are converted to Matrix-compatible HTML with data-mx-color
         text_with_color = "\x1b[31mRed text\x1b[0m"
         result = self.handler._ansi_to_html_for_pre(text_with_color)
-        # Should contain HTML span with red color
-        self.assertIn('<span style="color: #cc0000;">Red text</span>', result)
+        # Should contain HTML font tag with data-mx-color attribute
+        self.assertIn('<font data-mx-color="#cc0000">Red text</font>', result)
         self.assertNotIn('\x1b', result)  # No ANSI codes remaining
-        self.assertNotIn('<br>', result)  # Should NOT have br tags
+        self.assertNotIn('style=', result)  # No inline CSS styles
         
-        # Test bold ANSI codes are converted to HTML
+        # Test bold ANSI codes are converted to <strong> tags
         text_with_bold = "\x1b[1mBold text\x1b[0m"
         result = self.handler._ansi_to_html_for_pre(text_with_bold)
-        # Should contain HTML span with bold style
-        self.assertIn('<span style="font-weight: bold;">Bold text</span>', result)
+        # Should contain <strong> tag (Matrix-supported)
+        self.assertIn('<strong>Bold text</strong>', result)
         self.assertNotIn('\x1b', result)
         
         # Test that newlines are preserved (not replaced with <br>)
@@ -814,8 +814,8 @@ class TestCommandHandler(unittest.TestCase):
         # Test mixed ANSI codes and text
         text_mixed = "Normal \x1b[32mgreen\x1b[0m text"
         result = self.handler._ansi_to_html_for_pre(text_mixed)
-        # Should contain HTML span for green text
-        self.assertIn('<span style="color: #4e9a06;">green</span>', result)
+        # Should contain HTML font tag for green text
+        self.assertIn('<font data-mx-color="#4e9a06">green</font>', result)
         self.assertIn('Normal', result)
         self.assertIn('text', result)
 
