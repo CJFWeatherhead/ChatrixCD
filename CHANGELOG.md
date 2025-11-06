@@ -15,6 +15,16 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Changed
+- **Global Log Tailing Mode**: Redesigned `!cd log on/off` commands for better usability
+  - `!cd log on` and `!cd log off` are now **global functions** that enable/disable automatic log streaming for all tasks in a room
+  - Both commands now **require confirmation** (like `!cd run` and `!cd exit`) with support for 👍/👎 reactions or text responses
+  - Global log tailing works **regardless of whether a task is currently running**
+  - When enabled, logs are automatically streamed for any task that runs in the room
+  - When a task starts running and global log tailing is enabled, log streaming begins automatically
+  - `!cd log` still shows logs for the last task (one-time retrieval)
+  - `!cd log <task_id>` still shows logs for a specific task (one-time retrieval)
+
 ### Fixed
 - **Log Output Parsing for Ansible**: Fixed `!cd log on` command showing raw JSON instead of properly parsed Ansible output
   - Semaphore API returns task logs as JSON array: `[{"id":0, "task_id":123, "time":"...", "output":"log line"}, ...]`

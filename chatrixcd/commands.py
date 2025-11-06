@@ -57,6 +57,9 @@ class CommandHandler:
         
         # Track log tailing sessions: {room_id: {'task_id': int, 'project_id': int, 'last_log_size': int}}
         self.log_tailing_sessions: Dict[str, Dict[str, Any]] = {}
+        
+        # Track global log tailing mode per room: {room_id: bool}
+        self.global_log_tailing_enabled: Dict[str, bool] = {}
 
     def is_allowed_room(self, room_id: str) -> bool:
         """Check if bot is allowed to respond in this room.
@@ -271,6 +274,10 @@ class CommandHandler:
             # Handle based on action type
             if confirmation.get('action') == 'exit':
                 await self._execute_exit(room.room_id, sender)
+            elif confirmation.get('action') == 'log_on':
+                await self._execute_log_on(room.room_id, sender)
+            elif confirmation.get('action') == 'log_off':
+                await self._execute_log_off(room.room_id, sender)
             else:
                 # Task execution
                 await self._execute_task(room.room_id, confirmation)
@@ -930,6 +937,73 @@ class CommandHandler:
         import sys
         sys.exit(0)
 
+    async def _execute_log_on(self, room_id: str, sender: str):
+        """Execute global log tailing enable.
+        
+        Args:
+            room_id: Room ID
+            sender: User ID
+        """
+        user_name = self._get_display_name(sender)
+        
+        # Enable global log tailing for this room
+        self.global_log_tailing_enabled[room_id] = True
+        
+        logger.info(f"Global log tailing enabled in room {room_id} by {sender}")
+        message = f"{user_name} 👋 - ✅ **Global log tailing enabled!**\n\n"
+        message += "Logs will be automatically streamed for all tasks that run in this room.\n"
+        message += f"Use `{self.command_prefix} log off` to disable."
+        
+        html_message = self.markdown_to_html(message)
+        await self.bot.send_message(room_id, message, html_message)
+        
+        # If there's already a task running, start tailing it
+        if self.last_task_id is not None and self.last_task_id in self.active_tasks:
+            task_info = self.active_tasks[self.last_task_id]
+            project_id = task_info['project_id']
+            task_name = task_info.get('template_name')
+            task_display = f"{task_name} ({self.last_task_id})" if task_name else str(self.last_task_id)
+            
+            # Start tailing the current task
+            self.log_tailing_sessions[room_id] = {
+                'task_id': self.last_task_id,
+                'project_id': project_id,
+                'last_log_size': 0
+            }
+            
+            start_message = f"📋 Starting log stream for task **{task_display}**..."
+            await self.bot.send_message(room_id, start_message, self.markdown_to_html(start_message))
+            
+            # Start the tailing task
+            asyncio.create_task(self.tail_logs(room_id, self.last_task_id, project_id))
+
+    async def _execute_log_off(self, room_id: str, sender: str):
+        """Execute global log tailing disable.
+        
+        Args:
+            room_id: Room ID
+            sender: User ID
+        """
+        user_name = self._get_display_name(sender)
+        
+        # Disable global log tailing for this room
+        self.global_log_tailing_enabled[room_id] = False
+        
+        # Stop any active tailing session
+        if room_id in self.log_tailing_sessions:
+            task_id = self.log_tailing_sessions[room_id]['task_id']
+            del self.log_tailing_sessions[room_id]
+            logger.info(f"Stopped log tailing for task {task_id} in room {room_id}")
+        
+        logger.info(f"Global log tailing disabled in room {room_id} by {sender}")
+        message = f"{user_name} 👋 - 🛑 **Global log tailing disabled!**\n\n"
+        message += "You will no longer receive automatic log streams for tasks.\n"
+        message += f"Use `{self.command_prefix} log on` to re-enable."
+        
+        html_message = self.markdown_to_html(message)
+        await self.bot.send_message(room_id, message, html_message)
+
+
     async def _execute_task(self, room_id: str, confirmation: Dict[str, Any]):
         """Execute a task based on confirmation.
         
@@ -1026,6 +1100,10 @@ class CommandHandler:
         # Check if this is an exit confirmation
         if confirmation.get('action') == 'exit':
             await self._execute_exit(room_id, sender)
+        elif confirmation.get('action') == 'log_on':
+            await self._execute_log_on(room_id, sender)
+        elif confirmation.get('action') == 'log_off':
+            await self._execute_log_off(room_id, sender)
         else:
             # Execute the task
             await self._execute_task(room_id, confirmation)
@@ -1065,6 +1143,21 @@ class CommandHandler:
                     message = f"🔄 Task **{task_display}** is now running..."
                     html_message = self.markdown_to_html(message)
                     await self.bot.send_message(room_id, message, html_message)
+                    
+                    # Start log tailing if global log tailing is enabled for this room
+                    if self.global_log_tailing_enabled.get(room_id, False) and room_id not in self.log_tailing_sessions:
+                        logger.info(f"Auto-starting log tailing for task {task_id} (global log tailing enabled)")
+                        self.log_tailing_sessions[room_id] = {
+                            'task_id': task_id,
+                            'project_id': project_id,
+                            'last_log_size': 0
+                        }
+                        
+                        log_message = f"📋 Starting log stream for task **{task_display}**..."
+                        await self.bot.send_message(room_id, log_message, self.markdown_to_html(log_message))
+                        
+                        # Start the tailing task
+                        asyncio.create_task(self.tail_logs(room_id, task_id, project_id))
                 elif status == 'success':
                     # Get the user who initiated this task
                     task_sender = self.active_tasks[task_id].get('sender')
@@ -1254,13 +1347,13 @@ class CommandHandler:
             await self.bot.send_message(room_id, message, html_message)
 
     async def get_logs(self, room_id: str, args: list, sender: str = None):
-        """Get logs for a task or control log tailing.
+        """Get logs for a task or control global log tailing.
         
         Supports:
         - !cd log - Get logs for last task (one-time)
         - !cd log <task_id> - Get logs for specific task (one-time)
-        - !cd log on - Start tailing logs for last task
-        - !cd log off - Stop tailing logs
+        - !cd log on - Enable global log tailing (requires confirmation)
+        - !cd log off - Disable global log tailing (requires confirmation)
         
         Args:
             room_id: Room to send response to
@@ -1268,60 +1361,88 @@ class CommandHandler:
             sender: User who requested the logs
         """
         user_name = self._get_display_name(sender) if sender else "friend"
+        confirmation_key = f"{room_id}:{sender}"
         
         # Check if this is a log tailing control command
         if args and args[0].lower() == 'on':
-            # Start log tailing for the last task
-            if self.last_task_id is None:
-                logger.info(f"Log tailing 'on' requested but no last task found")
-                await self.bot.send_message(
-                    room_id,
-                    f"{user_name} 👋 - No task to tail logs for. Run a task first!"
-                    
-                )
-                return
-            
-            # Start tailing
-            self.log_tailing_sessions[room_id] = {
-                'task_id': self.last_task_id,
-                'project_id': self.last_project_id,
-                'last_log_size': 0
-            }
-            
-            logger.info(f"Started log tailing for task {self.last_task_id} in room {room_id}")
-            message = (f"{user_name} 👋 - Started tailing logs for task **{self.last_task_id}** 📋\n"
-                      f"Use `{self.command_prefix} log off` to stop.")
-            await self.bot.send_message(
-                room_id,
-                message,
-                self.markdown_to_html(message)
-            )
-            
-            # Start the tailing task
-            asyncio.create_task(self.tail_logs(room_id, self.last_task_id, self.last_project_id))
+            # Check if already waiting for confirmation
+            if confirmation_key in self.pending_confirmations and self.pending_confirmations[confirmation_key].get('action') == 'log_on':
+                # User is confirming
+                del self.pending_confirmations[confirmation_key]
+                if confirmation_key in self.confirmation_message_ids:
+                    del self.confirmation_message_ids[confirmation_key]
+                
+                logger.info(f"Log tailing 'on' confirmed by {sender}")
+                await self._execute_log_on(room_id, sender)
+            else:
+                # Request confirmation
+                self.pending_confirmations[confirmation_key] = {
+                    'action': 'log_on',
+                    'room_id': room_id,
+                    'sender': sender,
+                    'timestamp': asyncio.get_event_loop().time()
+                }
+                
+                message = f"{user_name} 👋 - ⚠️ **Enable Global Log Tailing**\n\n"
+                message += "This will enable automatic log tailing for all tasks in this room.\n"
+                message += "Logs will be streamed in real-time as tasks run.\n\n"
+                message += f"Reply with `{self.command_prefix} log on` again to confirm.\n"
+                message += "Or react with 👍 to confirm or 👎 to cancel!"
+                
+                logger.info(f"Log tailing 'on' requested by {sender}, requesting confirmation")
+                event_id = await self.bot.send_message(room_id, message)
+                
+                # Track the message ID for reaction handling
+                if event_id:
+                    self.confirmation_message_ids[confirmation_key] = event_id
+                
+                # Set timeout to clear confirmation after 30 seconds
+                asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 30, room_id))
             return
             
         elif args and args[0].lower() == 'off':
-            # Stop log tailing
-            if room_id not in self.log_tailing_sessions:
-                logger.info(f"Log tailing 'off' requested but no active session in room {room_id}")
-                await self.bot.send_message(
-                    room_id,
-                    f"{user_name} 👋 - No active log tailing session."
-                    
-                )
-                return
-            
-            task_id = self.log_tailing_sessions[room_id]['task_id']
-            del self.log_tailing_sessions[room_id]
-            
-            logger.info(f"Stopped log tailing for task {task_id} in room {room_id}")
-            message = f"{user_name} 👋 - Stopped tailing logs for task **{task_id}** 🛑"
-            await self.bot.send_message(
-                room_id,
-                message,
-                self.markdown_to_html(message)
-            )
+            # Check if already waiting for confirmation
+            if confirmation_key in self.pending_confirmations and self.pending_confirmations[confirmation_key].get('action') == 'log_off':
+                # User is confirming
+                del self.pending_confirmations[confirmation_key]
+                if confirmation_key in self.confirmation_message_ids:
+                    del self.confirmation_message_ids[confirmation_key]
+                
+                logger.info(f"Log tailing 'off' confirmed by {sender}")
+                await self._execute_log_off(room_id, sender)
+            else:
+                # Check if log tailing is even enabled
+                if not self.global_log_tailing_enabled.get(room_id, False):
+                    logger.info(f"Log tailing 'off' requested but not enabled in room {room_id}")
+                    await self.bot.send_message(
+                        room_id,
+                        f"{user_name} 👋 - Global log tailing is not currently enabled."
+                    )
+                    return
+                
+                # Request confirmation
+                self.pending_confirmations[confirmation_key] = {
+                    'action': 'log_off',
+                    'room_id': room_id,
+                    'sender': sender,
+                    'timestamp': asyncio.get_event_loop().time()
+                }
+                
+                message = f"{user_name} 👋 - ⚠️ **Disable Global Log Tailing**\n\n"
+                message += "This will disable automatic log tailing for all tasks in this room.\n"
+                message += "You will stop receiving real-time log updates.\n\n"
+                message += f"Reply with `{self.command_prefix} log off` again to confirm.\n"
+                message += "Or react with 👍 to confirm or 👎 to cancel!"
+                
+                logger.info(f"Log tailing 'off' requested by {sender}, requesting confirmation")
+                event_id = await self.bot.send_message(room_id, message)
+                
+                # Track the message ID for reaction handling
+                if event_id:
+                    self.confirmation_message_ids[confirmation_key] = event_id
+                
+                # Set timeout to clear confirmation after 30 seconds
+                asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 30, room_id))
             return
         
         # Regular log retrieval (one-time)
@@ -1390,7 +1511,7 @@ class CommandHandler:
                 
                 header = f"{user_name} 👋 Here are the logs! (showing last {max_lines} lines out of {len(log_lines)} total) 📋\n\n"
                 header += f"**Logs for Task {task_display}**\n\n"
-                header += f"💡 *Tip: Use `{self.command_prefix} log on` to tail logs in real-time*\n\n"
+                header += f"💡 *Tip: Use `{self.command_prefix} log on` to enable real-time log streaming*\n\n"
             else:
                 # Show all logs for small outputs
                 tailed_raw_logs = logs
@@ -1414,6 +1535,7 @@ class CommandHandler:
                 f"{user_name} 👋 - No logs available for task {task_id} ❌"
                 
             )
+
 
     async def tail_logs(self, room_id: str, task_id: int, project_id: int):
         """Tail logs for a running task and send incremental updates to the room.
