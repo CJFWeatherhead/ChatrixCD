@@ -734,16 +734,18 @@ class ChatrixBot:
         await self.command_handler.handle_reaction(room, event.sender, reacted_event_id, reaction_key)
 
     async def send_message(self, room_id: str, message: str, 
-                          formatted_message: Optional[str] = None):
+                          formatted_message: Optional[str] = None,
+                          msgtype: str = "m.text"):
         """Send a message to a room.
         
         Args:
             room_id: ID of the room to send to
             message: Plain text message
             formatted_message: Optional HTML formatted message
+            msgtype: Message type - "m.text" for normal messages, "m.notice" for non-urgent notifications
         """
         content = {
-            "msgtype": "m.text",
+            "msgtype": msgtype,
             "body": message,
         }
         

@@ -29,7 +29,7 @@ ChatrixCD integrates with Semaphore UI to enable CI/CD automation through chat. 
 - 🎯 **Command-based Interface**: Easy-to-use command system for task management
 - 🔖 **Command Aliases**: Create custom shortcuts for frequently used commands
 - ✅ **Task Confirmation**: Required confirmation before executing tasks with template details
-- 🎨 **Rich Formatting**: Markdown and HTML formatting in messages with emoji support
+- 🎨 **Rich Formatting**: Markdown and HTML formatting with semantic emojis, colored status indicators, and tables for structured data
 
 ## Installation
 

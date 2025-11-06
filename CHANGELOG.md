@@ -15,6 +15,35 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Added
+- **Enhanced message formatting with m.notice, colors, semantic emojis, and tables**
+  - **m.notice support**: Informational commands now use `m.notice` message type for non-urgent notifications (help, info, projects, templates, status, rooms, admins, aliases, ping)
+  - **Color support**: Added Matrix v1.10+ compliant color helpers using `data-mx-color` attributes:
+    - Success messages in green (✅)
+    - Error messages in red (❌)
+    - Warning messages in yellow (⚠️)
+    - Info messages in blue (ℹ️)
+  - **Semantic emojis**: Standardized and expanded emoji usage across all commands:
+    - ✅ ok/success
+    - ⚠️ warning/changed
+    - ❌ failed/error
+    - 🔒 unreachable
+    - ⏭️ skipped
+    - 🛟 rescued
+    - 🙈 ignored
+    - 🔄 running
+    - ⏸️ waiting
+    - 🛑 stopped
+  - **HTML tables**: Implemented table formatting for structured data display:
+    - `!cd help` - Commands listed in table format with descriptions and emojis
+    - `!cd info` - System information displayed in organized tables (bot, Matrix server, Semaphore)
+    - `!cd projects` - Projects listed in table with name and ID columns
+    - `!cd templates` - Templates listed in table with name, ID, and description
+    - `!cd rooms` - Rooms listed in table with name and ID
+    - `!cd admins` - Admin users listed in table
+    - `!cd aliases` - Command aliases displayed in table format
+  - Maintains sassy and fun personality throughout with emoji-rich responses
+
 ### Changed
 - **Complete reimplementation of `!cd log` command for better readability and async performance**
   - ANSI color codes now properly converted to Matrix-compatible HTML instead of being stripped
@@ -28,22 +57,13 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - **Fixed**: Removed inline CSS `style` attributes which Element strips for security
   - **Fixed**: Removed styled `<pre>` blocks which don't support nested tags in Matrix
   - **Fixed**: Changed from deprecated `<font>` tags to `<span>` tags per Matrix v1.10 spec
-### Fixed
-- Fixed misleading error message when no projects exist in Semaphore - now shows clear message to create a project instead of connection error
-- Fixed incorrect "multiple templates" message when no templates exist - now shows clear message to create templates with proper handling for 0, 1, and multiple template cases
-
-### Added
-- Enhanced `!cd info` command with comprehensive bot system information:
-  - Bot version, platform, architecture, and Python version
-  - CPU and memory usage statistics
-  - Hostname and IP addresses (IPv4 and IPv6) - only shown when --redact flag is not used
-- Added psutil dependency for system information gathering
-- Added 3 new tests for edge cases and redaction behavior
-
-### Changed
 - Improved consistency of --redact (-R) flag application - now properly passed to command handler for IP address redaction in info command
 - Updated documentation to accurately reflect Linux-only pre-built binaries (removed outdated Windows/macOS binary references)
 - Clarified platform availability in docs/index.md, docs/quickstart.md, and QUICKSTART.md
+
+### Fixed
+- Fixed misleading error message when no projects exist in Semaphore - now shows clear message to create a project instead of connection error
+- Fixed incorrect "multiple templates" message when no templates exist - now shows clear message to create templates with proper handling for 0, 1, and multiple template cases
 
 ## [2025.11.04.4.0.1] - 2025-11-04
 
