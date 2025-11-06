@@ -35,12 +35,18 @@ ChatrixCD integrates with Semaphore UI to enable CI/CD automation through chat. 
 
 ### Option 1: Pre-built Binaries (Recommended for Linux)
 
-**No Python installation required!** Download the standalone executable for your platform:
+**No Python installation required!** Download the standalone, statically-compiled executable for your platform:
 
 #### Linux
 - [x86_64 (64-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64) - Most common
 - [i686 (32-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
 - [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64) - For Raspberry Pi, ARM servers
+
+**Features:**
+- 🚀 **Fully static binaries** - No external dependencies required
+- 🔒 **Maximum portability** - Works on any Linux distribution (kernel 3.2+)
+- 📦 **Self-contained** - All libraries (OpenSSL, libffi, etc.) included
+- ⚡ **Built with musl** - No glibc version conflicts
 
 **Quick Start (Linux):**
 

@@ -16,6 +16,13 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Changed
+- **Build system now uses musl-based static compilation for maximum portability**
+  - All Linux binaries (x86_64, i686, arm64) now built on Alpine Linux using musl libc
+  - Added `--static-libpython=yes` flag to statically link Python interpreter
+  - Added `--lto=yes` flag for link-time optimization and better code size
+  - Binaries now include all required libraries (OpenSSL, libffi, etc.) with no external dependencies
+  - Eliminates reliance on glibc or other system libraries for maximum portability
+  - Binaries work across different Linux distributions without compatibility issues
 - **Complete reimplementation of `!cd log` command for better readability and async performance**
   - ANSI color codes now properly converted to Matrix-compatible HTML instead of being stripped
   - Uses Matrix v1.10+ spec-compliant `data-mx-color` attributes on `<span>` tags (not inline CSS)

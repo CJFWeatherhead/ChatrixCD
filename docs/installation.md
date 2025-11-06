@@ -20,6 +20,17 @@ Choose the method that best suits your needs:
 
 The easiest way to get started - **no Python installation required!**
 
+### Binary Features
+
+Our binaries are statically compiled using musl libc for maximum portability:
+
+- 🚀 **Fully static** - No external dependencies (glibc, OpenSSL, etc.)
+- 🔒 **Maximum portability** - Works on any Linux distribution (kernel 3.2+)
+- 📦 **Self-contained** - All libraries included in the binary
+- ⚡ **Built with Alpine Linux/musl** - No glibc version conflicts
+
+This means you can run the binary on Debian, Ubuntu, CentOS, Fedora, Alpine, Arch, or any other Linux distribution without worrying about missing libraries or version mismatches.
+
 ### Download
 
 Download the appropriate binary for your platform:
