@@ -194,7 +194,7 @@ class TestWorkflowConfiguration(unittest.TestCase):
         self.skipTest("Windows and macOS builds removed - test no longer applicable")
     
     def test_build_workflow_includes_assets(self):
-        """Test that build workflow includes assets directory."""
+        """Test that build workflow includes assets directory (Docker-based builds)."""
         jobs = self.build_workflow['jobs']
         
         # Check Linux build job for assets (Windows/macOS removed)
@@ -202,23 +202,25 @@ class TestWorkflowConfiguration(unittest.TestCase):
             job = jobs[job_name]
             steps = job['steps']
             
+            # Find build steps (now Docker-based with run commands)
             nuitka_steps = [
                 step for step in steps
-                if 'uses' in step and 'Nuitka' in step['uses']
+                if 'Build with Nuitka' in step.get('name', '')
             ]
             
+            self.assertGreater(
+                len(nuitka_steps), 0,
+                f"{job_name} should have Nuitka build steps"
+            )
+            
+            # Check that each build step includes assets in the run command
             for nuitka_step in nuitka_steps:
-                with_config = nuitka_step.get('with', {})
-                self.assertIn('include-data-dir', with_config)
+                run_command = nuitka_step.get('run', '')
+                step_name = nuitka_step.get('name', '')
                 
-                # Check that assets are included
-                include_data = with_config['include-data-dir']
-                if isinstance(include_data, str):
-                    self.assertIn('assets', include_data)
-                elif isinstance(include_data, list):
-                    self.assertTrue(
-                        any('assets' in item for item in include_data)
-                    )
+                # Verify that assets are included via --include-data-dir flag
+                self.assertIn('--include-data-dir=assets=assets', run_command,
+                             f"{step_name} should include assets directory")
     
     def test_build_workflow_moves_x86_64_artifact(self):
         """Test that build workflow creates artifacts correctly (Docker builds directly in source)."""
