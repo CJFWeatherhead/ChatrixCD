@@ -215,7 +215,8 @@ Use `ccache` with network storage for sharing cache across runners.
 
 ## Related Documentation
 
-- [GitHub Actions - Runners](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners) (ARM64 runners available for GitHub Team and Enterprise Cloud plans)
+- [GitHub Actions - Runners](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners)
+  > **Note:** ARM64 runner availability may vary by GitHub plan. For the most current information, consult the official documentation above.
 - [Nuitka Performance Options](https://nuitka.net/doc/user-manual.html#performance-options)
 - [ccache Manual](https://ccache.dev/manual/latest.html)
 - [BuildKit Documentation](https://docs.docker.com/build/buildkit/)
