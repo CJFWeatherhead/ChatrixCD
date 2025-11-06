@@ -122,17 +122,17 @@ validate-build:
 
 **Solution**: Explicitly configure BuildKit with latest features.
 
-**Impact**: Better layer caching and network performance
+**Impact**: Better layer caching
 
 **Implementation**:
 ```yaml
 - name: Set up Docker Buildx
   uses: docker/setup-buildx-action@v3
   with:
-    driver-opts: |
-      image=moby/buildkit:latest
-      network=host
+    driver-opts: image=moby/buildkit:latest
 ```
+
+**Note**: We use the latest BuildKit image for improved features while maintaining network isolation (no `network=host`) for security.
 
 ## Expected Performance Improvements
 
