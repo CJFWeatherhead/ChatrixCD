@@ -1343,7 +1343,7 @@ class CommandHandler:
             # If chunk is too large, only show the last N lines
             formatted_logs = '\n'.join(log_lines[-max_lines:])
             truncated_chunk = '\n'.join(log_chunk.split('\n')[-max_lines:])
-            header = f"📋 **Task {task_id}** (showing last {max_lines} lines of {len(log_lines)} total)\n\n"
+            header = f"📋 **Task {task_id}** (showing last {max_lines} of {len(log_lines)} total lines)\n\n"
         else:
             truncated_chunk = log_chunk
             if final:
