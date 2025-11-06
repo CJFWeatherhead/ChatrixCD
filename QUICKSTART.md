@@ -4,7 +4,7 @@ Get ChatrixCD up and running in 5 minutes!
 
 ## Installation
 
-### Option 1: Pre-built Binary (Fastest!)
+### Option 1: Pre-built Binary (Linux Only)
 
 **No Python required!** Download and run:
 
@@ -15,17 +15,11 @@ chmod +x chatrixcd-linux-x86_64
 ./chatrixcd-linux-x86_64
 ```
 
-**macOS (Universal):**
-```bash
-wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal
-chmod +x chatrixcd-macos-universal
-./chatrixcd-macos-universal
-```
+**Other Linux architectures:**
+- **i686 (32-bit)**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
+- **ARM64**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64)
 
-**Windows:**
-Download [chatrixcd-windows-x86_64.exe](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-x86_64.exe) and double-click to run.
-
-**Other platforms:** See [all available binaries](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest) for i686, ARM64, etc.
+**Windows and macOS users:** Pre-built binaries are not currently available. Please use Option 2 (from source), Docker, or WSL2 (Windows only). See [INSTALL.md](INSTALL.md) for detailed platform-specific instructions.
 
 ### Option 2: From Source
 
@@ -119,14 +113,10 @@ When you start the bot with OIDC:
 ### From Binary
 
 ```bash
-# Linux/macOS
-./chatrixcd-linux-x86_64      # or your platform's binary
-./chatrixcd-macos-universal
-```
-
-```cmd
-rem Windows
-chatrixcd-windows-x86_64.exe
+# Linux
+./chatrixcd-linux-x86_64      # or your architecture's binary
+# ./chatrixcd-linux-i686
+# ./chatrixcd-linux-arm64
 ```
 
 ### From Source

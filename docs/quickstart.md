@@ -10,7 +10,7 @@ Get ChatrixCD up and running in minutes. For more detailed examples, configurati
 
 ## 1. Install ChatrixCD
 
-### Option 1: Pre-built Binary (Fastest!)
+### Option 1: Pre-built Binary (Linux Only)
 
 **No Python required!** Download and run:
 
@@ -21,17 +21,11 @@ chmod +x chatrixcd-linux-x86_64
 ./chatrixcd-linux-x86_64
 ```
 
-**macOS (Universal):**
-```bash
-wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal
-chmod +x chatrixcd-macos-universal
-./chatrixcd-macos-universal
-```
+**Other Linux architectures:**
+- **i686 (32-bit)**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
+- **ARM64**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64)
 
-**Windows:**
-Download [chatrixcd-windows-x86_64.exe](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-x86_64.exe) and double-click to run.
-
-**Other platforms:** See [all available binaries](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest).
+**Windows and macOS users:** Pre-built binaries are not currently available. Please use Option 2 (from source), Docker, or WSL2 (Windows only).
 
 ### Option 2: From Source
 
@@ -74,14 +68,11 @@ Create a `config.json` file:
 ### From Binary
 
 ```bash
-# Linux/macOS (adjust filename for your platform)
+# Linux (adjust filename for your architecture)
 ./chatrixcd-linux-x86_64
-./chatrixcd-macos-universal
-```
-
-```cmd
-rem Windows
-chatrixcd-windows-x86_64.exe
+# Or for other architectures:
+# ./chatrixcd-linux-i686
+# ./chatrixcd-linux-arm64
 ```
 
 ### From Source

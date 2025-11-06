@@ -212,10 +212,11 @@ class TestCommandHandler(unittest.TestCase):
             self.handler.list_projects('!test:example.com')
         )
         
-        # Should send empty message
+        # Should send clear message about no projects (not connection error)
         self.mock_bot.send_message.assert_called_once()
         call_args = self.mock_bot.send_message.call_args[0]
         self.assertIn('No projects found', call_args[1])
+        self.assertIn('Create a project', call_args[1])
 
     def test_list_templates_no_args(self):
         """Test list templates without project ID."""
@@ -354,6 +355,39 @@ class TestCommandHandler(unittest.TestCase):
         self.mock_bot.send_message.assert_called_once()
         call_args = self.mock_bot.send_message.call_args[0]
         self.assertIn('not found', call_args[1])
+
+    def test_run_task_no_templates_single_arg(self):
+        """Test run task with zero templates when only project ID provided."""
+        # Mock to return empty templates list
+        self.mock_semaphore.get_project_templates = AsyncMock(return_value=[])
+        
+        self.loop.run_until_complete(
+            self.handler.run_task('!test:example.com', '@user:example.com', ['1'])
+        )
+        
+        # Should send message about no templates
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('No templates found', call_args[1])
+        self.assertIn('Create a template', call_args[1])
+
+    def test_run_task_no_templates_no_args(self):
+        """Test run task with zero templates when no args provided and one project."""
+        # Mock to return one project with no templates
+        self.mock_semaphore.get_projects = AsyncMock(return_value=[
+            {'id': 1, 'name': 'Project 1'}
+        ])
+        self.mock_semaphore.get_project_templates = AsyncMock(return_value=[])
+        
+        self.loop.run_until_complete(
+            self.handler.run_task('!test:example.com', '@user:example.com', [])
+        )
+        
+        # Should send message about no templates
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        self.assertIn('No templates found', call_args[1])
+        self.assertIn('Create a template', call_args[1])
 
     def test_check_status_no_args(self):
         """Test check status without task ID."""
@@ -854,6 +888,97 @@ class TestCommandHandler(unittest.TestCase):
         user_id = "@john.doe:matrix.org"
         result = self.handler._get_display_name(user_id)
         self.assertEqual(result, "@john.doe:matrix.org")
+
+    def test_get_semaphore_info_includes_bot_version(self):
+        """Test that get_semaphore_info includes bot version and system info."""
+        # Mock semaphore info
+        self.mock_semaphore.get_info = AsyncMock(return_value={
+            'version': '2.8.0'
+        })
+        
+        # Mock bot client
+        self.mock_bot.client = MagicMock()
+        self.mock_bot.client.homeserver = 'https://matrix.example.com'
+        self.mock_bot.client.user_id = '@bot:example.com'
+        self.mock_bot.client.device_id = 'DEVICE123'
+        self.mock_bot.client.logged_in = True
+        self.mock_bot.client.olm = MagicMock()  # E2E enabled
+        
+        self.loop.run_until_complete(
+            self.handler.get_semaphore_info('!test:example.com', '@user:example.com')
+        )
+        
+        # Should send info message
+        self.mock_bot.send_message.assert_called_once()
+        call_args = self.mock_bot.send_message.call_args[0]
+        message = call_args[1]
+        
+        # Check for bot information
+        self.assertIn('ChatrixCD Bot', message)
+        self.assertIn('Version:', message)
+        self.assertIn('Platform:', message)
+        self.assertIn('Architecture:', message)
+        self.assertIn('CPU Usage:', message)
+        self.assertIn('Memory Usage:', message)
+        
+        # Check for Matrix information
+        self.assertIn('Matrix Server', message)
+        self.assertIn('@bot:example.com', message)
+        
+        # Check for Semaphore information
+        self.assertIn('Semaphore Server', message)
+        self.assertIn('2.8.0', message)
+
+    def test_get_semaphore_info_respects_redact_flag(self):
+        """Test that get_semaphore_info respects redact flag for IP addresses."""
+        # Mock semaphore info
+        self.mock_semaphore.get_info = AsyncMock(return_value={})
+        
+        # Mock bot client
+        self.mock_bot.client = MagicMock()
+        self.mock_bot.client.homeserver = 'https://matrix.example.com'
+        self.mock_bot.client.user_id = '@bot:example.com'
+        
+        # Test without redact flag (should include IPs)
+        # Recreate handler with redact=False in config
+        self.config['redact'] = False
+        handler_no_redact = CommandHandler(
+            bot=self.mock_bot,
+            config=self.config,
+            semaphore=self.mock_semaphore
+        )
+        
+        self.loop.run_until_complete(
+            handler_no_redact.get_semaphore_info('!test:example.com', '@user:example.com')
+        )
+        
+        call_args1 = self.mock_bot.send_message.call_args[0]
+        message1 = call_args1[1]
+        # May or may not have hostname depending on system, but structure should be there
+        self.assertIn('ChatrixCD Bot', message1)
+        
+        # Reset mock
+        self.mock_bot.send_message.reset_mock()
+        
+        # Test with redact flag (should not include IPs)
+        # Recreate handler with redact=True in config
+        self.config['redact'] = True
+        handler_redact = CommandHandler(
+            bot=self.mock_bot,
+            config=self.config,
+            semaphore=self.mock_semaphore
+        )
+        
+        self.loop.run_until_complete(
+            handler_redact.get_semaphore_info('!test:example.com', '@user:example.com')
+        )
+        
+        call_args2 = self.mock_bot.send_message.call_args[0]
+        message2 = call_args2[1]
+        # Should not include Hostname or IPv4/IPv6 sections
+        self.assertNotIn('Hostname:', message2)
+        self.assertNotIn('IPv4:', message2)
+        self.assertNotIn('IPv6:', message2)
 
 
 if __name__ == '__main__':

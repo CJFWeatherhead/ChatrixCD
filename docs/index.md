@@ -65,7 +65,7 @@ chmod +x chatrixcd-linux-x86_64
 - [i686 (32-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
 - [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64) - For Raspberry Pi, ARM servers
 
-**Windows and macOS:** Pre-built binaries are not available. Use [source installation](installation.html#method-2-install-from-source), [Docker](installation.html#method-3-docker), or WSL2 (Windows only). See the [Installation Guide](installation.html) for details.
+**Windows and macOS:** Pre-built binaries are not currently available. Use [source installation](installation.html#method-2-install-from-source), [Docker](installation.html#method-3-docker), or WSL2 (Windows only). See the [Installation Guide](installation.html) for details.
 
 ### Install from Source
 
@@ -107,11 +107,13 @@ Once installed and configured, you can:
 
 ### Download Pre-built Binaries
 
-Choose your platform:
+**Linux only** - Choose your architecture:
 
-- **Linux**: [x86_64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64) | [i686](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686) | [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64)
-- **Windows**: [x86_64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-x86_64.exe) | [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-windows-arm64.exe)
-- **macOS**: [Universal](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-macos-universal) (Intel + Apple Silicon)
+- **x86_64 (64-bit)**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64)
+- **i686 (32-bit)**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
+- **ARM64**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64) - For Raspberry Pi, ARM servers
+
+**Windows and macOS**: Pre-built binaries are not currently available. Please use [source installation](#quick-install-from-source), [Docker](installation.html#method-3-docker), or WSL2 (Windows only).
 
 ### Quick Install from Source
 
