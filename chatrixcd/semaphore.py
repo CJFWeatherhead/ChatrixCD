@@ -230,7 +230,7 @@ class SemaphoreClient:
                         return output
                     else:
                         # Fallback: if response is not a list, treat as plain text
-                        logger.warning(f"Task output is not a JSON array, treating as plain text")
+                        logger.warning("Task output is not a JSON array, treating as plain text")
                         return str(log_entries)
                 else:
                     logger.error(f"Failed to get task output: {resp.status}")

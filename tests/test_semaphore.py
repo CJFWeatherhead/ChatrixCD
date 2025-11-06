@@ -282,7 +282,14 @@ class TestSemaphoreClient(unittest.TestCase):
         result = self.loop.run_until_complete(self.client.get_task_output(1, 123))
         
         # Verify the output field from each log entry is extracted and joined
-        expected = "\nPLAY [Set global variables] ****************************************************\n\nTASK [Add sync service host to inventory] **************************************\n\u001b[0;33mchanged: [localhost]\u001b[0m"
+        # Expected format: empty line, PLAY line, empty line, TASK line, colored changed line
+        expected = (
+            "\n"
+            "PLAY [Set global variables] ****************************************************\n"
+            "\n"
+            "TASK [Add sync service host to inventory] **************************************\n"
+            "\u001b[0;33mchanged: [localhost]\u001b[0m"
+        )
         self.assertEqual(result, expected)
 
     def test_get_task_output_failure(self):
