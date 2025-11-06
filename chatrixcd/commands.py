@@ -1211,7 +1211,7 @@ class CommandHandler:
                 formatted_logs = '\n'.join(log_lines[-max_lines:])
                 tailed_raw_logs = '\n'.join(logs.split('\n')[-max_lines:])
                 
-                header = f"{user_name} 👋 Here are the logs! (showing last {max_lines} of {len(log_lines)} lines) 📋\n\n"
+                header = f"{user_name} 👋 Here are the logs! (showing last {max_lines} lines out of {len(log_lines)} total) 📋\n\n"
                 header += f"**Logs for Task {task_display}**\n\n"
                 header += f"💡 *Tip: Use `{self.command_prefix} log on` to tail logs in real-time*\n\n"
             else:
