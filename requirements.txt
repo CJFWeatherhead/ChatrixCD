@@ -19,4 +19,7 @@ qrcode>=7.4.2
 # YAML parsing for tests
 PyYAML>=6.0
 
+# System and process utilities for info command
+psutil>=5.9.0
+
 

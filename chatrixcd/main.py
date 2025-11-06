@@ -435,6 +435,11 @@ def main():
         config.config.setdefault('bot', {})['greetings_enabled'] = False
         logger.info("Greetings disabled via --no-greetings flag")
     
+    # Store redact flag in config for access by command handler
+    if args.redact:
+        config.config.setdefault('bot', {})['redact'] = True
+        logger.info("Redaction enabled via --redact flag")
+    
     # Show config and exit if requested
     if args.show_config:
         # Use TUI for show-config if not in redact mode and not verbose mode
