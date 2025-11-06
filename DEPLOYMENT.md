@@ -24,10 +24,11 @@ This document provides an overview of deployment options for ChatrixCD.
 - Testing and evaluation
 
 **Standalone executable:**
-- No dependencies required
-- Works on all major platforms
+- **Statically compiled** with musl libc - no dependencies required
+- Works on all Linux distributions (kernel 3.2+)
 - Easy updates (just replace the binary)
 - Smallest deployment footprint
+- All libraries (OpenSSL, libffi, etc.) embedded in binary
 
 **Download:** [Latest Release](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest)
 

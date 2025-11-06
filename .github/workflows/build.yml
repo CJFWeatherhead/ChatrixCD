@@ -110,54 +110,61 @@ jobs:
           print(f'Updated version to {version}')
           "
       
-      - name: Build with Nuitka (x86_64)
-        if: matrix.arch == 'x86_64'
-        uses: Nuitka/Nuitka-Action@main
-        with:
-          nuitka-version: main
-          script-name: chatrixcd/main.py
-          mode: onefile
-          output-file: chatrixcd-linux-x86_64
-          enable-plugins: anti-bloat
-          assume-yes-for-downloads: true
-          linux-icon: assets/icon.png
-          include-data-dir: assets=assets
-      
-      - name: Move x86_64 artifact to root
+      - name: Build with Nuitka (x86_64 - using Alpine/musl)
         if: matrix.arch == 'x86_64'
         run: |
-          mv build/chatrixcd-linux-x86_64 ./chatrixcd-linux-x86_64 || { echo 'Error: Failed to move x86_64 artifact from build/ directory'; exit 1; }
-          ls -lah chatrixcd-linux-x86_64 || { echo 'Error: Artifact file not found after move'; exit 1; }
-      
-      - name: Build with Nuitka (i686 - using Docker)
-        if: matrix.arch == 'i686'
-        run: |
-          docker run --rm -v "$PWD":/src -w /src i386/python:3.12-slim sh -c "
-          apt-get update && apt-get install -y gcc patchelf ccache &&
+          docker run --rm -v "$PWD":/src -w /src python:3.12-alpine sh -c "
+          apk add --no-cache gcc g++ musl-dev patchelf ccache linux-headers \
+            libffi-dev openssl-dev rust cargo git make &&
           pip install --upgrade pip &&
           pip install -r requirements.txt &&
           pip install nuitka ordered-set &&
           python -m nuitka --mode=onefile \
-            --output-filename=chatrixcd-linux-i686 \
+            --output-filename=chatrixcd-linux-x86_64 \
             --enable-plugin=anti-bloat \
             --assume-yes-for-downloads \
+            --static-libpython=yes \
+            --lto=yes \
             --linux-icon=assets/icon.png \
             --include-data-dir=assets=assets \
             chatrixcd/main.py
           "
       
-      - name: Build with Nuitka (arm64 - using Docker)
+      - name: Build with Nuitka (i686 - using Alpine/musl)
+        if: matrix.arch == 'i686'
+        run: |
+          docker run --rm --platform linux/386 -v "$PWD":/src -w /src i386/alpine:3.19 sh -c "
+          apk add --no-cache python3 py3-pip gcc g++ musl-dev patchelf ccache linux-headers \
+            libffi-dev openssl-dev rust cargo git make &&
+          pip3 install --break-system-packages --upgrade pip &&
+          pip3 install --break-system-packages -r requirements.txt &&
+          pip3 install --break-system-packages nuitka ordered-set &&
+          python3 -m nuitka --mode=onefile \
+            --output-filename=chatrixcd-linux-i686 \
+            --enable-plugin=anti-bloat \
+            --assume-yes-for-downloads \
+            --static-libpython=yes \
+            --lto=yes \
+            --linux-icon=assets/icon.png \
+            --include-data-dir=assets=assets \
+            chatrixcd/main.py
+          "
+      
+      - name: Build with Nuitka (arm64 - using Alpine/musl)
         if: matrix.arch == 'arm64'
         run: |
-          docker run --rm --platform linux/arm64 -v "$PWD":/src -w /src arm64v8/python:3.12-slim sh -c "
-          apt-get update && apt-get install -y gcc patchelf ccache &&
-          pip install --upgrade pip &&
-          pip install -r requirements.txt &&
-          pip install nuitka ordered-set &&
-          python -m nuitka --mode=onefile \
+          docker run --rm --platform linux/arm64 -v "$PWD":/src -w /src arm64v8/alpine:3.19 sh -c "
+          apk add --no-cache python3 py3-pip gcc g++ musl-dev patchelf ccache linux-headers \
+            libffi-dev openssl-dev rust cargo git make &&
+          pip3 install --break-system-packages --upgrade pip &&
+          pip3 install --break-system-packages -r requirements.txt &&
+          pip3 install --break-system-packages nuitka ordered-set &&
+          python3 -m nuitka --mode=onefile \
             --output-filename=chatrixcd-linux-arm64 \
             --enable-plugin=anti-bloat \
             --assume-yes-for-downloads \
+            --static-libpython=yes \
+            --lto=yes \
             --linux-icon=assets/icon.png \
             --include-data-dir=assets=assets \
             chatrixcd/main.py
