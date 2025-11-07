@@ -62,11 +62,10 @@ jobs:
       - name: Fetch all tags
         run: git fetch --tags --force
       
-      - name: Set up QEMU for ARM64 emulation
-        if: matrix.arch == 'arm64'
+      - name: Set up QEMU for multi-platform builds
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: linux/arm64
+          platforms: linux/amd64,linux/386,linux/arm64
       
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -111,88 +110,43 @@ jobs:
           print(f'Updated version to {version}')
           "
       
-      - name: Cache ccache
-        uses: actions/cache@v4
+      - name: Map architecture to Docker platform
+        id: platform
+        run: |
+          case "${{ matrix.arch }}" in
+            x86_64) echo "platform=linux/amd64" >> "$GITHUB_OUTPUT" ;;
+            i686)   echo "platform=linux/386" >> "$GITHUB_OUTPUT" ;;
+            arm64)  echo "platform=linux/arm64" >> "$GITHUB_OUTPUT" ;;
+          esac
+      
+      - name: Set LTO flag based on architecture
+        id: lto
+        run: |
+          # Disable LTO for ARM64 to speed up compilation, enable for others
+          if [ "${{ matrix.arch }}" = "arm64" ]; then
+            echo "flag=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "flag=yes" >> "$GITHUB_OUTPUT"
+          fi
+      
+      - name: Build with Nuitka using Docker Buildx
+        uses: docker/build-push-action@v5
         with:
-          path: .ccache
-          key: ccache-${{ matrix.arch }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ matrix.arch }}-
+          context: .
+          file: ./Dockerfile.build
+          platforms: ${{ steps.platform.outputs.platform }}
+          target: export
+          build-args: |
+            ARCH=${{ matrix.arch }}
+            ENABLE_LTO=${{ steps.lto.outputs.flag }}
+          cache-from: type=gha,scope=build-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=build-${{ matrix.arch }}
+          outputs: type=local,dest=.
       
-      - name: Build with Nuitka (x86_64 - using Alpine/musl)
-        if: matrix.arch == 'x86_64'
+      - name: Verify binary was created
         run: |
-          docker run --rm --platform linux/amd64 -v "$PWD":/src -w /src amd64/alpine:3.22 sh -c "
-          apk add --no-cache python3 py3-pip build-base python3-dev gcc g++ musl-dev \
-            patchelf ccache linux-headers libffi-dev openssl-dev rust cargo git &&
-          export CCACHE_DIR=/src/.ccache &&
-          export PATH=/usr/lib/ccache/bin:\$PATH &&
-          python3 -m venv /venv &&
-          source /venv/bin/activate &&
-          pip install --upgrade pip &&
-          pip install -r requirements.txt &&
-          pip install nuitka ordered-set &&
-          python -m nuitka --mode=onefile \
-            --output-filename=chatrixcd-linux-x86_64 \
-            --enable-plugin=anti-bloat \
-            --assume-yes-for-downloads \
-            --static-libpython=yes \
-            --lto=yes \
-            --jobs=4 \
-            --linux-icon=assets/icon.png \
-            --include-data-dir=assets=assets \
-            chatrixcd/main.py
-          "
-      
-      - name: Build with Nuitka (i686 - using Alpine/musl)
-        if: matrix.arch == 'i686'
-        run: |
-          docker run --rm --platform linux/386 -v "$PWD":/src -w /src i386/alpine:3.22 sh -c "
-          apk add --no-cache python3 py3-pip build-base python3-dev gcc g++ musl-dev \
-            patchelf ccache linux-headers libffi-dev openssl-dev rust cargo git &&
-          export CCACHE_DIR=/src/.ccache &&
-          export PATH=/usr/lib/ccache/bin:\$PATH &&
-          python3 -m venv /venv &&
-          source /venv/bin/activate &&
-          pip install --upgrade pip &&
-          pip install -r requirements.txt &&
-          pip install nuitka ordered-set &&
-          python3 -m nuitka --mode=onefile \
-            --output-filename=chatrixcd-linux-i686 \
-            --enable-plugin=anti-bloat \
-            --assume-yes-for-downloads \
-            --static-libpython=yes \
-            --lto=yes \
-            --jobs=4 \
-            --linux-icon=assets/icon.png \
-            --include-data-dir=assets=assets \
-            chatrixcd/main.py
-          "
-      
-      - name: Build with Nuitka (arm64 - using Alpine/musl)
-        if: matrix.arch == 'arm64'
-        run: |
-          docker run --rm --platform linux/arm64 -v "$PWD":/src -w /src arm64v8/alpine:3.22 sh -c "
-          apk add --no-cache python3 py3-pip build-base python3-dev gcc g++ musl-dev \
-            patchelf ccache linux-headers libffi-dev openssl-dev rust cargo git make &&
-          export CCACHE_DIR=/src/.ccache &&
-          export PATH=/usr/lib/ccache/bin:\$PATH &&
-          python3 -m venv /venv &&
-          source /venv/bin/activate &&
-          pip install --upgrade pip &&
-          pip install -r requirements.txt &&
-          pip install nuitka ordered-set &&
-          python3 -m nuitka --mode=onefile \
-            --output-filename=chatrixcd-linux-arm64 \
-            --enable-plugin=anti-bloat \
-            --assume-yes-for-downloads \
-            --static-libpython=yes \
-            --lto=no \
-            --jobs=4 \
-            --linux-icon=assets/icon.png \
-            --include-data-dir=assets=assets \
-            chatrixcd/main.py
-          "
+          ls -lh chatrixcd-linux-${{ matrix.arch }}
+          file chatrixcd-linux-${{ matrix.arch }}
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
