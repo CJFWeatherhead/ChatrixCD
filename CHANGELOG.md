@@ -15,6 +15,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+## [2025.11.07.4.1.0] - 2025-11-07
+
 ### Changed
 - **Build Workflow**: Migrated from `docker run` to Docker buildx for all architecture builds
   - **Better Performance**: 35-50% faster builds with BuildKit's intelligent layer caching
@@ -974,6 +976,8 @@ ChatrixCD/
 
 
 
+
+- **2025.11.07.4.1.0** (2025-11-07)
 - **2025.11.04.4.0.1** (2025-11-04)
 - **2025.11.03.4.0.0** (2025-11-03)
 - **2025.10.18.3.1.0** (2025-10-18)
