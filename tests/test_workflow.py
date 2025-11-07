@@ -124,13 +124,27 @@ class TestWorkflowConfiguration(unittest.TestCase):
                 self.assertIn('--static-libpython=yes', run_command,
                              f"{step_name} should use static libpython")
                 
-                # Verify LTO is enabled
-                self.assertIn('--lto=yes', run_command,
-                             f"{step_name} should use LTO")
+                # Verify LTO setting (disabled for ARM64 for performance)
+                # ARM64 builds use --lto=no for faster compilation
+                # x86_64 and i686 use --lto=yes for optimization
+                if 'arm64' in step_name.lower():
+                    self.assertIn('--lto=no', run_command,
+                                 f"{step_name} should disable LTO for faster ARM64 compilation")
+                else:
+                    self.assertIn('--lto=yes', run_command,
+                                 f"{step_name} should use LTO")
+                
+                # Verify parallel compilation is enabled
+                self.assertIn('--jobs=', run_command,
+                             f"{step_name} should use parallel compilation")
                 
                 # Verify onefile mode
                 self.assertIn('--mode=onefile', run_command,
                              f"{step_name} should use onefile mode")
+                
+                # Verify ccache is configured
+                self.assertIn('ccache', run_command,
+                             f"{step_name} should use ccache for faster rebuilds")
     
     def test_build_workflow_has_version_calculation(self):
         """Test that build workflow calculates versions correctly."""
