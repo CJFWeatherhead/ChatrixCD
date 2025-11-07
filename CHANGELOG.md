@@ -15,6 +15,17 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Fixed
+- **Build Workflow**: Fixed broken build process from PR #110 optimization changes
+  - **ccache Configuration**: Fixed "cannot locate suitable C compiler" error in x86_64, i686, and arm64 builds
+    - Changed from `export CC='ccache gcc'` to `export PATH=/usr/lib/ccache/bin:$PATH` (Alpine's standard ccache wrapper location)
+    - This allows Nuitka's Scons build system to correctly detect the C compiler while still benefiting from ccache
+  - **ARM64 Runner**: Re-enabled QEMU emulation for ARM64 builds to ensure compatibility
+    - Reverted from `ubuntu-24.04-arm64` native runners (requires GitHub Team/Enterprise plan) to `ubuntu-latest` with QEMU
+    - Prevents 12+ hour wait times when ARM64 runners are unavailable
+    - Keeps all other ARM64 optimizations: ccache, parallel compilation, and LTO disabled
+  - All build optimizations from PR #110 remain intact: ccache caching, parallel compilation, LTO tuning, and test matrix optimization
+
 ### Changed
 - **CI/CD Performance Optimizations**: Significantly improved build and test workflow execution times
   - **ARM64 Builds**: Now use native ARM64 runners (`ubuntu-24.04-arm64`) instead of QEMU emulation, resulting in 3-5x faster build times

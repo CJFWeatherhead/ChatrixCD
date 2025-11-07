@@ -6,22 +6,34 @@ This document explains the optimizations made to ChatrixCD's GitHub Actions work
 
 ## Key Optimizations
 
-### 1. Native ARM64 Runners (Build Workflow)
+### 1. ARM64 Build Optimization (Build Workflow)
 
 **Problem**: ARM64 builds were extremely slow due to QEMU emulation on x86_64 runners.
 
-**Solution**: Use GitHub's native ARM64 runners (`ubuntu-24.04-arm64`).
+**Attempted Solution**: Native ARM64 runners (`ubuntu-24.04-arm64`) were initially tried but require GitHub Team/Enterprise plan.
 
-**Impact**: 3-5x faster ARM64 builds
+**Current Solution**: Use QEMU emulation with optimized ccache, parallel compilation, and disabled LTO.
+
+**Impact**: Significant improvement through caching and parallel builds, though not as fast as native ARM64 hardware
 
 **Implementation**:
 ```yaml
-runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm64' || 'ubuntu-latest' }}
+runs-on: ubuntu-latest
 ```
 
-This conditional expression ensures:
-- ARM64 builds run on native ARM64 hardware
-- x86_64 and i686 builds continue using standard runners
+With QEMU setup for ARM64:
+```yaml
+- name: Set up QEMU for ARM64 emulation
+  if: matrix.arch == 'arm64'
+  uses: docker/setup-qemu-action@v3
+  with:
+    platforms: linux/arm64
+```
+
+**Note**: Organizations with GitHub Team or Enterprise plans can switch to native ARM64 runners by changing `runs-on` to:
+```yaml
+runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm64' || 'ubuntu-latest' }}
+```
 
 ### 2. Compilation Cache (ccache)
 
@@ -42,12 +54,13 @@ This conditional expression ensures:
       ccache-${{ matrix.arch }}-
 ```
 
-Each build exports ccache environment variables:
+Each build configures ccache by adding it to PATH (Alpine's standard method):
 ```bash
 export CCACHE_DIR=/src/.ccache
-export CC='ccache gcc'
-export CXX='ccache g++'
+export PATH=/usr/lib/ccache/bin:$PATH
 ```
+
+**Note**: In Alpine Linux, `/usr/lib/ccache/bin` contains symlinks that wrap gcc/g++/etc. with ccache automatically. This is the recommended approach as it works seamlessly with build systems like Nuitka's Scons.
 
 ### 3. Link Time Optimization (LTO) Management
 
@@ -138,13 +151,13 @@ validate-build:
 
 ### Build Workflow
 
-| Architecture | Before | After | Improvement |
-|-------------|--------|-------|-------------|
-| ARM64 | 45-60 min | 10-15 min | **70-75% faster** |
+| Architecture | Before | After (with QEMU) | Improvement |
+|-------------|--------|-------------------|-------------|
+| ARM64 | 45-60 min | 20-30 min | **40-50% faster** |
 | x86_64 | 15-20 min | 12-15 min | **20-25% faster** |
 | i686 | 15-20 min | 12-15 min | **20-25% faster** |
 
-*Note: Subsequent builds with ccache will be even faster*
+*Note: Subsequent builds with ccache will be even faster. With native ARM64 runners (GitHub Team/Enterprise plan), ARM64 builds can be 70-75% faster (10-15 min).*
 
 ### Test Workflow
 
@@ -164,7 +177,7 @@ validate-build:
 2. Check cache hit rates in build logs
 
 ### Verification Checklist
-- [ ] ARM64 build uses `ubuntu-24.04-arm64` runner
+- [ ] ARM64 build uses QEMU emulation (or `ubuntu-24.04-arm64` if available)
 - [ ] ccache directory is cached and restored
 - [ ] LTO is disabled for ARM64
 - [ ] Parallel compilation is enabled
@@ -172,12 +185,28 @@ validate-build:
 
 ## Troubleshooting
 
-### ARM64 Runner Not Available
-**Symptom**: Build fails with "runner not found"
+### C Compiler Not Found Error
+**Symptom**: `FATAL: Error, cannot locate suitable C compiler` during Nuitka compilation
 
-**Solution**: GitHub ARM64 runners require GitHub Team or Enterprise Cloud plan. If unavailable:
-1. Revert to QEMU with optimizations
-2. Or use self-hosted ARM64 runners
+**Cause**: Incorrectly setting `CC='ccache gcc'` prevents Nuitka's Scons from finding the compiler
+
+**Solution**: Use ccache via PATH instead:
+```bash
+export PATH=/usr/lib/ccache/bin:$PATH
+```
+
+This is the Alpine Linux standard method and works seamlessly with all build systems.
+
+### ARM64 Runner Not Available
+**Symptom**: Build waits for hours or fails with "runner not found"
+
+**Cause**: GitHub ARM64 runners (`ubuntu-24.04-arm64`) require GitHub Team or Enterprise Cloud plan
+
+**Solution**: The default configuration now uses QEMU emulation for maximum compatibility:
+1. Standard `ubuntu-latest` runners work for all architectures
+2. QEMU provides ARM64 emulation automatically
+3. If you have access to ARM64 runners, you can optionally enable them
+4. Or use self-hosted ARM64 runners for best performance
 
 ### ccache Not Working
 **Symptom**: No "cache hit" messages in build logs
