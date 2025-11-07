@@ -35,7 +35,6 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
     - Prevents 12+ hour wait times when ARM64 runners are unavailable
     - Keeps all other ARM64 optimizations: ccache, parallel compilation, and LTO disabled
   - All build optimizations from PR #110 remain intact: ccache caching, parallel compilation, LTO tuning, and test matrix optimization
-  - **ARM64 Builds**: Now use native ARM64 runners (`ubuntu-24.04-arm64`) instead of QEMU emulation, resulting in 3-5x faster build times
   - **Build Cache**: Added ccache configuration for all architectures to cache compilation artifacts across builds
   - **Docker Build Cache**: Configured BuildKit with proper caching for faster Docker builds
   - **LTO Optimization**: Disabled Link Time Optimization (--lto=no) for ARM64 builds to dramatically reduce compilation time while keeping it enabled for x86_64 and i686
