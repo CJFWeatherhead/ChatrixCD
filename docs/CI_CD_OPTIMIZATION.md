@@ -314,7 +314,7 @@ If you're updating an existing workflow that uses `docker run --platform`, here'
 ```yaml
 - name: Build with Nuitka (arm64)
   run: |
-    docker run --rm --platform linux/arm64 -v "$PWD":/src -w /src arm64v8/alpine:3.20 sh -c "
+    docker run --rm --platform linux/arm64 -v "$PWD":/src -w /src arm64v8/alpine:3.22 sh -c "
     apk add --no-cache python3 py3-pip build-base python3-dev gcc g++ musl-dev \
       patchelf ccache linux-headers libffi-dev openssl-dev rust cargo git make &&
     export CCACHE_DIR=/src/.ccache &&
@@ -340,7 +340,7 @@ If you're updating an existing workflow that uses `docker run --platform`, here'
 ### After (buildx):
 1. Create `Dockerfile.build`:
 ```dockerfile
-FROM alpine:3.20 AS builder
+FROM alpine:3.22 AS builder
 RUN apk add --no-cache \
     python3 py3-pip build-base python3-dev gcc g++ musl-dev \
     patchelf ccache linux-headers libffi-dev openssl-dev rust cargo git make

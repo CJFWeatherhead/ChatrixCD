@@ -77,7 +77,7 @@ We use **Docker buildx** with BuildKit for all architecture builds. This provide
 
 The build process is defined in `Dockerfile.build`:
 ```dockerfile
-FROM alpine:3.20 AS builder
+FROM alpine:3.22 AS builder
 RUN apk add --no-cache python3 py3-pip build-base python3-dev gcc g++ musl-dev \
     patchelf ccache linux-headers libffi-dev openssl-dev rust cargo git make
 ENV CCACHE_DIR=/root/.ccache PATH=/usr/lib/ccache/bin:$PATH
