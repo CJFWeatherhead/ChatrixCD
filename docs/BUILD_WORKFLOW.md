@@ -20,11 +20,13 @@ We build all binaries on Alpine Linux using musl libc instead of glibc for sever
 
 ### Supported Architectures
 
-- **x86_64** (64-bit Intel/AMD): Built using Alpine 3.22
-- **i686** (32-bit Intel/AMD): Built using Alpine 3.22
-- **arm64** (64-bit ARM): Built using Alpine 3.22
+- **x86_64** (64-bit Intel/AMD): Built using Alpine 3.22 (onefile mode - single binary)
+- **i686** (32-bit Intel/AMD): Built using Alpine 3.22 (standalone mode - directory with executable and dependencies)
+- **arm64** (64-bit ARM): Built using Alpine 3.22 (onefile mode - single binary)
 
 All architectures are now built using the same `Dockerfile.build` with platform-specific configurations.
+
+**Note on i686**: The i686 binary uses standalone mode instead of onefile mode to avoid symbol resolution issues with musl libc. This results in a directory (`chatrixcd-linux-i686.dist/`) containing the executable and its dependencies, distributed as a `.tar.gz` archive.
 
 ## Build Process
 
@@ -59,7 +61,9 @@ All builds require these Alpine packages:
 
 We use Nuitka to compile Python code to C and create standalone binaries with these key options:
 
-- `--mode=onefile`: Create a single executable file
+- `--mode=onefile` (x86_64, arm64) or `--mode=standalone` (i686): Build mode selection
+  - **onefile**: Single executable file (x86_64, arm64)
+  - **standalone**: Directory with executable and dependencies (i686) - avoids symbol resolution issues on musl libc
 - `--output-filename=chatrixcd-linux-{arch}`: Name the output binary
 - `--enable-plugin=anti-bloat`: Reduce binary size by removing unnecessary imports
 - `--assume-yes-for-downloads`: Automatically download required tools

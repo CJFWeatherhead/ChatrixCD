@@ -145,15 +145,29 @@ jobs:
       
       - name: Verify binary was created
         run: |
-          ls -lh chatrixcd-linux-${{ matrix.arch }}
-          file chatrixcd-linux-${{ matrix.arch }}
+          if [ "${{ matrix.arch }}" = "i686" ]; then
+            # i686 uses standalone mode (directory)
+            ls -lh chatrixcd-linux-${{ matrix.arch }}.dist/
+            file chatrixcd-linux-${{ matrix.arch }}.dist/chatrixcd
+          else
+            # x86_64 and arm64 use onefile mode (single binary)
+            ls -lh chatrixcd-linux-${{ matrix.arch }}
+            file chatrixcd-linux-${{ matrix.arch }}
+          fi
+      
+      - name: Package i686 standalone directory
+        if: matrix.arch == 'i686'
+        run: |
+          # Create tarball for i686 standalone directory
+          tar -czf chatrixcd-linux-i686.dist.tar.gz chatrixcd-linux-i686.dist/
+          ls -lh chatrixcd-linux-i686.dist.tar.gz
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: chatrixcd-linux-${{ matrix.arch }}
           path: |
-            chatrixcd-linux-${{ matrix.arch }}
+            chatrixcd-linux-${{ matrix.arch }}*
           retention-days: 90
 
   release:
@@ -192,8 +206,12 @@ jobs:
       - name: Prepare release artifacts
         run: |
           mkdir -p release
-          find artifacts -type f -exec cp {} release/ \;
+          # Copy all files and directories from artifacts
+          find artifacts -mindepth 2 -maxdepth 2 -exec cp -r {} release/ \;
           ls -lah release/
+          # Verify what we have
+          echo "Release artifacts:"
+          ls -R release/
       
       - name: Update version in files (for release job)
         run: |

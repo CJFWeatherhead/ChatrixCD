@@ -48,18 +48,37 @@ COPY . .
 ARG ARCH
 ARG ENABLE_LTO=yes
 RUN --mount=type=cache,target=/root/.ccache \
-    python3 -m nuitka --mode=onefile \
-    --output-filename=chatrixcd-linux-${ARCH} \
-    --enable-plugin=anti-bloat \
-    --assume-yes-for-downloads \
-    --static-libpython=yes \
-    --lto=${ENABLE_LTO} \
-    --jobs=4 \
-    --linux-icon=assets/icon.png \
-    --include-data-dir=assets=assets \
-    chatrixcd/main.py
+    if [ "$ARCH" = "i686" ]; then \
+        # Use standalone mode for i686 to avoid symbol resolution issues with musl libc \
+        python3 -m nuitka --mode=standalone \
+        --output-dir=. \
+        --enable-plugin=anti-bloat \
+        --assume-yes-for-downloads \
+        --static-libpython=yes \
+        --lto=${ENABLE_LTO} \
+        --jobs=4 \
+        --linux-icon=assets/icon.png \
+        --include-data-dir=assets=assets \
+        chatrixcd/main.py && \
+        # Rename the output executable and directory for consistency \
+        mv main.dist chatrixcd-linux-${ARCH}.dist && \
+        mv chatrixcd-linux-${ARCH}.dist/main chatrixcd-linux-${ARCH}.dist/chatrixcd; \
+    else \
+        # Use onefile mode for x86_64 and arm64 (no symbol resolution issues) \
+        python3 -m nuitka --mode=onefile \
+        --output-filename=chatrixcd-linux-${ARCH} \
+        --enable-plugin=anti-bloat \
+        --assume-yes-for-downloads \
+        --static-libpython=yes \
+        --lto=${ENABLE_LTO} \
+        --jobs=4 \
+        --linux-icon=assets/icon.png \
+        --include-data-dir=assets=assets \
+        chatrixcd/main.py; \
+    fi
 
-# Final stage - just copy the binary
+# Final stage - just copy the binary or directory
 FROM scratch AS export
 ARG ARCH
-COPY --from=builder /src/chatrixcd-linux-${ARCH} /
+# Copy both files and directories (handles both onefile and standalone modes)
+COPY --from=builder /src/chatrixcd-linux-${ARCH}* /

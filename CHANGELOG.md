@@ -15,6 +15,12 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Fixed
+- **i686 Binary**: Fixed ImportError with `PyType_GetModuleByDef: symbol not found` when running i686 binaries
+  - Switched i686 builds from onefile mode to standalone mode to resolve symbol resolution issues with musl libc on Alpine Linux
+  - x86_64 and arm64 binaries remain in onefile mode (single file executable)
+  - i686 binary is now distributed as a directory (`chatrixcd-linux-i686.dist/`) containing the executable and dependencies
+
 ## [2025.11.07.4.1.0] - 2025-11-07
 
 ### Changed

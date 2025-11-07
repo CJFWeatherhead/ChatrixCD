@@ -18,7 +18,13 @@ chmod +x chatrixcd-linux-x86_64
 ```
 
 **Other Linux architectures:**
-- **i686 (32-bit)**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
+- **i686 (32-bit)**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686.dist.tar.gz)
+  ```bash
+  wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686.dist.tar.gz
+  tar -xzf chatrixcd-linux-i686.dist.tar.gz
+  cd chatrixcd-linux-i686.dist
+  ./chatrixcd
+  ```
 - **ARM64**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64)
 
 **Windows and macOS users:** Pre-built binaries are not currently available. Please use Option 2 (from source), Docker, or WSL2 (Windows only). See [INSTALL.md](INSTALL.md) for detailed platform-specific instructions.
