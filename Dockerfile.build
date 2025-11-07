@@ -1,0 +1,68 @@
+# Multi-stage Dockerfile for building ChatrixCD with Nuitka
+# This Dockerfile uses BuildKit for better caching and build optimization
+# Supports x86_64, i686, and arm64 architectures
+
+FROM alpine:3.20 AS builder
+
+# Install build dependencies
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk add --no-cache \
+    python3 \
+    py3-pip \
+    build-base \
+    python3-dev \
+    gcc \
+    g++ \
+    musl-dev \
+    patchelf \
+    ccache \
+    linux-headers \
+    libffi-dev \
+    openssl-dev \
+    rust \
+    cargo \
+    git \
+    make
+
+# Set up ccache for faster rebuilds
+RUN --mount=type=cache,target=/root/.ccache \
+    mkdir -p /root/.ccache
+ENV CCACHE_DIR=/root/.ccache
+ENV PATH=/usr/lib/ccache/bin:$PATH
+
+# Create and activate virtual environment
+RUN python3 -m venv /venv
+ENV PATH="/venv/bin:$PATH"
+ENV VIRTUAL_ENV="/venv"
+
+# Copy requirements and install Python dependencies
+WORKDIR /src
+COPY requirements.txt .
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip && \
+    pip install -r requirements.txt && \
+    pip install nuitka ordered-set
+
+# Copy source code
+COPY . .
+
+# Build with Nuitka
+ARG ARCH
+ARG ENABLE_LTO=yes
+RUN --mount=type=cache,target=/root/.ccache \
+    python3 -m nuitka --mode=onefile \
+    --output-filename=chatrixcd-linux-${ARCH} \
+    --enable-plugin=anti-bloat \
+    --assume-yes-for-downloads \
+    --static-libpython=yes \
+    --lto=${ENABLE_LTO} \
+    --jobs=4 \
+    --linux-icon=assets/icon.png \
+    --include-data-dir=assets=assets \
+    chatrixcd/main.py
+
+# Final stage - just copy the binary
+FROM scratch AS export
+ARG ARCH
+COPY --from=builder /src/chatrixcd-linux-${ARCH} /
