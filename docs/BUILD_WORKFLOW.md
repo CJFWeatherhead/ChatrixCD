@@ -20,9 +20,11 @@ We build all binaries on Alpine Linux using musl libc instead of glibc for sever
 
 ### Supported Architectures
 
-- **x86_64** (64-bit Intel/AMD): Built using `python:3.12-alpine` image
-- **i686** (32-bit Intel/AMD): Built using `i386/alpine:3.19` image
-- **arm64** (64-bit ARM): Built using `arm64v8/alpine:3.19` image
+- **x86_64** (64-bit Intel/AMD): Built using Alpine 3.22
+- **i686** (32-bit Intel/AMD): Built using Alpine 3.22
+- **arm64** (64-bit ARM): Built using Alpine 3.22
+
+All architectures are now built using the same `Dockerfile.build` with platform-specific configurations.
 
 ## Build Process
 
@@ -218,7 +220,7 @@ docker run --rm -v "$PWD":/src -w /src python:3.12-alpine sh -c "
 
 **For arm64:**
 ```bash
-docker run --rm --platform linux/arm64 -v "$PWD":/src -w /src arm64v8/alpine:3.19 sh -c "
+docker run --rm --platform linux/arm64 -v "$PWD":/src -w /src arm64v8/alpine:3.22 sh -c "
   apk add --no-cache python3 py3-pip gcc g++ musl-dev patchelf ccache linux-headers \
     libffi-dev openssl-dev rust cargo git make &&
   pip3 install --break-system-packages --upgrade pip &&
