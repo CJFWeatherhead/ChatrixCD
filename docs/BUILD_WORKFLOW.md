@@ -62,30 +62,74 @@ We use Nuitka to compile Python code to C and create standalone binaries with th
 - `--enable-plugin=anti-bloat`: Reduce binary size by removing unnecessary imports
 - `--assume-yes-for-downloads`: Automatically download required tools
 - `--static-libpython=yes`: **Statically link the Python interpreter** (no external libpython required)
-- `--lto=yes`: **Enable link-time optimization** for better performance and smaller size
+- `--lto=yes/no`: **Link-time optimization** (enabled for x86_64/i686, disabled for ARM64 for faster builds)
+- `--jobs=4`: **Parallel compilation** using 4 CPU cores
 - `--linux-icon=assets/icon.png`: Embed application icon
 - `--include-data-dir=assets=assets`: Include asset files in the binary
 
-#### Example Build Command (x86_64)
+#### Build Method: Docker Buildx with BuildKit
 
-```bash
-docker run --rm -v "$PWD":/src -w /src python:3.12-alpine sh -c "
-  apk add --no-cache gcc g++ musl-dev patchelf ccache linux-headers \
-    libffi-dev openssl-dev rust cargo git make &&
-  pip install --upgrade pip &&
-  pip install -r requirements.txt &&
-  pip install nuitka ordered-set &&
-  python -m nuitka --mode=onefile \
-    --output-filename=chatrixcd-linux-x86_64 \
+We use **Docker buildx** with BuildKit for all architecture builds. This provides:
+- Better layer caching with BuildKit cache mounts
+- GitHub Actions cache integration
+- Optimized multi-platform builds
+- Cleaner and more maintainable build process
+
+The build process is defined in `Dockerfile.build`:
+```dockerfile
+FROM alpine:3.20 AS builder
+RUN apk add --no-cache python3 py3-pip build-base python3-dev gcc g++ musl-dev \
+    patchelf ccache linux-headers libffi-dev openssl-dev rust cargo git make
+ENV CCACHE_DIR=/root/.ccache PATH=/usr/lib/ccache/bin:$PATH
+RUN python3 -m venv /venv
+ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV="/venv"
+WORKDIR /src
+COPY requirements.txt .
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip && \
+    pip install -r requirements.txt && \
+    pip install nuitka ordered-set
+COPY . .
+ARG ARCH ENABLE_LTO=yes
+RUN --mount=type=cache,target=/root/.ccache \
+    python3 -m nuitka --mode=onefile \
+    --output-filename=chatrixcd-linux-${ARCH} \
     --enable-plugin=anti-bloat \
     --assume-yes-for-downloads \
     --static-libpython=yes \
-    --lto=yes \
+    --lto=${ENABLE_LTO} \
+    --jobs=4 \
     --linux-icon=assets/icon.png \
     --include-data-dir=assets=assets \
     chatrixcd/main.py
-"
+FROM scratch AS export
+ARG ARCH
+COPY --from=builder /src/chatrixcd-linux-${ARCH} /
 ```
+
+And invoked via GitHub Actions workflow:
+```yaml
+- name: Build with Nuitka using Docker Buildx
+  uses: docker/build-push-action@v5
+  with:
+    context: .
+    file: ./Dockerfile.build
+    platforms: linux/amd64  # or linux/386, linux/arm64
+    target: export
+    build-args: |
+      ARCH=x86_64
+      ENABLE_LTO=yes
+    cache-from: type=gha,scope=build-x86_64
+    cache-to: type=gha,mode=max,scope=build-x86_64
+    outputs: type=local,dest=.
+```
+
+**Key advantages over docker run**:
+- BuildKit caches pip packages and ccache artifacts using `RUN --mount=type=cache`
+- GitHub Actions cache persists BuildKit layers across workflow runs
+- Better parallelization and optimization
+- Cleaner separation of build logic (Dockerfile) from workflow
+- Same Dockerfile works for all architectures with different platforms
 
 ### 3. Release Phase
 
