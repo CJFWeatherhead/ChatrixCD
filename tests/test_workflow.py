@@ -18,6 +18,18 @@ class TestWorkflowConfiguration(unittest.TestCase):
         # Load build workflow
         with open(cls.build_workflow_path, 'r') as f:
             cls.build_workflow = yaml.safe_load(f)
+        
+        # Load Dockerfile.build for validation
+        cls.dockerfile_path = Path(__file__).parent.parent / 'Dockerfile.build'
+        cls.dockerfile_content = ''
+        if cls.dockerfile_path.exists():
+            with open(cls.dockerfile_path, 'r') as f:
+                cls.dockerfile_content = f.read()
+    
+    @classmethod
+    def has_dockerfile_build(cls):
+        """Check if Dockerfile.build exists and has content."""
+        return cls.dockerfile_path.exists() and bool(cls.dockerfile_content.strip())
     
     def test_build_workflow_exists(self):
         """Test that build.yml workflow exists."""
@@ -90,13 +102,6 @@ class TestWorkflowConfiguration(unittest.TestCase):
         """Test that build workflow uses Nuitka for building (Docker-based with Alpine/musl)."""
         jobs = self.build_workflow['jobs']
         
-        # Load Dockerfile.build for verification
-        dockerfile_path = Path(__file__).parent.parent / 'Dockerfile.build'
-        dockerfile_content = ''
-        if dockerfile_path.exists():
-            with open(dockerfile_path, 'r') as f:
-                dockerfile_content = f.read()
-        
         # Check Linux build job for Nuitka usage in Docker containers
         for job_name in ['build-linux']:
             job = jobs[job_name]
@@ -122,38 +127,38 @@ class TestWorkflowConfiguration(unittest.TestCase):
                 with_params = nuitka_step.get('with', {})
                 
                 # If using docker buildx action, check Dockerfile.build
-                if 'docker/build-push-action' in uses_action and dockerfile_content:
+                if 'docker/build-push-action' in uses_action and self.has_dockerfile_build():
                     # Verify the step references Dockerfile.build
                     dockerfile_file = with_params.get('file', '')
                     self.assertIn('Dockerfile.build', dockerfile_file,
                                  f"{step_name} should use Dockerfile.build")
                     
                     # Verify Dockerfile.build uses Alpine Linux
-                    self.assertIn('alpine', dockerfile_content.lower(),
+                    self.assertIn('alpine', self.dockerfile_content.lower(),
                                  "Dockerfile.build should use Alpine Linux")
                     
                     # Verify Dockerfile.build uses Nuitka
-                    self.assertIn('nuitka', dockerfile_content.lower(),
+                    self.assertIn('nuitka', self.dockerfile_content.lower(),
                                  "Dockerfile.build should use Nuitka")
                     
                     # Verify static compilation flags in Dockerfile
-                    self.assertIn('--static-libpython=yes', dockerfile_content,
+                    self.assertIn('--static-libpython=yes', self.dockerfile_content,
                                  "Dockerfile.build should use static libpython")
                     
                     # Verify LTO is configurable via build args
-                    self.assertIn('--lto=${ENABLE_LTO}', dockerfile_content,
+                    self.assertIn('--lto=${ENABLE_LTO}', self.dockerfile_content,
                                  "Dockerfile.build should support configurable LTO")
                     
                     # Verify parallel compilation is enabled
-                    self.assertIn('--jobs=', dockerfile_content,
+                    self.assertIn('--jobs=', self.dockerfile_content,
                                  "Dockerfile.build should use parallel compilation")
                     
                     # Verify onefile mode
-                    self.assertIn('--mode=onefile', dockerfile_content,
+                    self.assertIn('--mode=onefile', self.dockerfile_content,
                                  "Dockerfile.build should use onefile mode")
                     
                     # Verify ccache is configured in Dockerfile
-                    self.assertIn('ccache', dockerfile_content,
+                    self.assertIn('ccache', self.dockerfile_content,
                                  "Dockerfile.build should use ccache for faster rebuilds")
                 
                 # Legacy check for docker run commands
@@ -257,13 +262,6 @@ class TestWorkflowConfiguration(unittest.TestCase):
         """Test that build workflow includes assets directory (Docker-based builds)."""
         jobs = self.build_workflow['jobs']
         
-        # Load Dockerfile.build for verification
-        dockerfile_path = Path(__file__).parent.parent / 'Dockerfile.build'
-        dockerfile_content = ''
-        if dockerfile_path.exists():
-            with open(dockerfile_path, 'r') as f:
-                dockerfile_content = f.read()
-        
         # Check Linux build job for assets (Windows/macOS removed)
         for job_name in ['build-linux']:
             job = jobs[job_name]
@@ -287,9 +285,9 @@ class TestWorkflowConfiguration(unittest.TestCase):
                 step_name = nuitka_step.get('name', '')
                 
                 # If using docker buildx action, check Dockerfile.build
-                if 'docker/build-push-action' in uses_action and dockerfile_content:
+                if 'docker/build-push-action' in uses_action and self.has_dockerfile_build():
                     # Verify that assets are included in Dockerfile.build
-                    self.assertIn('--include-data-dir=assets=assets', dockerfile_content,
+                    self.assertIn('--include-data-dir=assets=assets', self.dockerfile_content,
                                  "Dockerfile.build should include assets directory")
                 # Legacy check for docker run commands
                 elif run_command:
@@ -302,13 +300,6 @@ class TestWorkflowConfiguration(unittest.TestCase):
         jobs = self.build_workflow['jobs']
         linux_job = jobs['build-linux']
         steps = linux_job['steps']
-        
-        # Load Dockerfile.build for verification
-        dockerfile_path = Path(__file__).parent.parent / 'Dockerfile.build'
-        dockerfile_content = ''
-        if dockerfile_path.exists():
-            with open(dockerfile_path, 'r') as f:
-                dockerfile_content = f.read()
         
         # With Docker-based builds, artifacts are created directly in the source directory
         # No move step is needed. Instead, verify that build steps create the correct output files.
@@ -331,9 +322,9 @@ class TestWorkflowConfiguration(unittest.TestCase):
             step_name = build_step.get('name', '')
             
             # If using docker buildx action, check Dockerfile.build
-            if 'docker/build-push-action' in uses_action and dockerfile_content:
+            if 'docker/build-push-action' in uses_action and self.has_dockerfile_build():
                 # Check that output filename is specified in Dockerfile.build
-                self.assertIn('--output-filename=chatrixcd-linux-', dockerfile_content,
+                self.assertIn('--output-filename=chatrixcd-linux-', self.dockerfile_content,
                              "Dockerfile.build should specify output filename")
             # Legacy check for docker run commands
             elif run_command:
