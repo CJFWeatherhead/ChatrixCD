@@ -2,7 +2,7 @@
 # This Dockerfile uses BuildKit for better caching and build optimization
 # Supports x86_64, i686, and arm64 architectures
 
-FROM alpine:3.20 AS builder
+FROM alpine:3.22 AS builder
 
 # Install build dependencies
 RUN apk add --no-cache \
