@@ -90,12 +90,19 @@ class TestWorkflowConfiguration(unittest.TestCase):
         """Test that build workflow uses Nuitka for building (Docker-based with Alpine/musl)."""
         jobs = self.build_workflow['jobs']
         
+        # Load Dockerfile.build for verification
+        dockerfile_path = Path(__file__).parent.parent / 'Dockerfile.build'
+        dockerfile_content = ''
+        if dockerfile_path.exists():
+            with open(dockerfile_path, 'r') as f:
+                dockerfile_content = f.read()
+        
         # Check Linux build job for Nuitka usage in Docker containers
         for job_name in ['build-linux']:
             job = jobs[job_name]
             steps = job['steps']
             
-            # Find Nuitka build steps (now run via Docker with Alpine/musl)
+            # Find Nuitka build steps (now run via Docker buildx or docker run)
             nuitka_steps = [
                 step for step in steps
                 if 'Build with Nuitka' in step.get('name', '')
@@ -111,40 +118,79 @@ class TestWorkflowConfiguration(unittest.TestCase):
             for nuitka_step in nuitka_steps:
                 step_name = nuitka_step.get('name', '')
                 run_command = nuitka_step.get('run', '')
+                uses_action = nuitka_step.get('uses', '')
+                with_params = nuitka_step.get('with', {})
                 
-                # Verify Alpine/musl is used
-                self.assertIn('alpine', run_command.lower(), 
-                             f"{step_name} should use Alpine Linux")
+                # If using docker buildx action, check Dockerfile.build
+                if 'docker/build-push-action' in uses_action and dockerfile_content:
+                    # Verify the step references Dockerfile.build
+                    dockerfile_file = with_params.get('file', '')
+                    self.assertIn('Dockerfile.build', dockerfile_file,
+                                 f"{step_name} should use Dockerfile.build")
+                    
+                    # Verify Dockerfile.build uses Alpine Linux
+                    self.assertIn('alpine', dockerfile_content.lower(),
+                                 "Dockerfile.build should use Alpine Linux")
+                    
+                    # Verify Dockerfile.build uses Nuitka
+                    self.assertIn('nuitka', dockerfile_content.lower(),
+                                 "Dockerfile.build should use Nuitka")
+                    
+                    # Verify static compilation flags in Dockerfile
+                    self.assertIn('--static-libpython=yes', dockerfile_content,
+                                 "Dockerfile.build should use static libpython")
+                    
+                    # Verify LTO is configurable via build args
+                    self.assertIn('--lto=${ENABLE_LTO}', dockerfile_content,
+                                 "Dockerfile.build should support configurable LTO")
+                    
+                    # Verify parallel compilation is enabled
+                    self.assertIn('--jobs=', dockerfile_content,
+                                 "Dockerfile.build should use parallel compilation")
+                    
+                    # Verify onefile mode
+                    self.assertIn('--mode=onefile', dockerfile_content,
+                                 "Dockerfile.build should use onefile mode")
+                    
+                    # Verify ccache is configured in Dockerfile
+                    self.assertIn('ccache', dockerfile_content,
+                                 "Dockerfile.build should use ccache for faster rebuilds")
                 
-                # Verify Nuitka is used
-                self.assertIn('nuitka', run_command.lower(),
-                             f"{step_name} should use Nuitka")
-                
-                # Verify static compilation flags
-                self.assertIn('--static-libpython=yes', run_command,
-                             f"{step_name} should use static libpython")
-                
-                # Verify LTO setting (disabled for ARM64 for performance)
-                # ARM64 builds use --lto=no for faster compilation
-                # x86_64 and i686 use --lto=yes for optimization
-                if 'arm64' in step_name.lower():
-                    self.assertIn('--lto=no', run_command,
-                                 f"{step_name} should disable LTO for faster ARM64 compilation")
-                else:
-                    self.assertIn('--lto=yes', run_command,
-                                 f"{step_name} should use LTO")
-                
-                # Verify parallel compilation is enabled
-                self.assertIn('--jobs=', run_command,
-                             f"{step_name} should use parallel compilation")
-                
-                # Verify onefile mode
-                self.assertIn('--mode=onefile', run_command,
-                             f"{step_name} should use onefile mode")
-                
-                # Verify ccache is configured
-                self.assertIn('ccache', run_command,
-                             f"{step_name} should use ccache for faster rebuilds")
+                # Legacy check for docker run commands
+                elif run_command:
+                    # Verify Alpine/musl is used
+                    self.assertIn('alpine', run_command.lower(), 
+                                 f"{step_name} should use Alpine Linux")
+                    
+                    # Verify Nuitka is used
+                    self.assertIn('nuitka', run_command.lower(),
+                                 f"{step_name} should use Nuitka")
+                    
+                    # Verify static compilation flags
+                    self.assertIn('--static-libpython=yes', run_command,
+                                 f"{step_name} should use static libpython")
+                    
+                    # Verify LTO setting (disabled for ARM64 for performance)
+                    # ARM64 builds use --lto=no for faster compilation
+                    # x86_64 and i686 use --lto=yes for optimization
+                    if 'arm64' in step_name.lower():
+                        self.assertIn('--lto=no', run_command,
+                                     f"{step_name} should disable LTO for faster ARM64 compilation")
+                    else:
+                        self.assertIn('--lto=yes', run_command,
+                                     f"{step_name} should use LTO")
+                    
+                    # Verify parallel compilation is enabled
+                    self.assertIn('--jobs=', run_command,
+                                 f"{step_name} should use parallel compilation")
+                    
+                    # Verify onefile mode
+                    self.assertIn('--mode=onefile', run_command,
+                                 f"{step_name} should use onefile mode")
+                    
+                    # Verify ccache is configured
+                    self.assertIn('ccache', run_command,
+                                 f"{step_name} should use ccache for faster rebuilds")
     
     def test_build_workflow_has_version_calculation(self):
         """Test that build workflow calculates versions correctly."""
@@ -211,12 +257,19 @@ class TestWorkflowConfiguration(unittest.TestCase):
         """Test that build workflow includes assets directory (Docker-based builds)."""
         jobs = self.build_workflow['jobs']
         
+        # Load Dockerfile.build for verification
+        dockerfile_path = Path(__file__).parent.parent / 'Dockerfile.build'
+        dockerfile_content = ''
+        if dockerfile_path.exists():
+            with open(dockerfile_path, 'r') as f:
+                dockerfile_content = f.read()
+        
         # Check Linux build job for assets (Windows/macOS removed)
         for job_name in ['build-linux']:
             job = jobs[job_name]
             steps = job['steps']
             
-            # Find build steps (now Docker-based with run commands)
+            # Find build steps (now Docker-based with buildx or run commands)
             nuitka_steps = [
                 step for step in steps
                 if 'Build with Nuitka' in step.get('name', '')
@@ -227,20 +280,35 @@ class TestWorkflowConfiguration(unittest.TestCase):
                 f"{job_name} should have Nuitka build steps"
             )
             
-            # Check that each build step includes assets in the run command
+            # Check that each build step includes assets
             for nuitka_step in nuitka_steps:
                 run_command = nuitka_step.get('run', '')
+                uses_action = nuitka_step.get('uses', '')
                 step_name = nuitka_step.get('name', '')
                 
-                # Verify that assets are included via --include-data-dir flag
-                self.assertIn('--include-data-dir=assets=assets', run_command,
-                             f"{step_name} should include assets directory")
+                # If using docker buildx action, check Dockerfile.build
+                if 'docker/build-push-action' in uses_action and dockerfile_content:
+                    # Verify that assets are included in Dockerfile.build
+                    self.assertIn('--include-data-dir=assets=assets', dockerfile_content,
+                                 "Dockerfile.build should include assets directory")
+                # Legacy check for docker run commands
+                elif run_command:
+                    # Verify that assets are included via --include-data-dir flag
+                    self.assertIn('--include-data-dir=assets=assets', run_command,
+                                 f"{step_name} should include assets directory")
     
     def test_build_workflow_moves_x86_64_artifact(self):
         """Test that build workflow creates artifacts correctly (Docker builds directly in source)."""
         jobs = self.build_workflow['jobs']
         linux_job = jobs['build-linux']
         steps = linux_job['steps']
+        
+        # Load Dockerfile.build for verification
+        dockerfile_path = Path(__file__).parent.parent / 'Dockerfile.build'
+        dockerfile_content = ''
+        if dockerfile_path.exists():
+            with open(dockerfile_path, 'r') as f:
+                dockerfile_content = f.read()
         
         # With Docker-based builds, artifacts are created directly in the source directory
         # No move step is needed. Instead, verify that build steps create the correct output files.
@@ -259,11 +327,19 @@ class TestWorkflowConfiguration(unittest.TestCase):
         # Verify that build steps specify correct output filenames
         for build_step in build_steps:
             run_command = build_step.get('run', '')
+            uses_action = build_step.get('uses', '')
             step_name = build_step.get('name', '')
             
-            # Check that output filename is specified in Nuitka command
-            self.assertIn('--output-filename=chatrixcd-linux-', run_command,
-                         f"{step_name} should specify output filename")
+            # If using docker buildx action, check Dockerfile.build
+            if 'docker/build-push-action' in uses_action and dockerfile_content:
+                # Check that output filename is specified in Dockerfile.build
+                self.assertIn('--output-filename=chatrixcd-linux-', dockerfile_content,
+                             "Dockerfile.build should specify output filename")
+            # Legacy check for docker run commands
+            elif run_command:
+                # Check that output filename is specified in Nuitka command
+                self.assertIn('--output-filename=chatrixcd-linux-', run_command,
+                             f"{step_name} should specify output filename")
 
 
 class TestIconFiles(unittest.TestCase):
