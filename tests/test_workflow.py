@@ -153,9 +153,12 @@ class TestWorkflowConfiguration(unittest.TestCase):
                     self.assertIn('--jobs=', self.dockerfile_content,
                                  "Dockerfile.build should use parallel compilation")
                     
-                    # Verify onefile mode
+                    # Verify both onefile and standalone modes are supported
+                    # i686 uses standalone mode, x86_64/arm64 use onefile mode
                     self.assertIn('--mode=onefile', self.dockerfile_content,
-                                 "Dockerfile.build should use onefile mode")
+                                 "Dockerfile.build should support onefile mode (x86_64, arm64)")
+                    self.assertIn('--mode=standalone', self.dockerfile_content,
+                                 "Dockerfile.build should support standalone mode (i686)")
                     
                     # Verify ccache is configured in Dockerfile
                     self.assertIn('ccache', self.dockerfile_content,
