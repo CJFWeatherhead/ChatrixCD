@@ -114,9 +114,9 @@ jobs:
         id: platform
         run: |
           case "${{ matrix.arch }}" in
-            x86_64) echo "platform=linux/amd64" >> $GITHUB_OUTPUT ;;
-            i686)   echo "platform=linux/386" >> $GITHUB_OUTPUT ;;
-            arm64)  echo "platform=linux/arm64" >> $GITHUB_OUTPUT ;;
+            x86_64) echo "platform=linux/amd64" >> "$GITHUB_OUTPUT" ;;
+            i686)   echo "platform=linux/386" >> "$GITHUB_OUTPUT" ;;
+            arm64)  echo "platform=linux/arm64" >> "$GITHUB_OUTPUT" ;;
           esac
       
       - name: Set LTO flag based on architecture
@@ -124,9 +124,9 @@ jobs:
         run: |
           # Disable LTO for ARM64 to speed up compilation, enable for others
           if [ "${{ matrix.arch }}" = "arm64" ]; then
-            echo "flag=no" >> $GITHUB_OUTPUT
+            echo "flag=no" >> "$GITHUB_OUTPUT"
           else
-            echo "flag=yes" >> $GITHUB_OUTPUT
+            echo "flag=yes" >> "$GITHUB_OUTPUT"
           fi
       
       - name: Build with Nuitka using Docker Buildx
