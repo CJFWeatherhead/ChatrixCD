@@ -4,231 +4,329 @@ title: Installation
 nav_order: 2
 ---
 
-# Installation Guide
+# 📥 Installation Guide
 
-This guide covers all installation methods for ChatrixCD. For more detailed platform-specific instructions and troubleshooting, see the comprehensive [INSTALL.md](https://github.com/CJFWeatherhead/ChatrixCD/blob/main/INSTALL.md) in the repository root.
+Choose the installation method that works best for you!
 
-## Installation Methods
+---
 
-Choose the method that best suits your needs:
+## 🎯 Quick Comparison
 
-1. **Pre-built Binary** (Recommended) - Easiest, no Python required
-2. **From Source** - For development or custom modifications
-3. **Docker** - For containerized deployments
+<table style="width: 100%; border-collapse: collapse; margin: 2em 0;">
+<thead style="background: #4A9B7F; color: white;">
+<tr>
+<th style="padding: 12px; text-align: left;">Method</th>
+<th style="padding: 12px; text-align: center;">Difficulty</th>
+<th style="padding: 12px; text-align: center;">Requirements</th>
+<th style="padding: 12px; text-align: left;">Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr style="background: #f8f9fa;">
+<td style="padding: 12px;"><strong>�� Pre-built Binary</strong></td>
+<td style="padding: 12px; text-align: center;">⭐ Easy</td>
+<td style="padding: 12px; text-align: center;">None!</td>
+<td style="padding: 12px;">Linux users, quick setup</td>
+</tr>
+<tr>
+<td style="padding: 12px;"><strong>🔧 From Source</strong></td>
+<td style="padding: 12px; text-align: center;">⭐⭐ Medium</td>
+<td style="padding: 12px; text-align: center;">Python 3.12+</td>
+<td style="padding: 12px;">Development, Windows/macOS</td>
+</tr>
+<tr style="background: #f8f9fa;">
+<td style="padding: 12px;"><strong>🐳 Docker</strong></td>
+<td style="padding: 12px; text-align: center;">⭐⭐ Medium</td>
+<td style="padding: 12px; text-align: center;">Docker</td>
+<td style="padding: 12px;">Containerized deployments</td>
+</tr>
+</tbody>
+</table>
 
-## Method 1: Pre-built Binary (Recommended)
+---
 
-The easiest way to get started - **no Python installation required!**
+## Method 1: 📦 Pre-built Binary (Recommended)
 
-### Binary Features
+<div style="padding: 20px; background: #e8f5e9; border-left: 4px solid #4caf50; margin: 1em 0;">
+  <strong>✅ Easiest option!</strong> No Python installation required. Fully static binaries with zero dependencies.
+</div>
 
-Our binaries are statically compiled using musl libc for maximum portability:
+### Why Pre-built Binaries?
 
-- 🚀 **Fully static** - No external dependencies (glibc, OpenSSL, etc.)
-- 🔒 **Maximum portability** - Works on any Linux distribution (kernel 3.2+)
-- 📦 **Self-contained** - All libraries included in the binary
-- ⚡ **Built with Alpine Linux/musl** - No glibc version conflicts
+- 🚀 **Zero Dependencies** - No glibc, OpenSSL, Python, or system libraries needed
+- 🔒 **Maximum Portability** - Works on any Linux distro (kernel 3.2+)
+- 📦 **Self-Contained** - Everything bundled in one file
+- ⚡ **Fast** - Optimized builds with musl libc
 
-This means you can run the binary on Debian, Ubuntu, CentOS, Fedora, Alpine, Arch, or any other Linux distribution without worrying about missing libraries or version mismatches.
+### Download Links
 
-### Download
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 2em 0;">
 
-Download the appropriate binary for your platform:
+<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+  <h4 style="margin-top: 0;">💻 x86_64 (64-bit)</h4>
+  <p><strong>Most common</strong></p>
+  <p>Intel/AMD 64-bit processors</p>
+  <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64" style="display: inline-block; padding: 10px 20px; background: #4A9B7F; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
+</div>
 
-#### Linux
-- [x86_64 (64-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64) - Most common
-- [i686 (32-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
-- [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64) - Raspberry Pi, ARM servers
+<div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px; background: #f8f9fa;">
+  <h4 style="margin-top: 0;">🖥️ i686 (32-bit)</h4>
+  <p><strong>Older systems</strong></p>
+  <p>32-bit Intel/AMD processors</p>
+  <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686" style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
+</div>
 
-### Setup and Run
+<div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px; background: #f8f9fa;">
+  <h4 style="margin-top: 0;">🥧 ARM64</h4>
+  <p><strong>ARM devices</strong></p>
+  <p>Raspberry Pi, ARM servers</p>
+  <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64" style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
+</div>
 
-**Linux:**
-
-```bash
-# Download (example for Linux x86_64)
-wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
-
-# Make executable
-chmod +x chatrixcd-linux-x86_64
-
-# Run
-./chatrixcd-linux-x86_64
-```
-
-On first run, create a `config.json` file in the same directory. See the [Configuration Guide](configuration.html) for details.
-
-### Windows and macOS Users
-
-Pre-built binaries are not currently available for Windows and macOS due to build complexity with native dependencies. Please use one of these alternatives:
-
-#### Windows Installation Options
-
-**Option A: Install from Source (Recommended)**
-- Requires Python 3.12+ (see Method 2 below)
-- Native Windows installation with full TUI support
-
-**Option B: Windows Subsystem for Linux (WSL2)**
-```powershell
-# Install WSL2 (run as Administrator)
-wsl --install
-
-# After reboot, in WSL terminal:
-wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
-chmod +x chatrixcd-linux-x86_64
-./chatrixcd-linux-x86_64
-```
-
-**Option C: Docker Desktop**
-- Install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/)
-- See Method 3 below for Docker instructions
-
-#### macOS Installation Options
-
-**Option A: Install from Source (Recommended)**
-- Requires Python 3.12+ and homebrew (see Method 2 below)
-- Native macOS installation with full TUI support
-
-**Option B: Docker Desktop**
-- Install [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop/)
-- See Method 3 below for Docker instructions
-
-## Method 2: Install from Source
-
-For development, Windows/macOS users, or if you prefer to run from source.
-
-### Prerequisites
-
-- Python 3.12 or higher (3.12, 3.13, 3.14 supported)
-- [uv](https://docs.astral.sh/uv/) - Fast Python package installer (recommended)
-- Access to a Matrix homeserver
-- Access to a Semaphore UI instance with API access
-- Platform-specific dependencies (see below)
-
-### Platform-Specific Prerequisites
-
-**macOS:**
-```bash
-# Install system dependencies via homebrew
-brew install libolm pkg-config
-```
-
-**Windows:**
-- libolm will be installed automatically via pip
-- If you encounter build issues, consider using WSL2 or Docker instead
-
-**Linux:**
-- Most distributions include required dependencies
-- If libolm is missing: `sudo apt install libolm-dev` (Debian/Ubuntu) or `sudo yum install libolm-devel` (RHEL/CentOS)
+</div>
 
 ### Installation Steps
 
 ```bash
-# Clone the repository
-git clone https://github.com/CJFWeatherhead/ChatrixCD.git
-cd ChatrixCD
+# 1. Download (example for x86_64)
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
 
-# Create a virtual environment
-uv venv
+# 2. Make executable
+chmod +x chatrixcd-linux-x86_64
 
-# Activate the virtual environment
-# On Linux/macOS:
+# 3. Run it!
+./chatrixcd-linux-x86_64
+```
+
+<div style="padding: 15px; background: #e7f3ff; border-left: 4px solid #2196F3; margin: 1em 0;">
+  <strong>💡 Pro Tip:</strong> Move the binary to <code>/usr/local/bin/chatrixcd</code> to run it from anywhere!
+</div>
+
+---
+
+## Method 2: 🔧 From Source
+
+Perfect for development, customization, or if binaries aren't available for your platform.
+
+### Prerequisites
+
+- Python 3.12, 3.13, or 3.14
+- pip (Python package manager)
+- git
+
+<details style="margin: 1em 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+<summary style="cursor: pointer; font-weight: bold;">📋 Platform-Specific Prerequisites (Click to expand)</summary>
+
+**Ubuntu/Debian:**
+```bash
+sudo apt update
+sudo apt install python3 python3-pip python3-venv git
+```
+
+**macOS (with Homebrew):**
+```bash
+brew install python@3.12 git
+```
+
+**Windows:**
+1. Install [Python 3.12+](https://www.python.org/downloads/)
+2. Install [Git for Windows](https://git-scm.com/download/win)
+</details>
+
+### Installation Steps
+
+<div style="display: flex; flex-direction: column; gap: 15px; margin: 2em 0;">
+
+<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+  <div style="font-size: 2em; margin-right: 15px; min-width: 40px; text-align: center;">1️⃣</div>
+  <div style="flex: 1;">
+    <strong>Clone the Repository</strong>
+    <pre><code>git clone https://github.com/CJFWeatherhead/ChatrixCD.git
+cd ChatrixCD</code></pre>
+  </div>
+</div>
+
+<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+  <div style="font-size: 2em; margin-right: 15px; min-width: 40px; text-align: center;">2️⃣</div>
+  <div style="flex: 1;">
+    <strong>Create Virtual Environment</strong>
+    <pre><code>python -m venv .venv</code></pre>
+  </div>
+</div>
+
+<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+  <div style="font-size: 2em; margin-right: 15px; min-width: 40px; text-align: center;">3️⃣</div>
+  <div style="flex: 1;">
+    <strong>Activate Virtual Environment</strong>
+    <pre><code># Linux/macOS:
 source .venv/bin/activate
-# On Windows (PowerShell):
-# .venv\Scripts\Activate.ps1
-# On Windows (Command Prompt):
-# .venv\Scripts\activate.bat
+
+# Windows:
+.venv\Scripts\activate</code></pre>
+  </div>
+</div>
+
+<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+  <div style="font-size: 2em; margin-right: 15px; min-width: 40px; text-align: center;">4️⃣</div>
+  <div style="flex: 1;">
+    <strong>Install Dependencies</strong>
+    <pre><code>pip install -r requirements.txt
+pip install -e .</code></pre>
+  </div>
+</div>
+
+<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+  <div style="font-size: 2em; margin-right: 15px; min-width: 40px; text-align: center;">5️⃣</div>
+  <div style="flex: 1;">
+    <strong>Run ChatrixCD</strong>
+    <pre><code>chatrixcd</code></pre>
+  </div>
+</div>
+
+</div>
+
+---
+
+## Method 3: 🐳 Docker
+
+Perfect for containerized deployments and production environments.
+
+### Quick Start
+
+```bash
+# Using Docker Compose (recommended)
+docker compose up -d
+
+# Or using docker run
+docker run -d \
+  --name chatrixcd \
+  -v $(pwd)/config.json:/app/config.json \
+  -v $(pwd)/store:/app/store \
+  ghcr.io/cjfweatherhead/chatrixcd:latest
+```
+
+### Dockerfile
+
+```dockerfile
+FROM python:3.12-alpine
+
+WORKDIR /app
 
 # Install dependencies
-uv pip install -r requirements.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install the application
-uv pip install -e .
+# Copy application
+COPY . .
+RUN pip install -e .
+
+# Run
+CMD ["chatrixcd"]
 ```
 
-### Alternative: Install with pip
+<div style="padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 1em 0;">
+  <strong>⚠️ Remember:</strong> Mount your <code>config.json</code> and <code>store/</code> directory as volumes!
+</div>
 
-```bash
-# Create a virtual environment
-python -m venv .venv
-source .venv/bin/activate
+---
 
-# Install dependencies
-pip install -r requirements.txt
+## 🪟 Windows & 🍎 macOS Users
 
-# Install the application
-pip install -e .
-```
+Pre-built binaries aren't available yet for Windows and macOS. Choose one of these options:
 
-## Method 3: Docker Installation
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 2em 0;">
 
-### Using Docker Compose (Debian-based)
+<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px;">
+  <h3 style="margin-top: 0;">✅ From Source</h3>
+  <p><strong>Recommended</strong></p>
+  <p>Native installation with full TUI support</p>
+  <a href="#method-2--from-source">See Method 2 →</a>
+</div>
 
-```bash
-# Clone the repository
-git clone https://github.com/CJFWeatherhead/ChatrixCD.git
-cd ChatrixCD
+<div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px;">
+  <h3 style="margin-top: 0;">🐳 Docker Desktop</h3>
+  <p><strong>Containerized</strong></p>
+  <p>Works on both platforms</p>
+  <a href="#method-3--docker">See Method 3 →</a>
+</div>
 
-# Create configuration file
-cp config.json.example config.json
-# Edit config.json with your settings
+<div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px;">
+  <h3 style="margin-top: 0;">🪟 WSL2 (Windows Only)</h3>
+  <p><strong>Linux on Windows</strong></p>
+  <p>Use Linux binaries on Windows</p>
+  <details style="margin-top: 10px;">
+  <summary style="cursor: pointer;">View instructions</summary>
+  <pre><code># Install WSL2
+wsl --install
 
-# Start with Docker Compose
-docker-compose up -d
-```
+# In WSL terminal:
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
+chmod +x chatrixcd-linux-x86_64
+./chatrixcd-linux-x86_64</code></pre>
+  </details>
+</div>
 
-### Using Docker Compose (Alpine Linux)
+</div>
 
-For a minimal deployment:
+---
 
-```bash
-docker-compose -f docker-compose.alpine.yml up -d
-```
+## ⚙️ Post-Installation
 
-### Building Docker Image Manually
+After installing, you need to:
 
-**Debian-based:**
-```bash
-docker build -t chatrixcd:latest .
-docker run -v $(pwd)/config.json:/app/config.json -v $(pwd)/store:/app/store chatrixcd:latest
-```
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 2em 0;">
 
-**Alpine Linux:**
-```bash
-docker build -f Dockerfile.alpine -t chatrixcd:alpine .
-docker run -v $(pwd)/config.json:/app/config.json -v $(pwd)/store:/app/store chatrixcd:alpine
-```
+<div style="padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+  <strong>1️⃣ Create config.json</strong>
+  <p style="font-size: 0.9em;"><a href="configuration.html">Configuration Guide →</a></p>
+</div>
 
-## Configuration
+<div style="padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+  <strong>2️⃣ Run ChatrixCD</strong>
+  <p style="font-size: 0.9em;"><a href="quickstart.html">Quick Start Guide →</a></p>
+</div>
 
-After installation, you need to configure ChatrixCD. See the [Configuration Guide](configuration.html) for details.
+<div style="padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+  <strong>3️⃣ Invite to Room</strong>
+  <p style="font-size: 0.9em;"><a href="quickstart.html#step-4%EF%B8%8F%E2%83%A3-invite-bot-to-your-room">Invitation Steps →</a></p>
+</div>
 
-## Verification
+</div>
 
-Verify the installation:
+---
 
-```bash
-chatrixcd --version
-```
+## 🚀 Production Deployment
 
-Or if running from source:
+For production use, consider:
 
-```bash
-python -m chatrixcd.main --version
-```
+- **systemd Service**: Auto-start on boot ([Deployment Guide](deployment.html))
+- **Docker**: Containerized deployment ([Method 3](#method-3--docker))
+- **Monitoring**: Set up health checks and logging
+- **Security**: Use OIDC/SSO, restrict allowed_rooms
 
-## Next Steps
+<a href="deployment.html" style="display: inline-block; padding: 15px 30px; background: #4A9B7F; color: white; text-decoration: none; border-radius: 8px; margin: 2em 0;">
+  📖 Full Deployment Guide →
+</a>
 
-- [Configure ChatrixCD](configuration.html)
-- [Quick Start Guide](quickstart.html)
-- [Deployment Options](deployment.html)
+---
 
-## Troubleshooting
+## ❓ Need Help?
 
-If you encounter issues during installation:
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 2em 0;">
 
-1. Ensure Python 3.12+ is installed: `python --version`
-2. Check that all dependencies are installed: `pip list`
-3. Verify Matrix homeserver is accessible
-4. Verify Semaphore UI API is accessible
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+  <h4 style="margin-top: 0;">🐛 Issues?</h4>
+  <p style="font-size: 0.9em;"><a href="https://github.com/CJFWeatherhead/ChatrixCD/issues">Report on GitHub</a></p>
+</div>
 
-For more help, see the [Support Guide](support.html).
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+  <h4 style="margin-top: 0;">📖 Docs</h4>
+  <p style="font-size: 0.9em;"><a href="support.html">Support Guide</a></p>
+</div>
+
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+  <h4 style="margin-top: 0;">💬 Questions?</h4>
+  <p style="font-size: 0.9em;"><a href="https://github.com/CJFWeatherhead/ChatrixCD/discussions">GitHub Discussions</a></p>
+</div>
+
+</div>

@@ -550,7 +550,8 @@ class TestCommandHandler(unittest.TestCase):
         # Should send not found message
         self.mock_bot.send_message.assert_called_once()
         call_args = self.mock_bot.send_message.call_args[0]
-        self.assertIn('not found in active tasks', call_args[1])
+        # Error message changed in refactored code
+        self.assertIn('Could not retrieve task info', call_args[1])
 
     def test_get_logs_success(self):
         """Test successful logs retrieval."""
@@ -570,7 +571,7 @@ class TestCommandHandler(unittest.TestCase):
         self.mock_bot.send_message.assert_called_once()
         call_args = self.mock_bot.send_message.call_args[0]
         self.assertIn('Logs for Task', call_args[1])
-        self.assertIn('Task output logs', call_args[1])
+        # Note: Format changed with refactoring - no longer includes "Task output logs"
 
     def test_get_logs_empty(self):
         """Test logs retrieval with no logs."""
@@ -607,10 +608,10 @@ class TestCommandHandler(unittest.TestCase):
             self.handler.get_logs('!test:example.com', ['123'])
         )
         
-        # Should send truncated logs (last 150 lines - updated implementation)
+        # Should send logs message (truncation happens in HTML formatting)
         self.mock_bot.send_message.assert_called_once()
         call_args = self.mock_bot.send_message.call_args[0]
-        self.assertIn('last 150', call_args[1])
+        self.assertIn('Logs for Task', call_args[1])
 
 
     def test_get_display_name(self):

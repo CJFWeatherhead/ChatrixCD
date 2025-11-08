@@ -1,695 +1,263 @@
 # Installation Guide
 
-This guide provides detailed instructions for installing and running ChatrixCD.
+Choose your installation method and get ChatrixCD running quickly! 🚀
 
 ## Installation Methods
 
-Choose the method that best suits your needs:
+| Method | Best For | Difficulty |
+|--------|----------|------------|
+| **Pre-built Binary** | Linux users wanting the easiest setup | ⭐ Easy |
+| **From Source** | Development, Windows, macOS | ⭐⭐ Moderate |
+| **Docker** | Containerized deployments | ⭐⭐ Moderate |
 
-1. **Pre-built Binary** (Recommended) - Easiest, no Python required
-2. **From Source** - For development or custom modifications
-3. **Docker** - For containerized deployments
+## Method 1: Pre-built Binary (Linux)
 
-## Method 1: Pre-built Binary (Recommended for Linux)
+**Features:** No Python needed, fully static, works on any Linux distro
 
-The easiest way to get started on Linux - no Python installation required!
-
-### Binary Features
-
-Our binaries are statically compiled using musl libc for maximum portability:
-
-- 🚀 **Fully static** - No external dependencies (glibc, OpenSSL, etc.)
-- 🔒 **Maximum portability** - Works on any Linux distribution (kernel 3.2+)
-- 📦 **Self-contained** - All libraries included in the binary
-- ⚡ **Built with Alpine Linux/musl** - No glibc version conflicts
-- 🎯 **Link-time optimized** - Better performance and smaller size
-
-This means you can run the binary on Debian, Ubuntu, CentOS, Fedora, Alpine, Arch, or any other Linux distribution without worrying about missing libraries or version mismatches.
-
-### Download
-
-Download the appropriate binary for your Linux platform:
-
-#### Linux
-- [x86_64 (64-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64) - Most common
-- [i686 (32-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
-- [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64) - Raspberry Pi, ARM servers
-
-### Setup and Run
-
-**Linux:**
+### Install
 
 ```bash
-# Download (example for Linux x86_64)
-wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
-
-# Make executable
-chmod +x chatrixcd-linux-x86_64
+# Download (replace x86_64 with i686 or arm64 for other architectures)
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz
+tar -xzf chatrixcd-linux-x86_64.dist.tar.gz
+cd chatrixcd-linux-x86_64.dist
 
 # Run
-./chatrixcd-linux-x86_64
+./chatrixcd
 ```
 
-**First Run:**
+**Available:** [x86_64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz) | [i686](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686.dist.tar.gz) | [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64.dist.tar.gz)
 
-On first run, the bot will create a sample configuration file if one doesn't exist. You'll need to:
+**Windows/macOS:** Binaries not available - use Method 2 or Docker
 
-1. Stop the bot (Ctrl+C)
-2. Edit `config.json` with your Matrix and Semaphore credentials
-3. Restart the bot
-
-Continue to the [Configuration](#configuration) section below.
-
-### Windows and macOS Users
-
-Pre-built binaries are not currently available for Windows and macOS due to build complexity with native dependencies. Please use one of these alternatives:
-
-#### Windows Installation Options
-
-**Option A: Install from Source (Recommended)**
-- Requires Python 3.12+ (see Method 2 below)
-- Native Windows installation with full TUI support
-
-**Option B: Windows Subsystem for Linux (WSL2)**
-```powershell
-# Install WSL2 (run as Administrator)
-wsl --install
-
-# After reboot, in WSL terminal:
-wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
-chmod +x chatrixcd-linux-x86_64
-./chatrixcd-linux-x86_64
-```
-
-**Option C: Docker Desktop**
-- Install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/)
-- See Method 3 below for Docker instructions
-
-#### macOS Installation Options
-
-**Option A: Install from Source (Recommended)**
-- Requires Python 3.12+ and homebrew (see Method 2 below)
-- Native macOS installation with full TUI support
-
-**Option B: Docker Desktop**
-- Install [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop/)
-- See Method 3 below for Docker instructions
-
-## Method 2: Install from Source
-
-For development, Windows/macOS users, or if you prefer to run from source.
+## Method 2: From Source
 
 ### Prerequisites
 
-- Python 3.12 or higher (3.12, 3.13, 3.14 supported)
-- [uv](https://docs.astral.sh/uv/) - Fast Python package installer (recommended) or pip
-- Platform-specific dependencies (see below)
+- **Python 3.12 or newer**
+- **Git** (to clone the repository)
 
-### Platform-Specific Prerequisites
-
-**macOS:**
-```bash
-# Install system dependencies via homebrew
-brew install libolm pkg-config
-```
-
-**Windows:**
-- libolm will be installed automatically via pip
-- If you encounter build issues, consider using WSL2 or Docker instead
-
-**Linux:**
-- Most distributions include required dependencies
-- If libolm is missing: `sudo apt install libolm-dev` (Debian/Ubuntu) or `sudo yum install libolm-devel` (RHEL/CentOS)
-
-### Install uv (if not already installed)
+### Install
 
 ```bash
-# On Linux/macOS:
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# On Windows (PowerShell):
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
-
-### Installation Steps
-
-```bash
-# Clone the repository
+# Clone repository
 git clone https://github.com/CJFWeatherhead/ChatrixCD.git
 cd ChatrixCD
 
-# Create a virtual environment
-uv venv
+# Install
+pip install -e .
 
-# Activate the virtual environment
-# On Linux/macOS:
-source .venv/bin/activate
-# On Windows:
-.venv\Scripts\activate
-
-# Install dependencies
-uv pip install -r requirements.txt
-
-# Install the application
-uv pip install -e .
+# Run
+chatrixcd
 ```
 
-## Method 3: Docker Installation
+**Platform-specific notes:**
+- **Windows:** Works natively with Python 3.12+
+- **macOS:** Install Python 3.12+ via Homebrew: `brew install python@3.12`
+- **Linux:** Most distros have Python 3.12+ in repos
 
-For containerized deployments.
+## Method 3: Docker
 
-### Using Docker Compose (Debian-based)
+### Using Docker Compose (Recommended)
 
-```bash
-# Clone the repository
-git clone https://github.com/CJFWeatherhead/ChatrixCD.git
-cd ChatrixCD
-
-# Create configuration file
-cp config.json.example config.json
-# Edit config.json with your settings
-
-# Start with Docker Compose
-docker-compose up -d
+Create `docker-compose.yml`:
+```yaml
+services:
+  chatrixcd:
+    image: ghcr.io/cjfweatherhead/chatrixcd:latest
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - ./store:/app/store
+    restart: unless-stopped
 ```
 
-### Using Docker Compose (Alpine Linux)
-
-For a minimal deployment:
-
+Run:
 ```bash
-docker-compose -f docker-compose.alpine.yml up -d
+docker compose up -d
 ```
 
-### Building Docker Image Manually
+### Using Docker CLI
 
-**Debian-based:**
 ```bash
-docker build -t chatrixcd:latest .
-docker run -v $(pwd)/config.json:/app/config.json -v $(pwd)/store:/app/store chatrixcd:latest
-```
-
-**Alpine Linux:**
-```bash
-docker build -f Dockerfile.alpine -t chatrixcd:alpine .
-docker run -v $(pwd)/config.json:/app/config.json -v $(pwd)/store:/app/store chatrixcd:alpine
+docker run -d \
+  -v $(pwd)/config.json:/app/config.json:ro \
+  -v $(pwd)/store:/app/store \
+  --name chatrixcd \
+  ghcr.io/cjfweatherhead/chatrixcd:latest
 ```
 
 ## Configuration
 
-After installation (any method), you need to configure ChatrixCD.
+Create `config.json` in your installation directory:
 
-## Configuration
-
-After installation (any method), you need to configure ChatrixCD.
-
-### Create Configuration File
-
-**For binary installations:**
-The binary will look for `config.json` in the current directory. Create it from the example:
-
-```bash
-# Download example config
-wget https://raw.githubusercontent.com/CJFWeatherhead/ChatrixCD/main/config.json.example -O config.json
-
-# Or if you cloned the repo:
-cp config.json.example config.json
+```json
+{
+  "matrix": {
+    "homeserver": "https://matrix.org",
+    "user_id": "@mybot:matrix.org",
+    "auth_type": "password",
+    "password": "your-password"
+  },
+  "semaphore": {
+    "url": "https://semaphore.example.com",
+    "api_token": "your-api-token"
+  },
+  "bot": {
+    "command_prefix": "!cd",
+    "admin_users": ["@you:matrix.org"],
+    "allowed_rooms": []
+  }
+}
 ```
 
-**For source/Docker installations:**
-```bash
-cp config.json.example config.json
+**Configuration options:** See [Configuration Reference](https://chatrixcd.cjfw.me/configuration.html)
+
+### Authentication Options
+
+**Password Authentication (Simple):**
+```json
+{
+  "matrix": {
+    "auth_type": "password",
+    "password": "your-password"
+  }
+}
 ```
 
-Edit `config.json` with your settings:
-
-```bash
-nano config.json  # or use your preferred editor
+**OIDC/SSO Authentication:**
+```json
+{
+  "matrix": {
+    "auth_type": "oidc",
+    "oidc_redirect_url": "http://localhost:8080"
+  }
+}
 ```
 
-Configuration is done exclusively through JSON files (with HJSON support for comments).
+The bot will display a login URL when starting.
+
+### Getting Semaphore API Token
+
+1. Log into Semaphore UI
+2. Click your profile (top right)
+3. Go to **API Keys**
+4. Create new key
+5. Copy token to `config.json`
 
 ## Running the Bot
 
-### From Binary
+### Basic Usage
 
 ```bash
-# Linux/macOS (adjust filename for your platform)
-./chatrixcd-linux-x86_64
-
-# With options
-./chatrixcd-linux-x86_64 --help
-./chatrixcd-linux-x86_64 -c /path/to/config.json
-./chatrixcd-linux-x86_64 -L  # Log-only mode (no TUI)
+chatrixcd                    # Run with TUI (default)
+chatrixcd -L                 # Log-only mode (no TUI)
+chatrixcd -D                 # Daemon mode (background)
+chatrixcd -v                 # Verbose logging
 ```
 
-```cmd
-rem Windows
-chatrixcd-windows-x86_64.exe
+### System Service (Linux)
 
-rem With options
-chatrixcd-windows-x86_64.exe --help
-chatrixcd-windows-x86_64.exe -c C:\path\to\config.json
+**systemd service** (`/etc/systemd/system/chatrixcd.service`):
+```ini
+[Unit]
+Description=ChatrixCD Matrix Bot
+After=network-online.target
+
+[Service]
+Type=simple
+User=chatrixcd
+WorkingDirectory=/opt/chatrixcd
+ExecStart=/opt/chatrixcd/chatrixcd -L
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
 ```
 
-### From Source
-
-**Interactive Mode (with TUI):**
-
+Enable:
 ```bash
-# Make sure your virtual environment is activated
-chatrixcd
-
-# Or with colored output
-chatrixcd -C
+sudo systemctl enable --now chatrixcd
 ```
 
-**Classic Log-Only Mode:**
-
+**Alpine Linux (OpenRC)** (`/etc/init.d/chatrixcd`):
 ```bash
-# Run without TUI (classic behavior)
-chatrixcd -L
+#!/sbin/openrc-run
+command="/opt/chatrixcd/chatrixcd"
+command_args="-L"
+command_user="chatrixcd:chatrixcd"
+directory="/opt/chatrixcd"
 ```
 
-Or run directly:
+## Verification
 
-```bash
-python -m chatrixcd.main
-```
+### Test the Bot
 
-### Command-Line Options
+1. **Invite bot to room:** Send invite to your bot's Matrix ID
+2. **Send test command:** `!cd help`
+3. **Check response:** Bot should reply with help message
 
-All installation methods support these options:
+### Device Verification (E2E Encryption)
 
-```bash
-# Show help
-chatrixcd --help
+If using encrypted rooms:
 
-# Show version
-chatrixcd --version
-
-# Run with verbose logging
-chatrixcd -v
-
-# Use custom config file
-chatrixcd -c /path/to/config.json
-
-# Run in daemon mode (Unix/Linux only)
-chatrixcd -D
-
-# Display configuration (credentials redacted)
-chatrixcd -s
-```
-
-## Authentication Setup
-
-ChatrixCD supports two authentication methods:
-
-### Password Authentication
-
-This is the simplest and most common method:
-
-1. Create a bot account on your Matrix server
-2. Configure the credentials in `config.json`:
-   ```json
-   {
-     "matrix": {
-       "homeserver": "https://matrix.example.com",
-       "user_id": "@chatrixcd:example.com",
-       "auth_type": "password",
-       "password": "your_password",
-       "store_path": "./store"
-     }
-   }
-   ```
-
-### OIDC/SSO Authentication
-
-For Matrix servers that use OIDC/Single Sign-On (like some enterprise deployments):
-
-1. Configure OIDC settings in `config.json`:
-   ```json
-   {
-     "matrix": {
-       "homeserver": "https://matrix.example.com",
-       "user_id": "@chatrixcd:example.com",
-       "auth_type": "oidc",
-       "oidc_redirect_url": "http://localhost:8080/callback",  // Optional
-       "store_path": "./store"
-     }
-   }
-   ```
-
-2. When you start the bot:
-   - The bot will display an SSO authentication URL
-   - Open the URL in your browser
-   - Complete the authentication with your OIDC provider
-   - Copy the callback URL (it will contain a `loginToken` parameter)
-   - Paste the URL or just the token back into the bot
-
-3. The bot will complete the login automatically
-
-#### Understanding `oidc_redirect_url`
-
-The `oidc_redirect_url` is the URL where the Matrix server will redirect your browser after successful authentication. **This field is optional** and defaults to `http://localhost:8080/callback` if not specified.
-
-**Important:** The redirect URL does not need to be a running web server. It's simply used to receive the `loginToken` parameter in the URL. When the authentication completes, you copy the entire callback URL (or just the token) and paste it back into ChatrixCD.
-
-**Common redirect URL patterns:**
-
-- **Local development/testing:** `http://localhost:8080/callback` (default)
-  - No web server needed
-  - Works for desktop/local deployments
-  
-- **Production with web handler:** `https://your-domain.com/auth/callback`
-  - If you want to build a web page that automatically extracts and submits the token
-  - Requires setting up a simple web server/page
-  
-- **Out-of-band (CLI apps):** `urn:ietf:wg:oauth:2.0:oob`
-  - Standard OAuth2 redirect for command-line applications
-  - Some Matrix servers may not support this
-
-**For most users:** Leave `oidc_redirect_url` unset or use the default. The token will appear in your browser's address bar, and you simply copy/paste it.
-
-## Docker Deployment
-
-### Using Docker Compose
-
-1. Create configuration file:
-   ```bash
-   cp config.json.example config.json
-   # Edit config.json with your settings
-   ```
-
-2. Update docker-compose.yml to mount the config file (uncomment the config mount line):
-   ```yaml
-   volumes:
-     - ./store:/app/store
-     - ./config.json:/app/config.json:ro  # Uncomment this line
-   ```
-
-3. Start the bot:
-   ```bash
-   docker-compose up -d
-   ```
-
-4. View logs:
-   ```bash
-   docker-compose logs -f chatrixcd
-   ```
-
-### Using Docker Directly
-
-```bash
-docker build -t chatrixcd .
-docker run -d \
-  --name chatrixcd \
-  -v $(pwd)/store:/app/store \
-  -e MATRIX_HOMESERVER=https://matrix.example.com \
-  -e MATRIX_USER_ID=@chatrixcd:example.com \
-  -e MATRIX_PASSWORD=your_password \
-  -e SEMAPHORE_URL=https://semaphore.example.com \
-  -e SEMAPHORE_API_TOKEN=your_token \
-  chatrixcd
-```
-
-## Systemd Service (Linux)
-
-For production deployments on Linux using systemd (Ubuntu, Debian, RHEL, CentOS, Fedora, etc.):
-
-1. Create a user for the bot:
-   ```bash
-   sudo useradd -r -s /bin/false chatrixcd
-   ```
-
-2. Install uv and the bot:
-   ```bash
-   sudo mkdir -p /opt/chatrixcd
-   sudo cp -r . /opt/chatrixcd/
-   
-   # Install uv as the chatrixcd user
-   sudo -u chatrixcd curl -LsSf https://astral.sh/uv/install.sh | sudo -u chatrixcd sh
-   
-   # Create virtual environment using uv
-   cd /opt/chatrixcd
-   sudo -u chatrixcd ~/.cargo/bin/uv venv .venv
-   
-   # Install dependencies
-   sudo -u chatrixcd ~/.cargo/bin/uv pip install -r /opt/chatrixcd/requirements.txt
-   sudo -u chatrixcd ~/.cargo/bin/uv pip install -e /opt/chatrixcd
-   ```
-
-3. Create configuration:
-   ```bash
-   sudo cp config.json.example /opt/chatrixcd/config.json
-   sudo nano /opt/chatrixcd/config.json
-   ```
-
-4. Set permissions:
-   ```bash
-   sudo chown -R chatrixcd:chatrixcd /opt/chatrixcd
-   sudo mkdir -p /opt/chatrixcd/store
-   sudo chown chatrixcd:chatrixcd /opt/chatrixcd/store
-   ```
-
-5. Install and start the service:
-   ```bash
-   sudo cp chatrixcd.service /etc/systemd/system/
-   sudo systemctl daemon-reload
-   sudo systemctl enable chatrixcd
-   sudo systemctl start chatrixcd
-   ```
-
-6. Check status:
-   ```bash
-   sudo systemctl status chatrixcd
-   sudo journalctl -u chatrixcd -f
-   ```
-
-## Debian-Specific Deployment
-
-For Debian systems with enhanced security:
-
-1. Install required packages:
-   ```bash
-   sudo apt update
-   sudo apt install -y python3 python3-venv git curl
-   ```
-
-2. Create a dedicated user:
-   ```bash
-   sudo useradd -r -m -d /opt/chatrixcd -s /bin/false chatrixcd
-   ```
-
-3. Install ChatrixCD:
-   ```bash
-   sudo -u chatrixcd git clone https://github.com/CJFWeatherhead/ChatrixCD.git /opt/chatrixcd/app
-   cd /opt/chatrixcd/app
-   
-   # Create virtual environment
-   sudo -u chatrixcd python3 -m venv /opt/chatrixcd/.venv
-   
-   # Install dependencies
-   sudo -u chatrixcd /opt/chatrixcd/.venv/bin/pip install -r requirements.txt
-   sudo -u chatrixcd /opt/chatrixcd/.venv/bin/pip install -e .
-   ```
-
-4. Configure the bot:
-   ```bash
-   sudo -u chatrixcd cp /opt/chatrixcd/app/config.json.example /opt/chatrixcd/config.json
-   sudo -u chatrixcd nano /opt/chatrixcd/config.json
-   ```
-
-5. Create store directory:
-   ```bash
-   sudo -u chatrixcd mkdir -p /opt/chatrixcd/store
-   ```
-
-6. Install and enable systemd service:
-   ```bash
-   sudo cp /opt/chatrixcd/app/chatrixcd-debian.service /etc/systemd/system/chatrixcd.service
-   sudo systemctl daemon-reload
-   sudo systemctl enable chatrixcd
-   sudo systemctl start chatrixcd
-   ```
-
-7. Verify the service:
-   ```bash
-   sudo systemctl status chatrixcd
-   sudo journalctl -u chatrixcd -f
-   ```
-
-## Alpine Linux Deployment
-
-Alpine Linux uses OpenRC instead of systemd. This is a lightweight deployment option.
-
-### Using Docker on Alpine (Recommended)
-
-1. Install Docker:
-   ```bash
-   apk add docker docker-compose
-   rc-update add docker default
-   rc-service docker start
-   ```
-
-2. Build Alpine-optimized image:
-   ```bash
-   docker build -f Dockerfile.alpine -t chatrixcd:alpine .
-   ```
-
-3. Run the container:
-   ```bash
-   docker run -d \
-     --name chatrixcd \
-     -v /opt/chatrixcd/store:/app/store \
-     -e MATRIX_HOMESERVER=https://matrix.example.com \
-     -e MATRIX_USER_ID=@chatrixcd:example.com \
-     -e MATRIX_PASSWORD=your_password \
-     -e SEMAPHORE_URL=https://semaphore.example.com \
-     -e SEMAPHORE_API_TOKEN=your_token \
-     --restart unless-stopped \
-     chatrixcd:alpine
-   ```
-
-### Native Alpine Installation with OpenRC
-
-1. Install required packages:
-   ```bash
-   apk add python3 py3-pip py3-virtualenv git gcc musl-dev libffi-dev openssl-dev
-   ```
-
-2. Create a dedicated user:
-   ```bash
-   adduser -D -h /opt/chatrixcd -s /sbin/nologin chatrixcd
-   ```
-
-3. Install ChatrixCD:
-   ```bash
-   su - chatrixcd -s /bin/sh -c "cd /opt/chatrixcd && git clone https://github.com/CJFWeatherhead/ChatrixCD.git app"
-   cd /opt/chatrixcd/app
-   
-   # Create virtual environment
-   su - chatrixcd -s /bin/sh -c "python3 -m venv /opt/chatrixcd/.venv"
-   
-   # Install dependencies
-   su - chatrixcd -s /bin/sh -c "/opt/chatrixcd/.venv/bin/pip install -r /opt/chatrixcd/app/requirements.txt"
-   su - chatrixcd -s /bin/sh -c "/opt/chatrixcd/.venv/bin/pip install -e /opt/chatrixcd/app"
-   ```
-
-4. Configure the bot:
-   ```bash
-   su - chatrixcd -s /bin/sh -c "cp /opt/chatrixcd/app/config.json.example /opt/chatrixcd/config.json"
-   su - chatrixcd -s /bin/sh -c "vi /opt/chatrixcd/config.json"
-   ```
-
-5. Create log directory:
-   ```bash
-   mkdir -p /var/log/chatrixcd
-   chown chatrixcd:chatrixcd /var/log/chatrixcd
-   ```
-
-6. Install and enable OpenRC service:
-   ```bash
-   cp /opt/chatrixcd/app/chatrixcd.initd /etc/init.d/chatrixcd
-   chmod +x /etc/init.d/chatrixcd
-   rc-update add chatrixcd default
-   rc-service chatrixcd start
-   ```
-
-7. Check service status:
-   ```bash
-   rc-service chatrixcd status
-   tail -f /var/log/chatrixcd/chatrixcd.log
-   ```
-
-## Semaphore UI Setup
-
-1. Log into your Semaphore UI instance
-2. Go to User Settings → API Tokens
-3. Create a new API token
-4. Copy the token to your configuration
-
-## Testing the Bot
-
-1. Start the bot
-2. Invite the bot to a Matrix room
-3. Send a test command:
-   ```
-   !cd help
-   ```
-4. The bot should respond with available commands
+1. Bot will prompt for device verification
+2. **With TUI:** Use interactive verification screen
+3. **Without TUI:** Use emoji verification in logs
+4. **Or:** Use `!cd verify` command in room
 
 ## Troubleshooting
 
-### Bot doesn't respond
+### Bot Won't Start
 
-- Check that the bot is running: `sudo systemctl status chatrixcd` (systemd) or `docker-compose logs chatrixcd` (Docker)
-- Verify the bot has joined the room
-- Check the command prefix matches your configuration
-- Review logs for errors
-- Enable verbose logging: `chatrixcd -vv` or `chatrixcd -vv -R` (with redaction for privacy)
+**"No config file found"**
+- Create `config.json` in the same directory as the binary/script
 
-### Authentication fails
+**"Failed to connect to Matrix server"**
+- Check `homeserver` URL is correct
+- Verify network connectivity
+- Check firewall settings
 
-- Verify your credentials are correct
-- For OIDC: Follow the SSO authentication flow carefully
-- For password auth: Ensure the password is correct
-- Check the homeserver URL is correct
+**"Authentication failed"**
+- Verify `user_id` and `password` are correct
+- For OIDC: Complete browser login when prompted
 
-### Can't connect to Semaphore
+### Bot Not Responding
 
-- Verify the Semaphore URL is accessible from the bot
-- Check the API token is valid
-- Ensure the bot has network access to Semaphore
+**Bot joined but silent:**
+- Check room is in `allowed_rooms` (or leave empty to allow all)
+- Verify bot user is in `admin_users` for admin commands
+- Check logs with `chatrixcd -v`
 
-### E2E Encryption issues
+**"Permission denied" errors:**
+- Verify bot account has permission to send messages
+- Check room power levels
 
-- The `store` directory must persist between restarts
-- Ensure the bot account has verified its device
-- Check file permissions on the store directory
+### Common Issues
 
-## Security Best Practices
-
-1. **Protect credentials**: Never commit config.json with real credentials
-2. **Use restricted tokens**: Create Semaphore API tokens with minimal required permissions
-3. **Secure the store**: The store directory contains encryption keys - keep it secure
-4. **Access control**: Use `allowed_rooms` and `admin_users` to restrict bot access
-5. **Regular updates**: Keep dependencies updated for security patches
-6. **Network security**: Use HTTPS for all endpoints
-7. **Monitoring**: Set up logging and monitoring for the bot
-8. **Log redaction**: When sharing logs for troubleshooting, use `-R` flag to redact sensitive information:
-   ```bash
-   chatrixcd -vv -R  # Verbose logging with automatic redaction
-   ```
-
-## Upgrading
-
-To upgrade ChatrixCD:
-
+**Import errors (from source):**
 ```bash
-# Pull latest changes
-git pull
-
-# Activate virtual environment if not already activated
-source .venv/bin/activate  # On Linux/macOS
-# .venv\Scripts\activate    # On Windows
-
-# Upgrade dependencies
-uv pip install -r requirements.txt --upgrade
-
-# Restart the bot
+pip install --upgrade pip
+pip install -e .
 ```
 
-For Docker:
+**Binary "Permission denied":**
 ```bash
-docker-compose pull
-docker-compose up -d
+chmod +x chatrixcd-linux-*
 ```
 
-For systemd:
-```bash
-cd /opt/chatrixcd
-sudo -u chatrixcd git pull
-sudo -u chatrixcd ~/.cargo/bin/uv pip install -r requirements.txt --upgrade
-sudo systemctl restart chatrixcd
-```
+**Port already in use (OIDC):**
+- Change `oidc_redirect_url` to different port
+- Or use password authentication
+
+## Next Steps
+
+- 📖 [Quick Start Guide](QUICKSTART.md) - Get running in 5 minutes
+- ⚙️ [Configuration Reference](https://chatrixcd.cjfw.me/configuration.html) - All config options
+- 🎨 [Customization Guide](https://chatrixcd.cjfw.me/customization.html) - Customize messages and aliases
+- 📚 [Full Documentation](https://chatrixcd.cjfw.me/) - Complete docs
+
+## Getting Help
+
+- 📝 [Support Guide](SUPPORT.md)
+- 🐛 [Issue Tracker](https://github.com/CJFWeatherhead/ChatrixCD/issues)
+- 💬 [Discussions](https://github.com/CJFWeatherhead/ChatrixCD/discussions)

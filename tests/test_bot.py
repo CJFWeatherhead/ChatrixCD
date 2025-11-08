@@ -1059,6 +1059,8 @@ class TestChatrixBot(unittest.TestCase):
         # Create LoginInfoResponse
         login_info = LoginInfoResponse(flows=['m.login.sso', 'm.login.token'])
         
+        login_info.oidc_redirect_url = None  # Add missing attribute for refactored code
+        
         bot.client.login_info = AsyncMock(return_value=login_info)
         
         # Mock the login method to return success
@@ -1136,6 +1138,8 @@ class TestChatrixBot(unittest.TestCase):
         # Create LoginInfoResponse
         login_info = LoginInfoResponse(flows=['m.login.sso', 'm.login.token'])
         
+        login_info.oidc_redirect_url = None  # Add missing attribute for refactored code
+        
         bot.client.login_info = AsyncMock(return_value=login_info)
         
         # Mock the login method to return success
@@ -1201,6 +1205,8 @@ class TestChatrixBot(unittest.TestCase):
         
         # Create LoginInfoResponse
         login_info = LoginInfoResponse(flows=['m.login.sso', 'm.login.token'])
+        
+        login_info.oidc_redirect_url = None  # Add missing attribute for refactored code
         
         bot.client.login_info = AsyncMock(return_value=login_info)
         
@@ -1277,6 +1283,8 @@ class TestChatrixBot(unittest.TestCase):
         # Create LoginInfoResponse
         login_info = LoginInfoResponse(flows=['m.login.sso', 'm.login.token'])
         
+        login_info.oidc_redirect_url = None  # Add missing attribute for refactored code
+        
         bot.client.login_info = AsyncMock(return_value=login_info)
         
         # Mock the login method to return success
@@ -1334,6 +1342,8 @@ class TestChatrixBot(unittest.TestCase):
         
         # Create LoginInfoResponse
         login_info = LoginInfoResponse(flows=['m.login.sso', 'm.login.token'])
+        
+        login_info.oidc_redirect_url = None  # Add missing attribute for refactored code
         
         bot.client.login_info = AsyncMock(return_value=login_info)
         

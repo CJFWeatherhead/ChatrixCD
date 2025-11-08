@@ -4,7 +4,7 @@
 
 # ChatrixCD
 
-**Matrix bot for CI/CD automation through chat**
+**Matrix bot for CI/CD automation through chat** 🚀
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
@@ -14,615 +14,119 @@
 
 </div>
 
-ChatrixCD integrates with Semaphore UI to enable CI/CD automation through chat. It supports end-to-end encrypted Matrix rooms and provides password and OIDC/SSO authentication for Matrix servers.
+**ChatrixCD** connects Matrix chat with Semaphore UI to automate CI/CD tasks right from your chat room. It's like having a friendly bot coworker who handles your deployments! 🤖
 
-## Documentation
+## 🎯 Quick Start
 
-📚 **[Full Documentation](https://chatrixcd.cjfw.me/)** - Installation guides, configuration reference, architecture overview, and more.
+**Just want to run it?** Here's the fastest path:
 
-## Features
+### 1. Install
 
-- 🔐 **Native Matrix Authentication**: Support for password and OIDC/SSO authentication with Matrix servers
-- 🔒 **E2E Encryption**: Full support for end-to-end encrypted Matrix rooms with device verification
-- 🚀 **Semaphore UI Integration**: Start and monitor CI/CD tasks via chat commands
-- 📊 **Real-time Updates**: Automatic status updates for running tasks
-- 🎯 **Command-based Interface**: Easy-to-use command system for task management
-- 🔖 **Command Aliases**: Create custom shortcuts for frequently used commands
-- ✅ **Task Confirmation**: Required confirmation before executing tasks with template details
-- 🎨 **Rich Formatting**: Markdown and HTML formatting with semantic emojis, colored status indicators, and tables for structured data
-
-## Installation
-
-### Option 1: Pre-built Binaries (Recommended for Linux)
-
-**No Python installation required!** Download the standalone, statically-compiled executable for your platform:
-
-#### Linux
-- [x86_64 (64-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz) - Most common
-- [i686 (32-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686.dist.tar.gz) - 32-bit Intel/AMD
-- [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64.dist.tar.gz) - Raspberry Pi, ARM servers
-
-**Features:**
-- 🚀 **Fully static binaries** - No external dependencies required
-- 🔒 **Maximum portability** - Works on any Linux distribution (kernel 3.2+)
-- 📦 **Self-contained** - All libraries (OpenSSL, libffi, etc.) included
-- ⚡ **Built with musl** - No glibc version conflicts
-
-**Quick Start (Linux):**
-
+**Linux (No Python needed!):**
 ```bash
-# Download and extract
+# Download the binary for your architecture
 wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz
 tar -xzf chatrixcd-linux-x86_64.dist.tar.gz
 cd chatrixcd-linux-x86_64.dist
-
-# Run ChatrixCD
-./chatrixcd
 ```
 
-#### Windows and macOS
-
-Pre-built binaries are not currently available for Windows and macOS due to build complexity with native dependencies. Please use one of the following alternatives:
-
-**Windows:**
-- **Option A (Recommended)**: Install from source (see below) using Python 3.12+
-- **Option B**: Use [Docker Desktop](https://www.docker.com/products/docker-desktop/) with the Linux containers (see [INSTALL.md](INSTALL.md))
-- **Option C**: Use [WSL2 (Windows Subsystem for Linux)](https://learn.microsoft.com/en-us/windows/wsl/install) and run the Linux binary
-
-**macOS:**
-- **Option A (Recommended)**: Install from source (see below) using Python 3.12+ and homebrew dependencies
-- **Option B**: Use [Docker Desktop](https://www.docker.com/products/docker-desktop/) with the Linux containers (see [INSTALL.md](INSTALL.md))
-
-See [Installation Guide](INSTALL.md) for detailed setup instructions including configuration.
-
-### Option 2: Install from Source
-
-**Prerequisites:**
-- Python 3.12 or higher (3.12, 3.13, 3.14 supported)
-- [uv](https://docs.astral.sh/uv/) - Fast Python package installer (recommended) or pip
-- Access to a Matrix homeserver
-- Access to a Semaphore UI instance with API access
-
-**Platform-specific prerequisites:**
-
-**macOS:** Install system dependencies via homebrew:
+**From Source (Windows/macOS/Linux):**
 ```bash
-brew install libolm pkg-config
+pip install -e .
 ```
 
-**Windows:** libolm will be installed automatically via pip. If you encounter issues, consider using WSL2 or Docker instead.
+### 2. Configure
 
-**Installation steps:**
-
-```bash
-# Clone the repository
-git clone https://github.com/CJFWeatherhead/ChatrixCD.git
-cd ChatrixCD
-
-# Create a virtual environment
-uv venv
-
-# Activate the virtual environment
-# On Linux/macOS:
-source .venv/bin/activate
-# On Windows (PowerShell):
-# .venv\Scripts\Activate.ps1
-# On Windows (Command Prompt):
-# .venv\Scripts\activate.bat
-
-# Install dependencies
-uv pip install -r requirements.txt
-
-# Install the application
-uv pip install -e .
-```
-
-**Running from source:**
-
-```bash
-# After installation, you can run:
-chatrixcd
-
-# Or directly:
-python -m chatrixcd.main
-```
-
-## Configuration
-
-ChatrixCD is configured using JSON configuration files with HJSON support.
-
-**HJSON Configuration (JSON with Comments)**
-
-Configuration files support HJSON format, which allows comments and trailing commas for better documentation:
-
-1. Copy the example configuration file:
-   ```bash
-   cp config.json.example config.json
-   ```
-
-2. Edit `config.json` with your settings (comments are supported):
-   ```hjson
-   {
-     // Configuration file version
-     "_config_version": 2,
-     
-     // Matrix homeserver settings
-     "matrix": {
-       "homeserver": "https://matrix.example.com",  // Your Matrix server
-       "user_id": "@chatrixcd:example.com",         // Bot user ID
-       "auth_type": "password",                      // or "oidc"
-       "password": "your_password"
-     },
-     
-     // Semaphore UI settings
-     "semaphore": {
-       "url": "https://semaphore.example.com",
-       "api_token": "your_semaphore_api_token"
-     },
-     
-     // Bot behavior
-     "bot": {
-       "command_prefix": "!cd"
-     }
-   }
-   ```
-
-**Configuration Priority**: Configuration file values have highest priority, followed by hardcoded defaults.
-
-**Configuration Migration**: Old configuration files are automatically migrated to the current version. A backup is created before migration.
-
-## Authentication Methods
-
-ChatrixCD supports two authentication methods for Matrix:
-
-### 1. Password Authentication (Recommended for most users)
-
-Traditional username/password authentication:
-
+Create `config.json`:
 ```json
 {
   "matrix": {
+    "homeserver": "https://matrix.org",
+    "user_id": "@mybot:matrix.org",
     "auth_type": "password",
-    "user_id": "@chatrixcd:example.com",
-    "password": "your_password"
+    "password": "your-secure-password"
+  },
+  "semaphore": {
+    "url": "https://semaphore.example.com",
+    "api_token": "your-api-token"
   }
 }
 ```
 
-### 2. OIDC/SSO Authentication (For OIDC-enabled servers)
-
-For Matrix servers using OIDC/Single Sign-On:
-
-```json
-{
-  "matrix": {
-    "auth_type": "oidc",
-    "user_id": "@chatrixcd:example.com"
-  }
-}
-```
-
-**OIDC Authentication Flow:**
-1. When you start the bot, it will display an SSO URL
-2. Open the URL in your browser and complete authentication
-3. After authentication, copy the callback URL (containing `loginToken`)
-4. Paste the URL or token back into the bot
-5. The bot completes login automatically
-
-**Optional Configuration:**
-- `oidc_redirect_url`: The URL where your browser will be redirected after authentication (defaults to `http://localhost:8080/callback`)
-  - Does **not** need to be a running web server
-  - Only used to receive the `loginToken` in the URL
-  - For most users, the default is sufficient
-
-## Usage
-
-### Starting the Bot
-
-**Interactive Mode (TUI):**
-
-By default, when running ChatrixCD interactively in a terminal, it will launch with a Text User Interface (TUI):
+### 3. Run
 
 ```bash
-chatrixcd
+./chatrixcd              # Linux binary
+# OR
+chatrixcd                # From source install
 ```
 
-The TUI provides a menu-driven interface with options for:
-- **STATUS** - View bot status (Matrix/Semaphore connections, uptime, metrics)
-- **ADMINS** - View admin users
-- **ROOMS** - View joined rooms
-- **SESSIONS** - Manage Olm encryption sessions
-- **SAY** - Send messages to rooms
-- **LOG** - View bot logs
-- **SET** - Change operational variables
-- **SHOW** - View current configuration
-- **QUIT** - Gracefully exit
+**That's it!** Invite your bot to a Matrix room and start running tasks. 🎉
 
-**TUI Modes:**
+## 📚 Need More?
 
-ChatrixCD offers two TUI styles:
-- **Turbo Vision (default)**: Classic 3D aesthetic with menu bar (File, Edit, Run, Help) and status bar
-- **Classic**: Original TUI interface with status widgets
+- **[Full Installation Guide](https://chatrixcd.cjfw.me/installation.html)** - Detailed setup for all platforms
+- **[Configuration Reference](https://chatrixcd.cjfw.me/configuration.html)** - All config options explained
+- **[Quick Start Tutorial](https://chatrixcd.cjfw.me/quickstart.html)** - Step-by-step walkthrough
+- **[Complete Documentation](https://chatrixcd.cjfw.me/)** - Everything you need to know
 
-To select TUI mode:
+## ✨ Key Features
+
+- 🔐 **End-to-End Encryption** - Secure Matrix rooms supported
+- 🚀 **Semaphore Integration** - Start, monitor, and manage CI/CD tasks
+- 💬 **Chat Commands** - Simple `!cd run`, `!cd status`, `!cd logs` 
+- 🎯 **Smart Confirmations** - Thumbs up/down reactions or text
+- 🔖 **Custom Aliases** - Create shortcuts for common tasks
+- 🖥️ **Interactive TUI** - Terminal UI for bot management
+- 🎭 **Fun Personality** - Sassy responses with emoji (never rude!)
+
+## 🎮 Basic Commands
 
 ```bash
-# Use Turbo Vision style (default)
-chatrixcd
-
-# Use classic TUI style
-chatrixcd -t classic
-
-# Or configure in config.json:
-# "bot": { "tui_mode": "classic" }
+!cd help                           # Show all commands
+!cd projects                       # List projects
+!cd templates 1                    # List templates for project 1
+!cd run 1 5                        # Run template 5 in project 1
+!cd status                         # Check task status
+!cd logs                           # View task logs
+!cd stop 123                       # Stop task 123
 ```
 
-**Classic Log Mode:**
-
-To run without the TUI (classic log-only mode):
+## 🔧 Command Line Options
 
 ```bash
-chatrixcd -L
+chatrixcd                          # Run with TUI (default)
+chatrixcd -L                       # Log-only mode (no TUI)
+chatrixcd -D                       # Daemon mode (background)
+chatrixcd -C                       # Enable colored output
+chatrixcd -v                       # Verbose logging
+chatrixcd -s                       # Show current config
+chatrixcd -c custom.json           # Use custom config file
 ```
 
-Or if running from source:
-
-```bash
-python -m chatrixcd.main -L
-```
-
-**Daemon Mode:**
-
-To run as a background process:
-
-```bash
-chatrixcd -D
-```
-
-### Command-Line Options
-
-ChatrixCD supports various command-line options for configuration and control:
-
-```bash
-chatrixcd [OPTIONS]
-```
-
-**Options:**
-
-- `-h, --help` - Show help message and exit
-- `-V, --version` - Show version number and exit
-- `-v, --verbose` - Increase verbosity (use `-v` for DEBUG, `-vv` for detailed DEBUG with library logs)
-- `-c FILE, --config FILE` - Path to configuration file (default: config.json)
-- `-C, --color` - Enable colored logging output in TUI and logs (requires colorlog package)
-- `-R, --redact` - Redact sensitive information from logs (room names, usernames, IPs, tokens, etc.)
-- `-L, --log-only` - Run in classic log-only mode (no TUI, only show logs)
-- `-t MODE, --tui-mode MODE` - Select TUI mode: 'turbo' (Turbo Vision-style, default) or 'classic' (original TUI)
-- `-m, --mouse` - Enable mouse support in TUI (default: disabled)
-- `-D, --daemon` - Run in daemon mode (background process, Unix/Linux only)
-- `-s, --show-config` - Display current configuration with redacted credentials and exit
-- `-a USER, --admin USER` - Add admin user (can be specified multiple times)
-- `-r ROOM, --room ROOM` - Add allowed room (can be specified multiple times)
-
-**Examples:**
-
-```bash
-# Show version
-chatrixcd --version
-
-# Run with interactive TUI (default - Turbo Vision style)
-chatrixcd
-
-# Run with classic TUI style
-chatrixcd -t classic
-
-# Run with interactive TUI and colored output
-chatrixcd -C
-
-# Run in classic log-only mode (no TUI)
-chatrixcd -L
-
-# Use custom config file with verbose logging
-chatrixcd -c /etc/chatrixcd/config.json -v -L
-
-# Run in daemon mode (automatically disables TUI)
-chatrixcd -D
-
-# Show current configuration
-chatrixcd -s
-
-# Override admin users and allowed rooms
-chatrixcd -a @admin1:matrix.org -a @admin2:matrix.org -r !room1:matrix.org
-
-# Combine multiple options with TUI
-chatrixcd -v -C -c custom.json -a @admin:matrix.org
-
-# Enable verbose logging with redaction for privacy (recommended for bug reports)
-chatrixcd -vv -R -L
-
-# Redaction with colored output (redacted content appears in pink)
-chatrixcd -vv -C -R -L
-```
-
-**Privacy Note**: When reporting bugs or sharing logs, use the `-R` flag to automatically redact sensitive information like room IDs, usernames, IP addresses, and tokens. When combined with `-C`, redacted information will be highlighted in pink for easy identification.
-
-### Bot Commands
-
-Once the bot is running and invited to a room, you can use the following commands:
-
-#### Basic Commands
-- `!cd help` - Show help message with available commands
-- `!cd admins` - List admin users who can run bot commands
-- `!cd rooms` - List all rooms the bot is currently in
-- `!cd rooms join <room_id>` - Join a specific room
-- `!cd rooms part <room_id>` - Leave a specific room
-- `!cd exit` - Shut down the bot (requires confirmation)
-- `!cd projects` - List all available Semaphore projects
-- `!cd templates [project_id]` - List templates for a specific project (auto-selects if only one project)
-- `!cd run [project_id] [template_id]` - Start a task from a template (with confirmation, auto-selects when possible)
-- `!cd status [task_id]` - Check the status of a task (uses last task if no ID provided)
-- `!cd stop <task_id>` - Stop a running task
-- `!cd logs [task_id]` - Get logs from a task (uses last task if no ID provided, formatted for Ansible/Terraform)
-
-#### Server Commands
-- `!cd ping` - Ping the Semaphore server to check connectivity
-- `!cd info` - Get Semaphore server information
-
-#### Alias Commands
-- `!cd aliases` - List all configured command aliases
-
-**Threaded Responses**: All bot responses are sent as threaded replies to your command, keeping conversations organized and easy to follow in busy rooms.
-
-**Reaction Confirmations**: For confirmations (like running tasks or shutting down the bot), you can react with 👍 (thumbs up) to confirm or 👎 (thumbs down) to cancel, instead of typing a response. This makes interactions faster and more intuitive!
-
-**Fun Personality**: The bot greets you with varied responses like "Hi username! 👋", "Yo username! 🤙", "Sup username! 😎" and more, making interactions more engaging and personalized.
-
-**Admin Access**: When admin users are configured in `config.json`, only those users can run bot commands. Other users will receive a friendly brush-off message. Supports URL-encoded usernames (e.g., `@user%40domain.com`).
-
-### Command Aliases
-
-Command aliases allow you to create custom shortcuts for frequently used commands. Aliases can be managed through the TUI or by editing the `aliases.json` file.
-
-#### Managing Aliases via TUI
-
-1. Press `x` in the main menu to access the ALIASES screen
-2. Press `a` to add a new alias
-3. Enter the alias name (e.g., "deploy")
-4. Enter the command to alias to (e.g., "run 1 5")
-5. Press `d` to delete a selected alias
-
-**Note**: Alias names with special characters (including emoji) are fully supported.
-
-#### Managing Aliases via JSON File
-
-Create or edit `aliases.json` in your ChatrixCD directory:
-
-**Example aliases** (`aliases.json`):
-```json
-{
-  "deploy-prod": "run 1 5",
-  "deploy-staging": "run 1 3",
-  "check-last": "status",
-  "health": "ping",
-  "🚀": "run 1 5",
-  "deploy😱": "run 2 10"
-}
-```
-
-#### Using Aliases
-
-Once configured, use aliases just like regular commands:
+## 🏗️ Architecture
 
 ```
-!cd deploy-prod
-!cd health
-!cd 🚀
+┌─────────────┐         ┌──────────────┐         ┌────────────────┐
+│   Matrix    │ ◄────── │  ChatrixCD   │ ──────► │  Semaphore UI  │
+│   Server    │         │     Bot      │         │  REST API      │
+└─────────────┘         └──────────────┘         └────────────────┘
+     Chat                   Commands                   CI/CD Tasks
 ```
 
-Aliases support all valid bot commands:
-- `help`, `projects`, `templates`, `run`, `status`, `stop`, `logs`, `ping`, `info`
+ChatrixCD sits between Matrix and Semaphore, translating chat commands into API calls and streaming results back to your room.
 
-**Note**: Aliases cannot override built-in commands.
+## 🤝 Contributing
 
-### Example Workflow
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-1. Invite the bot to your Matrix room
-2. List available projects:
-   ```
-   !cd projects
-   ```
-3. View templates for a project (auto-selects if only one):
-   ```
-   !cd templates
-   ```
-   or
-   ```
-   !cd templates 1
-   ```
-4. Start a task (with confirmation):
-   ```
-   !cd run 1 5
-   ```
-   The bot will show task details and ask for confirmation. Reply with `y`, `yes`, `go`, or `start` to proceed.
+Found a bug? [Open an issue](https://github.com/CJFWeatherhead/ChatrixCD/issues)
 
-5. The bot will automatically report status updates as the task runs, with periodic reminders for long-running tasks
-6. Check logs without specifying task ID (uses last task):
-   ```
-   !cd logs
-   ```
+## 📄 License
 
-## Deployment
+GNU General Public License v3.0 - See [LICENSE](LICENSE)
 
-ChatrixCD supports multiple deployment options:
-
-### Docker Deployment
-
-**Debian-based (default)**:
-```bash
-docker build -t chatrixcd .
-docker run -d --name chatrixcd \
-  -v $(pwd)/store:/app/store \
-  -e MATRIX_HOMESERVER=https://matrix.example.com \
-  -e MATRIX_USER_ID=@chatrixcd:example.com \
-  -e MATRIX_PASSWORD=your_password \
-  chatrixcd
-```
-
-**Alpine Linux (minimal)**:
-```bash
-docker build -f Dockerfile.alpine -t chatrixcd:alpine .
-docker run -d --name chatrixcd \
-  -v $(pwd)/store:/app/store \
-  -e MATRIX_HOMESERVER=https://matrix.example.com \
-  chatrixcd:alpine
-```
-
-### Native Deployment
-
-- **Debian/Ubuntu**: Use `chatrixcd-debian.service` with systemd
-- **RHEL/CentOS/Fedora**: Use `chatrixcd.service` with systemd
-- **Alpine Linux**: Use `chatrixcd.initd` with OpenRC
-
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed comparison and [INSTALL.md](INSTALL.md) for complete instructions.
-
-## Architecture
-
-ChatrixCD is built with the following components:
-
-- **matrix-nio**: Async Python Matrix client library with E2E encryption
-- **authlib**: OAuth2/OIDC authentication library
-- **aiohttp**: Async HTTP client for Semaphore UI API calls
-
-### Key Components
-
-- `bot.py` - Main bot logic and Matrix client integration
-- `auth.py` - Authentication handler with OIDC support
-- `semaphore.py` - Semaphore UI REST API client
-- `commands.py` - Command parser and handler
-- `config.py` - Configuration management
-
-## Security Considerations
-
-- **Encryption Keys**: The bot stores encryption keys in the configured `store_path` directory. Keep this secure.
-- **Credentials**: Never commit your `config.json` file with real credentials.
-- **Access Control**: Use `allowed_rooms` and `admin_users` to restrict bot access.
-- **API Tokens**: Use Semaphore API tokens with minimal required permissions.
-
-## Development
-
-### Running Tests
-
-```bash
-# Create and activate virtual environment
-uv venv
-source .venv/bin/activate  # On Linux/macOS
-# .venv\Scripts\activate    # On Windows
-
-# Install dependencies and test tools
-uv pip install -r requirements.txt
-uv pip install pytest pytest-cov pytest-asyncio
-
-# Run tests with coverage
-pytest tests/ --cov=chatrixcd --cov-report=term-missing
-```
-
-#### Test Coverage
-
-Current test coverage:
-- **config.py**: 89% - Configuration loading and management
-- **auth.py**: 38% - Authentication methods (password, token, OIDC)
-- **semaphore.py**: 23% - Semaphore API client basics
-- **Overall**: 16% - Basic unit tests for core modules
-
-Tests cover:
-- Configuration from JSON and environment variables
-- Password, token, and OIDC authentication flows
-- Semaphore client initialization
-- Error handling for missing configurations
-
-### Project Structure
-
-```
-ChatrixCD/
-├── chatrixcd/
-│   ├── __init__.py
-│   ├── main.py         # Entry point
-│   ├── bot.py          # Bot core
-│   ├── auth.py         # Authentication
-│   ├── config.py       # Configuration
-│   ├── commands.py     # Command handlers
-│   ├── semaphore.py    # Semaphore API client
-│   ├── tui.py          # Text User Interface
-│   └── redactor.py     # Sensitive data redaction
-├── requirements.txt
-├── setup.py
-├── config.json.example
-└── README.md
-```
-
-## CI/CD
-
-### Automated Testing
-
-Pull requests are automatically tested using GitHub Actions. Tests run against Python 3.12, 3.13, and 3.14.
-
-### Releases
-
-Releases use a semantic calendar versioning system with the format `YYYY.MM.DD.MAJOR.MINOR.PATCH` (e.g., `2025.10.12.1.0.1`).
-
-**Version Format:**
-- `YYYY.MM.DD`: Release date (year, month, day)
-- `MAJOR`: Breaking changes or major features
-- `MINOR`: New features, non-breaking changes
-- `PATCH`: Bug fixes and security updates
-
-**Important:** Version numbers (MAJOR, MINOR, PATCH) always increment and never reset. This ensures each version is unique and comparable.
-
-#### Production Releases
-
-To create a new production release:
-
-1. Go to Actions → Build and Release workflow
-2. Click "Run workflow"
-3. Select version type:
-   - **major**: Breaking changes or major features (e.g., 2025.10.12.1.0.1 → 2025.10.13.2.0.0)
-   - **minor**: New features, non-breaking (e.g., 2025.10.12.1.0.1 → 2025.10.13.1.1.0)
-   - **patch**: Bug fixes and security updates (e.g., 2025.10.12.1.0.1 → 2025.10.13.1.0.2)
-
-4. The workflow will:
-   - Run all unit tests
-   - Build standalone executables for all platforms (Linux x86_64/i686/ARM64, Windows x86_64/ARM64, macOS Universal)
-   - Calculate the new version based on current date and type
-   - Update version in code files
-   - Update `CHANGELOG.md` (move Unreleased content to new version section)
-   - Create git tag
-   - Create a GitHub release with pre-built binaries
-
-#### Pre-releases (Automated)
-
-Pre-releases are automatically created when pull requests are merged to `main`:
-- Version includes `-dev` suffix (e.g., `2025.10.21.0.0.1-dev`)
-- Marked as pre-release on GitHub
-- Includes pre-built binaries for testing
-
-See [Build Workflow Documentation](docs/BUILD_WORKFLOW.md) for complete details on the build and release process.
-
-**Note**: Document changes in the `[Unreleased]` section of `CHANGELOG.md` as you develop. The release workflow will automatically move these changes to a versioned section.
-
-**Historical Note**: Versions prior to October 2025 used the format `YYYY.MM.PATCH` (e.g., `2025.10.8`). The new format provides better semantic versioning while maintaining date-based organization.
-
-## Contributing
-
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on our code of conduct, development process, and how to submit pull requests.
-
-- [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Security Policy](SECURITY.md)
-- [Issue Templates](.github/ISSUE_TEMPLATE/)
-
-## License
-
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
+## 🙏 Acknowledgments
 
 - Built with [matrix-nio](https://github.com/poljar/matrix-nio)
 - Integrates with [Semaphore UI](https://github.com/ansible-semaphore/semaphore)
@@ -641,3 +145,11 @@ While AI tools accelerated development, all code has been reviewed, tested, and 
 - Contributions and improvements from the community are welcome and encouraged
 
 This transparency aligns with emerging best practices for AI-assisted software development.
+
+---
+
+<div align="center">
+
+**Ready to automate your CI/CD through chat?** [Get Started →](https://chatrixcd.cjfw.me/)
+
+</div>

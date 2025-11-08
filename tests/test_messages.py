@@ -95,8 +95,9 @@ class TestMessageManager(unittest.TestCase):
         
         manager = MessageManager(messages_file=self.messages_file, auto_reload=False)
         
-        # No changes yet
-        self.assertFalse(manager.check_for_changes())
+        # No changes yet (if auto_reload was True, FileWatcher would track this)
+        # Without auto_reload, there's no file watcher
+        self.assertIsNone(manager._file_watcher)
         
         # Modify the file
         import time
@@ -105,8 +106,9 @@ class TestMessageManager(unittest.TestCase):
         with open(self.messages_file, 'w') as f:
             json.dump(test_messages, f)
         
-        # Should detect changes
-        self.assertTrue(manager.check_for_changes())
+        # Load messages again manually
+        manager.load_messages()
+        self.assertIn('Hi {name}!', manager.messages['greetings'])
     
     def test_message_formatting(self):
         """Test that messages are properly formatted with kwargs."""

@@ -21,17 +21,6 @@ class TestTUIImport(unittest.TestCase):
         self.assertTrue(hasattr(ChatrixTUI, '__init__'))
         self.assertTrue(hasattr(ChatrixTUI, 'compose'))
     
-    def test_import_turbo_tui_module(self):
-        """Test that Turbo Vision TUI module can be imported."""
-        from chatrixcd.tui_turbo import ChatrixTurboTUI, run_tui
-        
-        # Verify the classes/functions are actually imported and callable
-        self.assertTrue(callable(ChatrixTurboTUI))
-        self.assertTrue(callable(run_tui))
-        
-        # Verify ChatrixTurboTUI has expected methods
-        self.assertTrue(hasattr(ChatrixTurboTUI, '__init__'))
-        self.assertTrue(hasattr(ChatrixTurboTUI, 'compose'))
     
     def test_tui_screens_import(self):
         """Test that TUI screen classes can be imported and are valid."""
@@ -246,117 +235,6 @@ class TestShowConfigTUI(unittest.TestCase):
         import inspect
         
         self.assertTrue(inspect.iscoroutinefunction(show_config_tui))
-    
-    def test_turbo_show_config_tui_import(self):
-        """Test that Turbo Vision show_config_tui can be imported."""
-        from chatrixcd.tui_turbo import show_config_tui
-        
-        self.assertTrue(callable(show_config_tui))
-    
-    def test_turbo_show_config_tui_callable(self):
-        """Test that Turbo Vision show_config_tui is a coroutine function."""
-        from chatrixcd.tui_turbo import show_config_tui
-        import inspect
-        
-        self.assertTrue(inspect.iscoroutinefunction(show_config_tui))
-
-
-class TestTurboTUIComponents(unittest.TestCase):
-    """Test Turbo Vision TUI components."""
-    
-    def test_turbo_menu_bar_creation(self):
-        """Test creating a TurboMenuBar widget."""
-        from chatrixcd.tui_turbo import TurboMenuBar
-        
-        menu_bar = TurboMenuBar()
-        
-        self.assertIsNotNone(menu_bar)
-        self.assertEqual(menu_bar.menu_items, ["File", "Edit", "Run", "Help"])
-    
-    def test_turbo_status_bar_creation(self):
-        """Test creating a TurboStatusBar widget."""
-        from chatrixcd.tui_turbo import TurboStatusBar
-        
-        status_bar = TurboStatusBar()
-        
-        self.assertIsNotNone(status_bar)
-        self.assertEqual(status_bar.status_text, "Idle")
-    
-    def test_turbo_window_creation(self):
-        """Test creating a TurboWindow container."""
-        from chatrixcd.tui_turbo import TurboWindow
-        
-        window = TurboWindow(title="Test Window")
-        
-        self.assertIsNotNone(window)
-        self.assertEqual(window.border_title, " Test Window ")
-    
-    def test_menu_screen_creation(self):
-        """Test creating menu screens."""
-        from chatrixcd.tui_turbo import (
-            FileMenuScreen, EditMenuScreen, RunMenuScreen, HelpMenuScreen
-        )
-        
-        # Test each menu screen can be created
-        file_menu = FileMenuScreen()
-        self.assertIsNotNone(file_menu)
-        
-        edit_menu = EditMenuScreen()
-        self.assertIsNotNone(edit_menu)
-        
-        run_menu = RunMenuScreen()
-        self.assertIsNotNone(run_menu)
-        
-        help_menu = HelpMenuScreen()
-        self.assertIsNotNone(help_menu)
-    
-    def test_turbo_tui_creation(self):
-        """Test creating a ChatrixTurboTUI instance."""
-        from chatrixcd.tui_turbo import ChatrixTurboTUI
-        
-        mock_bot = Mock()
-        mock_config = Mock()
-        mock_config.get_bot_config.return_value = {
-            'admin_users': ['@admin:example.com'],
-            'allowed_rooms': ['!room:example.com']
-        }
-        
-        tui = ChatrixTurboTUI(mock_bot, mock_config, use_color=True)
-        
-        self.assertIsNotNone(tui)
-        self.assertEqual(tui.bot, mock_bot)
-        self.assertEqual(tui.config, mock_config)
-        self.assertTrue(tui.use_color)
-    
-    def test_turbo_screens_creation(self):
-        """Test creating Turbo Vision specific screens."""
-        from chatrixcd.tui_turbo import (
-            StatusScreen, OptionsScreen, AboutScreen, VersionScreen
-        )
-        
-        mock_tui = Mock()
-        mock_tui.bot = Mock()
-        mock_tui.config = Mock()
-        mock_tui.start_time = 1234567890
-        mock_tui.messages_processed = 0
-        mock_tui.errors = 0
-        mock_tui.warnings = 0
-        
-        # Test StatusScreen creation
-        status_screen = StatusScreen(mock_tui)
-        self.assertIsNotNone(status_screen)
-        
-        # Test OptionsScreen creation
-        options_screen = OptionsScreen(mock_tui)
-        self.assertIsNotNone(options_screen)
-        
-        # Test AboutScreen creation
-        about_screen = AboutScreen()
-        self.assertIsNotNone(about_screen)
-        
-        # Test VersionScreen creation
-        version_screen = VersionScreen()
-        self.assertIsNotNone(version_screen)
 
 
 class TestCSSCompatibility(unittest.TestCase):
@@ -398,40 +276,6 @@ class TestCSSCompatibility(unittest.TestCase):
         
         for var in required_scrollbar_vars:
             self.assertIn(var, css_vars, 
-                         f"Missing required CSS variable: {var}")
-    
-    def test_turbo_tui_css_variables_complete(self):
-        """Test that Turbo TUI provides all required CSS variables."""
-        from chatrixcd.tui_turbo import ChatrixTurboTUI
-        
-        mock_bot = Mock()
-        mock_bot.client = None
-        mock_bot.semaphore = None
-        
-        mock_config = Mock()
-        mock_config.get_bot_config.return_value = {}
-        mock_config.get.return_value = "default"
-        
-        tui = ChatrixTurboTUI(mock_bot, mock_config, use_color=True)
-        css_vars = tui.get_css_variables()
-        
-        # Verify we have the complete set of CSS variables from ColorSystem
-        self.assertEqual(len(css_vars), self.EXPECTED_CSS_VARIABLE_COUNT,
-                        f"Should have {self.EXPECTED_CSS_VARIABLE_COUNT} CSS variables from ColorSystem.generate()")
-        
-        # Verify critical scrollbar variables are present
-        required_scrollbar_vars = [
-            'scrollbar-background',
-            'scrollbar-background-hover',
-            'scrollbar-background-active',
-            'scrollbar',
-            'scrollbar-hover',
-            'scrollbar-active',
-            'scrollbar-corner-color'
-        ]
-        
-        for var in required_scrollbar_vars:
-            self.assertIn(var, css_vars,
                          f"Missing required CSS variable: {var}")
     
     def test_all_themes_provide_css_variables(self):

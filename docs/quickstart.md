@@ -4,62 +4,67 @@ title: Quick Start
 nav_order: 3
 ---
 
-# Quick Start Guide
+# ⚡ Quick Start Guide
 
-Get ChatrixCD up and running in minutes. For more detailed examples, configuration options, and troubleshooting, see the comprehensive [QUICKSTART.md](https://github.com/CJFWeatherhead/ChatrixCD/blob/main/QUICKSTART.md) in the repository root.
+Get ChatrixCD up and running in **5 minutes**! 🚀
 
-## 1. Install ChatrixCD
+<div style="padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 1em 0;">
+  <strong>⏱️ Time to Success:</strong> ~5 minutes<br>
+  <strong>📋 What You'll Need:</strong> Matrix account, Semaphore UI access<br>
+  <strong>�� What You'll Get:</strong> Fully working CI/CD bot in your chat!
+</div>
 
-### Option 1: Pre-built Binary (Linux Only)
+---
 
-**No Python required!** Download and run the statically-compiled binary:
+## Step 1️⃣: Install ChatrixCD
 
-**Features:** Fully static, no external dependencies, works on any Linux distribution
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 2em 0;">
 
-**All Linux architectures use the same format:**
-```bash
-# Example for x86_64 (replace with i686 or arm64 as needed)
-wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz
-tar -xzf chatrixcd-linux-x86_64.dist.tar.gz
-cd chatrixcd-linux-x86_64.dist
-./chatrixcd
-```
+<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+  <h3 style="margin-top: 0;">📦 Pre-built Binary (Easiest!)</h3>
+  <p><strong>✅ Recommended for most users</strong></p>
+  <p>No Python required! Just download and run:</p>
+  <pre><code>wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
+chmod +x chatrixcd-linux-x86_64
+./chatrixcd-linux-x86_64</code></pre>
+  <p><small>📖 <a href="installation.html#method-1-pre-built-binary-recommended">More download options →</a></small></p>
+</div>
 
-**Available architectures:**
-- **x86_64 (64-bit)**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz) - Most common
-- **i686 (32-bit)**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686.dist.tar.gz) - 32-bit Intel/AMD
-- **ARM64**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64.dist.tar.gz) - Raspberry Pi, ARM servers
-
-**Windows and macOS users:** Pre-built binaries are not currently available. Please use Option 2 (from source), Docker, or WSL2 (Windows only).
-
-### Option 2: From Source
-
-```bash
-git clone https://github.com/CJFWeatherhead/ChatrixCD.git
+<div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px; background: #f8f9fa;">
+  <h3 style="margin-top: 0;">🔧 From Source (Advanced)</h3>
+  <p><strong>For development or customization</strong></p>
+  <pre><code>git clone https://github.com/CJFWeatherhead/ChatrixCD.git
 cd ChatrixCD
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-pip install -e .
-```
+pip install -e .</code></pre>
+  <p><small>📖 <a href="installation.html#method-2-from-source">Full source guide →</a></small></p>
+</div>
 
-## 2. Create Configuration
+</div>
 
-Create a `config.json` file:
+---
+
+## Step 2️⃣: Create Configuration
+
+Create a `config.json` file in the same directory:
+
+<div style="padding: 15px; background: #e7f3ff; border-left: 4px solid #2196F3; margin: 1em 0;">
+  <strong>💡 Tip:</strong> Start with password auth for simplicity. You can switch to OIDC/SSO later!
+</div>
 
 ```json
 {
   "matrix": {
-    "homeserver": "https://matrix.example.com",
-    "user_id": "@bot:example.com",
+    "homeserver": "https://matrix.org",
+    "user_id": "@your-bot:matrix.org",
     "auth_type": "password",
-    "password": "your-secure-password",
-    "device_name": "ChatrixCD Bot",
-    "store_path": "./store"
+    "password": "your-secure-password"
   },
   "semaphore": {
-    "url": "https://semaphore.example.com",
-    "api_token": "your-semaphore-api-token"
+    "url": "https://your-semaphore.example.com",
+    "api_token": "your-api-token-here"
   },
   "bot": {
     "command_prefix": "!cd",
@@ -68,145 +73,212 @@ Create a `config.json` file:
 }
 ```
 
-## 3. Start the Bot
+<details style="margin: 1em 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+<summary style="cursor: pointer; font-weight: bold;">🔐 Using OIDC/SSO instead? (Click to expand)</summary>
+<pre><code>{
+  "matrix": {
+    "homeserver": "https://matrix.org",
+    "user_id": "@your-bot:matrix.org",
+    "auth_type": "oidc",
+    "oidc_redirect_url": "http://localhost:8765/callback"
+  },
+  ...
+}
+</code></pre>
+<p><small>📖 <a href="configuration.html#matrix-authentication">Full OIDC guide →</a></small></p>
+</details>
 
-### From Binary
+<div style="padding: 15px; background: #ffebee; border-left: 4px solid #f44336; margin: 1em 0;">
+  <strong>🔒 Security Note:</strong> Never commit your <code>config.json</code> to version control! Add it to <code>.gitignore</code>.
+</div>
+
+---
+
+## Step 3️⃣: Run the Bot
+
+Start ChatrixCD:
 
 ```bash
-# Linux (adjust filename for your architecture)
+# If using binary:
 ./chatrixcd-linux-x86_64
-# Or for other architectures:
-# ./chatrixcd-linux-i686
-# ./chatrixcd-linux-arm64
-```
 
-### From Source
-
-```bash
+# If from source:
 chatrixcd
 ```
 
-Or from source:
+**What you'll see:**
+1. 🖥️ Interactive TUI launches
+2. 🔐 Bot logs into Matrix
+3. 🔑 Initial sync with encryption keys
+4. ✅ Ready! Bot is now online
 
-```bash
-python -m chatrixcd.main
-```
+<div style="padding: 15px; background: #e8f5e9; border-left: 4px solid #4caf50; margin: 1em 0;">
+  <strong>✅ Success!</strong> Your bot is now running. Keep this terminal open.
+</div>
 
-## 4. Invite Bot to Room
+---
 
-1. Create or open a Matrix room
-2. Invite the bot: `/invite @bot:example.com`
-3. The bot will automatically join
+## Step 4️⃣: Invite Bot to Your Room
 
-## 5. Use Bot Commands
+In your Matrix client (Element, etc.):
+
+<div style="display: flex; flex-direction: column; gap: 15px; margin: 2em 0;">
+
+<div style="display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+  <div style="font-size: 2em; margin-right: 15px; min-width: 40px;">1️⃣</div>
+  <div>
+    <strong>Create or open a Matrix room</strong><br>
+    <small>Can be encrypted or unencrypted</small>
+  </div>
+</div>
+
+<div style="display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+  <div style="font-size: 2em; margin-right: 15px; min-width: 40px;">2️⃣</div>
+  <div>
+    <strong>Invite your bot</strong><br>
+    <small>Use the user_id from your config: <code>@your-bot:matrix.org</code></small>
+  </div>
+</div>
+
+<div style="display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+  <div style="font-size: 2em; margin-right: 15px; min-width: 40px;">3️⃣</div>
+  <div>
+    <strong>Bot auto-accepts the invite</strong><br>
+    <small>Look for a friendly greeting! 👋</small>
+  </div>
+</div>
+
+</div>
+
+---
+
+## Step 5️⃣: Start Using Commands!
 
 Try these commands in your Matrix room:
 
-### Get Help
-```
-!cd help
-```
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 2em 0;">
 
-### List Projects
-```
-!cd projects
-```
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f8f9fa;">
+  <code style="font-weight: bold; color: #4A9B7F;">!cd help</code>
+  <p style="font-size: 0.9em; margin-top: 10px;">📖 See all available commands</p>
+</div>
 
-### List Templates
-```
-!cd templates 1
-```
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f8f9fa;">
+  <code style="font-weight: bold; color: #4A9B7F;">!cd projects</code>
+  <p style="font-size: 0.9em; margin-top: 10px;">📋 List Semaphore projects</p>
+</div>
 
-### Start a Task
-```
-!cd run 1 5
-```
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f8f9fa;">
+  <code style="font-weight: bold; color: #4A9B7F;">!cd templates 1</code>
+  <p style="font-size: 0.9em; margin-top: 10px;">📄 List templates for project 1</p>
+</div>
 
-Replace `1` with your project ID and `5` with your template ID.
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f8f9fa;">
+  <code style="font-weight: bold; color: #4A9B7F;">!cd run 1 2</code>
+  <p style="font-size: 0.9em; margin-top: 10px;">🚀 Run template 2 in project 1</p>
+</div>
 
-### Check Task Status
-```
-!cd status 123
-```
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f8f9fa;">
+  <code style="font-weight: bold; color: #4A9B7F;">!cd status</code>
+  <p style="font-size: 0.9em; margin-top: 10px;">📊 Check last task status</p>
+</div>
 
-Replace `123` with your task ID.
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f8f9fa;">
+  <code style="font-weight: bold; color: #4A9B7F;">!cd logs</code>
+  <p style="font-size: 0.9em; margin-top: 10px;">📝 View logs for last task</p>
+</div>
 
-### Stop a Task
-```
-!cd stop 123
-```
+</div>
 
-### Get Task Logs
-```
-!cd logs 123
-```
+---
 
-## Example Workflow
+## 🎯 Example Workflow
 
-Here's a complete workflow example:
+Here's a complete example of running a deployment:
 
 ```
-User: !cd projects
-Bot: Available projects:
-     1. MyProject - Production deployment
+You: !cd projects
+Bot: 📋 Projects:
+     1. Production Website
+     2. API Server
 
-User: !cd templates 1
-Bot: Templates for project MyProject:
-     5. Deploy to Production
-     6. Run Tests
+You: !cd templates 1
+Bot: 📄 Templates for "Production Website":
+     1. Deploy to Staging
+     2. Deploy to Production
 
-User: !cd run 1 5
-Bot: ✅ Task started successfully
-     Task ID: 123
-     Project: MyProject
-     Template: Deploy to Production
+You: !cd run 1 2
+Bot: 🚀 Ready to run "Deploy to Production"?
+     React with 👍 to confirm or 👎 to cancel
 
-Bot: 🔄 Task 123 status: running
+You: [React with 👍]
+Bot: ✅ Task started! Task ID: 42
+     I'll keep you posted! 📊
 
-Bot: ✅ Task 123 completed successfully
+[After a few minutes]
+Bot: ✅ Task #42 completed successfully! 🎉
+     Duration: 3m 24s
 ```
 
-## Advanced Configuration
+---
 
-### OIDC Authentication
+## 🎭 Easter Eggs
 
-For OIDC authentication with Matrix:
+ChatrixCD has a fun personality! Try these hidden commands:
 
-```json
-{
-  "matrix": {
-    "homeserver": "https://matrix.example.com",
-    "user_id": "@bot:example.com",
-    "auth_type": "oidc",
-    "oidc_issuer": "https://auth.example.com",
-    "oidc_client_id": "your-client-id",
-    "oidc_client_secret": "your-client-secret"
-  }
-}
-```
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 2em 0;">
 
-## Next Steps
+<div style="padding: 15px; border: 2px dashed #ffc107; border-radius: 8px; background: #fffbeb;">
+  <code style="font-weight: bold;">!cd pet</code>
+  <p style="font-size: 0.9em; margin-top: 10px;">🐕 Give the bot some love</p>
+</div>
 
-- [Full Configuration Guide](configuration.html)
-- [Architecture Overview](architecture.html)
-- [Deployment Options](deployment.html)
-- [Contributing Guidelines](contributing.html)
+<div style="padding: 15px; border: 2px dashed #ffc107; border-radius: 8px; background: #fffbeb;">
+  <code style="font-weight: bold;">!cd scold</code>
+  <p style="font-size: 0.9em; margin-top: 10px;">😔 Bot feels bad</p>
+</div>
 
-## Troubleshooting
+</div>
 
-### Bot doesn't respond
-- Check bot is running: look for log output
-- Verify bot joined the room
-- Check `allowed_rooms` configuration
+<div style="padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 1em 0;">
+  <strong>🤫 Shhh!</strong> These are undocumented features. Don't tell everyone! 😉
+</div>
 
-### Authentication fails
-- Verify credentials in config.json
-- Check Matrix homeserver is accessible
-- For OIDC, follow the SSO authentication flow
+---
 
-### Can't start tasks
-- Verify Semaphore API token is valid
-- Check Semaphore URL is correct and accessible
-- Ensure project and template IDs exist
+## 🚀 Next Steps
 
-For more help, see the [Support Guide](support.html).
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 2em 0;">
+
+<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px;">
+  <h3 style="margin-top: 0;">⚙️ Configure More</h3>
+  <p>Add custom aliases, configure log tailing, set up OIDC</p>
+  <a href="configuration.html">Configuration Guide →</a>
+</div>
+
+<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px;">
+  <h3 style="margin-top: 0;">🖥️ Explore the TUI</h3>
+  <p>Learn about the interactive terminal interface features</p>
+  <a href="TUI.html">TUI Guide →</a>
+</div>
+
+<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px;">
+  <h3 style="margin-top: 0;">🚀 Deploy to Production</h3>
+  <p>systemd, Docker, or native deployment options</p>
+  <a href="deployment.html">Deployment Guide →</a>
+</div>
+
+<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px;">
+  <h3 style="margin-top: 0;">❓ Need Help?</h3>
+  <p>Troubleshooting, FAQ, and getting support</p>
+  <a href="support.html">Support Guide →</a>
+</div>
+
+</div>
+
+---
+
+<div align="center" style="margin: 3em 0; padding: 2em; background: #e8f5e9; border-radius: 10px;">
+  <h2 style="margin-top: 0;">🎉 You're All Set!</h2>
+  <p style="font-size: 1.1em;">Your CI/CD automation is now chat-powered. Time to celebrate! 🎊</p>
+</div>

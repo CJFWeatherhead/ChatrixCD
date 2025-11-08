@@ -1,70 +1,77 @@
-# ChatrixCD Text User Interface (TUI)
+---
+layout: default
+title: TUI Guide
+nav_order: 4
+---
 
-## Overview
+# 🖥️ Text User Interface (TUI)
 
-ChatrixCD includes two Text User Interface (TUI) styles that provide an interactive, menu-driven way to manage and monitor the bot:
+Your bot's control center, right in the terminal! 🎮
 
-1. **Turbo Vision Style (Default)**: Classic 3D aesthetic with menu bar (File, Edit, Run, Help) and status bar
-2. **Classic Style**: Original TUI with status widgets and button-based navigation
+<div style="padding: 15px; background: #e7f3ff; border-left: 4px solid #2196F3; margin: 1em 0;">
+  <strong>💡 What's a TUI?</strong> It's like a GUI, but in your terminal! Think mouse support, menus, and real-time updates—all without leaving the command line.
+</div>
 
-Both TUI modes are built using the [Textual](https://textual.textualize.io/) framework and feature:
+---
 
-- Menu-driven navigation
-- Mouse support
-- Brand colors (ChatrixCD green: #4A9B7F)
-- Real-time status updates
-- Log viewing
-- Configuration display
-- Room messaging
+## ✨ Features at a Glance
 
-## Starting the TUI
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 2em 0;">
 
-The TUI launches automatically when running ChatrixCD in an interactive terminal:
+<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+  <h4 style="margin-top: 0;">📊 Status Monitoring</h4>
+  <p style="font-size: 0.9em;">Real-time bot status, connections, and metrics</p>
+</div>
+
+<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+  <h4 style="margin-top: 0;">🏠 Room Management</h4>
+  <p style="font-size: 0.9em;">View, join, leave, and message rooms</p>
+</div>
+
+<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+  <h4 style="margin-top: 0;">🔐 Device Verification</h4>
+  <p style="font-size: 0.9em;">Emoji, QR code, and fingerprint verification</p>
+</div>
+
+<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+  <h4 style="margin-top: 0;">📝 Log Viewing</h4>
+  <p style="font-size: 0.9em;">Real-time log streaming in the terminal</p>
+</div>
+
+<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+  <h4 style="margin-top: 0;">🖱️ Mouse Support</h4>
+  <p style="font-size: 0.9em;">Click buttons and navigate menus</p>
+</div>
+
+<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+  <h4 style="margin-top: 0;">🎨 Pretty Colors</h4>
+  <p style="font-size: 0.9em;">ChatrixCD brand green (#4A9B7F) 💚</p>
+</div>
+
+</div>
+
+---
+
+## 🚀 Launching the TUI
+
+The TUI launches automatically when you run ChatrixCD in an interactive terminal:
 
 ```bash
-# Use Turbo Vision style (default)
+# Start with TUI (default)
 chatrixcd
 
-# Use classic TUI style
-chatrixcd -t classic
+# Run without TUI (log-only mode)
+chatrixcd -L
 
-# Or configure in config.json:
-# "bot": { "tui_mode": "classic" }
-```
-
-To enable colored output:
-
-```bash
+# Enable colored output
 chatrixcd -C
 ```
 
-To run without the TUI (classic log-only mode):
-
-```bash
-chatrixcd -L
-```
-
-## TUI Modes
-
-### Turbo Vision Style (Default)
-
-The Turbo Vision style features:
-- Menu bar with File, Edit, Run, Help menus
-- 3D windowed appearance with drop shadows
-- Status bar at bottom showing task status
-- Keyboard shortcuts (F1-F4 for menus)
-
-### Classic Style
-
-The classic style features:
-- Button-based main menu
-- Status widgets for bot monitoring
-- Active task display
-- Keyboard shortcuts (s, a, r, x, etc.)
-
-## TUI Interface (Classic Style)
+## TUI Interface
 
 ### Main Menu
+
+The main menu provides quick access to all bot functions:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

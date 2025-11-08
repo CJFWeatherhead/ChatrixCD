@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <!-- ChatrixCD Architecture Diagram -->
+  <defs>
+    <style>
+      .box { fill: #4A9B7F; stroke: #2D3238; stroke-width: 2; }
+      .box-alt { fill: #6c757d; stroke: #2D3238; stroke-width: 2; }
+      .text { fill: white; font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; }
+      .text-small { fill: white; font-family: Arial, sans-serif; font-size: 12px; }
+      .arrow { stroke: #2D3238; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .label { fill: #2D3238; font-family: Arial, sans-serif; font-size: 12px; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#2D3238" />
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" style="font-size: 24px; font-weight: bold; fill: #2D3238;">ChatrixCD Architecture</text>
+  
+  <!-- Matrix Server -->
+  <rect x="50" y="100" width="150" height="80" class="box-alt" rx="8"/>
+  <text x="125" y="135" text-anchor="middle" class="text">Matrix Server</text>
+  <text x="125" y="155" text-anchor="middle" class="text-small">🔐 Encrypted</text>
+  <text x="125" y="170" text-anchor="middle" class="text-small">Messages</text>
+  
+  <!-- ChatrixCD Bot -->
+  <rect x="325" y="100" width="150" height="120" class="box" rx="8"/>
+  <text x="400" y="130" text-anchor="middle" class="text">ChatrixCD Bot</text>
+  <text x="400" y="150" text-anchor="middle" class="text-small">🤖 Command Parser</text>
+  <text x="400" y="165" text-anchor="middle" class="text-small">🎭 Fun Responses</text>
+  <text x="400" y="180" text-anchor="middle" class="text-small">📊 TUI Interface</text>
+  <text x="400" y="195" text-anchor="middle" class="text-small">🔄 Task Monitor</text>
+  <text x="400" y="210" text-anchor="middle" class="text-small">💾 Config Manager</text>
+  
+  <!-- Semaphore UI -->
+  <rect x="600" y="100" width="150" height="80" class="box-alt" rx="8"/>
+  <text x="675" y="135" text-anchor="middle" class="text">Semaphore UI</text>
+  <text x="675" y="155" text-anchor="middle" class="text-small">🚀 CI/CD Tasks</text>
+  <text x="675" y="170" text-anchor="middle" class="text-small">📝 Templates</text>
+  
+  <!-- Storage -->
+  <rect x="325" y="280" width="150" height="80" class="box-alt" rx="8"/>
+  <text x="400" y="315" text-anchor="middle" class="text">Storage</text>
+  <text x="400" y="335" text-anchor="middle" class="text-small">🔐 E2E Keys</text>
+  <text x="400" y="350" text-anchor="middle" class="text-small">⚙️ Config</text>
+  
+  <!-- Users -->
+  <rect x="50" y="280" width="150" height="80" class="box" rx="8"/>
+  <text x="125" y="315" text-anchor="middle" class="text">Users</text>
+  <text x="125" y="335" text-anchor="middle" class="text-small">💬 Chat Commands</text>
+  <text x="125" y="350" text-anchor="middle" class="text-small">📱 Mobile/Desktop</text>
+  
+  <!-- Arrows -->
+  <path d="M 200 140 L 325 140" class="arrow"/>
+  <text x="262" y="130" class="label">Commands</text>
+  
+  <path d="M 325 160 L 200 160" class="arrow"/>
+  <text x="250" y="180" class="label">Responses</text>
+  
+  <path d="M 475 140 L 600 140" class="arrow"/>
+  <text x="537" y="130" class="label">API Calls</text>
+  
+  <path d="M 600 160 L 475 160" class="arrow"/>
+  <text x="530" y="180" class="label">Status</text>
+  
+  <path d="M 400 220 L 400 280" class="arrow"/>
+  <text x="410" y="255" class="label">Read/Write</text>
+  
+  <path d="M 125 280 L 125 180" class="arrow"/>
+  <text x="135" y="235" class="label">Interact</text>
+  
+  <!-- Legend -->
+  <rect x="50" y="420" width="700" height="150" style="fill: #f8f9fa; stroke: #ddd; stroke-width: 1;" rx="8"/>
+  <text x="400" y="445" text-anchor="middle" style="font-size: 16px; font-weight: bold; fill: #2D3238;">📋 Data Flow</text>
+  
+  <text x="70" y="475" style="font-size: 13px; fill: #2D3238;">1️⃣ User sends command in Matrix room (e.g., <tspan font-weight="bold">!cd run 1 2</tspan>)</text>
+  <text x="70" y="495" style="font-size: 13px; fill: #2D3238;">2️⃣ Bot receives encrypted message, decrypts, parses command</text>
+  <text x="70" y="515" style="font-size: 13px; fill: #2D3238;">3️⃣ Bot makes API call to Semaphore UI to start task</text>
+  <text x="70" y="535" style="font-size: 13px; fill: #2D3238;">4️⃣ Bot monitors task status, sends updates back to Matrix room</text>
+  <text x="70" y="555" style="font-size: 13px; fill: #2D3238;">5️⃣ All data stored securely (E2E keys, config, aliases)</text>
+</svg>

@@ -18,6 +18,7 @@ from nio import (
     InviteMemberEvent,
     MegolmEvent,
     LoginResponse,
+    LoginInfoResponse,
     SyncResponse,
     KeyVerificationStart,
     KeyVerificationCancel,
@@ -322,31 +323,134 @@ class ChatrixBot:
             logger.error(f"Login error: {e}")
             return False
 
+    async def _get_oidc_identity_providers(self) -> list:
+        """Get list of identity providers from the Matrix server.
+        
+        Returns:
+            List of identity provider dictionaries with 'id', 'name', 'icon', 'brand'
+        """
+        import aiohttp
+        
+        identity_providers = []
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"{self.homeserver}/_matrix/client/v3/login") as resp:
+                    if resp.status == 200:
+                        response_data = await resp.json()
+                        flows = response_data.get('flows', [])
+                        
+                        for flow in flows:
+                            if flow.get('type') == 'm.login.sso':
+                                identity_providers = flow.get('identity_providers', [])
+                                break
+                        
+                        logger.debug(f"Found {len(identity_providers)} identity providers")
+                    else:
+                        logger.warning(f"Failed to get login flows: HTTP {resp.status}")
+        except Exception as e:
+            logger.warning(f"Failed to fetch identity providers: {e}")
+        
+        return identity_providers
+
+    async def _build_oidc_redirect_url(self, identity_providers: list) -> tuple:
+        """Build SSO redirect URL based on available identity providers.
+        
+        Args:
+            identity_providers: List of available identity providers
+            
+        Returns:
+            Tuple of (sso_redirect_url, redirect_url)
+        """
+        redirect_url = self.auth.get_oidc_redirect_url()
+        
+        if identity_providers and len(identity_providers) == 1:
+            # Single provider - use specific provider URL
+            provider_id = identity_providers[0].get('id')
+            sso_redirect_url = (
+                f"{self.homeserver}/_matrix/client/v3/login/sso/redirect/{provider_id}"
+                f"?redirectUrl={redirect_url}"
+            )
+            logger.info(f"Using identity provider: {identity_providers[0].get('name', provider_id)}")
+        else:
+            # Multiple or no providers - use generic SSO URL
+            sso_redirect_url = (
+                f"{self.homeserver}/_matrix/client/v3/login/sso/redirect"
+                f"?redirectUrl={redirect_url}"
+            )
+            
+            if identity_providers and len(identity_providers) > 1:
+                logger.info(f"Multiple identity providers available ({len(identity_providers)})")
+        
+        logger.debug(f"SSO redirect URL: {sso_redirect_url}")
+        return sso_redirect_url, redirect_url
+
+    async def _get_oidc_token_from_user(self, sso_redirect_url: str, redirect_url: str, 
+                                        identity_providers: list, token_callback=None) -> str:
+        """Get OIDC login token from user after browser authentication.
+        
+        Args:
+            sso_redirect_url: URL for user to visit
+            redirect_url: Redirect URL after authentication
+            identity_providers: List of available providers
+            token_callback: Optional callback function to display URL and get token
+            
+        Returns:
+            Login token string, or None if failed
+        """
+        if token_callback:
+            # Use provided callback (e.g., from TUI)
+            try:
+                login_token = await token_callback(sso_redirect_url, redirect_url, identity_providers)
+                if not login_token:
+                    logger.error("No login token provided by callback")
+                    return None
+            except Exception as e:
+                logger.error(f"Token callback failed: {e}")
+                return None
+        else:
+            # Default: Display instructions and wait for console input
+            logger.info("=" * 70)
+            logger.info("OIDC Authentication Required")
+            logger.info("=" * 70)
+            logger.info("")
+            logger.info("Please complete the following steps:")
+            logger.info("1. Open this URL in your browser:")
+            logger.info(f"   {sso_redirect_url}")
+            logger.info("")
+            logger.info("2. Log in with your credentials")
+            logger.info("")
+            logger.info("3. After successful login, you'll be redirected to:")
+            logger.info(f"   {redirect_url}?loginToken=...")
+            logger.info("")
+            logger.info("4. Copy the 'loginToken' value from the URL")
+            logger.info("")
+            
+            if identity_providers and len(identity_providers) > 1:
+                logger.info("Available Identity Providers:")
+                for i, idp in enumerate(identity_providers, 1):
+                    logger.info(f"   {i}. {idp.get('name', idp.get('id', 'Unknown'))}")
+                logger.info("")
+            
+            logger.info("=" * 70)
+            login_token = input("Enter loginToken: ").strip()
+            
+            if not login_token:
+                logger.error("No login token provided")
+                return None
+        
+        return login_token
+
     async def _login_oidc(self, token_callback=None) -> bool:
         """Perform OIDC authentication using Matrix SSO flow.
         
-        This method implements the Matrix SSO login flow:
-        1. Query server for available login flows
-        2. Parse SSO flow and identity providers from server response
-        3. Display appropriate SSO redirect URL to user
-        4. Wait for user to complete authentication in browser
-        5. User provides the login token from callback
-        6. Complete login with the token
-        
         Args:
-            token_callback: Optional async callback function that displays
-                          SSO URL and prompts for token. Should accept
-                          (sso_url, redirect_url, identity_providers) and
-                          return the login token. If None, uses default
-                          console input.
-        
+            token_callback: Optional callback to retrieve login token
+            
         Returns:
             True if login successful, False otherwise
         """
-        from nio import LoginInfoResponse
-        
         try:
-            # Get available login flows from the server
+            # Step 1: Get available login flows from server
             logger.info("Querying server for available login flows...")
             login_info = await self.client.login_info()
             
@@ -364,135 +468,19 @@ class ChatrixBot:
             
             logger.info("Server supports SSO login")
             
-            # Parse identity providers by making a fresh HTTP request
-            # We can't use login_info.transport_response.json() because the aiohttp
-            # response body has already been consumed by matrix-nio when creating
-            # the LoginInfoResponse object. Attempting to read it again would hang.
-            identity_providers = []
+            # Step 2: Get identity providers and build redirect URL
+            identity_providers = await self._get_oidc_identity_providers()
+            sso_redirect_url, redirect_url = await self._build_oidc_redirect_url(identity_providers)
             
-            try:
-                # Make a direct request to get the full login response with identity providers
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(f"{self.homeserver}/_matrix/client/v3/login") as resp:
-                        if resp.status == 200:
-                            response_data = await resp.json()
-                            flows = response_data.get('flows', [])
-                            
-                            # Find the m.login.sso flow
-                            for flow in flows:
-                                if flow.get('type') == 'm.login.sso':
-                                    identity_providers = flow.get('identity_providers', [])
-                                    break
-                            
-                            if identity_providers:
-                                logger.info(f"Found {len(identity_providers)} identity provider(s)")
-                                for idp in identity_providers:
-                                    logger.info(f"  - {idp.get('name', idp.get('id', 'Unknown'))}")
-                        else:
-                            logger.warning(f"Failed to fetch login flows: HTTP {resp.status}")
-            except Exception as e:
-                logger.warning(f"Could not parse identity providers: {e}")
-                # Continue anyway with generic SSO URL
+            # Step 3: Get login token from user
+            login_token = await self._get_oidc_token_from_user(
+                sso_redirect_url, redirect_url, identity_providers, token_callback
+            )
             
-            # Get redirect URL from config
-            redirect_url = self.auth.get_oidc_redirect_url()
-            logger.debug(f"OIDC redirect URL: {redirect_url}")
+            if not login_token:
+                return False
             
-            # Construct SSO redirect URL
-            # If there are multiple identity providers, we should let the user choose
-            # For now, we'll use the generic redirect (works for single or no-preference)
-            logger.debug(f"Constructing SSO redirect URL for {len(identity_providers) if identity_providers else 0} identity provider(s)")
-            if identity_providers and len(identity_providers) == 1:
-                # Single provider - use specific provider URL
-                provider_id = identity_providers[0].get('id')
-                sso_redirect_url = (
-                    f"{self.homeserver}/_matrix/client/v3/login/sso/redirect/{provider_id}"
-                    f"?redirectUrl={redirect_url}"
-                )
-                logger.info(f"Using identity provider: {identity_providers[0].get('name', provider_id)}")
-                logger.debug(f"SSO redirect URL: {sso_redirect_url}")
-            elif identity_providers and len(identity_providers) > 1:
-                # Multiple providers - user needs to choose
-                logger.info("=" * 70)
-                logger.info("Multiple Identity Providers Available")
-                logger.info("=" * 70)
-                logger.info("")
-                for i, idp in enumerate(identity_providers, 1):
-                    logger.info(f"{i}. {idp.get('name', idp.get('id', 'Unknown'))}")
-                logger.info("")
-                
-                # Let user select
-                print("Select identity provider (enter number): ", end='')
-                try:
-                    choice = int(input().strip())
-                    if 1 <= choice <= len(identity_providers):
-                        selected_idp = identity_providers[choice - 1]
-                        provider_id = selected_idp.get('id')
-                        sso_redirect_url = (
-                            f"{self.homeserver}/_matrix/client/v3/login/sso/redirect/{provider_id}"
-                            f"?redirectUrl={redirect_url}"
-                        )
-                        logger.info(f"Selected: {selected_idp.get('name', provider_id)}")
-                    else:
-                        logger.error("Invalid selection")
-                        return False
-                except (ValueError, EOFError):
-                    logger.error("Invalid input")
-                    return False
-            else:
-                # No specific providers or generic SSO
-                sso_redirect_url = (
-                    f"{self.homeserver}/_matrix/client/v3/login/sso/redirect"
-                    f"?redirectUrl={redirect_url}"
-                )
-                logger.debug(f"Using generic SSO redirect URL: {sso_redirect_url}")
-            
-            # Get login token from user via callback or default method
-            logger.debug(f"Requesting login token from user (callback={'provided' if token_callback else 'console'})")
-            if token_callback:
-                # Use provided callback (e.g., from TUI)
-                logger.debug("Invoking token callback for OIDC authentication")
-                login_token = await token_callback(sso_redirect_url, redirect_url, identity_providers)
-                logger.debug("Token callback returned successfully")
-            else:
-                # Default console-based prompt
-                logger.info("=" * 70)
-                logger.info("OIDC Authentication Required")
-                logger.info("=" * 70)
-                logger.info("")
-                logger.info("Please complete authentication in your browser:")
-                logger.info("")
-                logger.info(f"  {sso_redirect_url}")
-                logger.info("")
-                logger.info("After authentication, you will be redirected to:")
-                logger.info(f"  {redirect_url}")
-                logger.info("")
-                logger.info("The redirect URL will contain a 'loginToken' parameter.")
-                logger.info("Copy the entire URL or just the loginToken value.")
-                logger.info("=" * 70)
-                
-                # Prompt user for the login token
-                print("\nWaiting for login token...")
-                login_token = input("Paste the callback URL or loginToken: ").strip()
-            
-            # Extract token if full URL was provided
-            if 'loginToken=' in login_token:
-                # Parse the token from URL
-                import urllib.parse
-                parsed = urllib.parse.urlparse(login_token)
-                params = urllib.parse.parse_qs(parsed.query)
-                if 'loginToken' in params:
-                    login_token = params['loginToken'][0]
-                else:
-                    # Try fragment as some SSO providers use fragments
-                    params = urllib.parse.parse_qs(parsed.fragment)
-                    if 'loginToken' in params:
-                        login_token = params['loginToken'][0]
-                    else:
-                        logger.error("Could not find loginToken in provided URL")
-                        return False
-            
-            # Login using the token
+            # Step 4: Complete login with token
             logger.info("Attempting login with provided token...")
             response = await self.client.login(
                 token=login_token,
@@ -501,21 +489,19 @@ class ChatrixBot:
             
             if isinstance(response, LoginResponse):
                 logger.info(f"Successfully logged in as {self.user_id} via OIDC")
-                # Save session for future use (avoid interactive login on reconnect)
                 self._save_session(response.access_token, response.device_id)
-                # Setup encryption keys after successful login
                 await self.setup_encryption()
                 return True
             else:
-                # Provide more helpful error message
+                # Provide helpful error message
                 error_msg = str(response)
                 if "Invalid login token" in error_msg or "M_FORBIDDEN" in error_msg:
                     logger.error(
                         f"OIDC login failed: {response}\n"
                         "The login token is invalid or has expired. This can happen if:\n"
                         "  1. The token was copied incorrectly\n"
-                        "  2. Too much time has passed since you authenticated in the browser\n"
-                        "  3. The token has already been used\n"
+                        "  2. Too much time has passed since authentication\n"
+                        "  3. The token was already used\n"
                         "Please try the OIDC login process again."
                     )
                 else:

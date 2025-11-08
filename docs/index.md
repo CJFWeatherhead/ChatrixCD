@@ -4,141 +4,250 @@ title: Home
 nav_order: 1
 ---
 
-<div align="center" style="margin-bottom: 2em;">
-
-<img src="assets/logo-horizontal.svg" alt="ChatrixCD Logo" width="500">
-
+<div align="center" style="margin: 2em 0;">
+  <img src="assets/logo-horizontal.svg" alt="ChatrixCD Logo" width="500" style="max-width: 100%;">
 </div>
 
+<div align="center" style="margin: 2em 0;">
+  <h1 style="font-size: 3em; margin-bottom: 0.5em;">🚀 ChatrixCD</h1>
+  <p style="font-size: 1.3em; color: #4A9B7F;">Your CI/CD, Now in Chat! ✨</p>
+  <p style="font-size: 1.1em; margin: 1em 0;">Matrix bot that brings Semaphore UI automation to your encrypted chat rooms</p>
+</div>
 
-# ChatrixCD
-
-**Matrix bot for CI/CD automation through chat**
+<div align="center" style="margin: 2em 0;">
+  <a href="installation.html" style="display: inline-block; padding: 15px 30px; background: #4A9B7F; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin: 10px;">
+    📥 Get Started
+  </a>
+  <a href="quickstart.html" style="display: inline-block; padding: 15px 30px; background: #2D3238; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin: 10px;">
+    ⚡ Quick Start
+  </a>
+  <a href="https://github.com/CJFWeatherhead/ChatrixCD" style="display: inline-block; padding: 15px 30px; background: #333; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin: 10px;">
+    🐙 GitHub
+  </a>
+</div>
 
 ---
 
-## Features
+## ✨ Why ChatrixCD?
 
-- 🔐 **Native Matrix Authentication**: Support for password and OIDC/SSO authentication with Matrix servers
-- 🔒 **E2E Encryption**: Full support for end-to-end encrypted Matrix rooms with device verification
-- 🖥️ **Interactive TUI**: Dual TUI modes - Turbo Vision-style (default) with menu bar and 3D windows, or classic interface
-- 🧵 **Threaded Responses**: All bot replies are threaded for organized conversations
-- 👍 **Reaction Confirmations**: Quick interactions with emoji reactions (👍/👎) for confirmations
-- 🎭 **Fun Personality**: Varied greetings and sassy responses with emoji throughout
-- 🚀 **Semaphore UI Integration**: Start and monitor CI/CD tasks via chat commands
-- 📊 **Real-time Updates**: Automatic status updates for running tasks
-- 🎯 **Command-based Interface**: Easy-to-use command system for task management
-- 🔖 **Command Aliases**: Create custom shortcuts for frequently used commands
-- ✅ **Task Confirmation**: Required confirmation before executing tasks with template details
-- 🎨 **Rich Formatting**: Markdown and HTML formatting with semantic emojis, colored status indicators, and tables for structured data
-- 🧠 **Smart Parameters**: Auto-fill project/template IDs when only one option available
-- 📝 **Enhanced Logs**: Formatted output for Ansible and Terraform with intelligent tailing
-- 🔧 **Flexible Configuration**: Support for HJSON config files (JSON with comments) with automatic migration
-- ✅ **Configuration Validation**: Built-in schema validation with clear error messages
-- 🔄 **Auto-Migration**: Automatic upgrade of configuration files when new features are added
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 2em 0;">
 
-## Quick Links
+<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+  <h3 style="margin-top: 0;">🔐 Secure by Default</h3>
+  <p>End-to-end encryption support, OIDC/SSO authentication, and device verification built-in.</p>
+</div>
 
-- [Installation Guide](installation.html)
-- [Quick Start](quickstart.html)
-- [Configuration](configuration.html)
-- [Architecture](architecture.html)
-- [Contributing](contributing.html)
-- [Security Policy](security.html)
+<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+  <h3 style="margin-top: 0;">🎭 Fun & Friendly</h3>
+  <p>Sassy bot personality with emoji, threaded responses, and reaction confirmations. Never boring!</p>
+</div>
 
-## Getting Started
+<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+  <h3 style="margin-top: 0;">🖥️ Interactive TUI</h3>
+  <p>Beautiful terminal interface for monitoring, room management, and device verification.</p>
+</div>
 
-ChatrixCD makes it easy to manage CI/CD tasks through Matrix chat. Choose your installation method:
+<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+  <h3 style="margin-top: 0;">🚀 CI/CD Made Easy</h3>
+  <p>Start, monitor, and manage Semaphore tasks directly from chat with real-time updates.</p>
+</div>
 
-### Quick Install (Pre-built Binary - Linux Only)
+<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+  <h3 style="margin-top: 0;">🧠 Smart Automation</h3>
+  <p>Auto-fill parameters, smart log tailing, custom aliases, and confirmation flows.</p>
+</div>
 
-**No Python required!** Download the statically-compiled, standalone executable for Linux:
+<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+  <h3 style="margin-top: 0;">🎨 Rich Formatting</h3>
+  <p>Colored status indicators, formatted logs, HTML tables, and semantic emoji throughout.</p>
+</div>
 
-**Features:**
-- 🚀 **Fully static binaries** - No external dependencies
-- 🔒 **Maximum portability** - Works on any Linux distribution
-- 📦 **Self-contained** - All libraries included
-- ⚡ **Built with musl** - No glibc version conflicts
+</div>
 
-**Linux (x86_64):**
-```bash
-wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
-chmod +x chatrixcd-linux-x86_64
-./chatrixcd-linux-x86_64
-```
+---
 
-**Other Linux architectures:**
-- [i686 (32-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
-- [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64) - For Raspberry Pi, ARM servers
+## 🎯 Quick Start in 3 Steps
 
-**Windows and macOS:** Pre-built binaries are not currently available. Use [source installation](installation.html#method-2-install-from-source), [Docker](installation.html#method-3-docker), or WSL2 (Windows only). See the [Installation Guide](installation.html) for details.
+<div style="display: flex; flex-direction: column; gap: 20px; margin: 2em 0;">
 
-### Install from Source
+<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #4A9B7F;">1️⃣</div>
+  <div>
+    <h3 style="margin-top: 0;">Install ChatrixCD</h3>
+    <p>Download the pre-built binary for Linux (no Python needed!) or install from source:</p>
+    <pre><code>wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
+chmod +x chatrixcd-linux-x86_64</code></pre>
+    <p><a href="installation.html">📖 Full Installation Guide →</a></p>
+  </div>
+</div>
 
-For development or customization:
+<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #4A9B7F;">2️⃣</div>
+  <div>
+    <h3 style="margin-top: 0;">Configure Your Bot</h3>
+    <p>Create a <code>config.json</code> with your Matrix and Semaphore details:</p>
+    <pre><code>{
+  "matrix": {
+    "homeserver": "https://matrix.org",
+    "user_id": "@your-bot:matrix.org",
+    "auth_type": "password",
+    "password": "your-password"
+  },
+  "semaphore": {
+    "url": "https://semaphore.example.com",
+    "api_token": "your-api-token"
+  }
+}</code></pre>
+    <p><a href="configuration.html">⚙️ Configuration Guide →</a></p>
+  </div>
+</div>
 
-### Install from Source
+<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #4A9B7F;">3️⃣</div>
+  <div>
+    <h3 style="margin-top: 0;">Start Automating!</h3>
+    <p>Run the bot, invite it to your room, and start managing CI/CD tasks:</p>
+    <pre><code>./chatrixcd-linux-x86_64
 
-For development or customization:
+# In your Matrix room:
+!cd projects
+!cd run &lt;project_id&gt; &lt;template_id&gt;</code></pre>
+    <p><a href="quickstart.html">⚡ Quick Start Guide →</a></p>
+  </div>
+</div>
 
-```bash
-git clone https://github.com/CJFWeatherhead/ChatrixCD.git
-cd ChatrixCD
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-pip install -e .
-```
+</div>
 
-For detailed installation instructions, see the [Installation Guide](installation.html).
+---
 
-### Basic Usage
+## 🎨 Key Features
 
-Once installed and configured, you can:
+### 🔐 Security First
+- **E2E Encryption**: Full support for encrypted Matrix rooms
+- **Device Verification**: Emoji, QR code, and fingerprint verification
+- **Native Auth**: Password and OIDC/SSO with Matrix homeservers
+- **Secure Storage**: Encrypted credential storage
 
-1. Invite the bot to your Matrix room
-2. List available projects with `!cd projects`
-3. View templates with `!cd templates <project_id>`
-4. Start tasks with `!cd run <project_id> <template_id>`
-5. Monitor progress automatically
+### 🎭 Delightful Experience
+- **Threaded Responses**: Organized conversations with thread replies
+- **Reaction Confirmations**: Quick 👍/👎 reactions for confirmations
+- **Fun Personality**: Varied greetings, sassy responses, emoji everywhere
+- **Rich Formatting**: Colored status, tables, formatted logs
 
-## Installation
+### 🚀 Powerful Automation
+- **Real-time Updates**: Automatic status updates for running tasks
+- **Smart Parameters**: Auto-fill when only one option available
+- **Command Aliases**: Custom shortcuts for frequent commands
+- **Enhanced Logs**: Intelligent tailing for Ansible/Terraform
 
-### Prerequisites
+### 🖥️ Interactive TUI
+- **Status Monitoring**: View bot status, connections, metrics
+- **Room Management**: Manage Matrix rooms, invites, leaves
+- **Device Verification**: Interactive verification flows
+- **Log Viewing**: Real-time log streaming
 
-- **For pre-built binaries**: None! Just download and run
-- **For source installation**: Python 3.12 or higher (3.12, 3.13, 3.14 supported)
-- Access to a Matrix homeserver
-- Access to a Semaphore UI instance with API access
+---
 
-### Download Pre-built Binaries
+## 📚 Documentation
 
-**Linux only** - Choose your architecture:
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 2em 0;">
 
-- **x86_64 (64-bit)**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64)
-- **i686 (32-bit)**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
-- **ARM64**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64) - For Raspberry Pi, ARM servers
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+  <h4 style="margin-top: 0;">📥 <a href="installation.html">Installation</a></h4>
+  <p style="font-size: 0.9em;">Pre-built binaries, source, Docker</p>
+</div>
 
-**Windows and macOS**: Pre-built binaries are not currently available. Please use [source installation](#quick-install-from-source), [Docker](installation.html#method-3-docker), or WSL2 (Windows only).
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+  <h4 style="margin-top: 0;">⚡ <a href="quickstart.html">Quick Start</a></h4>
+  <p style="font-size: 0.9em;">Get up and running in minutes</p>
+</div>
 
-### Quick Install from Source
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+  <h4 style="margin-top: 0;">⚙️ <a href="configuration.html">Configuration</a></h4>
+  <p style="font-size: 0.9em;">Detailed config options</p>
+</div>
 
-```bash
-git clone https://github.com/CJFWeatherhead/ChatrixCD.git
-cd ChatrixCD
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-pip install -e .
-```
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+  <h4 style="margin-top: 0;">🖥️ <a href="TUI.html">TUI Guide</a></h4>
+  <p style="font-size: 0.9em;">Terminal interface features</p>
+</div>
 
-For detailed installation instructions, see the [Installation Guide](installation.html).
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+  <h4 style="margin-top: 0;">🏗️ <a href="architecture.html">Architecture</a></h4>
+  <p style="font-size: 0.9em;">Technical design overview</p>
+</div>
 
-## Support
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+  <h4 style="margin-top: 0;">🚀 <a href="deployment.html">Deployment</a></h4>
+  <p style="font-size: 0.9em;">Production deployment options</p>
+</div>
 
-- [GitHub Issues](https://github.com/CJFWeatherhead/ChatrixCD/issues) - Bug reports and feature requests
-- [Support Guide](support.html) - Troubleshooting and getting help
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+  <h4 style="margin-top: 0;">🔒 <a href="security.html">Security</a></h4>
+  <p style="font-size: 0.9em;">Security policy and best practices</p>
+</div>
 
-## License
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+  <h4 style="margin-top: 0;">🤝 <a href="contributing.html">Contributing</a></h4>
+  <p style="font-size: 0.9em;">How to contribute to the project</p>
+</div>
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](https://github.com/CJFWeatherhead/ChatrixCD/blob/main/LICENSE) file for details.
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+  <h4 style="margin-top: 0;">❓ <a href="support.html">Support</a></h4>
+  <p style="font-size: 0.9em;">Get help and troubleshooting</p>
+</div>
+
+</div>
+
+---
+
+## 🎯 Use Cases
+
+<div style="margin: 2em 0;">
+
+**💼 DevOps Teams**
+- Trigger deployments from your team chat
+- Monitor CI/CD pipelines in real-time
+- Collaborate on deployment decisions with threaded discussions
+
+**🚀 Rapid Response**
+- Emergency deployments via mobile Matrix client
+- Quick rollbacks when issues arise
+- Status checks without leaving your chat
+
+**🔐 Secure Ops**
+- E2E encrypted deployment commands
+- Audit trail of who triggered what
+- OIDC/SSO integration with your identity provider
+
+**🏢 Enterprise Ready**
+- Self-hosted Matrix and Semaphore
+- Role-based access with Matrix permissions
+- Integrates with existing infrastructure
+
+</div>
+
+---
+
+## 🌟 Getting Help
+
+- 📖 **Documentation**: You're looking at it! Start with [Quick Start](quickstart.html)
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/CJFWeatherhead/ChatrixCD/issues)
+- 💬 **Questions**: Check [Support](support.html) or open a discussion
+- 🤝 **Contributing**: See [Contributing Guide](contributing.html)
+
+---
+
+## 📜 License
+
+ChatrixCD is open source under the **GNU General Public License v3.0**. See [LICENSE](https://github.com/CJFWeatherhead/ChatrixCD/blob/main/LICENSE) for details.
+
+---
+
+<div align="center" style="margin: 3em 0; padding: 2em; background: #f8f9fa; border-radius: 10px;">
+  <h2 style="margin-top: 0;">Ready to automate? 🚀</h2>
+  <p style="font-size: 1.1em;">Install ChatrixCD and start managing CI/CD from chat!</p>
+  <a href="installation.html" style="display: inline-block; padding: 15px 40px; background: #4A9B7F; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin-top: 1em;">
+    Get Started Now →
+  </a>
+</div>

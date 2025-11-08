@@ -203,7 +203,6 @@ Using Textual's pilot feature for automated TUI testing:
   - ✅ Metrics initialization
   - ✅ Login task handling
 
-##### Turbo TUI Pilot Tests (`tests/test_tui_turbo_pilot.py` - 33 tests)
 - ✅ Main app startup and rendering
 - ✅ Menu bar and status bar rendering
 - ✅ F-key bindings (F1-F4) for menu navigation
@@ -310,7 +309,6 @@ tests/
 ├── test_tui_navigation.py         # TUI navigation tests
 ├── test_tui_pilot.py              # Regular TUI pilot tests (NEW! 44 tests)
 ├── test_tui_pilot_interactive.py  # Regular TUI interactive workflow tests (NEW! 17 tests)
-├── test_tui_turbo_pilot.py        # Turbo TUI pilot tests (NEW! 33 tests)
 ├── test_cli.py                    # CLI argument tests
 ├── test_workflow.py               # GitHub workflow tests
 ├── test_e2e_main.py               # Main entry point E2E tests

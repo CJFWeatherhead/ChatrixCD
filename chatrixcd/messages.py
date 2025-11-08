@@ -4,11 +4,8 @@ import hjson
 import os
 import logging
 import random
-import asyncio
-from typing import Dict, List, Any, Optional
-from pathlib import Path
-import time
-
+from typing import Dict, List, Optional
+from chatrixcd.file_watcher import FileWatcher
 
 logger = logging.getLogger(__name__)
 
@@ -121,17 +118,17 @@ class MessageManager:
             auto_reload: If True, automatically reload messages when file changes
         """
         self.messages_file = messages_file
-        self.auto_reload = auto_reload
         self.messages: Dict[str, List[str]] = {}
-        self._last_mtime: Optional[float] = None
-        self._reload_task: Optional[asyncio.Task] = None
+        self._file_watcher: Optional[FileWatcher] = None
         
-        # Load messages
         self.load_messages()
         
-        # Start auto-reload if requested
         if auto_reload:
-            self.start_auto_reload()
+            self._file_watcher = FileWatcher(
+                file_path=messages_file,
+                reload_callback=self.load_messages,
+                auto_reload=True
+            )
     
     def load_messages(self) -> bool:
         """Load messages from file, falling back to defaults if needed.
@@ -146,8 +143,7 @@ class MessageManager:
         
         try:
             with open(self.messages_file, 'r', encoding='utf-8') as f:
-                content = f.read()
-                loaded_messages = hjson.loads(content)
+                loaded_messages = hjson.load(f)
             
             # Merge with defaults (file messages override defaults)
             self.messages = DEFAULT_MESSAGES.copy()
@@ -156,9 +152,6 @@ class MessageManager:
                     self.messages[category] = messages
                 else:
                     logger.warning(f"Invalid message category '{category}' in {self.messages_file}, expected list")
-            
-            # Update last modified time
-            self._last_mtime = os.path.getmtime(self.messages_file)
             
             logger.info(f"Loaded messages from '{self.messages_file}'")
             return True
@@ -186,7 +179,6 @@ class MessageManager:
         
         message = random.choice(messages)
         
-        # Format with provided kwargs
         try:
             return message.format(**kwargs)
         except KeyError as e:
@@ -203,55 +195,4 @@ class MessageManager:
             List of messages in the category
         """
         return self.messages.get(category, []).copy()
-    
-    def check_for_changes(self) -> bool:
-        """Check if the messages file has been modified.
-        
-        Returns:
-            True if file has been modified, False otherwise
-        """
-        if not os.path.exists(self.messages_file):
-            return False
-        
-        try:
-            current_mtime = os.path.getmtime(self.messages_file)
-            if self._last_mtime is None or current_mtime > self._last_mtime:
-                return True
-        except Exception as e:
-            logger.warning(f"Failed to check file modification time: {e}")
-        
-        return False
-    
-    def start_auto_reload(self):
-        """Start automatic reloading of messages when file changes."""
-        try:
-            # Only start if we have a running event loop
-            loop = asyncio.get_running_loop()
-            if self._reload_task is None or self._reload_task.done():
-                self._reload_task = asyncio.create_task(self._auto_reload_loop())
-                logger.info("Started auto-reload for messages file")
-        except RuntimeError:
-            # No event loop running, will start later when needed
-            logger.debug("No event loop available yet, auto-reload will start when bot runs")
-            pass
-    
-    def stop_auto_reload(self):
-        """Stop automatic reloading."""
-        if self._reload_task and not self._reload_task.done():
-            self._reload_task.cancel()
-            logger.info("Stopped auto-reload for messages file")
-    
-    async def _auto_reload_loop(self):
-        """Background task that checks for file changes and reloads."""
-        try:
-            while True:
-                await asyncio.sleep(5)  # Check every 5 seconds
-                
-                if self.check_for_changes():
-                    logger.info(f"Messages file '{self.messages_file}' has been modified, reloading...")
-                    self.load_messages()
-                    
-        except asyncio.CancelledError:
-            logger.debug("Auto-reload task cancelled")
-        except Exception as e:
-            logger.error(f"Error in auto-reload loop: {e}")
+

@@ -14,86 +14,35 @@ CURRENT_CONFIG_VERSION = 4
 
 
 class ConfigMigrator:
-    """Handles migration of configuration files between versions."""
+    """Handles migration of configuration files between versions.
+    
+    Configuration version history:
+    - v1: Initial configuration
+    - v2: Added greetings_enabled, greeting_rooms, startup_message, shutdown_message
+    - v3: Added SSL certificate options, log_file configuration
+    - v4: Added TUI mode options, mouse support, color settings, verbosity
+    
+    All migrations are handled by default values in Config class.
+    This migrator only updates the version number.
+    """
     
     @staticmethod
     def migrate(config: Dict[str, Any], from_version: int) -> Dict[str, Any]:
-        """Migrate configuration from one version to another.
+        """Migrate configuration to current version.
         
         Args:
             config: Configuration dictionary to migrate
             from_version: Current version of the configuration
             
         Returns:
-            Migrated configuration dictionary
+            Migrated configuration dictionary with updated version
         """
         logger = logging.getLogger(__name__)
         
-        # Apply migrations sequentially
-        current_version = from_version
-        while current_version < CURRENT_CONFIG_VERSION:
-            next_version = current_version + 1
-            migration_method = getattr(
-                ConfigMigrator, 
-                f'_migrate_v{current_version}_to_v{next_version}',
-                None
-            )
-            
-            if migration_method:
-                logger.info(f"Migrating configuration from v{current_version} to v{next_version}")
-                config = migration_method(config)
-            else:
-                logger.warning(f"No migration method found for v{current_version} to v{next_version}")
-            
-            current_version = next_version
+        if from_version < CURRENT_CONFIG_VERSION:
+            logger.info(f"Migrating configuration from v{from_version} to v{CURRENT_CONFIG_VERSION}")
+            config['_config_version'] = CURRENT_CONFIG_VERSION
         
-        # Set the version in the config
-        config['_config_version'] = CURRENT_CONFIG_VERSION
-        return config
-    
-    @staticmethod
-    def _migrate_v1_to_v2(config: Dict[str, Any]) -> Dict[str, Any]:
-        """Migrate from version 1 (no version) to version 2.
-        
-        Changes in v2:
-        - Added _config_version field
-        - Added bot.greetings_enabled (default: true)
-        - Added bot.greeting_rooms (default: [])
-        - Added bot.startup_message and bot.shutdown_message
-        """
-        # These fields are already handled by defaults in load_config
-        # This migration exists primarily to set the version number
-        # and document the changes between versions
-        return config
-    
-    @staticmethod
-    def _migrate_v2_to_v3(config: Dict[str, Any]) -> Dict[str, Any]:
-        """Migrate from version 2 to version 3.
-        
-        Changes in v3:
-        - Added semaphore.ssl_ca_cert, ssl_client_cert, ssl_client_key (now standard features)
-        - Added bot.log_file for configurable log file path
-        """
-        # These fields are already handled by defaults in load_config
-        # SSL settings were already in the default config but are now documented as part of v3
-        # This migration exists primarily to set the version number
-        # and document the changes between versions
-        return config
-    
-    @staticmethod
-    def _migrate_v3_to_v4(config: Dict[str, Any]) -> Dict[str, Any]:
-        """Migrate from version 3 to version 4.
-        
-        Changes in v4:
-        - Added bot.tui_mode for TUI selection (turbo/classic)
-        - Added bot.mouse_enabled for mouse support in TUI
-        - Added bot.color_enabled for colored output
-        - Added bot.color_theme for theme selection
-        - Added bot.verbosity for log verbosity level
-        """
-        # These fields are already handled by defaults in load_config
-        # This migration exists primarily to set the version number
-        # and document the changes between versions
         return config
 
 
@@ -201,7 +150,6 @@ class Config:
                 'startup_message': '🤖 ChatrixCD bot is now online and ready to help with CI/CD tasks!',
                 'shutdown_message': '👋 ChatrixCD bot is shutting down. See you later!',
                 'log_file': 'chatrixcd.log',
-                'tui_mode': 'turbo',  # Options: 'turbo' (new Turbo Vision style) or 'classic' (original TUI)
                 'mouse_enabled': False,  # Enable mouse support in TUI
                 'color_enabled': False,  # Enable colored output
                 'color_theme': 'default',  # Theme: 'default', 'midnight', 'grayscale', 'windows31', 'msdos'

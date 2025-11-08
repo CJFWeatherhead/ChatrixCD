@@ -7,8 +7,17 @@ including SAS emoji verification and encrypted message exchange.
 import asyncio
 import unittest
 from unittest.mock import Mock, AsyncMock, MagicMock, patch
+from typing import Any
 from nio import AsyncClient
-from nio.crypto import Sas, OlmDevice, SasState
+# Conditional import for Sas - not available in all nio versions
+try:
+    from nio.crypto import Sas, OlmDevice, SasState
+    SAS_AVAILABLE = True
+except ImportError:
+    SAS_AVAILABLE = False
+    Sas = Any  # type: ignore
+    OlmDevice = Any  # type: ignore
+    SasState = Any  # type: ignore
 from nio.crypto.device import TrustState
 from nio.responses import ToDeviceResponse, ToDeviceMessage
 from chatrixcd.verification import DeviceVerificationManager
@@ -20,6 +29,7 @@ def create_mock_to_device_response():
     return ToDeviceResponse(mock_message)
 
 
+@unittest.skipIf(not SAS_AVAILABLE, "Sas not available in this nio version")
 class TestDeviceVerificationE2E(unittest.IsolatedAsyncioTestCase):
     """End-to-end tests for device verification workflow."""
     
@@ -301,6 +311,7 @@ class TestDeviceVerificationE2E(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(pending[0]['device_id'], 'Unknown')
 
 
+@unittest.skipIf(not SAS_AVAILABLE, "Sas not available in this nio version")
 class TestVerificationInteractiveFlow(unittest.IsolatedAsyncioTestCase):
     """Test interactive verification flows."""
     
@@ -387,6 +398,7 @@ class TestVerificationInteractiveFlow(unittest.IsolatedAsyncioTestCase):
         self.client.send_to_device_messages.assert_called()
 
 
+@unittest.skipIf(not SAS_AVAILABLE, "Sas not available in this nio version")
 class TestVerificationPersistence(unittest.IsolatedAsyncioTestCase):
     """Test verification status persistence features."""
     

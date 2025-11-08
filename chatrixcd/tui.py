@@ -22,7 +22,12 @@ from textual import events
 from textual.reactive import reactive
 from textual.design import ColorSystem
 from chatrixcd.verification import DeviceVerificationManager
-from nio.crypto import Sas
+try:
+    from nio.crypto import Sas
+    SAS_AVAILABLE = True
+except ImportError:
+    SAS_AVAILABLE = False
+    Sas = None  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -434,7 +439,7 @@ class SessionsScreen(Screen):
                     verification = ver_info['verification']
                     
                     # Check if this is a SAS verification
-                    if not isinstance(verification, Sas):
+                    if not SAS_AVAILABLE or not isinstance(verification, Sas):
                         self.app.push_screen(MessageScreen(
                             f"Unsupported verification type: {ver_info['type']}\n\n"
                             "Only SAS (emoji) verification is currently supported."
@@ -790,7 +795,7 @@ or "Verify Device (QR Code)" for verification."""
                     sas = None
                     if hasattr(client, 'key_verifications'):
                         for transaction_id, verification in client.key_verifications.items():
-                            if isinstance(verification, Sas):
+                            if SAS_AVAILABLE and isinstance(verification, Sas):
                                 if verification.other_olm_device == device:
                                     sas = verification
                                     break
@@ -1807,7 +1812,7 @@ class ChatrixTUI(App):
                     # Check if this is a new verification request
                     if transaction_id not in self.last_notified_verifications:
                         # For Sas verifications, user_id and device_id are in other_olm_device
-                        if isinstance(verification, Sas):
+                        if SAS_AVAILABLE and isinstance(verification, Sas):
                             other_device = getattr(verification, 'other_olm_device', None)
                             if other_device:
                                 user_id = getattr(other_device, 'user_id', 'Unknown')
