@@ -227,28 +227,6 @@ class TestCLI(unittest.TestCase):
         args = parser.parse_args(['-m'])
         self.assertTrue(args.mouse)
     
-    def test_tui_mode_flag(self):
-        """Test --tui-mode flag."""
-        import argparse
-        parser = argparse.ArgumentParser(prog='chatrixcd')
-        parser.add_argument('-t', '--tui-mode', type=str, choices=['turbo', 'classic'], dest='tui_mode')
-        
-        # Default (no tui mode specified)
-        args = parser.parse_args([])
-        self.assertIsNone(args.tui_mode)
-        
-        # Turbo mode
-        args = parser.parse_args(['--tui-mode', 'turbo'])
-        self.assertEqual(args.tui_mode, 'turbo')
-        
-        # Classic mode
-        args = parser.parse_args(['-t', 'classic'])
-        self.assertEqual(args.tui_mode, 'classic')
-        
-        # Invalid mode should fail
-        with self.assertRaises(SystemExit):
-            parser.parse_args(['--tui-mode', 'invalid'])
-    
     def test_combined_flags(self):
         """Test multiple flags combined."""
         import argparse

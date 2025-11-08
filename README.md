@@ -238,28 +238,18 @@ The TUI provides a menu-driven interface with options for:
 - **SHOW** - View current configuration
 - **QUIT** - Gracefully exit
 
-**TUI Modes:**
+**TUI Mode:**
 
-ChatrixCD offers two TUI styles:
-- **Turbo Vision (default)**: Classic 3D aesthetic with menu bar (File, Edit, Run, Help) and status bar
-- **Classic**: Original TUI interface with status widgets
-
-To select TUI mode:
+ChatrixCD provides an interactive Text User Interface (TUI) for bot management with features like status monitoring, room management, device verification, and more.
 
 ```bash
-# Use Turbo Vision style (default)
+# Run with TUI (default in interactive terminal)
 chatrixcd
-
-# Use classic TUI style
-chatrixcd -t classic
-
-# Or configure in config.json:
-# "bot": { "tui_mode": "classic" }
 ```
 
-**Classic Log Mode:**
+**Log-Only Mode:**
 
-To run without the TUI (classic log-only mode):
+To run without the TUI (log-only mode):
 
 ```bash
 chatrixcd -L
@@ -295,8 +285,7 @@ chatrixcd [OPTIONS]
 - `-c FILE, --config FILE` - Path to configuration file (default: config.json)
 - `-C, --color` - Enable colored logging output in TUI and logs (requires colorlog package)
 - `-R, --redact` - Redact sensitive information from logs (room names, usernames, IPs, tokens, etc.)
-- `-L, --log-only` - Run in classic log-only mode (no TUI, only show logs)
-- `-t MODE, --tui-mode MODE` - Select TUI mode: 'turbo' (Turbo Vision-style, default) or 'classic' (original TUI)
+- `-L, --log-only` - Run in log-only mode (no TUI, only show logs)
 - `-m, --mouse` - Enable mouse support in TUI (default: disabled)
 - `-D, --daemon` - Run in daemon mode (background process, Unix/Linux only)
 - `-s, --show-config` - Display current configuration with redacted credentials and exit
@@ -309,16 +298,13 @@ chatrixcd [OPTIONS]
 # Show version
 chatrixcd --version
 
-# Run with interactive TUI (default - Turbo Vision style)
+# Run with interactive TUI (default)
 chatrixcd
-
-# Run with classic TUI style
-chatrixcd -t classic
 
 # Run with interactive TUI and colored output
 chatrixcd -C
 
-# Run in classic log-only mode (no TUI)
+# Run in log-only mode (no TUI)
 chatrixcd -L
 
 # Use custom config file with verbose logging
