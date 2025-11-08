@@ -21,7 +21,7 @@ aux_links:
 footer_content: "Copyright &copy; 2024 ChatrixCD Contributors. Distributed under the GNU GPL v3.0 License."
 
 # Color scheme (using custom ChatrixCD branding)
-color_scheme: dark
+color_scheme: light
 
 # Custom color overrides for ChatrixCD branding
 # Primary brand color: ChatrixCD Green (#3e836b) - WCAG AA compliant
