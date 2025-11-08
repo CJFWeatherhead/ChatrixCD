@@ -26,7 +26,7 @@ A visual guide to how ChatrixCD works under the hood.
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 2em 0;">
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+<div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;">
   <h3 style="margin-top: 0;">🤖 Bot Core (bot.py)</h3>
   <p><strong>The Heart of ChatrixCD</strong></p>
   <ul style="font-size: 0.9em;">
@@ -37,7 +37,7 @@ A visual guide to how ChatrixCD works under the hood.
   </ul>
 </div>
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+<div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;">
   <h3 style="margin-top: 0;">⚡ Commands (commands.py)</h3>
   <p><strong>Command Processing Engine</strong></p>
   <ul style="font-size: 0.9em;">
@@ -48,7 +48,7 @@ A visual guide to how ChatrixCD works under the hood.
   </ul>
 </div>
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+<div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;">
   <h3 style="margin-top: 0;">🖥️ TUI (tui.py)</h3>
   <p><strong>Interactive Interface</strong></p>
   <ul style="font-size: 0.9em;">
@@ -59,7 +59,7 @@ A visual guide to how ChatrixCD works under the hood.
   </ul>
 </div>
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+<div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;">
   <h3 style="margin-top: 0;">⚙️ Config (config.py)</h3>
   <p><strong>Configuration Manager</strong></p>
   <ul style="font-size: 0.9em;">
@@ -70,7 +70,7 @@ A visual guide to how ChatrixCD works under the hood.
   </ul>
 </div>
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+<div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;">
   <h3 style="margin-top: 0;">🚀 Semaphore (semaphore.py)</h3>
   <p><strong>CI/CD Integration</strong></p>
   <ul style="font-size: 0.9em;">
@@ -81,7 +81,7 @@ A visual guide to how ChatrixCD works under the hood.
   </ul>
 </div>
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+<div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;">
   <h3 style="margin-top: 0;">📝 Messages (messages.py)</h3>
   <p><strong>Response Templates</strong></p>
   <ul style="font-size: 0.9em;">
@@ -100,8 +100,8 @@ A visual guide to how ChatrixCD works under the hood.
 
 <div style="display: flex; flex-direction: column; gap: 20px; margin: 2em 0;">
 
-<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
-  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #4A9B7F;">1️⃣</div>
+<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b; background: #f8f9fa;">
+  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #3e836b;">1️⃣</div>
   <div>
     <h3 style="margin-top: 0;">User Sends Command</h3>
     <p>User types <code>!cd run 1 2</code> in a Matrix room</p>
@@ -109,8 +109,8 @@ A visual guide to how ChatrixCD works under the hood.
   </div>
 </div>
 
-<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
-  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #4A9B7F;">2️⃣</div>
+<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b; background: #f8f9fa;">
+  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #3e836b;">2️⃣</div>
   <div>
     <h3 style="margin-top: 0;">Bot Receives & Decrypts</h3>
     <p>Bot receives message event, decrypts it (if encrypted), and parses the command</p>
@@ -118,8 +118,8 @@ A visual guide to how ChatrixCD works under the hood.
   </div>
 </div>
 
-<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
-  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #4A9B7F;">3️⃣</div>
+<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b; background: #f8f9fa;">
+  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #3e836b;">3️⃣</div>
   <div>
     <h3 style="margin-top: 0;">Request Confirmation</h3>
     <p>Bot fetches template details and sends confirmation message with reaction buttons</p>
@@ -127,8 +127,8 @@ A visual guide to how ChatrixCD works under the hood.
   </div>
 </div>
 
-<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
-  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #4A9B7F;">4️⃣</div>
+<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b; background: #f8f9fa;">
+  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #3e836b;">4️⃣</div>
   <div>
     <h3 style="margin-top: 0;">Execute Task</h3>
     <p>Bot makes API call to Semaphore UI to start the task</p>
@@ -136,8 +136,8 @@ A visual guide to how ChatrixCD works under the hood.
   </div>
 </div>
 
-<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
-  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #4A9B7F;">5️⃣</div>
+<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b; background: #f8f9fa;">
+  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #3e836b;">5️⃣</div>
   <div>
     <h3 style="margin-top: 0;">Monitor & Update</h3>
     <p>Bot polls task status and sends updates back to the room</p>
@@ -145,8 +145,8 @@ A visual guide to how ChatrixCD works under the hood.
   </div>
 </div>
 
-<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
-  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #4A9B7F;">6️⃣</div>
+<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b; background: #f8f9fa;">
+  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #3e836b;">6️⃣</div>
   <div>
     <h3 style="margin-top: 0;">Task Complete</h3>
     <p>Final status sent with completion time and success/failure indicators</p>
@@ -199,7 +199,7 @@ A visual guide to how ChatrixCD works under the hood.
 ## 🎯 Design Principles
 
 <table style="width: 100%; border-collapse: collapse; margin: 2em 0;">
-<thead style="background: #4A9B7F; color: white;">
+<thead style="background: #3e836b; color: white;">
 <tr>
 <th style="padding: 12px; text-align: left;">Principle</th>
 <th style="padding: 12px; text-align: left;">Implementation</th>
@@ -277,17 +277,17 @@ A visual guide to how ChatrixCD works under the hood.
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 2em 0;">
 
-<div style="padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+<div style="padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
   <strong>🔧 Implementation Details</strong>
   <p style="font-size: 0.9em;"><a href="https://github.com/CJFWeatherhead/ChatrixCD/blob/main/ARCHITECTURE.md">Full ARCHITECTURE.md →</a></p>
 </div>
 
-<div style="padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+<div style="padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
   <strong>🤝 Contributing</strong>
   <p style="font-size: 0.9em;"><a href="contributing.html">Contributing Guide →</a></p>
 </div>
 
-<div style="padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+<div style="padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
   <strong>🔒 Security</strong>
   <p style="font-size: 0.9em;"><a href="security.html">Security Policy →</a></p>
 </div>

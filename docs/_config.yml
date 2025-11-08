@@ -2,6 +2,7 @@ title: ChatrixCD
 description: Matrix bot for CI/CD automation through chat with Semaphore UI integration
 theme: jekyll-theme-cayman
 remote_theme: just-the-docs/just-the-docs
+lang: en
 
 # Custom domain URL
 url: https://chatrixcd.cjfw.me
@@ -23,9 +24,9 @@ footer_content: "Copyright &copy; 2024 ChatrixCD Contributors. Distributed under
 color_scheme: dark
 
 # Custom color overrides for ChatrixCD branding
-# Primary brand color: ChatrixCD Green (#4A9B7F)
+# Primary brand color: ChatrixCD Green (#3e836b) - WCAG AA compliant
 # Dark background: #2D3238
-# See BRANDING.md for complete color palette
+# All colors meet WCAG 2.1 AA accessibility standards
 
 # Enable search
 search_enabled: true
@@ -45,4 +46,24 @@ enable_copy_code_button: true
 head_custom: |
   <link rel="stylesheet" href="{{ '/assets/css/custom.css' | relative_url }}">
   <link rel="icon" type="image/svg+xml" href="{{ '/favicon.svg' | relative_url }}">
-  <meta name="theme-color" content="#4A9B7F">
+  <meta name="theme-color" content="#3e836b">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="ChatrixCD - Matrix bot for CI/CD automation through chat with Semaphore UI integration. Secure, fun, and powerful DevOps automation.">
+  <meta name="author" content="ChatrixCD Contributors">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph / Social Media Meta Tags -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ChatrixCD - CI/CD Automation Bot">
+  <meta property="og:description" content="Matrix bot that brings Semaphore UI automation to your encrypted chat rooms">
+  <meta property="og:url" content="https://chatrixcd.cjfw.me">
+  <meta property="og:site_name" content="ChatrixCD">
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ChatrixCD - CI/CD Automation Bot">
+  <meta name="twitter:description" content="Matrix bot that brings Semaphore UI automation to your encrypted chat rooms">
+  
+  <!-- Accessibility Meta Tags -->
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">

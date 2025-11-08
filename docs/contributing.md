@@ -162,7 +162,7 @@ ChatrixCD maintains consistent visual branding. When contributing visual element
 
 ### Brand Colors
 
-- **ChatrixCD Green**: `#4A9B7F` (primary)
+- **ChatrixCD Green**: `#3e836b` (primary)
 - **Dark Background**: `#2D3238`
 - **White**: `#FFFFFF`
 
