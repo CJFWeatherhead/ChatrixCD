@@ -12,7 +12,7 @@ nav_order: 1
 
 <header id="main-content" role="banner">
   <div align="center" style="margin: 2em 0;">
-    <h1 style="font-size: 3em; margin-bottom: 0.5em;">🚀 ChatrixCD</h1>
+    <!--- <h1 style="font-size: 3em; margin-bottom: 0.5em;">🚀 ChatrixCD</h1> --->
     <p style="font-size: 1.3em; color: #3e836b;">Your CI/CD, Now in Chat! ✨</p>
     <p style="font-size: 1.1em; margin: 1em 0;">Matrix bot that brings Semaphore UI automation to your encrypted chat rooms</p>
   </div>
