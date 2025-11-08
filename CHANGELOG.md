@@ -15,6 +15,11 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Fixed
+- **Build System**: Fixed Dockerfile.build to correctly rename `main.bin` to `chatrixcd` in standalone mode
+  - Nuitka creates `main.bin` instead of `main` when using `--mode=standalone`
+  - This was causing all builds (x86_64, i686, arm64) to fail with "No such file or directory" error
+
 ### Changed
 - **Documentation Accessibility** (WCAG 2.1 AA Compliance): Complete accessibility overhaul for GitHub Pages documentation
   - **Color Contrast**: All colors now meet WCAG 2.1 AA standards (4.5:1 for normal text, 3.0:1 for large text)
