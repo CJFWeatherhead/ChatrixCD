@@ -361,7 +361,7 @@ class ChatrixBot:
         Returns:
             Tuple of (sso_redirect_url, redirect_url)
         """
-        redirect_url = self.auth.oidc_redirect_url or "http://localhost:8080"
+        redirect_url = self.auth.get_oidc_redirect_url()
         
         if identity_providers and len(identity_providers) == 1:
             # Single provider - use specific provider URL
