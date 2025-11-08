@@ -129,6 +129,23 @@ jobs:
             echo "flag=yes" >> "$GITHUB_OUTPUT"
           fi
       
+      - name: Validate Dockerfile syntax
+        run: |
+          # Basic syntax validation before starting lengthy build
+          if ! grep -q "FROM alpine:" Dockerfile.build; then
+            echo "Error: Dockerfile.build missing Alpine base image"
+            exit 1
+          fi
+          if ! grep -q "nuitka" Dockerfile.build; then
+            echo "Error: Dockerfile.build missing Nuitka build step"
+            exit 1
+          fi
+          if ! grep -q -- "--mode=standalone" Dockerfile.build; then
+            echo "Error: Dockerfile.build not using standalone mode"
+            exit 1
+          fi
+          echo "✓ Dockerfile.build validation passed"
+      
       - name: Build with Nuitka using Docker Buildx
         uses: docker/build-push-action@v5
         with:
