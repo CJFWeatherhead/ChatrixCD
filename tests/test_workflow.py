@@ -153,12 +153,12 @@ class TestWorkflowConfiguration(unittest.TestCase):
                     self.assertIn('--jobs=', self.dockerfile_content,
                                  "Dockerfile.build should use parallel compilation")
                     
-                    # Verify both onefile and standalone modes are supported
-                    # i686 uses standalone mode, x86_64/arm64 use onefile mode
-                    self.assertIn('--mode=onefile', self.dockerfile_content,
-                                 "Dockerfile.build should support onefile mode (x86_64, arm64)")
+                    # Verify standalone mode is used for all architectures (consistency)
                     self.assertIn('--mode=standalone', self.dockerfile_content,
-                                 "Dockerfile.build should support standalone mode (i686)")
+                                 "Dockerfile.build should use standalone mode for all architectures")
+                    # Verify onefile mode is NOT used (all use standalone now)
+                    self.assertNotIn('--mode=onefile', self.dockerfile_content,
+                                 "Dockerfile.build should not use onefile mode (standalone for all)")
                     
                     # Verify ccache is configured in Dockerfile
                     self.assertIn('ccache', self.dockerfile_content,
@@ -305,7 +305,7 @@ class TestWorkflowConfiguration(unittest.TestCase):
         steps = linux_job['steps']
         
         # With Docker-based builds, artifacts are created directly in the source directory
-        # No move step is needed. Instead, verify that build steps create the correct output files.
+        # Standalone mode creates a directory, not a single file
         
         # Find build steps
         build_steps = [
@@ -318,7 +318,7 @@ class TestWorkflowConfiguration(unittest.TestCase):
             "Linux build should have Nuitka build steps"
         )
         
-        # Verify that build steps specify correct output filenames
+        # Verify that build steps use standalone mode
         for build_step in build_steps:
             run_command = build_step.get('run', '')
             uses_action = build_step.get('uses', '')
@@ -326,12 +326,19 @@ class TestWorkflowConfiguration(unittest.TestCase):
             
             # If using docker buildx action, check Dockerfile.build
             if 'docker/build-push-action' in uses_action and self.has_dockerfile_build():
-                # Check that output filename is specified in Dockerfile.build
-                self.assertIn('--output-filename=chatrixcd-linux-', self.dockerfile_content,
-                             "Dockerfile.build should specify output filename")
+                # Check that standalone mode creates directories
+                self.assertIn('--output-dir=', self.dockerfile_content,
+                             "Dockerfile.build should specify output directory for standalone mode")
+                # Verify directory renaming is done
+                self.assertIn('mv main.dist', self.dockerfile_content,
+                             "Dockerfile.build should rename output directory")
             # Legacy check for docker run commands
             elif run_command:
-                # Check that output filename is specified in Nuitka command
+                # Check that output is specified in Nuitka command
+                self.assertTrue(
+                    '--output-filename=' in run_command or '--output-dir=' in run_command,
+                    f"{step_name} should specify output"
+                )
                 self.assertIn('--output-filename=chatrixcd-linux-', run_command,
                              f"{step_name} should specify output filename")
 

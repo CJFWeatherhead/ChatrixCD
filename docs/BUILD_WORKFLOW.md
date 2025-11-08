@@ -20,13 +20,17 @@ We build all binaries on Alpine Linux using musl libc instead of glibc for sever
 
 ### Supported Architectures
 
-- **x86_64** (64-bit Intel/AMD): Built using Alpine 3.22 (onefile mode - single binary)
-- **i686** (32-bit Intel/AMD): Built using Alpine 3.22 (standalone mode - directory with executable and dependencies)
-- **arm64** (64-bit ARM): Built using Alpine 3.22 (onefile mode - single binary)
+- **x86_64** (64-bit Intel/AMD): Built using Alpine 3.22 (standalone mode)
+- **i686** (32-bit Intel/AMD): Built using Alpine 3.22 (standalone mode)
+- **arm64** (64-bit ARM): Built using Alpine 3.22 (standalone mode)
 
-All architectures are now built using the same `Dockerfile.build` with platform-specific configurations.
+All architectures use the same `Dockerfile.build` with **standalone mode** for consistency. Each build produces a directory containing the executable and its dependencies, distributed as a `.tar.gz` archive.
 
-**Note on i686**: The i686 binary uses standalone mode instead of onefile mode to avoid symbol resolution issues with musl libc. This results in a directory (`chatrixcd-linux-i686.dist/`) containing the executable and its dependencies, distributed as a `.tar.gz` archive.
+**Why standalone mode for all architectures?**
+- **Consistency**: Same distribution format and installation process across all platforms
+- **Simplicity**: Single set of instructions for all users
+- **Reliability**: Avoids symbol resolution issues with musl libc (especially on i686)
+- **Performance**: Standalone mode can be faster to build than onefile mode
 
 ## Build Process
 
@@ -61,10 +65,11 @@ All builds require these Alpine packages:
 
 We use Nuitka to compile Python code to C and create standalone binaries with these key options:
 
-- `--mode=onefile` (x86_64, arm64) or `--mode=standalone` (i686): Build mode selection
-  - **onefile**: Single executable file (x86_64, arm64)
-  - **standalone**: Directory with executable and dependencies (i686) - avoids symbol resolution issues on musl libc
-- `--output-filename=chatrixcd-linux-{arch}`: Name the output binary
+- `--mode=standalone`: Build mode (all architectures for consistency)
+  - Creates a directory with executable and all dependencies
+  - More reliable than onefile mode on musl libc
+  - Consistent distribution format across all platforms
+- `--output-dir=.`: Output directory for the build
 - `--enable-plugin=anti-bloat`: Reduce binary size by removing unnecessary imports
 - `--assume-yes-for-downloads`: Automatically download required tools
 - `--static-libpython=yes`: **Statically link the Python interpreter** (no external libpython required)

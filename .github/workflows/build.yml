@@ -143,31 +143,24 @@ jobs:
           cache-to: type=gha,mode=max,scope=build-${{ matrix.arch }}
           outputs: type=local,dest=.
       
-      - name: Verify binary was created
+      - name: Verify standalone directory was created
         run: |
-          if [ "${{ matrix.arch }}" = "i686" ]; then
-            # i686 uses standalone mode (directory)
-            ls -lh chatrixcd-linux-${{ matrix.arch }}.dist/
-            file chatrixcd-linux-${{ matrix.arch }}.dist/chatrixcd
-          else
-            # x86_64 and arm64 use onefile mode (single binary)
-            ls -lh chatrixcd-linux-${{ matrix.arch }}
-            file chatrixcd-linux-${{ matrix.arch }}
-          fi
+          # All architectures now use standalone mode (directory)
+          ls -lh chatrixcd-linux-${{ matrix.arch }}.dist/
+          file chatrixcd-linux-${{ matrix.arch }}.dist/chatrixcd
       
-      - name: Package i686 standalone directory
-        if: matrix.arch == 'i686'
+      - name: Package standalone directory as tarball
         run: |
-          # Create tarball for i686 standalone directory
-          tar -czf chatrixcd-linux-i686.dist.tar.gz chatrixcd-linux-i686.dist/
-          ls -lh chatrixcd-linux-i686.dist.tar.gz
+          # Create tarball for standalone directory (all architectures)
+          tar -czf chatrixcd-linux-${{ matrix.arch }}.dist.tar.gz chatrixcd-linux-${{ matrix.arch }}.dist/
+          ls -lh chatrixcd-linux-${{ matrix.arch }}.dist.tar.gz
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: chatrixcd-linux-${{ matrix.arch }}
           path: |
-            chatrixcd-linux-${{ matrix.arch }}*
+            chatrixcd-linux-${{ matrix.arch }}.dist.tar.gz
           retention-days: 90
 
   release:

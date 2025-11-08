@@ -15,11 +15,17 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Changed
+- **Build System**: Switched ALL architectures (x86_64, i686, arm64) to standalone mode for consistency
+  - All binaries now distributed as `.tar.gz` archives containing executable and dependencies
+  - Simplified installation process - same instructions for all architectures
+  - More reliable than onefile mode on musl libc (avoids symbol resolution issues)
+  - Distribution format: `chatrixcd-linux-{arch}.dist.tar.gz` → extract and run
+
 ### Fixed
 - **i686 Binary**: Fixed ImportError with `PyType_GetModuleByDef: symbol not found` when running i686 binaries
-  - Switched i686 builds from onefile mode to standalone mode to resolve symbol resolution issues with musl libc on Alpine Linux
-  - x86_64 and arm64 binaries remain in onefile mode (single file executable)
-  - i686 binary is now distributed as a directory (`chatrixcd-linux-i686.dist/`) containing the executable and dependencies
+  - Root cause was onefile mode's symbol resolution issues with musl libc on Alpine Linux
+  - Solution: Use standalone mode for all architectures (consistent approach)
 
 ## [2025.11.07.4.1.0] - 2025-11-07
 
