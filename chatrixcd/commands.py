@@ -1,10 +1,7 @@
 """Command handling for the bot."""
 
-import html
 import logging
 import asyncio
-import re
-import random
 import platform
 import socket
 import psutil
@@ -13,10 +10,10 @@ from nio import MatrixRoom, RoomMessageText
 from chatrixcd.semaphore import SemaphoreClient
 from chatrixcd.aliases import AliasManager
 from chatrixcd.messages import MessageManager
+from chatrixcd.formatters import MessageFormatter, ANSIFormatter
 from chatrixcd import __version__
 
 logger = logging.getLogger(__name__)
-
 
 class CommandHandler:
     """Handle bot commands."""

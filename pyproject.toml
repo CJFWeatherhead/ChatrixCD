@@ -12,6 +12,7 @@ license = {text = "GPL-3.0"}
 authors = [
     {name = "ChatrixCD Contributors"}
 ]
+keywords = ["matrix", "bot", "ci-cd", "automation", "semaphore", "devops"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -20,6 +21,8 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Topic :: Communications :: Chat",
+    "Topic :: Software Development :: Build Tools",
 ]
 dependencies = [
     "matrix-nio[e2e]>=0.24.0",
@@ -28,6 +31,15 @@ dependencies = [
     "colorlog>=6.7.0",
     "textual>=0.47.0",
     "qrcode>=7.4.2",
+    "psutil>=5.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "PyYAML>=6.0",
 ]
 
 [project.urls]
