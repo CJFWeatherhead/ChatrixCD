@@ -760,6 +760,97 @@ class CommandHandler:
         
         await self.bot.send_message(room_id, message, html_message, msgtype="m.notice")
 
+    async def _resolve_run_task_params(self, room_id: str, sender: str, args: list) -> tuple:
+        """Resolve project_id and template_id from args with smart auto-selection.
+        
+        Returns:
+            Tuple of (project_id, template_id) or (None, None) if resolution failed
+            (also sends error message to room if failed)
+        """
+        user_name = self._get_display_name(sender)
+        
+        # No args - try auto-selection
+        if len(args) == 0:
+            projects = await self.semaphore.get_projects()
+            if len(projects) != 1:
+                await self.bot.send_message(
+                    room_id,
+                    f"{user_name} 👋 - Usage: {self.command_prefix} run <project_id> <template_id>\n\n"
+                    f"Use `{self.command_prefix} projects` to list available projects."
+                )
+                return None, None
+            
+            project_id = projects[0].get('id')
+            templates = await self.semaphore.get_project_templates(project_id)
+            
+            if len(templates) == 0:
+                await self.bot.send_message(
+                    room_id,
+                    f"{user_name} 👋 - No templates found for project {project_id}.\n"
+                    f"Create a template in Semaphore UI first!"
+                )
+                return None, None
+            elif len(templates) > 1:
+                await self.bot.send_message(
+                    room_id,
+                    f"{user_name} 👋 - Multiple templates available for project {project_id}.\n"
+                    f"Use `{self.command_prefix} templates {project_id}` to list them."
+                )
+                return None, None
+            
+            template_id = templates[0].get('id')
+            logger.info(f"Auto-selected project {project_id} and template {template_id}")
+            return project_id, template_id
+        
+        # Only project_id provided
+        if len(args) == 1:
+            try:
+                project_id = int(args[0])
+            except ValueError:
+                await self.bot.send_message(room_id, f"{user_name} 👋 - Invalid project ID ❌")
+                return None, None
+            
+            templates = await self.semaphore.get_project_templates(project_id)
+            
+            if len(templates) == 0:
+                await self.bot.send_message(
+                    room_id,
+                    f"{user_name} 👋 - No templates found for project {project_id}.\n"
+                    f"Create a template in Semaphore UI first!"
+                )
+                return None, None
+            elif len(templates) > 1:
+                await self.bot.send_message(
+                    room_id,
+                    f"{user_name} 👋 - Multiple templates available for project {project_id}.\n"
+                    f"Use `{self.command_prefix} templates {project_id}` to list them."
+                )
+                return None, None
+            
+            template_id = templates[0].get('id')
+            logger.info(f"Auto-selected template {template_id}")
+            return project_id, template_id
+        
+        # Both params provided
+        if len(args) >= 2:
+            try:
+                project_id = int(args[0])
+                template_id = int(args[1])
+                return project_id, template_id
+            except ValueError:
+                await self.bot.send_message(
+                    room_id,
+                    f"{user_name} 👋 - Invalid project or template ID ❌"
+                )
+                return None, None
+        
+        # Fallback
+        await self.bot.send_message(
+            room_id,
+            f"{user_name} 👋 - Usage: {self.command_prefix} run <project_id> <template_id>"
+        )
+        return None, None
+
     async def run_task(self, room_id: str, sender: str, args: list):
         """Run a task from a template.
         
@@ -770,80 +861,9 @@ class CommandHandler:
         """
         user_name = self._get_display_name(sender)
         
-        # Smart parameter handling
-        if len(args) == 0:
-            # Try to auto-fill if only one project and one template
-            projects = await self.semaphore.get_projects()
-            if len(projects) == 1:
-                project_id = projects[0].get('id')
-                templates = await self.semaphore.get_project_templates(project_id)
-                if len(templates) == 1:
-                    template_id = templates[0].get('id')
-                    logger.info(f"Auto-selected project {project_id} and template {template_id}")
-                    args = [str(project_id), str(template_id)]
-                elif len(templates) == 0:
-                    response = (f"{user_name} 👋 - No templates found for project {project_id}.\n"
-                        f"Create a template in Semaphore UI first!")
-                    logger.info(f"No templates found for auto-selection, sending: {response}")
-                    await self.bot.send_message(room_id, response)
-                    return
-                else:
-                    response = (f"{user_name} 👋 - Multiple templates available for project {project_id}.\n"
-                        f"Use `{self.command_prefix} templates {project_id}` to list them.")
-                    logger.info(f"Multiple templates found for auto-selection, sending: {response}")
-                    await self.bot.send_message(room_id, response)
-                    return
-            else:
-                response = (f"{user_name} 👋 - Usage: {self.command_prefix} run <project_id> <template_id>\n\n"
-                    f"Use `{self.command_prefix} projects` to list available projects.")
-                logger.info(f"No args provided for run command, sending: {response}")
-                await self.bot.send_message(room_id, response)
-                return
-        elif len(args) == 1:
-            # Only project_id provided, check if there's only one template
-            try:
-                project_id = int(args[0])
-            except ValueError:
-                await self.bot.send_message(
-                    room_id,
-                    f"{user_name} 👋 - Invalid project ID ❌"
-                    
-                )
-                return
-                
-            templates = await self.semaphore.get_project_templates(project_id)
-            if len(templates) == 1:
-                template_id = templates[0].get('id')
-                logger.info(f"Auto-selected template {template_id}")
-                args.append(str(template_id))
-            elif len(templates) == 0:
-                response = (f"{user_name} 👋 - No templates found for project {project_id}.\n"
-                    f"Create a template in Semaphore UI first!")
-                logger.info(f"No templates found for auto-selection, sending: {response}")
-                await self.bot.send_message(room_id, response)
-                return
-            else:
-                response = (f"{user_name} 👋 - Multiple templates available for project {project_id}.\n"
-                    f"Use `{self.command_prefix} templates {project_id}` to list them.")
-                logger.info(f"Multiple templates found for auto-selection, sending: {response}")
-                await self.bot.send_message(room_id, response)
-                return
-        
-        if len(args) < 2:
-            await self.bot.send_message(
-                room_id,
-                f"{user_name} 👋 - Usage: {self.command_prefix} run <project_id> <template_id>"
-            )
-            return
-            
-        try:
-            project_id = int(args[0])
-            template_id = int(args[1])
-        except ValueError:
-            await self.bot.send_message(
-                room_id,
-                f"{user_name} 👋 - Invalid project or template ID ❌"
-            )
+        # Resolve parameters with smart auto-selection
+        project_id, template_id = await self._resolve_run_task_params(room_id, sender, args)
+        if project_id is None:
             return
         
         # Fetch template details for confirmation
@@ -887,11 +907,9 @@ class CommandHandler:
         html_message = self.markdown_to_html(message)
         event_id = await self.bot.send_message(room_id, message, html_message)
         
-        # Track the message ID for reaction handling
         if event_id:
             self.confirmation_message_ids[confirmation_key] = event_id
         
-        # Set timeout to clear confirmation after 5 minutes
         asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 300, room_id))
 
     async def _clear_confirmation_timeout(self, confirmation_key: str, timeout: int, room_id: str = None):
