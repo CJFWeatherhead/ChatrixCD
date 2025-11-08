@@ -1,9 +1,4 @@
-"""Text User Interface for ChatrixCD bot.
-
-This TUI implementation was developed with assistance from AI/LLM tools,
-providing an interactive menu-driven interface for bot management and
-device verification workflows.
-"""
+"""Text User Interface for ChatrixCD bot."""
 
 import asyncio
 import logging

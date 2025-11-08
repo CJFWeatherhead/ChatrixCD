@@ -1,9 +1,4 @@
-"""Main bot implementation with Matrix client.
-
-This module was developed with significant assistance from AI/LLM tools including
-GitHub Copilot. The implementation follows Matrix protocol specifications and
-uses matrix-nio for client functionality.
-"""
+"""Main bot implementation with Matrix client."""
 
 import logging
 import asyncio
