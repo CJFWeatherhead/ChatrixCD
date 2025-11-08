@@ -4,48 +4,55 @@ title: Quick Start
 nav_order: 3
 ---
 
-# Quick Start Guide
+# ⚡ Quick Start Guide
 
-Get ChatrixCD up and running in minutes. For more detailed examples, configuration options, and troubleshooting, see the comprehensive [QUICKSTART.md](https://github.com/CJFWeatherhead/ChatrixCD/blob/main/QUICKSTART.md) in the repository root.
+Get ChatrixCD up and running in **5 minutes**! 🚀
 
-## 1. Install ChatrixCD
+<div style="padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 1em 0;">
+  <strong>⏱️ Time to Success:</strong> ~5 minutes<br>
+  <strong>📋 What You'll Need:</strong> Matrix account, Semaphore UI access, 5 minutes<br>
+  <strong>🎯 What You'll Get:</strong> Fully working CI/CD bot in your chat!
+</div>
 
-### Option 1: Pre-built Binary (Linux Only)
+---
 
-**No Python required!** Download and run the statically-compiled binary:
+## Step 1️⃣: Install ChatrixCD
 
-**Features:** Fully static, no external dependencies, works on any Linux distribution
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 2em 0;">
 
-**All Linux architectures use the same format:**
-```bash
-# Example for x86_64 (replace with i686 or arm64 as needed)
-wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz
-tar -xzf chatrixcd-linux-x86_64.dist.tar.gz
-cd chatrixcd-linux-x86_64.dist
-./chatrixcd
-```
+<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+  <h3 style="margin-top: 0;">📦 Pre-built Binary (Easiest!)</h3>
+  <p><strong>✅ Recommended for most users</strong></p>
+  <p>No Python required! Just download and run:</p>
+  <pre><code>wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
+chmod +x chatrixcd-linux-x86_64
+./chatrixcd-linux-x86_64</code></pre>
+  <p><small>📖 <a href="installation.html#method-1-pre-built-binary-recommended">More download options →</a></small></p>
+</div>
 
-**Available architectures:**
-- **x86_64 (64-bit)**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz) - Most common
-- **i686 (32-bit)**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686.dist.tar.gz) - 32-bit Intel/AMD
-- **ARM64**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64.dist.tar.gz) - Raspberry Pi, ARM servers
-
-**Windows and macOS users:** Pre-built binaries are not currently available. Please use Option 2 (from source), Docker, or WSL2 (Windows only).
-
-### Option 2: From Source
-
-```bash
-git clone https://github.com/CJFWeatherhead/ChatrixCD.git
+<div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px; background: #f8f9fa;">
+  <h3 style="margin-top: 0;">🔧 From Source (Advanced)</h3>
+  <p><strong>For development or customization</strong></p>
+  <pre><code>git clone https://github.com/CJFWeatherhead/ChatrixCD.git
 cd ChatrixCD
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-pip install -e .
-```
+pip install -e .</code></pre>
+  <p><small>📖 <a href="installation.html#method-2-from-source">Full source guide →</a></small></p>
+</div>
 
-## 2. Create Configuration
+</div>
 
-Create a `config.json` file:
+---
+
+## Step 2️⃣: Create Configuration
+
+Create a `config.json` file in the same directory as the binary (or project root if from source):
+
+<div style="padding: 20px; background: #e7f3ff; border-left: 4px solid #2196F3; margin: 1em 0;">
+  <strong>💡 Tip:</strong> Start with password auth for simplicity. You can switch to OIDC/SSO later!
+</div>
 
 ```json
 {
