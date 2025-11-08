@@ -10,9 +10,8 @@ ChatrixCD is a Matrix bot that integrates with Semaphore UI to enable CI/CD auto
 - Interactive Text User Interface (TUI) for bot management
 - Asynchronous Python architecture
 - Real-time task monitoring and status updates
-- **Threaded responses** for better conversation organization
-- **Reaction-based confirmations** for quick interactions
-- **Sassy and fun personality** with emoji and engaging responses
+- Reaction-based confirmations for quick interactions
+- Sassy and fun personality with emoji and engaging responses (but is never rude)
 
 ## Architecture
 
@@ -26,6 +25,9 @@ ChatrixCD is a Matrix bot that integrates with Semaphore UI to enable CI/CD auto
 - **semaphore.py**: Semaphore UI REST API client
 - **tui.py**: Text User Interface (interactive mode)
 - **redactor.py**: Sensitive information redaction
+- **aliases.py**: Alias management for Matrix rooms
+- **file_watcher.py**: Configuration file watcher and reloader
+- **config_wizard.py**: Initial configuration setup wizard
 
 ### Key Technologies
 
@@ -87,7 +89,6 @@ ChatrixCD has a distinctive, engaging personality:
 - **Emoji-Rich**: Use emoji liberally to make responses fun and visually appealing 🎉
 - **Personal Touch**: Address users by name when responding (e.g., "username 👋")
 - **Variety**: Randomize response messages to avoid repetition and maintain engagement
-- **Threaded Conversations**: All bot responses should be threaded replies to maintain context
 - **Reaction Support**: Users can confirm actions with emoji reactions (👍/👎) instead of messages
 
 #### Easter Eggs
@@ -153,10 +154,21 @@ python -m unittest tests.test_config  # Specific test file
 
 ### Testing Guidelines
 
+Testing is crucial for ChatrixCD to ensure reliability and maintainability. Follow these guidelines when writing tests:
+
 - Mock external services (Matrix server, Semaphore API)
 - Test edge cases: empty inputs, None values, errors
 - Keep tests isolated and independent
 - Write tests for new functionality
+- Use textual.pilot for TUI component testing
+- Use coverage tools to ensure unit test code coverage
+    - Aim for at least 90% code coverage
+- Integrate tests into CI pipeline
+- Run tests on every pull request
+- Ensure all tests pass before merging
+- **IMPORTANT**: Tests should be meaningful, not just for coverage metrics, and should validate actual functionality.
+- Wherever possible attempt end-to-end tests that cover real-world scenarios.
+    - Use public information to build realistic test cases.
 
 ## Text User Interface (TUI)
 
@@ -170,6 +182,7 @@ ChatrixCD includes an interactive Text User Interface (TUI) for bot management:
 - **Configuration Editing**: Interactive configuration editing
 - **Log Viewing**: Real-time log viewing
 - **Message Sending**: Send messages to rooms directly
+- **Alias Management**: Allow alias creation and management
 
 ### TUI Implementation
 
@@ -178,13 +191,6 @@ ChatrixCD includes an interactive Text User Interface (TUI) for bot management:
 - Launches by default when running interactively
 - Can be disabled with `-L` (log-only mode) flag
 - Supports mouse and keyboard navigation
-
-### TUI Testing
-
-- TUI code has lower test coverage (17%) - this is expected
-- Interactive features require manual testing
-- Widget creation and initialization are unit tested
-- Full functionality testing should be done interactively
 
 ## Commands
 
@@ -279,9 +285,10 @@ def start_task(self, project_id: int, template_id: int) -> dict:
 
 ### Supported Platforms
 
-- Docker (Debian-based and Alpine Linux)
-- Native deployment with systemd (Debian/Ubuntu, RHEL/CentOS, Fedora)
-- Native deployment with OpenRC (Alpine Linux)
+- Primary target: Alpine Linux 3.22+ with Python 3.12+
+    - Precompiled binaries avaiable for i686, AMD64, and ARM64, static musl builds
+- Other Linux distributions with Python 3.12+ may work
+- Docker images available for easy deployment (should also use Alpine base)
 
 ### Configuration for Deployment
 
@@ -294,7 +301,7 @@ Configuration is done through `config.json` file with essential settings:
 - `semaphore.url`: Semaphore UI URL
 - `semaphore.api_token`: Semaphore API token
 
-**Note**: Token-based authentication has been removed. Use password or OIDC authentication only.
+There is an intial setup process to create the config file if it does not exist built into the bot.
 
 ## Common Patterns
 
@@ -354,9 +361,10 @@ When making changes, add entries to the "Unreleased" section of CHANGELOG.md:
 **Checklist for every change:**
 1. ✅ Make code changes
 2. ✅ Update tests
-3. ✅ **Update CHANGELOG.md** (don't forget this!)
-4. ✅ Update documentation if needed
-5. ✅ Test changes
+3. ✅ Run tests, iterate until all pass
+4. ✅ **Update CHANGELOG.md** (don't forget this!)
+5. ✅ Update documentation if needed, including Github Pages (../docs)
+6. ✅ Test changes
 
 ## Git Workflow
 
@@ -376,7 +384,7 @@ When making changes, add entries to the "Unreleased" section of CHANGELOG.md:
 
 ## Additional Resources
 
-- [ARCHITECTURE.md](../ARCHITECTURE.md): Detailed architecture documentation
+- [ARCHITECTURE.md](../docs/architecture.md): Detailed architecture documentation
 - [CONTRIBUTING.md](../CONTRIBUTING.md): Contribution guidelines
 - [Matrix Protocol Docs](https://matrix.org/docs/): Matrix protocol documentation
 - [matrix-nio Docs](https://matrix-nio.readthedocs.io/): Matrix client library docs

@@ -45,7 +45,7 @@ nav_order: 1
 
 <article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;" role="listitem">
   <h3 style="margin-top: 0;">🎭 Fun & Friendly</h3>
-  <p>Sassy bot personality with emoji, threaded responses, and reaction confirmations. Never boring!</p>
+  <p>Sassy bot personality with emoji, and reaction confirmations. Never boring!</p>
 </article>
 
 <article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;" role="listitem">
@@ -211,25 +211,34 @@ chmod +x chatrixcd-linux-x86_64</code></pre>
 
 <div style="margin: 2em 0;">
 
-**💼 DevOps Teams**
-- Trigger deployments from your team chat
-- Monitor CI/CD pipelines in real-time
-- Collaborate on deployment decisions with threaded discussions
+<h3>💼 DevOps Teams</h3>
+<ul>
+  <li>Trigger deployments from your team chat</li>
+  <li>Monitor CI/CD pipelines in real-time</li>
+  <li>Collaborate on deployment decisions with threaded discussions</li>
+</ul>
 
-**🚀 Rapid Response**
-- Emergency deployments via mobile Matrix client
-- Quick rollbacks when issues arise
-- Status checks without leaving your chat
+<h3>🚀 Rapid Response</h3>
+<ul>
+  <li>Emergency deployments via mobile Matrix client</li>
+  <li>Quick rollbacks when issues arise</li>
+  <li>Status checks without leaving your chat</li>
+</ul>
 
-**🔐 Secure Ops**
-- E2E encrypted deployment commands
-- Audit trail of who triggered what
-- OIDC/SSO integration with your identity provider
+<h3>🔐 Secure Ops</h3>
+<ul>
+  <li>E2E encrypted deployment commands</li>
+  <li>Audit trail of who triggered what</li>
+  <li>OIDC/SSO integration with your identity provider</li>
+</ul>
 
-**🏢 Enterprise Ready**
-- Self-hosted Matrix and Semaphore
-- Role-based access with Matrix permissions
-- Integrates with existing infrastructure
+<h3>🏢 Enterprise Ready</h3>
+<ul>
+  <li>Self-hosted Matrix and Semaphore</li>
+  <li>Role-based access with Matrix permissions</li>
+  <li>Integrates with existing infrastructure</li>
+</ul>
+
 
 </div>
 
