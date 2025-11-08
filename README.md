@@ -38,9 +38,9 @@ ChatrixCD integrates with Semaphore UI to enable CI/CD automation through chat. 
 **No Python installation required!** Download the standalone, statically-compiled executable for your platform:
 
 #### Linux
-- [x86_64 (64-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64) - Most common
-- [i686 (32-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
-- [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64) - For Raspberry Pi, ARM servers
+- [x86_64 (64-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz) - Most common
+- [i686 (32-bit)](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686.dist.tar.gz) - 32-bit Intel/AMD
+- [ARM64](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64.dist.tar.gz) - Raspberry Pi, ARM servers
 
 **Features:**
 - 🚀 **Fully static binaries** - No external dependencies required
@@ -51,10 +51,13 @@ ChatrixCD integrates with Semaphore UI to enable CI/CD automation through chat. 
 **Quick Start (Linux):**
 
 ```bash
-# Download and make executable
-wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
-chmod +x chatrixcd-linux-x86_64
-./chatrixcd-linux-x86_64
+# Download and extract
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz
+tar -xzf chatrixcd-linux-x86_64.dist.tar.gz
+cd chatrixcd-linux-x86_64.dist
+
+# Run ChatrixCD
+./chatrixcd
 ```
 
 #### Windows and macOS

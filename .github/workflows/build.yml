@@ -129,6 +129,23 @@ jobs:
             echo "flag=yes" >> "$GITHUB_OUTPUT"
           fi
       
+      - name: Validate Dockerfile syntax
+        run: |
+          # Basic syntax validation before starting lengthy build
+          if ! grep -q "FROM alpine:" Dockerfile.build; then
+            echo "Error: Dockerfile.build missing Alpine base image"
+            exit 1
+          fi
+          if ! grep -q "nuitka" Dockerfile.build; then
+            echo "Error: Dockerfile.build missing Nuitka build step"
+            exit 1
+          fi
+          if ! grep -q -- "--mode=standalone" Dockerfile.build; then
+            echo "Error: Dockerfile.build not using standalone mode"
+            exit 1
+          fi
+          echo "✓ Dockerfile.build validation passed"
+      
       - name: Build with Nuitka using Docker Buildx
         uses: docker/build-push-action@v5
         with:
@@ -143,17 +160,24 @@ jobs:
           cache-to: type=gha,mode=max,scope=build-${{ matrix.arch }}
           outputs: type=local,dest=.
       
-      - name: Verify binary was created
+      - name: Verify standalone directory was created
         run: |
-          ls -lh chatrixcd-linux-${{ matrix.arch }}
-          file chatrixcd-linux-${{ matrix.arch }}
+          # All architectures now use standalone mode (directory)
+          ls -lh chatrixcd-linux-${{ matrix.arch }}.dist/
+          file chatrixcd-linux-${{ matrix.arch }}.dist/chatrixcd
+      
+      - name: Package standalone directory as tarball
+        run: |
+          # Create tarball for standalone directory (all architectures)
+          tar -czf chatrixcd-linux-${{ matrix.arch }}.dist.tar.gz chatrixcd-linux-${{ matrix.arch }}.dist/
+          ls -lh chatrixcd-linux-${{ matrix.arch }}.dist.tar.gz
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: chatrixcd-linux-${{ matrix.arch }}
           path: |
-            chatrixcd-linux-${{ matrix.arch }}
+            chatrixcd-linux-${{ matrix.arch }}.dist.tar.gz
           retention-days: 90
 
   release:
@@ -192,8 +216,12 @@ jobs:
       - name: Prepare release artifacts
         run: |
           mkdir -p release
-          find artifacts -type f -exec cp {} release/ \;
+          # Copy all files and directories from artifacts
+          find artifacts -mindepth 2 -maxdepth 2 -exec cp -r {} release/ \;
           ls -lah release/
+          # Verify what we have
+          echo "Release artifacts:"
+          ls -R release/
       
       - name: Update version in files (for release job)
         run: |

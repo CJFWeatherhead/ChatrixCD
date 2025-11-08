@@ -44,12 +44,12 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 # Copy source code
 COPY . .
 
-# Build with Nuitka
+# Build with Nuitka - using standalone mode for all architectures for consistency
 ARG ARCH
 ARG ENABLE_LTO=yes
 RUN --mount=type=cache,target=/root/.ccache \
-    python3 -m nuitka --mode=onefile \
-    --output-filename=chatrixcd-linux-${ARCH} \
+    python3 -m nuitka --mode=standalone \
+    --output-dir=. \
     --enable-plugin=anti-bloat \
     --assume-yes-for-downloads \
     --static-libpython=yes \
@@ -57,9 +57,12 @@ RUN --mount=type=cache,target=/root/.ccache \
     --jobs=4 \
     --linux-icon=assets/icon.png \
     --include-data-dir=assets=assets \
-    chatrixcd/main.py
+    chatrixcd/main.py && \
+    # Rename the output executable and directory for consistency \
+    mv main.dist chatrixcd-linux-${ARCH}.dist && \
+    mv chatrixcd-linux-${ARCH}.dist/main chatrixcd-linux-${ARCH}.dist/chatrixcd
 
-# Final stage - just copy the binary
+# Final stage - copy the standalone directory
 FROM scratch AS export
 ARG ARCH
-COPY --from=builder /src/chatrixcd-linux-${ARCH} /
+COPY --from=builder /src/chatrixcd-linux-${ARCH}.dist /chatrixcd-linux-${ARCH}.dist

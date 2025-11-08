@@ -16,16 +16,19 @@ Get ChatrixCD up and running in minutes. For more detailed examples, configurati
 
 **Features:** Fully static, no external dependencies, works on any Linux distribution
 
-**Linux (x86_64):**
+**All Linux architectures use the same format:**
 ```bash
-wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
-chmod +x chatrixcd-linux-x86_64
-./chatrixcd-linux-x86_64
+# Example for x86_64 (replace with i686 or arm64 as needed)
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz
+tar -xzf chatrixcd-linux-x86_64.dist.tar.gz
+cd chatrixcd-linux-x86_64.dist
+./chatrixcd
 ```
 
-**Other Linux architectures:**
-- **i686 (32-bit)**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686)
-- **ARM64**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64)
+**Available architectures:**
+- **x86_64 (64-bit)**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz) - Most common
+- **i686 (32-bit)**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686.dist.tar.gz) - 32-bit Intel/AMD
+- **ARM64**: [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64.dist.tar.gz) - Raspberry Pi, ARM servers
 
 **Windows and macOS users:** Pre-built binaries are not currently available. Please use Option 2 (from source), Docker, or WSL2 (Windows only).
 
