@@ -617,7 +617,7 @@ class CommandHandler:
                 'timestamp': asyncio.get_event_loop().time()
             }
             
-            message = f"{user_name} 👋 - ⚠️ **Confirm Bot Shutdown**\n\n"
+            message = f"{user_name} 👋 - ⚠️ <strong>Confirm Bot Shutdown</strong>\n\n"
             message += "Are you sure you want to shut down the bot?\n\n"
             message += f"Reply with `{self.command_prefix} exit` again to confirm.\n"
             message += "Or react with 👍 to confirm or 👎 to cancel!"
