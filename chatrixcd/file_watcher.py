@@ -4,7 +4,6 @@ import os
 import logging
 import asyncio
 from typing import Optional, Callable
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +61,7 @@ class FileWatcher:
     def start(self):
         """Start automatic file watching."""
         try:
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
             if self._reload_task is None or self._reload_task.done():
                 self._reload_task = asyncio.create_task(self._watch_loop())
                 logger.info(f"Started file watcher for {self.file_path}")

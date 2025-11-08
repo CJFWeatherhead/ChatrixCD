@@ -442,8 +442,12 @@ class ChatrixBot:
     async def _login_oidc(self, token_callback=None) -> bool:
         """Perform OIDC authentication using Matrix SSO flow.
         
-        from nio import LoginInfoResponse, LoginResponse
-        
+        Args:
+            token_callback: Optional callback to retrieve login token
+            
+        Returns:
+            True if login successful, False otherwise
+        """
         try:
             # Step 1: Get available login flows from server
             logger.info("Querying server for available login flows...")

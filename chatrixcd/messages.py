@@ -126,7 +126,7 @@ class MessageManager:
         if auto_reload:
             self._file_watcher = FileWatcher(
                 file_path=messages_file,
-                reload_callback=lambda: self.load_messages(),
+                reload_callback=self.load_messages,
                 auto_reload=True
             )
     
