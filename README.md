@@ -628,3 +628,17 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 - Integrates with [Semaphore UI](https://github.com/ansible-semaphore/semaphore)
 - Inspired by [matrix-commander](https://github.com/8go/matrix-commander) for device verification and encryption handling patterns
 
+### AI/LLM Contributions
+
+**Important Notice:** Significant portions of this codebase were developed with assistance from AI/LLM tools, including:
+- GitHub Copilot for code generation and completion
+- Large Language Models (LLMs) for architecture design, documentation, and implementation
+- AI-assisted code review and testing strategies
+
+While AI tools accelerated development, all code has been reviewed, tested, and validated by human developers. Users should be aware that:
+- Code patterns and documentation may reflect AI-generated content
+- The project follows standard software engineering practices for testing and quality assurance
+- Contributions and improvements from the community are welcome and encouraged
+
+This transparency aligns with emerging best practices for AI-assisted software development.
+

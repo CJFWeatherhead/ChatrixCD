@@ -169,14 +169,6 @@ def parse_args():
     )
     
     parser.add_argument(
-        '-t', '--tui-mode',
-        type=str,
-        choices=['turbo', 'classic'],
-        dest='tui_mode',
-        help='Select TUI mode: "turbo" for Turbo Vision-style (default) or "classic" for original TUI'
-    )
-    
-    parser.add_argument(
         '-N', '--no-greetings',
         action='store_true',
         dest='no_greetings',
@@ -443,18 +435,8 @@ def main():
     # Show config and exit if requested
     if args.show_config:
         # Use TUI for show-config if not in redact mode and not verbose mode
-        use_tui_for_config = not args.redact and args.verbosity == 0 and sys.stdin.isatty()
-        
-        if use_tui_for_config:
-            # Show config in TUI window
-            from chatrixcd.tui_turbo import show_config_tui
-            try:
-                asyncio.run(show_config_tui(config))
-            except KeyboardInterrupt:
-                pass
-        else:
-            # Show config in console (original behavior)
-            print_config(config, redact_identifiers=args.redact)
+        # Show config in console
+        print_config(config, redact_identifiers=args.redact)
         sys.exit(0)
     
     # Determine operating mode
@@ -478,21 +460,14 @@ def main():
     # - Running in an interactive terminal
     use_tui = not args.daemon and not args.log_only and sys.stdin.isatty()
     
-    # Determine which TUI mode to use (command-line flag overrides config)
-    tui_mode = args.tui_mode if args.tui_mode else config.get('bot.tui_mode', 'turbo')
-    
     # Get color theme from config
     color_theme = config.get('bot.color_theme', 'default')
     
     try:
         if use_tui:
-            # Run with TUI interface (turbo or classic)
-            if tui_mode == 'turbo':
-                logger.info("Using Turbo Vision-style TUI")
-                asyncio.run(run_tui_with_bot(bot, config, color_enabled, mouse_enabled, tui_type='turbo', theme=color_theme))
-            else:  # classic
-                logger.info("Using classic TUI")
-                asyncio.run(run_tui_with_bot(bot, config, color_enabled, mouse_enabled, tui_type='classic', theme=color_theme))
+            # Run with TUI interface
+            logger.info("Using TUI")
+            asyncio.run(run_tui_with_bot(bot, config, color_enabled, mouse_enabled, theme=color_theme))
         else:
             # Run in classic log-only mode
             asyncio.run(bot.run())
@@ -509,7 +484,7 @@ def main():
         sys.exit(1)
 
 
-async def run_tui_with_bot(bot, config, use_color: bool, mouse: bool = False, tui_type: str = 'turbo', theme: str = 'default'):
+async def run_tui_with_bot(bot, config, use_color: bool, mouse: bool = False, theme: str = 'default'):
     """Run the bot with TUI interface.
     
     This function starts the TUI first, then performs login within the TUI context.
@@ -521,18 +496,13 @@ async def run_tui_with_bot(bot, config, use_color: bool, mouse: bool = False, tu
         config: Configuration object
         use_color: Whether to use colors
         mouse: Whether to enable mouse support (default: False)
-        tui_type: Type of TUI to use ('turbo' for Turbo Vision style, 'classic' for original)
         theme: Color theme to use ('default', 'midnight', 'grayscale', 'windows31', 'msdos')
     """
     import logging
     from nio import SyncResponse
     
-    # Import the appropriate TUI module based on type
-    if tui_type == 'turbo':
-        from chatrixcd.tui_turbo import ChatrixTurboTUI as TUIClass
-        from chatrixcd.tui import OIDCAuthScreen  # OIDC screen is shared
-    else:  # classic
-        from chatrixcd.tui import ChatrixTUI as TUIClass, OIDCAuthScreen
+    # Import the TUI module
+    from chatrixcd.tui import ChatrixTUI as TUIClass, OIDCAuthScreen
     
     logger = logging.getLogger(__name__)
     

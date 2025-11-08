@@ -23,14 +23,28 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Added `psutil` to dependencies (was missing from `pyproject.toml`)
   - Moved `PyYAML` to dev dependencies (only used in tests)
   - Consolidated `RESERVED_COMMANDS` list in `aliases.py`
-  - Removed AI/LLM acknowledgment sections from code and documentation
   - Net code reduction: ~478 lines of duplicate/cruft code removed
+  - Restored AI/LLM acknowledgment sections following best practices for transparency
+
+- **TUI Consolidation** (Breaking Change): Removed Turbo Vision-style TUI, keeping only the classic TUI
+  - Removed `tui_turbo.py` (~1,005 lines) and related tests
+  - Removed `-t/--tui-mode` command-line option
+  - Removed `bot.tui_mode` configuration option
+  - Classic TUI is now the only TUI implementation
+  - Rationale: Classic TUI is more feature-complete, consistent, and maintainable
 
 - **Build System**: Switched ALL architectures (x86_64, i686, arm64) to standalone mode for consistency
   - All binaries now distributed as `.tar.gz` archives containing executable and dependencies
   - Simplified installation process - same instructions for all architectures
   - More reliable than onefile mode on musl libc (avoids symbol resolution issues)
   - Distribution format: `chatrixcd-linux-{arch}.dist.tar.gz` → extract and run
+
+### Removed
+- **Turbo Vision TUI**: Removed experimental Turbo Vision-style TUI implementation
+  - `chatrixcd/tui_turbo.py` removed
+  - `tests/test_tui_turbo_pilot.py` removed
+  - Command-line option `-t/--tui-mode` removed
+  - Configuration option `bot.tui_mode` removed
 
 ### Fixed
 - **i686 Binary**: Fixed ImportError with `PyType_GetModuleByDef: symbol not found` when running i686 binaries
