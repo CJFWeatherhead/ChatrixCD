@@ -1,19 +1,58 @@
-# ChatrixCD Text User Interface (TUI)
+---
+layout: default
+title: TUI Guide
+nav_order: 4
+---
 
-## Overview
+# 🖥️ Text User Interface (TUI)
 
-ChatrixCD includes an interactive Text User Interface (TUI) for managing and monitoring your bot. It's like a dashboard right in your terminal! 🎮
+Your bot's control center, right in the terminal! 🎮
 
-Built with [Textual](https://textual.textualize.io/), the TUI features:
+<div style="padding: 15px; background: #e7f3ff; border-left: 4px solid #2196F3; margin: 1em 0;">
+  <strong>💡 What's a TUI?</strong> It's like a GUI, but in your terminal! Think mouse support, menus, and real-time updates—all without leaving the command line.
+</div>
 
-- Menu-driven navigation 📋
-- Mouse support 🖱️
-- ChatrixCD brand colors (#4A9B7F green) 💚
-- Real-time status updates ⚡
-- Log viewing and room messaging 💬
-- Device verification workflows 🔐
+---
 
-## Getting Started
+## ✨ Features at a Glance
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 2em 0;">
+
+<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+  <h4 style="margin-top: 0;">📊 Status Monitoring</h4>
+  <p style="font-size: 0.9em;">Real-time bot status, connections, and metrics</p>
+</div>
+
+<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+  <h4 style="margin-top: 0;">🏠 Room Management</h4>
+  <p style="font-size: 0.9em;">View, join, leave, and message rooms</p>
+</div>
+
+<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+  <h4 style="margin-top: 0;">🔐 Device Verification</h4>
+  <p style="font-size: 0.9em;">Emoji, QR code, and fingerprint verification</p>
+</div>
+
+<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+  <h4 style="margin-top: 0;">📝 Log Viewing</h4>
+  <p style="font-size: 0.9em;">Real-time log streaming in the terminal</p>
+</div>
+
+<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+  <h4 style="margin-top: 0;">🖱️ Mouse Support</h4>
+  <p style="font-size: 0.9em;">Click buttons and navigate menus</p>
+</div>
+
+<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+  <h4 style="margin-top: 0;">🎨 Pretty Colors</h4>
+  <p style="font-size: 0.9em;">ChatrixCD brand green (#4A9B7F) 💚</p>
+</div>
+
+</div>
+
+---
+
+## 🚀 Launching the TUI
 
 The TUI launches automatically when you run ChatrixCD in an interactive terminal:
 
