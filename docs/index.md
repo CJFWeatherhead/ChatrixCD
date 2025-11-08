@@ -21,7 +21,7 @@ nav_order: 1
 
 - 🔐 **Native Matrix Authentication**: Support for password and OIDC/SSO authentication with Matrix servers
 - 🔒 **E2E Encryption**: Full support for end-to-end encrypted Matrix rooms with device verification
-- 🖥️ **Interactive TUI**: Dual TUI modes - Turbo Vision-style (default) with menu bar and 3D windows, or classic interface
+- 🖥️ **Interactive TUI**: Interactive TUI with status monitoring, room management, and device verification
 - 🧵 **Threaded Responses**: All bot replies are threaded for organized conversations
 - 👍 **Reaction Confirmations**: Quick interactions with emoji reactions (👍/👎) for confirmations
 - 🎭 **Fun Personality**: Varied greetings and sassy responses with emoji throughout

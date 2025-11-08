@@ -2,69 +2,37 @@
 
 ## Overview
 
-ChatrixCD includes two Text User Interface (TUI) styles that provide an interactive, menu-driven way to manage and monitor the bot:
+ChatrixCD includes an interactive Text User Interface (TUI) for managing and monitoring your bot. It's like a dashboard right in your terminal! 🎮
 
-1. **Turbo Vision Style (Default)**: Classic 3D aesthetic with menu bar (File, Edit, Run, Help) and status bar
-2. **Classic Style**: Original TUI with status widgets and button-based navigation
+Built with [Textual](https://textual.textualize.io/), the TUI features:
 
-Both TUI modes are built using the [Textual](https://textual.textualize.io/) framework and feature:
+- Menu-driven navigation 📋
+- Mouse support 🖱️
+- ChatrixCD brand colors (#4A9B7F green) 💚
+- Real-time status updates ⚡
+- Log viewing and room messaging 💬
+- Device verification workflows 🔐
 
-- Menu-driven navigation
-- Mouse support
-- Brand colors (ChatrixCD green: #4A9B7F)
-- Real-time status updates
-- Log viewing
-- Configuration display
-- Room messaging
+## Getting Started
 
-## Starting the TUI
-
-The TUI launches automatically when running ChatrixCD in an interactive terminal:
+The TUI launches automatically when you run ChatrixCD in an interactive terminal:
 
 ```bash
-# Use Turbo Vision style (default)
+# Start with TUI (default)
 chatrixcd
 
-# Use classic TUI style
-chatrixcd -t classic
+# Run without TUI (log-only mode)
+chatrixcd -L
 
-# Or configure in config.json:
-# "bot": { "tui_mode": "classic" }
-```
-
-To enable colored output:
-
-```bash
+# Enable colored output
 chatrixcd -C
 ```
 
-To run without the TUI (classic log-only mode):
-
-```bash
-chatrixcd -L
-```
-
-## TUI Modes
-
-### Turbo Vision Style (Default)
-
-The Turbo Vision style features:
-- Menu bar with File, Edit, Run, Help menus
-- 3D windowed appearance with drop shadows
-- Status bar at bottom showing task status
-- Keyboard shortcuts (F1-F4 for menus)
-
-### Classic Style
-
-The classic style features:
-- Button-based main menu
-- Status widgets for bot monitoring
-- Active task display
-- Keyboard shortcuts (s, a, r, x, etc.)
-
-## TUI Interface (Classic Style)
+## TUI Interface
 
 ### Main Menu
+
+The main menu provides quick access to all bot functions:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
