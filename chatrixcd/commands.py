@@ -481,6 +481,69 @@ class CommandHandler:
         
         await self.bot.send_message(room_id, message, html_message, msgtype="m.notice")
     
+    async def _list_rooms(self, room_id: str, user_name: str):
+        """List all rooms the bot is in.
+        
+        Args:
+            room_id: Room to send response to
+            user_name: Display name of requesting user
+        """
+        rooms = self.bot.client.rooms
+        if not rooms:
+            plain_msg = f"{user_name} 👋 - Not currently in any rooms. 🏠"
+            html_msg = self.markdown_to_html(plain_msg)
+            await self.bot.send_message(room_id, plain_msg, html_msg, msgtype="m.notice")
+            return
+        
+        # Plain text version
+        message = f"{user_name} 👋 Here's where I hang out! 🏠\n\n"
+        message += "**Rooms I'm In**\n\n"
+        for room_id_key, room in rooms.items():
+            room_name = room.display_name or "Unknown"
+            message += f"• **{room_name}**\n  `{room_id_key}`\n"
+        
+        # HTML version with table
+        greeting_html = self.markdown_to_html(user_name)
+        table_html = '<table><thead><tr><th>Room Name</th><th>Room ID</th></tr></thead><tbody>'
+        for room_id_key, room in rooms.items():
+            room_name = html.escape(room.display_name or "Unknown")
+            table_html += f'<tr><td><strong>{room_name}</strong></td><td><code>{html.escape(room_id_key)}</code></td></tr>'
+        table_html += '</tbody></table>'
+        
+        html_message = f"{greeting_html} 👋 Here's where I hang out! 🏠<br/><br/><strong>Rooms I'm In</strong><br/><br/>{table_html}"
+        
+        await self.bot.send_message(room_id, message, html_message, msgtype="m.notice")
+
+    async def _join_room(self, room_id: str, user_name: str, target_room_id: str):
+        """Join a room.
+        
+        Args:
+            room_id: Room to send response to
+            user_name: Display name of requesting user
+            target_room_id: Room ID to join
+        """
+        try:
+            await self.bot.client.join(target_room_id)
+            await self.bot.send_message(room_id, f"✅ Joined room: {target_room_id}")
+        except Exception as e:
+            logger.error(f"Failed to join room {target_room_id}: {e}")
+            await self.bot.send_message(room_id, f"❌ Failed to join room: {e}")
+
+    async def _leave_room(self, room_id: str, user_name: str, target_room_id: str):
+        """Leave a room.
+        
+        Args:
+            room_id: Room to send response to
+            user_name: Display name of requesting user
+            target_room_id: Room ID to leave
+        """
+        try:
+            await self.bot.client.room_leave(target_room_id)
+            await self.bot.send_message(room_id, f"👋 Left room: {target_room_id}")
+        except Exception as e:
+            logger.error(f"Failed to leave room {target_room_id}: {e}")
+            await self.bot.send_message(room_id, f"❌ Failed to leave room: {e}")
+
     async def manage_rooms(self, room_id: str, args: list, sender: str = None):
         """Manage bot rooms (list, join, part).
         
@@ -491,97 +554,38 @@ class CommandHandler:
         """
         user_name = self._get_display_name(sender) if sender else "friend"
         
+        # List rooms if no action specified
         if not args:
-            # List rooms
-            rooms = self.bot.client.rooms
-            if not rooms:
-                plain_msg = f"{user_name} 👋 - Not currently in any rooms. 🏠"
-                html_msg = self.markdown_to_html(plain_msg)
-                await self.bot.send_message(
-                    room_id,
-                    plain_msg,
-                    html_msg,
-                    msgtype="m.notice"
-                )
-                return
-            
-            # Plain text version
-            message = f"{user_name} 👋 Here's where I hang out! 🏠\n\n"
-            message += "**Rooms I'm In**\n\n"
-            for room_id_key, room in rooms.items():
-                room_name = room.display_name or "Unknown"
-                message += f"• **{room_name}**\n  `{room_id_key}`\n"
-            
-            # HTML version with table
-            greeting_html = self.markdown_to_html(user_name)
-            table_html = '<table><thead><tr><th>Room Name</th><th>Room ID</th></tr></thead><tbody>'
-            for room_id_key, room in rooms.items():
-                room_name = html.escape(room.display_name or "Unknown")
-                table_html += f'<tr><td><strong>{room_name}</strong></td><td><code>{html.escape(room_id_key)}</code></td></tr>'
-            table_html += '</tbody></table>'
-            
-            html_message = f"{greeting_html} 👋 Here's where I hang out! 🏠<br/><br/><strong>Rooms I'm In</strong><br/><br/>{table_html}"
-            
-            await self.bot.send_message(room_id, message, html_message, msgtype="m.notice")
+            await self._list_rooms(room_id, user_name)
             return
         
         action = args[0].lower()
         
+        # Join room
         if action == 'join':
             if len(args) < 2:
                 await self.bot.send_message(
                     room_id,
                     f"{user_name} 👋 - Usage: {self.command_prefix} rooms join <room_id>"
-                    
                 )
                 return
-            
-            target_room_id = args[1]
-            try:
-                await self.bot.client.join(target_room_id)
-                await self.bot.send_message(
-                    room_id,
-                    f"✅ Joined room: {target_room_id}"
-                    
-                )
-            except Exception as e:
-                logger.error(f"Failed to join room {target_room_id}: {e}")
-                await self.bot.send_message(
-                    room_id,
-                    f"❌ Failed to join room: {e}"
-                    
-                )
+            await self._join_room(room_id, user_name, args[1])
         
-        elif action == 'part' or action == 'leave':
+        # Leave room
+        elif action in ('part', 'leave'):
             if len(args) < 2:
                 await self.bot.send_message(
                     room_id,
                     f"{user_name} 👋 - Usage: {self.command_prefix} rooms part <room_id>"
-                    
                 )
                 return
-            
-            target_room_id = args[1]
-            try:
-                await self.bot.client.room_leave(target_room_id)
-                await self.bot.send_message(
-                    room_id,
-                    f"👋 Left room: {target_room_id}"
-                    
-                )
-            except Exception as e:
-                logger.error(f"Failed to leave room {target_room_id}: {e}")
-                await self.bot.send_message(
-                    room_id,
-                    f"❌ Failed to leave room: {e}"
-                    
-                )
+            await self._leave_room(room_id, user_name, args[1])
         
+        # Unknown action
         else:
             await self.bot.send_message(
                 room_id,
                 f"{user_name} 👋 - Unknown action: {action}. Use 'join' or 'part'."
-                
             )
     
     async def exit_bot(self, room_id: str, sender: str):
