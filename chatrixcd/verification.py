@@ -8,7 +8,17 @@ import asyncio
 import logging
 from typing import Any, Dict, List, Optional, Callable, Tuple
 from nio import AsyncClient, ToDeviceError
-from nio.crypto import Sas, SasState
+
+# Try to import Sas for device verification
+# These may not be available in all versions of matrix-nio
+try:
+    from nio.crypto import Sas, SasState
+    SAS_AVAILABLE = True
+except ImportError:
+    # Fallback for older versions or when crypto is not available
+    Sas = None  # type: ignore
+    SasState = None  # type: ignore
+    SAS_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +146,7 @@ class DeviceVerificationManager:
         if hasattr(self.client, 'key_verifications') and self.client.key_verifications:
             for transaction_id, verification in self.client.key_verifications.items():
                 # For Sas verifications, user_id and device_id are in other_olm_device
-                if isinstance(verification, Sas):
+                if Sas and isinstance(verification, Sas):
                     other_device = getattr(verification, 'other_olm_device', None)
                     if other_device:
                         user_id = getattr(other_device, 'user_id', 'Unknown')
@@ -158,7 +168,7 @@ class DeviceVerificationManager:
         
         return pending
     
-    async def start_verification(self, device: Any) -> Optional[Sas]:
+    async def start_verification(self, device: Any) -> Optional[Any]:
         """Start SAS verification with a device.
         
         Args:
@@ -167,6 +177,10 @@ class DeviceVerificationManager:
         Returns:
             SAS verification object if successful, None otherwise
         """
+        if not SAS_AVAILABLE:
+            logger.warning("SAS verification not available in this version of matrix-nio")
+            return None
+            
         try:
             # Start key verification
             resp = await self.client.start_key_verification(device)
@@ -184,7 +198,7 @@ class DeviceVerificationManager:
             # Get the SAS object from the client
             if hasattr(self.client, 'key_verifications'):
                 for transaction_id, verification in self.client.key_verifications.items():
-                    if isinstance(verification, Sas):
+                    if Sas and isinstance(verification, Sas):
                         if verification.other_olm_device == device:
                             return verification
             
@@ -195,7 +209,7 @@ class DeviceVerificationManager:
             logger.error(f"Error starting verification: {e}")
             return None
     
-    async def accept_verification(self, sas: Sas) -> bool:
+    async def accept_verification(self, sas: Any) -> bool:
         """Accept a verification request.
         
         Args:
@@ -204,8 +218,12 @@ class DeviceVerificationManager:
         Returns:
             True if accepted successfully, False otherwise
         """
+        if not SAS_AVAILABLE:
+            logger.warning("SAS verification not available in this version of matrix-nio")
+            return False
+            
         try:
-            if not sas.we_started_it and sas.state == SasState.created:
+            if not sas.we_started_it and SasState and sas.state == SasState.created:
                 await self.client.accept_key_verification(sas.transaction_id)
                 # Send the accept message to the other device
                 await self.client.send_to_device_messages()
@@ -233,7 +251,7 @@ class DeviceVerificationManager:
         
         return sas.other_key_set
     
-    async def get_emoji_list(self, sas: Sas) -> Optional[List[Tuple[str, str]]]:
+    async def get_emoji_list(self, sas: Any) -> Optional[List[Tuple[str, str]]]:
         """Get emoji list from SAS verification.
         
         Args:
@@ -248,7 +266,7 @@ class DeviceVerificationManager:
             logger.error(f"Error getting emojis: {e}")
             return None
     
-    async def confirm_verification(self, sas: Sas) -> bool:
+    async def confirm_verification(self, sas: Any) -> bool:
         """Confirm the SAS verification (emojis match).
         
         This method confirms the verification and persists the device's verified
@@ -341,7 +359,7 @@ class DeviceVerificationManager:
         except Exception as e:
             logger.error(f"Error sharing room keys with device: {e}")
     
-    async def reject_verification(self, sas: Sas) -> bool:
+    async def reject_verification(self, sas: Any) -> bool:
         """Reject the SAS verification (emojis don't match).
         
         Args:
@@ -383,8 +401,8 @@ class DeviceVerificationManager:
             
             sas = self.client.key_verifications[transaction_id]
             
-            if not isinstance(sas, Sas):
-                logger.warning(f"Cannot auto-verify: {transaction_id} is not a SAS verification")
+            if not (Sas and isinstance(sas, Sas)):
+                logger.warning(f"Cannot auto-verify: {transaction_id} is not a SAS verification or SAS not available")
                 return False
             
             # Accept the verification request
@@ -496,8 +514,8 @@ class DeviceVerificationManager:
         """
         verification = verification_info['verification']
         
-        if not isinstance(verification, Sas):
-            logger.error(f"Unsupported verification type: {verification_info['type']}")
+        if not (Sas and isinstance(verification, Sas)):
+            logger.error(f"Unsupported verification type or SAS not available: {verification_info['type']}")
             return False
         
         sas = verification

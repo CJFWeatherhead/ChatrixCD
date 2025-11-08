@@ -18,6 +18,7 @@ from nio import (
     InviteMemberEvent,
     MegolmEvent,
     LoginResponse,
+    LoginInfoResponse,
     SyncResponse,
     KeyVerificationStart,
     KeyVerificationCancel,
