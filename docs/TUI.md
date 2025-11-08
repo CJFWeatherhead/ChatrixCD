@@ -18,34 +18,34 @@ Your bot's control center, right in the terminal! 🎮
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 2em 0;">
 
-<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px; background: #f8f9fa;">
   <h4 style="margin-top: 0;">📊 Status Monitoring</h4>
   <p style="font-size: 0.9em;">Real-time bot status, connections, and metrics</p>
 </div>
 
-<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px; background: #f8f9fa;">
   <h4 style="margin-top: 0;">🏠 Room Management</h4>
   <p style="font-size: 0.9em;">View, join, leave, and message rooms</p>
 </div>
 
-<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px; background: #f8f9fa;">
   <h4 style="margin-top: 0;">🔐 Device Verification</h4>
   <p style="font-size: 0.9em;">Emoji, QR code, and fingerprint verification</p>
 </div>
 
-<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px; background: #f8f9fa;">
   <h4 style="margin-top: 0;">📝 Log Viewing</h4>
   <p style="font-size: 0.9em;">Real-time log streaming in the terminal</p>
 </div>
 
-<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px; background: #f8f9fa;">
   <h4 style="margin-top: 0;">🖱️ Mouse Support</h4>
   <p style="font-size: 0.9em;">Click buttons and navigate menus</p>
 </div>
 
-<div style="padding: 15px; border: 2px solid #4A9B7F; border-radius: 8px; background: #f8f9fa;">
+<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px; background: #f8f9fa;">
   <h4 style="margin-top: 0;">🎨 Pretty Colors</h4>
-  <p style="font-size: 0.9em;">ChatrixCD brand green (#4A9B7F) 💚</p>
+  <p style="font-size: 0.9em;">ChatrixCD brand green (#3e836b) 💚</p>
 </div>
 
 </div>
@@ -410,7 +410,7 @@ The TUI fully supports mouse interaction:
 
 When using the `-C` flag, the TUI displays in brand colors:
 
-- **Header**: ChatrixCD green (#4A9B7F / RGB: 74, 155, 127) background with white text
+- **Header**: ChatrixCD green (#3e836b / RGB: 74, 155, 127) background with white text
 - **Footer**: Dark background (#2D3238 / RGB: 45, 50, 56)
 - **Primary Buttons**: ChatrixCD green background
 - **Text**: Standard terminal colors

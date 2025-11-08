@@ -13,7 +13,7 @@ Choose the installation method that works best for you!
 ## 🎯 Quick Comparison
 
 <table style="width: 100%; border-collapse: collapse; margin: 2em 0;">
-<thead style="background: #4A9B7F; color: white;">
+<thead style="background: #3e836b; color: white;">
 <tr>
 <th style="padding: 12px; text-align: left;">Method</th>
 <th style="padding: 12px; text-align: center;">Difficulty</th>
@@ -62,11 +62,11 @@ Choose the installation method that works best for you!
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 2em 0;">
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+<div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;">
   <h4 style="margin-top: 0;">💻 x86_64 (64-bit)</h4>
   <p><strong>Most common</strong></p>
   <p>Intel/AMD 64-bit processors</p>
-  <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64" style="display: inline-block; padding: 10px 20px; background: #4A9B7F; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
+  <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64" style="display: inline-block; padding: 10px 20px; background: #3e836b; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
 </div>
 
 <div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px; background: #f8f9fa;">
@@ -137,7 +137,7 @@ brew install python@3.12 git
 
 <div style="display: flex; flex-direction: column; gap: 15px; margin: 2em 0;">
 
-<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
   <div style="font-size: 2em; margin-right: 15px; min-width: 40px; text-align: center;">1️⃣</div>
   <div style="flex: 1;">
     <strong>Clone the Repository</strong>
@@ -146,7 +146,7 @@ cd ChatrixCD</code></pre>
   </div>
 </div>
 
-<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
   <div style="font-size: 2em; margin-right: 15px; min-width: 40px; text-align: center;">2️⃣</div>
   <div style="flex: 1;">
     <strong>Create Virtual Environment</strong>
@@ -154,7 +154,7 @@ cd ChatrixCD</code></pre>
   </div>
 </div>
 
-<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
   <div style="font-size: 2em; margin-right: 15px; min-width: 40px; text-align: center;">3️⃣</div>
   <div style="flex: 1;">
     <strong>Activate Virtual Environment</strong>
@@ -166,7 +166,7 @@ source .venv/bin/activate
   </div>
 </div>
 
-<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
   <div style="font-size: 2em; margin-right: 15px; min-width: 40px; text-align: center;">4️⃣</div>
   <div style="flex: 1;">
     <strong>Install Dependencies</strong>
@@ -175,7 +175,7 @@ pip install -e .</code></pre>
   </div>
 </div>
 
-<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
   <div style="font-size: 2em; margin-right: 15px; min-width: 40px; text-align: center;">5️⃣</div>
   <div style="flex: 1;">
     <strong>Run ChatrixCD</strong>
@@ -236,7 +236,7 @@ Pre-built binaries aren't available yet for Windows and macOS. Choose one of the
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 2em 0;">
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px;">
+<div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;">
   <h3 style="margin-top: 0;">✅ From Source</h3>
   <p><strong>Recommended</strong></p>
   <p>Native installation with full TUI support</p>
@@ -276,17 +276,17 @@ After installing, you need to:
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 2em 0;">
 
-<div style="padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+<div style="padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
   <strong>1️⃣ Create config.json</strong>
   <p style="font-size: 0.9em;"><a href="configuration.html">Configuration Guide →</a></p>
 </div>
 
-<div style="padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+<div style="padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
   <strong>2️⃣ Run ChatrixCD</strong>
   <p style="font-size: 0.9em;"><a href="quickstart.html">Quick Start Guide →</a></p>
 </div>
 
-<div style="padding: 15px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
+<div style="padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
   <strong>3️⃣ Invite to Room</strong>
   <p style="font-size: 0.9em;"><a href="quickstart.html#step-4%EF%B8%8F%E2%83%A3-invite-bot-to-your-room">Invitation Steps →</a></p>
 </div>
@@ -304,7 +304,7 @@ For production use, consider:
 - **Monitoring**: Set up health checks and logging
 - **Security**: Use OIDC/SSO, restrict allowed_rooms
 
-<a href="deployment.html" style="display: inline-block; padding: 15px 30px; background: #4A9B7F; color: white; text-decoration: none; border-radius: 8px; margin: 2em 0;">
+<a href="deployment.html" style="display: inline-block; padding: 15px 30px; background: #3e836b; color: white; text-decoration: none; border-radius: 8px; margin: 2em 0;">
   📖 Full Deployment Guide →
 </a>
 

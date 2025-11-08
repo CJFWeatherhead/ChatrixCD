@@ -4,63 +4,69 @@ title: Home
 nav_order: 1
 ---
 
-<div align="center" style="margin: 2em 0;">
-  <img src="assets/logo-horizontal.svg" alt="ChatrixCD Logo" width="500" style="max-width: 100%;">
-</div>
+<a href="#main-content" class="skip-to-content">Skip to main content</a>
 
 <div align="center" style="margin: 2em 0;">
-  <h1 style="font-size: 3em; margin-bottom: 0.5em;">🚀 ChatrixCD</h1>
-  <p style="font-size: 1.3em; color: #4A9B7F;">Your CI/CD, Now in Chat! ✨</p>
-  <p style="font-size: 1.1em; margin: 1em 0;">Matrix bot that brings Semaphore UI automation to your encrypted chat rooms</p>
+  <img src="assets/logo-horizontal.svg" alt="ChatrixCD - Matrix bot for CI/CD automation" width="500" style="max-width: 100%;">
 </div>
 
-<div align="center" style="margin: 2em 0;">
-  <a href="installation.html" style="display: inline-block; padding: 15px 30px; background: #4A9B7F; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin: 10px;">
-    📥 Get Started
-  </a>
-  <a href="quickstart.html" style="display: inline-block; padding: 15px 30px; background: #2D3238; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin: 10px;">
-    ⚡ Quick Start
-  </a>
-  <a href="https://github.com/CJFWeatherhead/ChatrixCD" style="display: inline-block; padding: 15px 30px; background: #333; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin: 10px;">
-    🐙 GitHub
-  </a>
-</div>
+<header id="main-content" role="banner">
+  <div align="center" style="margin: 2em 0;">
+    <h1 style="font-size: 3em; margin-bottom: 0.5em;">🚀 ChatrixCD</h1>
+    <p style="font-size: 1.3em; color: #3e836b;">Your CI/CD, Now in Chat! ✨</p>
+    <p style="font-size: 1.1em; margin: 1em 0;">Matrix bot that brings Semaphore UI automation to your encrypted chat rooms</p>
+  </div>
+</header>
+
+<nav role="navigation" aria-label="Quick access navigation">
+  <div align="center" style="margin: 2em 0;">
+    <a href="installation.html" style="display: inline-block; padding: 15px 30px; background: #3e836b; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin: 10px;" aria-label="Get Started with Installation">
+      📥 Get Started
+    </a>
+    <a href="quickstart.html" style="display: inline-block; padding: 15px 30px; background: #2D3238; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin: 10px;" aria-label="View Quick Start Guide">
+      ⚡ Quick Start
+    </a>
+    <a href="https://github.com/CJFWeatherhead/ChatrixCD" style="display: inline-block; padding: 15px 30px; background: #333; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin: 10px;" aria-label="View ChatrixCD on GitHub" rel="noopener noreferrer" target="_blank">
+      🐙 GitHub
+    </a>
+  </div>
+</nav>
 
 ---
 
 ## ✨ Why ChatrixCD?
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 2em 0;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 2em 0;" role="list">
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;" role="listitem">
   <h3 style="margin-top: 0;">🔐 Secure by Default</h3>
   <p>End-to-end encryption support, OIDC/SSO authentication, and device verification built-in.</p>
-</div>
+</article>
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;" role="listitem">
   <h3 style="margin-top: 0;">🎭 Fun & Friendly</h3>
   <p>Sassy bot personality with emoji, threaded responses, and reaction confirmations. Never boring!</p>
-</div>
+</article>
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;" role="listitem">
   <h3 style="margin-top: 0;">🖥️ Interactive TUI</h3>
   <p>Beautiful terminal interface for monitoring, room management, and device verification.</p>
-</div>
+</article>
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;" role="listitem">
   <h3 style="margin-top: 0;">🚀 CI/CD Made Easy</h3>
   <p>Start, monitor, and manage Semaphore tasks directly from chat with real-time updates.</p>
-</div>
+</article>
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;" role="listitem">
   <h3 style="margin-top: 0;">🧠 Smart Automation</h3>
   <p>Auto-fill parameters, smart log tailing, custom aliases, and confirmation flows.</p>
-</div>
+</article>
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;" role="listitem">
   <h3 style="margin-top: 0;">🎨 Rich Formatting</h3>
   <p>Colored status indicators, formatted logs, HTML tables, and semantic emoji throughout.</p>
-</div>
+</article>
 
 </div>
 
@@ -68,10 +74,10 @@ nav_order: 1
 
 ## 🎯 Quick Start in 3 Steps
 
-<div style="display: flex; flex-direction: column; gap: 20px; margin: 2em 0;">
+<ol style="list-style: none; padding: 0; margin: 2em 0;">
 
-<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
-  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #4A9B7F;">1️⃣</div>
+<li style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b; background: #f8f9fa; margin-bottom: 20px;">
+  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #3e836b;" aria-hidden="true">1️⃣</div>
   <div>
     <h3 style="margin-top: 0;">Install ChatrixCD</h3>
     <p>Download the pre-built binary for Linux (no Python needed!) or install from source:</p>
@@ -79,10 +85,10 @@ nav_order: 1
 chmod +x chatrixcd-linux-x86_64</code></pre>
     <p><a href="installation.html">📖 Full Installation Guide →</a></p>
   </div>
-</div>
+</li>
 
-<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
-  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #4A9B7F;">2️⃣</div>
+<li style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b; background: #f8f9fa; margin-bottom: 20px;">
+  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #3e836b;" aria-hidden="true">2️⃣</div>
   <div>
     <h3 style="margin-top: 0;">Configure Your Bot</h3>
     <p>Create a <code>config.json</code> with your Matrix and Semaphore details:</p>
@@ -100,10 +106,10 @@ chmod +x chatrixcd-linux-x86_64</code></pre>
 }</code></pre>
     <p><a href="configuration.html">⚙️ Configuration Guide →</a></p>
   </div>
-</div>
+</li>
 
-<div style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #4A9B7F; background: #f8f9fa;">
-  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #4A9B7F;">3️⃣</div>
+<li style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b; background: #f8f9fa;">
+  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #3e836b;" aria-hidden="true">3️⃣</div>
   <div>
     <h3 style="margin-top: 0;">Start Automating!</h3>
     <p>Run the bot, invite it to your room, and start managing CI/CD tasks:</p>
@@ -114,9 +120,9 @@ chmod +x chatrixcd-linux-x86_64</code></pre>
 !cd run &lt;project_id&gt; &lt;template_id&gt;</code></pre>
     <p><a href="quickstart.html">⚡ Quick Start Guide →</a></p>
   </div>
-</div>
+</li>
 
-</div>
+</ol>
 
 ---
 
@@ -244,10 +250,10 @@ ChatrixCD is open source under the **GNU General Public License v3.0**. See [LIC
 
 ---
 
-<div align="center" style="margin: 3em 0; padding: 2em; background: #f8f9fa; border-radius: 10px;">
+<section style="margin: 3em 0; padding: 2em; background: #f8f9fa; border-radius: 10px; text-align: center;" role="region" aria-label="Call to action">
   <h2 style="margin-top: 0;">Ready to automate? 🚀</h2>
   <p style="font-size: 1.1em;">Install ChatrixCD and start managing CI/CD from chat!</p>
-  <a href="installation.html" style="display: inline-block; padding: 15px 40px; background: #4A9B7F; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin-top: 1em;">
+  <a href="installation.html" style="display: inline-block; padding: 15px 40px; background: #3e836b; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin-top: 1em;" aria-label="Get started with ChatrixCD installation">
     Get Started Now →
   </a>
-</div>
+</section>

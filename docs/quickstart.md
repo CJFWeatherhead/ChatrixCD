@@ -20,7 +20,7 @@ Get ChatrixCD up and running in **5 minutes**! 🚀
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 2em 0;">
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px; background: #f8f9fa;">
+<div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;">
   <h3 style="margin-top: 0;">📦 Pre-built Binary (Easiest!)</h3>
   <p><strong>✅ Recommended for most users</strong></p>
   <p>No Python required! Just download and run:</p>
@@ -159,32 +159,32 @@ Try these commands in your Matrix room:
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 2em 0;">
 
 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f8f9fa;">
-  <code style="font-weight: bold; color: #4A9B7F;">!cd help</code>
+  <code style="font-weight: bold; color: #3e836b;">!cd help</code>
   <p style="font-size: 0.9em; margin-top: 10px;">📖 See all available commands</p>
 </div>
 
 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f8f9fa;">
-  <code style="font-weight: bold; color: #4A9B7F;">!cd projects</code>
+  <code style="font-weight: bold; color: #3e836b;">!cd projects</code>
   <p style="font-size: 0.9em; margin-top: 10px;">📋 List Semaphore projects</p>
 </div>
 
 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f8f9fa;">
-  <code style="font-weight: bold; color: #4A9B7F;">!cd templates 1</code>
+  <code style="font-weight: bold; color: #3e836b;">!cd templates 1</code>
   <p style="font-size: 0.9em; margin-top: 10px;">📄 List templates for project 1</p>
 </div>
 
 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f8f9fa;">
-  <code style="font-weight: bold; color: #4A9B7F;">!cd run 1 2</code>
+  <code style="font-weight: bold; color: #3e836b;">!cd run 1 2</code>
   <p style="font-size: 0.9em; margin-top: 10px;">🚀 Run template 2 in project 1</p>
 </div>
 
 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f8f9fa;">
-  <code style="font-weight: bold; color: #4A9B7F;">!cd status</code>
+  <code style="font-weight: bold; color: #3e836b;">!cd status</code>
   <p style="font-size: 0.9em; margin-top: 10px;">📊 Check last task status</p>
 </div>
 
 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f8f9fa;">
-  <code style="font-weight: bold; color: #4A9B7F;">!cd logs</code>
+  <code style="font-weight: bold; color: #3e836b;">!cd logs</code>
   <p style="font-size: 0.9em; margin-top: 10px;">📝 View logs for last task</p>
 </div>
 
@@ -250,25 +250,25 @@ ChatrixCD has a fun personality! Try these hidden commands:
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 2em 0;">
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px;">
+<div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;">
   <h3 style="margin-top: 0;">⚙️ Configure More</h3>
   <p>Add custom aliases, configure log tailing, set up OIDC</p>
   <a href="configuration.html">Configuration Guide →</a>
 </div>
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px;">
+<div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;">
   <h3 style="margin-top: 0;">🖥️ Explore the TUI</h3>
   <p>Learn about the interactive terminal interface features</p>
   <a href="TUI.html">TUI Guide →</a>
 </div>
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px;">
+<div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;">
   <h3 style="margin-top: 0;">🚀 Deploy to Production</h3>
   <p>systemd, Docker, or native deployment options</p>
   <a href="deployment.html">Deployment Guide →</a>
 </div>
 
-<div style="padding: 20px; border: 2px solid #4A9B7F; border-radius: 10px;">
+<div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;">
   <h3 style="margin-top: 0;">❓ Need Help?</h3>
   <p>Troubleshooting, FAQ, and getting support</p>
   <a href="support.html">Support Guide →</a>
