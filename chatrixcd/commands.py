@@ -1874,6 +1874,178 @@ class CommandHandler:
                 msgtype="m.notice"
             )
 
+    def _gather_bot_system_info(self) -> tuple:
+        """Gather bot and system information.
+        
+        Returns:
+            Tuple of (text_lines, info_dict) where text_lines are for plain text
+            and info_dict contains structured data for HTML tables
+        """
+        lines = []
+        info_dict = {}
+        
+        # Basic bot info
+        lines.append(f"• **Version:** {__version__}")
+        lines.append(f"• **Platform:** {platform.system()} {platform.release()}")
+        lines.append(f"• **Architecture:** {platform.machine()}")
+        lines.append(f"• **Python:** {platform.python_version()}")
+        
+        info_dict['version'] = __version__
+        info_dict['platform'] = f"{platform.system()} {platform.release()}"
+        info_dict['architecture'] = platform.machine()
+        info_dict['python'] = platform.python_version()
+        
+        # System resources
+        try:
+            cpu_percent = psutil.cpu_percent(interval=0.1)
+            memory = psutil.virtual_memory()
+            lines.append(f"• **CPU Usage:** {cpu_percent:.1f}%")
+            lines.append(f"• **Memory Usage:** {memory.percent:.1f}% ({memory.used // (1024**2)} MB / {memory.total // (1024**2)} MB)")
+            info_dict['cpu_percent'] = cpu_percent
+            info_dict['memory'] = memory
+        except Exception as e:
+            logger.debug(f"Could not get system resources: {e}")
+        
+        # Network information (only if not redacting)
+        redact_enabled = self.config.get('redact', False)
+        if not redact_enabled:
+            try:
+                hostname = socket.gethostname()
+                lines.append(f"• **Hostname:** {hostname}")
+                info_dict['hostname'] = hostname
+                
+                # Get IP addresses
+                ipv4_addrs = []
+                ipv6_addrs = []
+                try:
+                    addrs = psutil.net_if_addrs()
+                    for interface, addr_list in addrs.items():
+                        for addr in addr_list:
+                            if addr.family == socket.AF_INET and not addr.address.startswith('127.'):
+                                ipv4_addrs.append(addr.address)
+                            elif addr.family == socket.AF_INET6:
+                                if not addr.address.startswith('::1') and not addr.address.startswith('fe80'):
+                                    ipv6_addrs.append(addr.address.split('%')[0])
+                    
+                    if ipv4_addrs:
+                        lines.append(f"• **IPv4:** {', '.join(ipv4_addrs)}")
+                        info_dict['ipv4'] = ipv4_addrs
+                    if ipv6_addrs:
+                        lines.append(f"• **IPv6:** {', '.join(ipv6_addrs[:2])}")
+                        info_dict['ipv6'] = ipv6_addrs[:2]
+                except Exception as e:
+                    logger.debug(f"Could not get IP addresses: {e}")
+            except Exception as e:
+                logger.debug(f"Could not get network info: {e}")
+        
+        return lines, info_dict
+
+    def _gather_matrix_info(self) -> tuple:
+        """Gather Matrix server information.
+        
+        Returns:
+            Tuple of (text_lines, info_dict, connected, encrypted)
+        """
+        lines = []
+        info_dict = {}
+        connected = False
+        encrypted = False
+        
+        if self.bot.client:
+            lines.append(f"• **Homeserver:** {self.bot.client.homeserver}")
+            lines.append(f"• **User ID:** {self.bot.client.user_id}")
+            info_dict['homeserver'] = self.bot.client.homeserver
+            info_dict['user_id'] = self.bot.client.user_id
+            
+            if hasattr(self.bot.client, 'device_id') and self.bot.client.device_id:
+                lines.append(f"• **Device ID:** {self.bot.client.device_id}")
+                info_dict['device_id'] = self.bot.client.device_id
+            
+            # Connection status
+            if hasattr(self.bot.client, 'logged_in') and self.bot.client.logged_in:
+                lines.append(f"• **Status:** Connected ✅")
+                connected = True
+            else:
+                lines.append(f"• **Status:** Disconnected ❌")
+            
+            # Encryption status
+            if hasattr(self.bot.client, 'olm') and self.bot.client.olm:
+                lines.append(f"• **E2E Encryption:** Enabled 🔒")
+                encrypted = True
+            else:
+                lines.append(f"• **E2E Encryption:** Disabled")
+        
+        return lines, info_dict, connected, encrypted
+
+    def _build_info_html_tables(self, bot_info: dict, matrix_info: dict, 
+                                matrix_connected: bool, matrix_encrypted: bool,
+                                semaphore_info: dict) -> tuple:
+        """Build HTML tables for info display.
+        
+        Returns:
+            Tuple of (bot_table_html, matrix_table_html, semaphore_table_html)
+        """
+        redact_enabled = self.config.get('redact', False)
+        
+        # Bot info table
+        bot_rows = [
+            ['Version', bot_info['version']],
+            ['Platform', bot_info['platform']],
+            ['Architecture', bot_info['architecture']],
+            ['Python', bot_info['python']],
+        ]
+        if 'cpu_percent' in bot_info:
+            bot_rows.append(['CPU Usage', f"{bot_info['cpu_percent']:.1f}%"])
+        if 'memory' in bot_info:
+            mem = bot_info['memory']
+            bot_rows.append(['Memory Usage', f"{mem.percent:.1f}% ({mem.used // (1024**2)} MB / {mem.total // (1024**2)} MB)"])
+        if 'hostname' in bot_info and not redact_enabled:
+            bot_rows.append(['Hostname', bot_info['hostname']])
+        if 'ipv4' in bot_info and not redact_enabled:
+            bot_rows.append(['IPv4', ', '.join(bot_info['ipv4'])])
+        if 'ipv6' in bot_info and not redact_enabled:
+            bot_rows.append(['IPv6', ', '.join(bot_info['ipv6'])])
+        
+        bot_table_html = '<table><thead><tr><th colspan="2">ChatrixCD Bot 🤖</th></tr></thead><tbody>'
+        for key, value in bot_rows:
+            bot_table_html += f'<tr><td><strong>{html.escape(key)}</strong></td><td>{html.escape(str(value))}</td></tr>'
+        bot_table_html += '</tbody></table>'
+        
+        # Matrix info table
+        matrix_table_html = '<table><thead><tr><th colspan="2">Matrix Server 🌐</th></tr></thead><tbody>'
+        if matrix_info:
+            for key in ['homeserver', 'user_id', 'device_id']:
+                if key in matrix_info:
+                    display_key = key.replace('_', ' ').title()
+                    matrix_table_html += f'<tr><td><strong>{display_key}</strong></td><td>{html.escape(matrix_info[key])}</td></tr>'
+            
+            # Status with color
+            if matrix_connected:
+                matrix_table_html += f'<tr><td><strong>Status</strong></td><td>{self._color_success("Connected ✅")}</td></tr>'
+            else:
+                matrix_table_html += f'<tr><td><strong>Status</strong></td><td>{self._color_error("Disconnected ❌")}</td></tr>'
+            
+            # Encryption
+            if matrix_encrypted:
+                matrix_table_html += '<tr><td><strong>E2E Encryption</strong></td><td>Enabled 🔒</td></tr>'
+            else:
+                matrix_table_html += '<tr><td><strong>E2E Encryption</strong></td><td>Disabled</td></tr>'
+        matrix_table_html += '</tbody></table>'
+        
+        # Semaphore info table
+        semaphore_table_html = '<table><thead><tr><th colspan="2">Semaphore Server 🔧</th></tr></thead><tbody>'
+        if semaphore_info:
+            if 'version' in semaphore_info:
+                semaphore_table_html += f'<tr><td><strong>Version</strong></td><td>{html.escape(str(semaphore_info.get("version")))}</td></tr>'
+            for key, value in semaphore_info.items():
+                if key != 'version':
+                    semaphore_table_html += f'<tr><td><strong>{html.escape(key.replace("_", " ").title())}</strong></td><td>{html.escape(str(value))}</td></tr>'
+        else:
+            semaphore_table_html += f'<tr><td colspan="2">{self._color_error("Failed to get Semaphore info ❌")}</td></tr>'
+        semaphore_table_html += '</tbody></table>'
+        
+        return bot_table_html, matrix_table_html, semaphore_table_html
+
     async def get_semaphore_info(self, room_id: str, sender: str = None):
         """Get Semaphore, Matrix server, and bot system info.
         
@@ -1886,170 +2058,35 @@ class CommandHandler:
         # Get Semaphore info
         semaphore_info = await self.semaphore.get_info()
         
-        # Plain text version
+        # Gather information
+        bot_lines, bot_info = self._gather_bot_system_info()
+        matrix_lines, matrix_info, matrix_connected, matrix_encrypted = self._gather_matrix_info()
+        
+        # Build plain text message
         message = f"{user_name} 👋 Here's the technical stuff! ℹ️\n\n"
         message += "**System Information**\n\n"
-        
-        # Bot information
         message += "**ChatrixCD Bot** 🤖\n"
-        message += f"• **Version:** {__version__}\n"
-        message += f"• **Platform:** {platform.system()} {platform.release()}\n"
-        message += f"• **Architecture:** {platform.machine()}\n"
-        message += f"• **Python:** {platform.python_version()}\n"
-        
-        # System resources
-        cpu_percent = None
-        memory = None
-        try:
-            cpu_percent = psutil.cpu_percent(interval=0.1)
-            memory = psutil.virtual_memory()
-            message += f"• **CPU Usage:** {cpu_percent:.1f}%\n"
-            message += f"• **Memory Usage:** {memory.percent:.1f}% ({memory.used // (1024**2)} MB / {memory.total // (1024**2)} MB)\n"
-        except Exception as e:
-            logger.debug(f"Could not get system resources: {e}")
-        
-        # Network information (only if not redacting)
-        # Check if redaction is enabled in bot config
-        redact_enabled = self.config.get('redact', False)
-        hostname = None
-        ipv4_addrs = []
-        ipv6_addrs = []
-        if not redact_enabled:
-            try:
-                hostname = socket.gethostname()
-                message += f"• **Hostname:** {hostname}\n"
-                
-                # Get IP addresses
-                try:
-                    # Get all network interfaces
-                    addrs = psutil.net_if_addrs()
-                    
-                    for interface, addr_list in addrs.items():
-                        for addr in addr_list:
-                            if addr.family == socket.AF_INET:
-                                # IPv4 address
-                                if not addr.address.startswith('127.'):
-                                    ipv4_addrs.append(addr.address)
-                            elif addr.family == socket.AF_INET6:
-                                # IPv6 address
-                                if not addr.address.startswith('::1') and not addr.address.startswith('fe80'):
-                                    ipv6_addrs.append(addr.address.split('%')[0])  # Remove interface suffix
-                    
-                    if ipv4_addrs:
-                        message += f"• **IPv4:** {', '.join(ipv4_addrs)}\n"
-                    if ipv6_addrs:
-                        message += f"• **IPv6:** {', '.join(ipv6_addrs[:2])}\n"  # Show first 2 IPv6 addresses
-                except Exception as e:
-                    logger.debug(f"Could not get IP addresses: {e}")
-            except Exception as e:
-                logger.debug(f"Could not get network info: {e}")
-        
-        message += "\n"
-        
-        # Matrix information
+        message += "\n".join(bot_lines) + "\n\n"
         message += "**Matrix Server** 🌐\n"
-        matrix_connected = False
-        matrix_encrypted = False
-        if self.bot.client:
-            message += f"• **Homeserver:** {self.bot.client.homeserver}\n"
-            message += f"• **User ID:** {self.bot.client.user_id}\n"
-            if hasattr(self.bot.client, 'device_id') and self.bot.client.device_id:
-                message += f"• **Device ID:** {self.bot.client.device_id}\n"
-            
-            # Connection status
-            if hasattr(self.bot.client, 'logged_in') and self.bot.client.logged_in:
-                message += f"• **Status:** Connected ✅\n"
-                matrix_connected = True
-            else:
-                message += f"• **Status:** Disconnected ❌\n"
-            
-            # Encryption status
-            if hasattr(self.bot.client, 'olm') and self.bot.client.olm:
-                message += f"• **E2E Encryption:** Enabled 🔒\n"
-                matrix_encrypted = True
-            else:
-                message += f"• **E2E Encryption:** Disabled\n"
-        
-        message += "\n"
+        message += "\n".join(matrix_lines) + "\n\n"
         
         # Semaphore information
         if semaphore_info:
             message += "**Semaphore Server** 🔧\n"
-            
-            # Display version info
             if 'version' in semaphore_info:
                 message += f"• **Version:** {semaphore_info.get('version')}\n"
-            
-            # Display any other relevant info
             for key, value in semaphore_info.items():
-                if key not in ['version']:
+                if key != 'version':
                     message += f"• **{key.replace('_', ' ').title()}:** {value}\n"
         else:
             message += "**Semaphore Server** 🔧\n"
             message += "• Failed to get Semaphore info ❌\n"
         
-        # HTML version with tables
+        # Build HTML message
         greeting_html = self.markdown_to_html(user_name)
-        
-        # Bot info table
-        bot_rows = [
-            ['Version', __version__],
-            ['Platform', f"{platform.system()} {platform.release()}"],
-            ['Architecture', platform.machine()],
-            ['Python', platform.python_version()],
-        ]
-        if cpu_percent is not None:
-            bot_rows.append(['CPU Usage', f"{cpu_percent:.1f}%"])
-        if memory is not None:
-            bot_rows.append(['Memory Usage', f"{memory.percent:.1f}% ({memory.used // (1024**2)} MB / {memory.total // (1024**2)} MB)"])
-        if hostname and not redact_enabled:
-            bot_rows.append(['Hostname', hostname])
-        if ipv4_addrs and not redact_enabled:
-            bot_rows.append(['IPv4', ', '.join(ipv4_addrs)])
-        if ipv6_addrs and not redact_enabled:
-            bot_rows.append(['IPv6', ', '.join(ipv6_addrs[:2])])
-        
-        bot_table_html = '<table><thead><tr><th colspan="2">ChatrixCD Bot 🤖</th></tr></thead><tbody>'
-        for key, value in bot_rows:
-            bot_table_html += f'<tr><td><strong>{html.escape(key)}</strong></td><td>{html.escape(str(value))}</td></tr>'
-        bot_table_html += '</tbody></table>'
-        
-        # Matrix info table
-        matrix_rows = []
-        if self.bot.client:
-            matrix_rows.append(['Homeserver', self.bot.client.homeserver])
-            matrix_rows.append(['User ID', self.bot.client.user_id])
-            if hasattr(self.bot.client, 'device_id') and self.bot.client.device_id:
-                matrix_rows.append(['Device ID', self.bot.client.device_id])
-            
-            # Connection status with color
-            if matrix_connected:
-                matrix_rows.append(['Status', self._color_success('Connected ✅')])
-            else:
-                matrix_rows.append(['Status', self._color_error('Disconnected ❌')])
-            
-            # Encryption status
-            if matrix_encrypted:
-                matrix_rows.append(['E2E Encryption', 'Enabled 🔒'])
-            else:
-                matrix_rows.append(['E2E Encryption', 'Disabled'])
-        
-        matrix_table_html = '<table><thead><tr><th colspan="2">Matrix Server 🌐</th></tr></thead><tbody>'
-        for key, value in matrix_rows:
-            matrix_table_html += f'<tr><td><strong>{html.escape(key)}</strong></td><td>{value}</td></tr>'
-        matrix_table_html += '</tbody></table>'
-        
-        # Semaphore info table
-        semaphore_table_html = '<table><thead><tr><th colspan="2">Semaphore Server 🔧</th></tr></thead><tbody>'
-        if semaphore_info:
-            if 'version' in semaphore_info:
-                semaphore_table_html += f'<tr><td><strong>Version</strong></td><td>{html.escape(str(semaphore_info.get("version")))}</td></tr>'
-            for key, value in semaphore_info.items():
-                if key not in ['version']:
-                    semaphore_table_html += f'<tr><td><strong>{html.escape(key.replace("_", " ").title())}</strong></td><td>{html.escape(str(value))}</td></tr>'
-        else:
-            semaphore_table_html += f'<tr><td colspan="2">{self._color_error("Failed to get Semaphore info ❌")}</td></tr>'
-        semaphore_table_html += '</tbody></table>'
+        bot_table_html, matrix_table_html, semaphore_table_html = self._build_info_html_tables(
+            bot_info, matrix_info, matrix_connected, matrix_encrypted, semaphore_info
+        )
         
         html_message = f"""{greeting_html} 👋 Here's the technical stuff! ℹ️<br/><br/>
 <strong>System Information</strong><br/><br/>
@@ -2058,7 +2095,7 @@ class CommandHandler:
 {semaphore_table_html}
 """
         
-        await self.bot.send_message(room_id, message, html_message, msgtype="m.notice")
+        await self.bot.send_message(room_id, message, html_message)
 
     async def list_command_aliases(self, room_id: str, sender: str = None):
         """List all command aliases.
