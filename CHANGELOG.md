@@ -16,6 +16,16 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Changed
+- **Code Refactoring**: Comprehensive refactoring to improve maintainability and reduce code duplication
+  - Extracted `FileWatcher` class for shared file monitoring logic (used by `aliases.py` and `messages.py`)
+  - Simplified configuration migrations (reduced from 100 lines to 30 lines)
+  - Modernized packaging: enhanced `pyproject.toml` with complete metadata, simplified `setup.py` to minimal stub
+  - Added `psutil` to dependencies (was missing from `pyproject.toml`)
+  - Moved `PyYAML` to dev dependencies (only used in tests)
+  - Consolidated `RESERVED_COMMANDS` list in `aliases.py`
+  - Removed AI/LLM acknowledgment sections from code and documentation
+  - Net code reduction: ~478 lines of duplicate/cruft code removed
+
 - **Build System**: Switched ALL architectures (x86_64, i686, arm64) to standalone mode for consistency
   - All binaries now distributed as `.tar.gz` archives containing executable and dependencies
   - Simplified installation process - same instructions for all architectures
