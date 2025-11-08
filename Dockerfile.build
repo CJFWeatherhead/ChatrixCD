@@ -60,7 +60,7 @@ RUN --mount=type=cache,target=/root/.ccache \
     chatrixcd/main.py && \
     # Rename the output executable and directory for consistency \
     mv main.dist chatrixcd-linux-${ARCH}.dist && \
-    mv chatrixcd-linux-${ARCH}.dist/main chatrixcd-linux-${ARCH}.dist/chatrixcd
+    mv chatrixcd-linux-${ARCH}.dist/main.bin chatrixcd-linux-${ARCH}.dist/chatrixcd
 
 # Final stage - copy the standalone directory
 FROM scratch AS export
