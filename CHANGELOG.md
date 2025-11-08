@@ -15,6 +15,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+## [2025.11.08.5.0.0] - 2025-11-08
+
 ### Fixed
 - **Build System**: Fixed Dockerfile.build to correctly rename `main.bin` to `chatrixcd` in standalone mode
   - Nuitka creates `main.bin` instead of `main` when using `--mode=standalone`
@@ -1032,6 +1034,8 @@ ChatrixCD/
 
 
 
+
+- **2025.11.08.5.0.0** (2025-11-08)
 - **2025.11.07.4.1.0** (2025-11-07)
 - **2025.11.04.4.0.1** (2025-11-04)
 - **2025.11.03.4.0.0** (2025-11-03)
