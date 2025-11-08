@@ -212,7 +212,7 @@ A visual guide to how ChatrixCD works under the hood.
 </tr>
 <tr>
 <td style="padding: 12px;"><strong>🎭 User Experience</strong></td>
-<td style="padding: 12px;">Fun personality, emoji, threaded responses, reaction confirmations</td>
+<td style="padding: 12px;">Fun personality, emoji, reaction confirmations</td>
 </tr>
 <tr style="background: #f8f9fa;">
 <td style="padding: 12px;"><strong>🛡️ Security First</strong></td>
