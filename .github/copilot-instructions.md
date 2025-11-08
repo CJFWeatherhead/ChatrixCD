@@ -90,6 +90,8 @@ ChatrixCD has a distinctive, engaging personality:
 - **Personal Touch**: Address users by name when responding (e.g., "username 👋")
 - **Variety**: Randomize response messages to avoid repetition and maintain engagement
 - **Reaction Support**: Users can confirm actions with emoji reactions (👍/👎) instead of messages
+- **Rich Formatting**: Use HTML formatting for bold, italics, and links in messages. Use data-mx-color and data-mx-bg-color attributes for custom colors.
+- **Maintain Compliance with Matrix 1.10+**: Ensure all messages and features comply with Matrix protocol standards.
 
 #### Easter Eggs
 
