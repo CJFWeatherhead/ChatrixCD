@@ -1204,6 +1204,49 @@ class CommandHandler:
                 await self.bot.send_message(room_id, message, html_message)
                 last_notification_time = current_time
 
+    def _get_status_emoji(self, status: str) -> str:
+        """Get emoji for task status.
+        
+        Args:
+            status: Task status string
+            
+        Returns:
+            Emoji string representing the status
+        """
+        return {
+            'waiting': '⏸️',
+            'running': '🔄',
+            'success': '✅',
+            'error': '❌',
+            'stopped': '🛑',
+            'skipped': '⏭️',
+            'rescued': '🛟',
+            'ignored': '🙈',
+            'unreachable': '🔒',
+            'unknown': '❓'
+        }.get(status, '❓')
+
+    def _color_status(self, status: str, emoji: str) -> str:
+        """Apply color to status based on type.
+        
+        Args:
+            status: Task status string
+            emoji: Emoji for the status
+            
+        Returns:
+            HTML string with colored status
+        """
+        if status == 'success':
+            return self._color_success(f'{emoji} {status}')
+        elif status in ('error', 'stopped'):
+            return self._color_error(f'{emoji} {status}')
+        elif status == 'running':
+            return self._color_info(f'{emoji} {status}')
+        elif status == 'waiting':
+            return self._color_warning(f'{emoji} {status}')
+        else:
+            return f'{emoji} {status}'
+
     async def check_status(self, room_id: str, args: list, sender: str = None):
         """Check status of a task.
         
@@ -1214,14 +1257,13 @@ class CommandHandler:
         """
         user_name = self._get_display_name(sender) if sender else "friend"
         
-        # If no args, use last task
+        # Determine task ID
         if not args:
             if self.last_task_id is None:
                 await self.bot.send_message(
                     room_id,
                     f"{user_name} 👋 - No task ID provided and no previous task found.\n"
                     f"Usage: {self.command_prefix} status <task_id>"
-                    
                 )
                 return
             task_id = self.last_task_id
@@ -1231,78 +1273,46 @@ class CommandHandler:
             try:
                 task_id = int(args[0])
             except ValueError:
-                await self.bot.send_message(
-                    room_id,
-                    f"{user_name} 👋 - Invalid task ID ❌"
-                    
-                )
+                await self.bot.send_message(room_id, f"{user_name} 👋 - Invalid task ID ❌")
                 return
-                
+            
             if task_id not in self.active_tasks:
                 await self.bot.send_message(
                     room_id,
                     f"{user_name} 👋 - Task {task_id} not found in active tasks ❌"
-                    
                 )
                 return
-                
+            
             project_id = self.active_tasks[task_id]['project_id']
         
+        # Get task status
         task = await self.semaphore.get_task_status(project_id, task_id)
-        
         if not task:
             await self.bot.send_message(
                 room_id,
                 f"{user_name} 👋 - Could not get status for task {task_id} ❌"
-                
             )
             return
         
         status = task.get('status', 'unknown')
         task_name = self.active_tasks.get(task_id, {}).get('template_name')
         task_display = f"{task_name} ({task_id})" if task_name else str(task_id)
+        status_emoji = self._get_status_emoji(status)
         
-        # Choose semantic emoji based on status
-        status_emoji = {
-            'waiting': '⏸️',  # waiting
-            'running': '🔄',  # running/in progress
-            'success': '✅',  # ok/success
-            'error': '❌',    # failed/error
-            'stopped': '🛑',  # stopped
-            'skipped': '⏭️',  # skipped
-            'rescued': '🛟',  # rescued
-            'ignored': '🙈',  # ignored
-            'unreachable': '🔒',  # unreachable
-            'unknown': '❓'   # unknown
-        }.get(status, '❓')
-        
-        # Plain text version
+        # Build plain text message
         message = f"{user_name} 👋 Here's the scoop! {status_emoji}\n\n"
         message += f"**Task {task_display} Status:** {status}\n\n"
-        
         if task.get('start'):
             message += f"**Started:** {task.get('start')}\n"
         if task.get('end'):
             message += f"**Ended:** {task.get('end')}\n"
         
-        # HTML version with colored status
+        # Build HTML message with colored status
         greeting_html = self.markdown_to_html(user_name)
-        
-        # Color the status based on type
-        if status == 'success':
-            status_colored = self._color_success(f'{status_emoji} {status}')
-        elif status in ('error', 'stopped'):
-            status_colored = self._color_error(f'{status_emoji} {status}')
-        elif status == 'running':
-            status_colored = self._color_info(f'{status_emoji} {status}')
-        elif status == 'waiting':
-            status_colored = self._color_warning(f'{status_emoji} {status}')
-        else:
-            status_colored = f'{status_emoji} {status}'
+        status_colored = self._color_status(status, status_emoji)
         
         html_message = f"{greeting_html} 👋 Here's the scoop!<br/><br/>"
         html_message += f"<strong>Task {html.escape(task_display)} Status:</strong> {status_colored}<br/><br/>"
-        
         if task.get('start'):
             html_message += f"<strong>Started:</strong> {html.escape(str(task.get('start')))}<br/>"
         if task.get('end'):
