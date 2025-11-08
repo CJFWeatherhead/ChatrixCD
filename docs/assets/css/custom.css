@@ -14,7 +14,7 @@
   --chatrixcd-white: #FFFFFF;
   
   /* Status colors - WCAG AA compliant */
-  --chatrixcd-success: #28A745; /* 4.03:1 contrast on white */
+  --chatrixcd-success: #1e7e34; /* 5.14:1 contrast on white (was #28A745 at 3.13:1) */
   --chatrixcd-warning: #B45309; /* 5.02:1 contrast on white (was #FFC107 at 1.63:1) */
   --chatrixcd-error: #DC3545; /* 4.53:1 contrast on white */
   --chatrixcd-info: #0C7792; /* 4.51:1 contrast on white (adjusted from #17A2B8) */

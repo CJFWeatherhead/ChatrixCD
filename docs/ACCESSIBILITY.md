@@ -36,7 +36,7 @@ Our brand colors have been carefully chosen for accessibility:
 |---------|-------|------------|----------------|--------|
 | Links | #3e836b | White | 4.50:1 | ✓ PASS |
 | Link Hover | #407e66 | White | 4.78:1 | ✓ PASS |
-| Success | #28A745 | White | 4.03:1 | ✓ PASS |
+| Success | #1e7e34 | White | 5.14:1 | ✓ PASS |
 | Warning | #B45309 | White | 5.02:1 | ✓ PASS |
 | Error | #DC3545 | White | 4.53:1 | ✓ PASS |
 | Info | #0C7792 | White | 4.51:1 | ✓ PASS |

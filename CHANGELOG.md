@@ -16,6 +16,20 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Changed
+- **Documentation Accessibility** (WCAG 2.1 AA Compliance): Complete accessibility overhaul for GitHub Pages documentation
+  - **Color Contrast**: All colors now meet WCAG 2.1 AA standards (4.5:1 for normal text, 3.0:1 for large text)
+    - Updated brand green: #3e836b (was #4A9B7F, improved from 3.34:1 to 4.50:1 contrast)
+    - Updated link hover: #407e66 (was #5CB593, improved from 2.47:1 to 4.78:1 contrast)
+    - Updated warning: #B45309 (was #FFC107, improved from 1.63:1 to 5.02:1 contrast)
+    - Updated success: #1e7e34 (was #28A745, improved from 3.13:1 to 5.14:1 contrast)
+    - Updated info: #0C7792 (was #17A2B8, improved to 5.16:1 contrast)
+  - **Semantic HTML**: Improved structure with proper header, nav, section, article elements and ARIA labels
+  - **Keyboard Navigation**: Added skip-to-content links and visible focus indicators (3px outline)
+  - **Responsive Design**: Enhanced mobile support with proper viewport, touch-friendly buttons (44x44px minimum)
+  - **Meta Tags**: Added comprehensive accessibility metadata (viewport, lang, Open Graph, Twitter Card)
+  - **User Preferences**: Support for reduced motion, high contrast mode, and print stylesheets
+  - **Documentation**: New ACCESSIBILITY.md page documenting compliance and testing
+
 - **Code Refactoring**: Comprehensive refactoring to improve maintainability and reduce code duplication
   - Extracted `FileWatcher` class for shared file monitoring logic (used by `aliases.py` and `messages.py`)
   - Simplified configuration migrations (reduced from 100 lines to 30 lines)
