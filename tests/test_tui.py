@@ -235,34 +235,6 @@ class TestShowConfigTUI(unittest.TestCase):
         import inspect
         
         self.assertTrue(inspect.iscoroutinefunction(show_config_tui))
-    
-
-            StatusScreen, OptionsScreen, AboutScreen, VersionScreen
-        )
-        
-        mock_tui = Mock()
-        mock_tui.bot = Mock()
-        mock_tui.config = Mock()
-        mock_tui.start_time = 1234567890
-        mock_tui.messages_processed = 0
-        mock_tui.errors = 0
-        mock_tui.warnings = 0
-        
-        # Test StatusScreen creation
-        status_screen = StatusScreen(mock_tui)
-        self.assertIsNotNone(status_screen)
-        
-        # Test OptionsScreen creation
-        options_screen = OptionsScreen(mock_tui)
-        self.assertIsNotNone(options_screen)
-        
-        # Test AboutScreen creation
-        about_screen = AboutScreen()
-        self.assertIsNotNone(about_screen)
-        
-        # Test VersionScreen creation
-        version_screen = VersionScreen()
-        self.assertIsNotNone(version_screen)
 
 
 class TestCSSCompatibility(unittest.TestCase):
@@ -304,12 +276,6 @@ class TestCSSCompatibility(unittest.TestCase):
         
         for var in required_scrollbar_vars:
             self.assertIn(var, css_vars, 
-                         f"Missing required CSS variable: {var}")
-            'scrollbar-corner-color'
-        ]
-        
-        for var in required_scrollbar_vars:
-            self.assertIn(var, css_vars,
                          f"Missing required CSS variable: {var}")
     
     def test_all_themes_provide_css_variables(self):
