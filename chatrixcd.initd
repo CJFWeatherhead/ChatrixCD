@@ -1,5 +1,10 @@
 #!/sbin/openrc-run
 
+# ChatrixCD - Matrix bot for CI/CD automation with Semaphore UI
+# 
+# Note: Alpine Linux with OpenRC is the PRIMARY deployment target for ChatrixCD.
+# This init script provides native integration for Alpine Linux systems.
+
 name="ChatrixCD"
 description="Matrix bot for CI/CD automation with Semaphore UI"
 

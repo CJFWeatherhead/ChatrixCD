@@ -4,6 +4,10 @@ Documentation=https://github.com/CJFWeatherhead/ChatrixCD
 After=network-online.target
 Wants=network-online.target
 
+# Note: Alpine Linux with OpenRC is the primary deployment target.
+# This systemd service file is provided for Debian/Ubuntu (secondary target).
+# For Alpine Linux deployments, use chatrixcd.initd instead.
+
 [Service]
 Type=simple
 User=chatrixcd

@@ -164,47 +164,6 @@ Create a `config.json` file in your working directory. The file supports HJSON f
 - **Human-friendly**: More readable and maintainable configuration files
 - **Clear error messages**: Helpful error messages with line numbers when syntax is invalid
 
-## Environment Variables
-
-Environment variables use `SCREAMING_SNAKE_CASE` with component prefixes:
-
-### Matrix Configuration
-
-- `MATRIX_HOMESERVER` - Matrix homeserver URL (required)
-- `MATRIX_USER_ID` - Bot user ID, e.g., `@bot:example.com` (required)
-- `MATRIX_PASSWORD` - Bot password (required if not using OIDC)
-- `MATRIX_DEVICE_NAME` - Device name for the bot (default: "ChatrixCD Bot")
-- `MATRIX_STORE_PATH` - Path to store encryption keys (default: "./store")
-- `MATRIX_AUTH_TYPE` - Authentication type: "password" or "oidc" (default: "password")
-
-### OIDC Configuration
-
-For OIDC authentication using Matrix SSO flow:
-
-- `MATRIX_OIDC_REDIRECT_URL` - Redirect URL for SSO callback (optional, default: `http://localhost:8080/callback`)
-  - The URL where your browser will be redirected after SSO authentication
-  - Does **not** need to be a running web server - only used to receive the `loginToken` in the URL
-  - Common values:
-    - `http://localhost:8080/callback` (default, for local/desktop use)
-    - `https://your-domain.com/auth/callback` (production with web handler)
-    - `urn:ietf:wg:oauth:2.0:oob` (OAuth2 out-of-band for CLI apps)
-
-**Note:** ChatrixCD uses the Matrix SSO/OIDC flow, not direct OAuth2 client credentials. The Matrix server handles the OIDC provider integration.
-
-### Semaphore Configuration
-
-- `SEMAPHORE_URL` - Semaphore UI URL (required)
-- `SEMAPHORE_API_TOKEN` - Semaphore API token (required)
-
-### Bot Configuration
-
-- `BOT_COMMAND_PREFIX` - Command prefix (default: "!cd")
-- `BOT_ALLOWED_ROOMS` - Comma-separated list of allowed room IDs (empty = all rooms)
-- `BOT_GREETINGS_ENABLED` - Enable/disable startup and shutdown messages (default: "true")
-- `BOT_GREETING_ROOMS` - Comma-separated list of room IDs to send greetings to (empty = no greetings)
-- `BOT_STARTUP_MESSAGE` - Custom startup message (default: "🤖 ChatrixCD bot is now online and ready to help with CI/CD tasks!")
-- `BOT_SHUTDOWN_MESSAGE` - Custom shutdown message (default: "👋 ChatrixCD bot is shutting down. See you later!")
-
 ## Authentication Methods
 
 ChatrixCD supports two authentication methods for Matrix servers:

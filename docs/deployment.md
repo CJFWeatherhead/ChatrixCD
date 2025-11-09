@@ -12,15 +12,42 @@ Overview of deployment options for ChatrixCD. For detailed deployment instructio
 
 | Platform | Method | Init System | File |
 |----------|--------|-------------|------|
-| Docker | Debian-based | N/A | `Dockerfile` |
-| Docker | Alpine Linux | N/A | `Dockerfile.alpine` |
-| Debian/Ubuntu | Native | systemd | `chatrixcd-debian.service` |
-| RHEL/CentOS/Fedora | Native | systemd | `chatrixcd.service` |
-| Alpine Linux | Native | OpenRC | `chatrixcd.initd` |
+| **Alpine Linux (Primary)** | Docker | N/A | `Dockerfile.alpine` |
+| **Alpine Linux (Primary)** | Native | OpenRC | `chatrixcd.initd` |
+| Debian-based (Secondary) | Docker | N/A | `Dockerfile` |
+| Debian/Ubuntu (Secondary) | Native | systemd | `chatrixcd-debian.service` |
+| RHEL/CentOS/Fedora (Secondary) | Native | systemd | `chatrixcd.service` |
 
 ## Docker Deployment
 
-### Debian-based (Recommended)
+### Alpine Linux (Primary - Recommended)
+
+Best for minimal deployments and resource efficiency. **Primary deployment target.**
+
+```bash
+# Using Docker Compose
+docker-compose -f docker-compose.alpine.yml up -d
+
+# Or manually
+docker build -f Dockerfile.alpine -t chatrixcd:alpine .
+docker run -d \
+  -v $(pwd)/config.json:/app/config.json:ro \
+  -v $(pwd)/store:/app/store \
+  --name chatrixcd \
+  chatrixcd:alpine
+```
+
+**Pros:**
+- Smaller image size (~100MB)
+- Faster builds
+- Lower resource usage
+- Best alignment with project targets
+
+**Cons:**
+- Some packages may not be available for edge cases
+- Different system libraries (musl vs glibc)
+
+### Debian-based (Secondary)
 
 Best for standard deployments with maximum compatibility.
 
@@ -31,7 +58,7 @@ docker-compose up -d
 # Or manually
 docker build -t chatrixcd:latest .
 docker run -d \
-  -v $(pwd)/config.json:/app/config.json \
+  -v $(pwd)/config.json:/app/config.json:ro \
   -v $(pwd)/store:/app/store \
   --name chatrixcd \
   chatrixcd:latest
@@ -46,35 +73,27 @@ docker run -d \
 - Larger image size (~200MB)
 - Slower builds
 
-### Alpine Linux
-
-Best for minimal deployments and resource efficiency.
-
-```bash
-# Using Docker Compose
-docker-compose -f docker-compose.alpine.yml up -d
-
-# Or manually
-docker build -f Dockerfile.alpine -t chatrixcd:alpine .
-docker run -d \
-  -v $(pwd)/config.json:/app/config.json \
-  -v $(pwd)/store:/app/store \
-  --name chatrixcd \
-  chatrixcd:alpine
-```
-
-**Pros:**
-- Smaller image size (~100MB)
-- Faster builds
-- Lower resource usage
-
-**Cons:**
-- Some packages may not be available
-- Different system libraries (musl vs glibc)
-
 ## Native Deployment
 
-### Debian/Ubuntu (systemd)
+### Alpine Linux (Primary - Recommended)
+
+Minimal resource usage with OpenRC. **Primary deployment target.**
+
+```bash
+# Install as service
+sudo cp chatrixcd.initd /etc/init.d/chatrixcd
+sudo chmod +x /etc/init.d/chatrixcd
+sudo rc-update add chatrixcd default
+sudo rc-service chatrixcd start
+```
+
+**Features:**
+- Minimal resource usage
+- OpenRC init system
+- Automatic restart
+- Best alignment with project targets
+
+### Debian/Ubuntu (systemd - Secondary)
 
 Enhanced security with modern systemd features.
 
@@ -93,7 +112,7 @@ sudo systemctl start chatrixcd
 - Automatic restart
 - Resource limits
 
-### RHEL/CentOS/Fedora (systemd)
+### RHEL/CentOS/Fedora (systemd - Secondary)
 
 Standard systemd configuration for Red Hat family.
 
