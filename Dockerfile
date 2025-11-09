@@ -30,5 +30,8 @@ RUN pip install --no-cache-dir -e .
 # Create store directory
 RUN mkdir -p /app/store
 
+# Note: Configuration should be provided via mounted config.json file
+# Example: -v ./config.json:/app/config.json:ro
+
 # Run the bot
 CMD ["chatrixcd"]

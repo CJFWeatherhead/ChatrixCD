@@ -6,12 +6,12 @@ This document provides an overview of deployment options for ChatrixCD.
 
 | Method | Platform | Init System | File/Link |
 |--------|----------|-------------|-----------|
-| **Pre-built Binary** | Linux/Windows/macOS | systemd/manual | [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest) |
-| Docker | Debian-based | N/A | `Dockerfile` |
-| Docker | Alpine Linux | N/A | `Dockerfile.alpine` |
-| Native | Debian/Ubuntu | systemd | `chatrixcd-debian.service` |
-| Native | RHEL/CentOS/Fedora | systemd | `chatrixcd.service` |
-| Native | Alpine Linux | OpenRC | `chatrixcd.initd` |
+| **Pre-built Binary** | Linux (Alpine-focused) | systemd/OpenRC/manual | [Download](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest) |
+| Docker | **Alpine Linux (Primary)** | N/A | `Dockerfile.alpine` |
+| Docker | Debian-based (Secondary) | N/A | `Dockerfile` |
+| Native | **Alpine Linux (Primary)** | OpenRC | `chatrixcd.initd` |
+| Native | Debian/Ubuntu (Secondary) | systemd | `chatrixcd-debian.service` |
+| Native | RHEL/CentOS/Fedora (Secondary) | systemd | `chatrixcd.service` |
 
 ## Recommended Deployments
 
@@ -24,11 +24,12 @@ This document provides an overview of deployment options for ChatrixCD.
 - Testing and evaluation
 
 **Standalone executable:**
-- **Statically compiled** with musl libc - no dependencies required
+- **Statically compiled** with musl libc targeting Alpine Linux 3.22+
 - Works on all Linux distributions (kernel 3.2+)
 - Easy updates (just replace the binary)
 - Smallest deployment footprint
 - All libraries (OpenSSL, libffi, etc.) embedded in binary
+- Optimized for Alpine Linux but portable to other distributions
 
 **Download:** [Latest Release](https://github.com/CJFWeatherhead/ChatrixCD/releases/latest)
 
@@ -36,46 +37,49 @@ See [INSTALL.md](INSTALL.md#method-1-pre-built-binary-recommended) for setup ins
 
 ### For Production (Docker)
 
-**Debian-based** (default):
-- Use for standard deployments
-- Larger image size (~200MB)
-- Better package compatibility
-- File: `Dockerfile`
-
-**Alpine Linux**:
-- Use for minimal deployments
+**Alpine Linux (Primary - Recommended)**:
+- Minimal deployments
 - Smaller image size (~100MB)
 - Faster builds
+- Lower resource usage
 - File: `Dockerfile.alpine`
+
+**Debian-based (Secondary)**:
+- Standard deployments
+- Larger image size (~200MB)
+- Better package compatibility for edge cases
+- File: `Dockerfile`
 
 ### For Production (Native)
 
-**Debian/Ubuntu**:
+**Alpine Linux (Primary - Recommended)**:
+- Minimal resource usage
+- OpenRC init system
+- Best alignment with project target
+- File: `chatrixcd.initd`
+
+**Debian/Ubuntu (Secondary)**:
 - Enhanced security hardening
 - Modern systemd features
 - File: `chatrixcd-debian.service`
 
-**RHEL/CentOS/Fedora**:
+**RHEL/CentOS/Fedora (Secondary)**:
 - Standard systemd configuration
 - File: `chatrixcd.service`
 
-**Alpine Linux**:
-- Minimal resource usage
-- OpenRC init system
-- File: `chatrixcd.initd`
-
 ## Feature Comparison
 
-| Feature | Pre-built Binary | Docker (Debian) | Docker (Alpine) | Native (Debian) | Native (Alpine) |
-|---------|------------------|----------------|-----------------|-----------------|-----------------|
+| Feature | Pre-built Binary | Docker (Alpine) | Docker (Debian) | Native (Alpine) | Native (Debian) |
+|---------|------------------|-----------------|-----------------|-----------------|-----------------|
 | Setup Time | Instant | Fast | Fast | Medium | Medium |
-| Disk Usage | ~50-100MB | ~200MB | ~100MB | Minimal | Minimal |
-| Memory Usage | Low | Medium | Low | Low | Very Low |
+| Disk Usage | ~50-100MB | ~100MB | ~200MB | Minimal | Minimal |
+| Memory Usage | Low | Low | Medium | Very Low | Low |
 | Dependencies | None | Docker | Docker | Python + Deps | Python + Deps |
 | Updates | Replace file | Rebuild image | Rebuild image | Update code | Update code |
-| Security Hardening | Good | Good | Good | Excellent | Good |
+| Security Hardening | Good | Good | Good | Good | Excellent |
 | Ease of Deployment | Very Easy | Very Easy | Very Easy | Medium | Medium |
-| Package Compatibility | Excellent | Excellent | Good | Excellent | Good |
+| Package Compatibility | Excellent | Good | Excellent | Good | Excellent |
+| Target Alignment | ⭐ Primary | ⭐ Primary | Secondary | ⭐ Primary | Secondary |
 
 ## Choosing a Deployment Method
 
@@ -85,26 +89,29 @@ See [INSTALL.md](INSTALL.md#method-1-pre-built-binary-recommended) for setup ins
 - You're testing or evaluating ChatrixCD
 - You prefer simple file-based updates
 - You're deploying on a single machine
-
-### Use Docker (Debian) if:
-- You want the easiest deployment
-- You need maximum package compatibility
-- Image size is not a concern
+- You're running Alpine Linux (primary target)
 
 ### Use Docker (Alpine) if:
-- You want minimal resource usage
+- You want minimal resource usage (Primary recommendation)
 - You prefer faster builds
 - You need smaller images
+- You want the best alignment with project targets
 
-### Use Native (Debian) if:
-- You want maximum security hardening
-- You prefer native systemd integration
-- You're on Debian/Ubuntu servers
+### Use Docker (Debian) if:
+- You need maximum package compatibility for specific edge cases
+- Image size is not a concern
+- You're already using Debian-based infrastructure
 
 ### Use Native (Alpine) if:
-- You need minimal system resources
+- You need minimal system resources (Primary recommendation)
 - You prefer OpenRC over systemd
 - You're running Alpine Linux
+- You want the best alignment with project targets
+
+### Use Native (Debian) if:
+- You want maximum security hardening with systemd
+- You prefer native systemd integration
+- You're on Debian/Ubuntu servers
 
 ## Detailed Instructions
 

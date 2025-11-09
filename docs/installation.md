@@ -66,21 +66,21 @@ Choose the installation method that works best for you!
   <h4 style="margin-top: 0;">💻 x86_64 (64-bit)</h4>
   <p><strong>Most common</strong></p>
   <p>Intel/AMD 64-bit processors</p>
-  <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64" style="display: inline-block; padding: 10px 20px; background: #3e836b; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
+  <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz" style="display: inline-block; padding: 10px 20px; background: #3e836b; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
 </div>
 
 <div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px; background: #f8f9fa;">
   <h4 style="margin-top: 0;">🖥️ i686 (32-bit)</h4>
   <p><strong>Older systems</strong></p>
   <p>32-bit Intel/AMD processors</p>
-  <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686" style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
+  <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686.dist.tar.gz" style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
 </div>
 
 <div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px; background: #f8f9fa;">
   <h4 style="margin-top: 0;">🥧 ARM64</h4>
   <p><strong>ARM devices</strong></p>
   <p>Raspberry Pi, ARM servers</p>
-  <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64" style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
+  <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64.dist.tar.gz" style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
 </div>
 
 </div>
@@ -89,13 +89,14 @@ Choose the installation method that works best for you!
 
 ```bash
 # 1. Download (example for x86_64)
-wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz
 
-# 2. Make executable
-chmod +x chatrixcd-linux-x86_64
+# 2. Extract
+tar -xzf chatrixcd-linux-x86_64.dist.tar.gz
+cd chatrixcd-linux-x86_64.dist
 
 # 3. Run it!
-./chatrixcd-linux-x86_64
+./chatrixcd
 ```
 
 <div style="padding: 15px; background: #e7f3ff; border-left: 4px solid #2196F3; margin: 1em 0;">
@@ -260,9 +261,10 @@ Pre-built binaries aren't available yet for Windows and macOS. Choose one of the
 wsl --install
 
 # In WSL terminal:
-wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
-chmod +x chatrixcd-linux-x86_64
-./chatrixcd-linux-x86_64</code></pre>
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz
+tar -xzf chatrixcd-linux-x86_64.dist.tar.gz
+cd chatrixcd-linux-x86_64.dist
+./chatrixcd</code></pre>
   </details>
 </div>
 
