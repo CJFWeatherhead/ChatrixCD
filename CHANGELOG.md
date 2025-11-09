@@ -15,6 +15,34 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Changed
+- **Deployment Focus**: Updated all deployment documentation to reflect Alpine Linux as primary target
+  - Alpine Linux (OpenRC) is now explicitly marked as primary deployment target
+  - Debian/Ubuntu (systemd) marked as secondary target
+  - Updated DEPLOYMENT.md with clear priority indicators
+  - Updated docs/deployment.md to lead with Alpine recommendations
+  - Added notes in systemd service files indicating Alpine as primary target
+  - Enhanced OpenRC init script with primary target documentation
+- **Docker Configuration**: Removed environment variable support, now config.json only
+  - Removed `.env.example` file (environment variables no longer supported)
+  - Updated `docker-compose.yml` to mount config.json instead of using env vars
+  - Updated `docker-compose.alpine.yml` to mount config.json instead of using env vars
+  - Added notes in Dockerfiles about config.json requirement
+  - Simplified Docker configuration to single source of truth
+  
+### Fixed
+- **Binary Download Links**: Corrected binary artifact links in documentation
+  - Updated docs/installation.md to use .dist.tar.gz format (was single file)
+  - Fixed WSL installation instructions to use correct tarball format
+  - All download links now correctly point to distributed tarball artifacts
+
+### Added
+- **Documentation**: Created comprehensive repository alignment improvement plan
+  - Generated detailed analysis of copilot instructions alignment
+  - Identified 14 major areas for improvement with priorities
+  - Documented quick wins and implementation roadmap
+  - Available in `/tmp/ALIGNMENT_IMPROVEMENT_PLAN.md` for maintainer review
+
 ## [2025.11.08.5.0.0] - 2025-11-08
 
 ### Fixed
