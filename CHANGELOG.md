@@ -16,6 +16,14 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Changed
+- **Build System**: Removed redundant QEMU emulation from build workflow
+  - Docker Buildx with BuildKit can perform native cross-compilation without QEMU
+  - QEMU was only needed for older `docker run` approach, not for buildx
+  - BuildKit uses platform-specific base images and cross-compilation toolchains
+  - Simplifies build process and potentially improves build times
+  - Affects all architecture builds (x86_64, i686, arm64)
+
+### Changed
 - **Deployment Focus**: Updated all deployment documentation to reflect Alpine Linux as primary target
   - Alpine Linux (OpenRC) is now explicitly marked as primary deployment target
   - Debian/Ubuntu (systemd) marked as secondary target
