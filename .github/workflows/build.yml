@@ -129,6 +129,14 @@ jobs:
             echo "flag=yes" >> "$GITHUB_OUTPUT"
           fi
       
+      - name: Set Python optimization flag
+        id: python_optimize
+        run: |
+          # Python optimization (PGO + LTO) significantly increases Python build time
+          # Disabled by default for faster CI builds
+          # Can be enabled for release builds if needed
+          echo "flag=no" >> "$GITHUB_OUTPUT"
+      
       - name: Validate Dockerfile syntax
         run: |
           # Basic syntax validation before starting lengthy build
@@ -156,6 +164,8 @@ jobs:
           build-args: |
             ARCH=${{ matrix.arch }}
             ENABLE_LTO=${{ steps.lto.outputs.flag }}
+            PYTHON_VERSION=3.12.8
+            PYTHON_OPTIMIZE=${{ steps.python_optimize.outputs.flag }}
           cache-from: type=gha,scope=build-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=build-${{ matrix.arch }}
           outputs: type=local,dest=.
