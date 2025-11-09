@@ -2,6 +2,10 @@
 Description=ChatrixCD - Matrix bot for CI/CD automation
 After=network.target
 
+# Note: Alpine Linux with OpenRC is the primary deployment target.
+# This systemd service file is provided for RHEL/CentOS/Fedora (secondary target).
+# For Alpine Linux deployments, use chatrixcd.initd instead.
+
 [Service]
 Type=simple
 User=chatrixcd
