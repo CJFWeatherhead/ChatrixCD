@@ -15,6 +15,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+## [2025.11.09.5.1.0] - 2025-11-09
+
 ### Changed
 - **Build System**: Removed redundant QEMU emulation from build workflow
   - Docker Buildx with BuildKit can perform native cross-compilation without QEMU
@@ -1089,6 +1091,8 @@ ChatrixCD/
 
 
 
+
+- **2025.11.09.5.1.0** (2025-11-09)
 - **2025.11.08.5.0.0** (2025-11-08)
 - **2025.11.07.4.1.0** (2025-11-07)
 - **2025.11.04.4.0.1** (2025-11-04)
