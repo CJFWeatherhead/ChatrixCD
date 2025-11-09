@@ -42,6 +42,20 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Identified 14 major areas for improvement with priorities
   - Documented quick wins and implementation roadmap
   - Available in `/tmp/ALIGNMENT_IMPROVEMENT_PLAN.md` for maintainer review
+### Fixed
+- **Build System**: Fixed `PyType_GetModuleByDef: symbol not found` error in compiled binaries
+  - Root cause: Alpine's default Python package provides shared libraries instead of static ones
+  - Solution: Build Python from source with `--disable-shared --enable-static=yes --with-static-libpython`
+  - Added `--python-flag=no_site` to Nuitka build flags for better static linking
+  - Ensures `--static-libpython=yes` works correctly with musl libc on Alpine Linux
+  - Affects all architectures (x86_64, i686, arm64)
+
+### Changed
+- **Build Performance**: Optimized build times in GitHub Actions
+  - Python optimization flags (PGO + LTO) disabled by default for faster CI builds
+  - Can be enabled for release builds with `PYTHON_OPTIMIZE=yes` build arg
+  - Python source download cached with BuildKit cache mounts
+  - Reduces Python build time from ~15 minutes to ~5 minutes per architecture
 
 ## [2025.11.08.5.0.0] - 2025-11-08
 
