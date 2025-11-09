@@ -29,6 +29,10 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Updated `docker-compose.alpine.yml` to mount config.json instead of using env vars
   - Added notes in Dockerfiles about config.json requirement
   - Simplified Docker configuration to single source of truth
+- **Documentation Cleanup**: Removed outdated environment variable documentation
+  - Removed "Environment Variables" section from docs/configuration.md
+  - Environment variables were removed in version 2025.10.14
+  - All configuration now exclusively through config.json
   
 ### Fixed
 - **Binary Download Links**: Corrected binary artifact links in documentation
