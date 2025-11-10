@@ -1251,7 +1251,7 @@ class CommandHandler:
         else:
             return f'{emoji} {status}'
 
-    async def check_status(self, room_id: str, args: list, sender: str | None):
+    async def check_status(self, room_id: str, args: list, sender: str | None = None):
         """Check status of a task.
         
         Args:
