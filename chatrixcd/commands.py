@@ -632,7 +632,7 @@ class CommandHandler:
             # Set timeout to clear confirmation after 30 seconds
             asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 30, room_id))
 
-    async def list_projects(self, room_id: str, sender: str | None):
+    async def list_projects(self, room_id: str, sender: str | None = None):
         """List available Semaphore projects.
         
         Args:
@@ -693,7 +693,7 @@ class CommandHandler:
         
         return formatted
 
-    async def list_templates(self, room_id: str, args: list, sender: str | None):
+    async def list_templates(self, room_id: str, args: list, sender: str | None = None):
         """List templates for a project.
         
         Args:
@@ -1557,7 +1557,7 @@ class CommandHandler:
                 f"{user_name} 👋 - Failed to retrieve logs for task #{task_id} ❌"
             )
 
-    async def get_logs(self, room_id: str, args: list, sender: str | None):
+    async def get_logs(self, room_id: str, args: list, sender: str | None = None):
         """Get logs for a task or control global log tailing.
         
         Supports:
