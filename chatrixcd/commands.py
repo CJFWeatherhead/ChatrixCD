@@ -173,22 +173,22 @@ class CommandHandler:
             HTML table string
         """
         # Start table with border
-        html = '<table><thead><tr>'
+        table_html = '<table><thead><tr>'
         
         # Add headers
         for header in headers:
-            html += f'<th>{html.escape(header)}</th>'
-        html += '</tr></thead><tbody>'
+            table_html += f'<th>{html.escape(header)}</th>'
+        table_html += '</tr></thead><tbody>'
         
         # Add rows
         for row in rows:
-            html += '<tr>'
+            table_html += '<tr>'
             for cell in row:
-                html += f'<td>{html.escape(str(cell))}</td>'
-            html += '</tr>'
+                table_html += f'<td>{html.escape(str(cell))}</td>'
+            table_html += '</tr>'
         
-        html += '</tbody></table>'
-        return html
+        table_html += '</tbody></table>'
+        return table_html
 
     def _get_display_name(self, user_id: str) -> str:
         """Get a friendly display name for a user.
