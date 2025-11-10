@@ -173,6 +173,30 @@ class SemaphoreClient:
             logger.error(f"Error starting task: {e}")
             return None
 
+    async def get_task(self, task_id: int) -> Optional[Dict[str, Any]]:
+        """Get details of a specific task.
+        
+        Args:
+            task_id: ID of the task
+            
+        Returns:
+            Task dictionary or None if failed
+        """
+        await self._ensure_session()
+        try:
+            async with self.session.get(
+                f"{self.base_url}/api/task/{task_id}"
+            ) as resp:
+                if resp.status == 200:
+                    task = await resp.json()
+                    return task
+                else:
+                    logger.error(f"Failed to get task: {resp.status}")
+                    return None
+        except Exception as e:
+            logger.error(f"Error getting task: {e}")
+            return None
+
     async def get_task_status(self, project_id: int, task_id: int) -> Optional[Dict[str, Any]]:
         """Get status of a specific task.
         
