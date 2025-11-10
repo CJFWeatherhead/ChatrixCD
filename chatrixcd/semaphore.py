@@ -41,7 +41,7 @@ class SemaphoreClient:
         if not self.ssl_verify:
             # Disable SSL verification
             logger.warning("SSL certificate verification is disabled for Semaphore connection")
-            return False
+            return None
         
         # Create SSL context for custom certificate configuration
         if self.ssl_ca_cert or self.ssl_client_cert:
