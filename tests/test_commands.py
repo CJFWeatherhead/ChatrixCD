@@ -655,7 +655,7 @@ class TestCommandHandler(unittest.TestCase):
         # Test that None user ID returns a greeting
         greeting = self.handler._get_greeting(None)
         self.assertIsInstance(greeting, str)
-        self.assertTrue(len(greeting) > 0)
+        self.assertGreater(len(greeting), 0)
 
     def test_format_description_with_paragraph_symbol(self):
         """Test formatting descriptions with ¶ symbol."""
