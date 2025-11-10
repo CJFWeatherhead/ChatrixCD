@@ -98,6 +98,10 @@ class SemaphoreClient:
             List of project dictionaries
         """
         await self._ensure_session()
+        if self.session is None:
+            logger.error("aiohttp session could not be created")
+            return []
+        
         try:
             async with self.session.get(f"{self.base_url}/api/projects") as resp:
                 if resp.status == 200:
@@ -121,6 +125,10 @@ class SemaphoreClient:
             List of template dictionaries
         """
         await self._ensure_session()
+        if self.session is None:
+            logger.error("aiohttp session could not be created")
+            return []
+        
         try:
             async with self.session.get(
                 f"{self.base_url}/api/project/{project_id}/templates"
@@ -150,6 +158,10 @@ class SemaphoreClient:
             Task dictionary or None if failed
         """
         await self._ensure_session()
+        if self.session is None:
+            logger.error("aiohttp session could not be created")
+            return None
+        
         try:
             payload = {
                 'template_id': template_id,
@@ -183,6 +195,10 @@ class SemaphoreClient:
             Task dictionary or None if failed
         """
         await self._ensure_session()
+        if self.session is None:
+            logger.error("aiohttp session could not be created")
+            return None
+
         try:
             async with self.session.get(
                 f"{self.base_url}/api/task/{task_id}"
@@ -208,6 +224,10 @@ class SemaphoreClient:
             Task dictionary with status or None if failed
         """
         await self._ensure_session()
+        if self.session is None:
+            logger.error("aiohttp session could not be created")
+            return None
+        
         try:
             async with self.session.get(
                 f"{self.base_url}/api/project/{project_id}/tasks/{task_id}"
@@ -239,6 +259,10 @@ class SemaphoreClient:
             Task output as string or None if failed
         """
         await self._ensure_session()
+        if self.session is None:
+            logger.error("aiohttp session could not be created")
+            return None
+        
         try:
             async with self.session.get(
                 f"{self.base_url}/api/project/{project_id}/tasks/{task_id}/output"
@@ -274,6 +298,10 @@ class SemaphoreClient:
             True if task was stopped successfully, False otherwise
         """
         await self._ensure_session()
+        if self.session is None:
+            logger.error("aiohttp session could not be created")
+            return False
+        
         try:
             async with self.session.post(
                 f"{self.base_url}/api/project/{project_id}/tasks/{task_id}/stop"
@@ -295,6 +323,10 @@ class SemaphoreClient:
             True if server responds, False otherwise
         """
         await self._ensure_session()
+        if self.session is None:
+            logger.error("aiohttp session could not be created")
+            return False
+
         try:
             async with self.session.get(f"{self.base_url}/api/ping") as resp:
                 if resp.status == 200:
@@ -314,6 +346,10 @@ class SemaphoreClient:
             Server info dictionary or None if failed
         """
         await self._ensure_session()
+        if self.session is None:
+            logger.error("aiohttp session could not be created")
+            return None
+        
         try:
             async with self.session.get(f"{self.base_url}/api/info") as resp:
                 if resp.status == 200:
