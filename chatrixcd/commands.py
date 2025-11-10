@@ -916,7 +916,7 @@ class CommandHandler:
         
         asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 300, room_id))
 
-    async def _clear_confirmation_timeout(self, confirmation_key: str, timeout: int, room_id: str = None):
+    async def _clear_confirmation_timeout(self, confirmation_key: str, timeout: int, room_id: str | None):
         """Clear a pending confirmation after timeout.
         
         Args:
@@ -1128,7 +1128,7 @@ class CommandHandler:
             # Execute the task
             await self._execute_task(room_id, confirmation)
 
-    async def monitor_task(self, project_id: int, task_id: int, room_id: str, task_name: str = None):
+    async def monitor_task(self, project_id: int, task_id: int, room_id: str, task_name: str | None):
         """Monitor a task and report status updates.
         
         Args:
