@@ -197,10 +197,10 @@ class CommandHandler:
         The markdown_to_html function will convert it to a clickable mention link.
         
         Args:
-            user_id: User ID to get display name for, defaults to `'friend'` if `None` is passed
+            user_id: User ID to get display name for, or None to use 'friend' as default
             
         Returns:
-            Full Matrix user ID (e.g., @username:server.com) for proper mentions, or `'friend'` if `user_id` is `None`
+            Full Matrix user ID (e.g., @username:server.com) for proper mentions, or 'friend' if user_id is None
         """
         # Return the full Matrix ID for proper mentions
         # The markdown_to_html function will convert it to an HTML link
