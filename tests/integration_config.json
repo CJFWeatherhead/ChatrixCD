@@ -5,9 +5,12 @@
   "chatrix_dir": "~/ChatrixCD",
   "venv_activate": "source .venv/bin/activate",
   "chatrix_command": "chatrix -NLCvv",
-  "test_client": {
+  "matrix": {
+    "homeserver": "https://matrix.example.com",
     "user_id": "@testuser:example.com",
-    "password": "testpassword"
+    "password": "testpassword",
+    "room_id": "!roomid:example.com",
+    "bot_user_id": "@chatrix:example.com"
   },
   "test_timeout": 300,
   "ssh_key_path": "~/.ssh/id_rsa"

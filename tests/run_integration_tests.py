@@ -36,28 +36,43 @@ class IntegrationTestRunner:
         with open(self.config_path, 'r') as f:
             return json.load(f)
 
-    def _run_ssh_command(self, command: str, user: str = "root") -> str:
-        """Run a command on the remote host via SSH."""
-        ssh_cmd = [
-            "ssh",
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
-            "-i", os.path.expanduser(self.config.get("ssh_key_path", "~/.ssh/id_rsa")),
-            f"{user}@{self.config['remote_host']}",
-            command
-        ]
+    def _get_remote_config(self) -> dict:
+        """Read and parse the config.json from the remote server."""
+        print("Reading configuration from remote server...")
+        
+        # Read the config file from remote server
+        cat_cmd = f"su {self.config['chatrix_user']} -c 'cat {self.config['chatrix_dir']}/config.json'"
+        config_json = self._run_ssh_command(cat_cmd)
+        
+        try:
+            remote_config = json.loads(config_json)
+            return remote_config
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"Failed to parse remote config.json: {e}") from None
 
-        result = subprocess.run(
-            ssh_cmd,
-            capture_output=True,
-            text=True,
-            timeout=30
-        )
-
-        if result.returncode != 0:
-            raise RuntimeError(f"SSH command failed: {result.stderr}")
-
-        return result.stdout.strip()
+    def _extract_matrix_config(self, remote_config: dict) -> dict:
+        """Extract Matrix configuration from remote config."""
+        matrix_config = {}
+        
+        # Extract homeserver
+        if 'matrix' in remote_config and 'homeserver' in remote_config['matrix']:
+            matrix_config['homeserver'] = remote_config['matrix']['homeserver']
+        else:
+            raise RuntimeError("Matrix homeserver not found in remote config")
+        
+        # Extract bot user ID
+        if 'matrix' in remote_config and 'user_id' in remote_config['matrix']:
+            matrix_config['bot_user_id'] = remote_config['matrix']['user_id']
+        else:
+            raise RuntimeError("Bot user_id not found in remote config")
+        
+        # Extract allowed rooms (use first one as test room)
+        if 'allowed_rooms' in remote_config and remote_config['allowed_rooms']:
+            matrix_config['room_id'] = remote_config['allowed_rooms'][0]
+        else:
+            raise RuntimeError("No allowed_rooms found in remote config")
+        
+        return matrix_config
 
     def start_bot(self) -> None:
         """Start ChatrixCD on the remote machine."""
@@ -133,6 +148,21 @@ class IntegrationTestRunner:
     def run(self) -> bool:
         """Run the complete integration test cycle."""
         try:
+            # Get Matrix configuration from remote server
+            remote_config = self._get_remote_config()
+            matrix_config = self._extract_matrix_config(remote_config)
+            
+            # Merge with local config for test environment
+            test_config = self.config.copy()
+            test_config['matrix'] = matrix_config
+            
+            # Add test client credentials
+            if 'test_client' in self.config:
+                test_config['matrix'].update(self.config['test_client'])
+            
+            # Set environment variable for the test
+            os.environ['INTEGRATION_CONFIG'] = json.dumps(test_config)
+            
             self.start_bot()
             success = self.run_tests()
             return success

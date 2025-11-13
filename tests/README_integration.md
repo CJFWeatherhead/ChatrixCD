@@ -2,7 +2,62 @@
 
 This directory contains tools for running integration tests against a live ChatrixCD instance running on a remote machine.
 
-## Setup
+## Local Development Setup (macOS with Homebrew)
+
+### Prerequisites
+
+1. **Install Homebrew** (if not already installed):
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+
+2. **Install uv package manager**:
+   ```bash
+   brew install uv
+   ```
+
+3. **Install Python 3.12+** (if not already installed):
+   ```bash
+   brew install python@3.14
+   ```
+
+### Setup Steps
+
+1. **Clone and enter the repository**:
+   ```bash
+   git clone https://github.com/CJFWeatherhead/ChatrixCD.git
+   cd ChatrixCD
+   ```
+
+2. **Create virtual environment**:
+   ```bash
+   uv venv
+   ```
+
+3. **Activate virtual environment**:
+   ```bash
+   source .venv/bin/activate
+   ```
+
+4. **Install dependencies**:
+   ```bash
+   uv pip install -r requirements.txt
+   uv pip install -e .
+   uv pip install pytest pytest-asyncio
+   ```
+
+5. **Verify installation**:
+   ```bash
+   python -m pytest tests/test_config.py::TestConfig::test_json_config -v
+   ```
+
+### Troubleshooting
+
+- **python-olm build failures**: The integration tests use `matrix-nio` without E2E encryption features to avoid build issues with `python-olm` on macOS.
+- **CMake errors**: Ensure you have `cmake` installed: `brew install cmake`
+- **Permission issues**: Make sure your SSH keys have correct permissions: `chmod 600 ~/.ssh/id_rsa`
+
+## Remote Machine Setup
 
 1. **Copy the configuration template:**
    ```bash
@@ -12,19 +67,33 @@ This directory contains tools for running integration tests against a live Chatr
 2. **Edit the configuration:**
    Update `tests/integration_config.json` with your specific settings:
    - `remote_host`: IP address of the machine running ChatrixCD
-   - `remote_user`: SSH user (usually "root")
-   - `chatrix_user`: User account running ChatrixCD
-   - `matrix`: Matrix server and credentials for the test client
+   - `remote_user`: SSH user for initial connection (usually "root")
+   - `chatrix_user`: User account that runs ChatrixCD
+   - `test_client`: Credentials for the test Matrix user (user_id, password)
    - `ssh_key_path`: Path to your SSH private key
 
-3. **Ensure SSH access:**
-   Make sure you can SSH to the remote machine without a password:
-   ```bash
-   ssh -i ~/.ssh/id_rsa root@100.96.234.70
-   ```
+   **Note**: Matrix server details (homeserver, bot user ID, room ID) are automatically read from the remote server's `config.json` file.
 
-4. **Install dependencies:**
-   The tests require `matrix-nio` which should already be installed.
+### Configuration Options
+
+### Remote Machine Configuration
+
+- `remote_host`: IP/hostname of the remote machine
+- `remote_user`: SSH user for initial connection (usually "root")
+- `chatrix_user`: User account that runs ChatrixCD
+- `chatrix_dir`: Directory where ChatrixCD is installed (usually "~/ChatrixCD")
+- `venv_activate`: Command to activate virtual environment
+- `chatrix_command`: Command to start ChatrixCD with desired flags
+
+### Test Client Configuration
+
+- `user_id`: Matrix user ID for the test client
+- `password`: Password for the test client
+
+### Test Configuration
+
+- `test_timeout`: Timeout for test runs (seconds)
+- `ssh_key_path`: Path to SSH private key
 
 ## Running Integration Tests
 
@@ -38,10 +107,12 @@ python tests/run_integration_tests.py tests/integration_config.json
 
 This will:
 1. SSH to the remote machine
-2. Start ChatrixCD in the background
-3. Run the integration tests
-4. Stop ChatrixCD
-5. Report results
+2. Read Matrix configuration from the remote `config.json`
+3. Update code and dependencies on remote machine
+4. Start ChatrixCD in the background
+5. Run the integration tests
+6. Stop ChatrixCD
+7. Report results
 
 ### Manual Testing
 
@@ -68,30 +139,6 @@ If you want to start/stop the bot manually:
    # Kill it
    kill <PID>
    ```
-
-## Configuration Options
-
-### Remote Machine Configuration
-
-- `remote_host`: IP/hostname of the remote machine
-- `remote_user`: SSH user for initial connection (usually "root")
-- `chatrix_user`: User account that runs ChatrixCD
-- `chatrix_dir`: Directory where ChatrixCD is installed (usually "~/ChatrixCD")
-- `venv_activate`: Command to activate virtual environment
-- `chatrix_command`: Command to start ChatrixCD with desired flags
-
-### Matrix Configuration
-
-- `homeserver`: Matrix homeserver URL
-- `user_id`: Test user ID for sending messages
-- `password`: Test user password
-- `room_id`: Room ID where ChatrixCD is active
-- `bot_user_id`: ChatrixCD bot's user ID
-
-### Test Configuration
-
-- `test_timeout`: Timeout for test runs (seconds)
-- `ssh_key_path`: Path to SSH private key
 
 ## Test Coverage
 

@@ -21,6 +21,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Matrix protocol integration tests
   - Configurable test setup for local network testing
   - Automated start/stop of remote bot during testing
+  - Automatic Matrix configuration discovery from remote server
 
 ### Changed
 - Temporarily removed E2E encryption requirement from matrix-nio dependency
