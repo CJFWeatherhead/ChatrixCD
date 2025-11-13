@@ -32,7 +32,7 @@ class SemaphoreClient:
         self.ssl_client_key = ssl_client_key
         self.session: Optional[aiohttp.ClientSession] = None
 
-    def _create_ssl_context(self) -> Optional[ssl.SSLContext]:
+    def _create_ssl_context(self) -> ssl.SSLContext | bool | None:
         """Create SSL context based on configuration.
         
         Returns:
@@ -41,7 +41,7 @@ class SemaphoreClient:
         if not self.ssl_verify:
             # Disable SSL verification
             logger.warning("SSL certificate verification is disabled for Semaphore connection")
-            return None
+            return False
         
         # Create SSL context for custom certificate configuration
         if self.ssl_ca_cert or self.ssl_client_cert:
