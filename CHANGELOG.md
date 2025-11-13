@@ -22,6 +22,12 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Configurable test setup for local network testing
   - Automated start/stop of remote bot during testing
 
+### Changed
+- Temporarily removed E2E encryption requirement from matrix-nio dependency
+  - Allows easier local development and testing on macOS
+  - Reduces build complexity by avoiding python-olm compilation issues
+  - E2E features can be re-enabled when needed for production deployments
+
 ## [2025.11.09.5.1.0] - 2025-11-09
 
 ### Changed
