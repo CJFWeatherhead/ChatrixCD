@@ -42,8 +42,8 @@ class IntegrationTestRunner:
         """Read and parse the config.json from the remote server."""
         print("Reading configuration from remote server...")
         
-        # Read the config file from remote server
-        cat_cmd = f"su {self.config['chatrix_user']} -c 'cat {self.config['chatrix_dir']}/config.json'"
+        # Read the config file from remote server (using root to access chatrix directory)
+        cat_cmd = f"cat {self.config['chatrix_dir']}/config.json"
         config_json = self._run_ssh_command(cat_cmd)
         
         print(f"Raw config output (first 200 chars): {config_json[:200]}")
@@ -80,8 +80,8 @@ class IntegrationTestRunner:
         
         return matrix_config
 
-    def _run_ssh_command(self, command: str, user: str = "root") -> str:
-        """Run a command on the remote host via SSH."""
+    def _run_ssh_command(self, command: str, user: str = "root", max_retries: int = 3) -> str:
+        """Run a command on the remote host via SSH with retry logic."""
         ssh_cmd = [
             "ssh",
             "-o", "StrictHostKeyChecking=no",
@@ -91,31 +91,46 @@ class IntegrationTestRunner:
             command
         ]
 
-        result = subprocess.run(
-            ssh_cmd,
-            capture_output=True,
-            text=True,
-            timeout=30
-        )
+        last_error = None
+        for attempt in range(max_retries):
+            try:
+                print(f"SSH attempt {attempt + 1}/{max_retries}: {command[:50]}...")
+                result = subprocess.run(
+                    ssh_cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
 
-        if result.returncode != 0:
-            raise RuntimeError(f"SSH command failed: {result.stderr}")
+                if result.returncode == 0:
+                    return result.stdout.strip()
+                else:
+                    last_error = RuntimeError(f"SSH command failed: {result.stderr}")
+                    print(f"SSH attempt {attempt + 1} failed: {result.stderr.strip()}")
+                    
+            except subprocess.TimeoutExpired:
+                last_error = RuntimeError("SSH command timed out")
+                print(f"SSH attempt {attempt + 1} timed out")
+            
+            if attempt < max_retries - 1:
+                print("Retrying in 2 seconds...")
+                time.sleep(2)
 
-        return result.stdout.strip()
+        raise last_error
 
     def start_bot(self) -> None:
         """Start ChatrixCD on the remote machine."""
         print("Updating ChatrixCD on remote machine...")
         
-        # Update code and dependencies
-        update_cmd = f"su {self.config['chatrix_user']} -c 'cd {self.config['chatrix_dir']} && git pull && uv pip install -r requirements.txt && uv pip install -e .'"
+        # Update code and dependencies as chatrix user
+        update_cmd = f"su - {self.config['chatrix_user']} -c 'cd {self.config['chatrix_dir']} && git pull && uv pip install -r requirements.txt && uv pip install -e .'"
         self._run_ssh_command(update_cmd)
         print("Code updated and dependencies installed")
         
         print("Starting ChatrixCD on remote machine...")
         
-        # Switch to chatrix user and start the bot
-        start_cmd = f"su {self.config['chatrix_user']} -c 'cd {self.config['chatrix_dir']} && {self.config['venv_activate']} && nohup {self.config['chatrix_command']} > chatrix.log 2>&1 & echo $!'"
+        # Start the bot as chatrix user
+        start_cmd = f"su - {self.config['chatrix_user']} -c 'cd {self.config['chatrix_dir']} && {self.config['venv_activate']} && nohup {self.config['chatrix_command']} > chatrix.log 2>&1 & echo $!'"
         
         # Get the PID
         pid_output = self._run_ssh_command(start_cmd)
@@ -128,11 +143,14 @@ class IntegrationTestRunner:
         # Wait a bit for the bot to start
         time.sleep(5)
         
-        # Verify it's running
-        check_cmd = f"ps -p {self.bot_pid} -o pid,cmd | grep chatrix"
+        # Verify it's running (use BusyBox compatible ps)
+        check_cmd = f"ps | grep {self.bot_pid} | grep chatrix"
         try:
-            self._run_ssh_command(check_cmd, self.config['chatrix_user'])
-            print("ChatrixCD is running")
+            result = self._run_ssh_command(check_cmd)
+            if str(self.bot_pid) in result and 'chatrix' in result:
+                print("ChatrixCD is running")
+            else:
+                raise RuntimeError("ChatrixCD process not found")
         except RuntimeError:
             raise RuntimeError("Failed to verify ChatrixCD is running") from None
 
@@ -142,7 +160,7 @@ class IntegrationTestRunner:
             print(f"Stopping ChatrixCD (PID: {self.bot_pid})...")
             try:
                 stop_cmd = f"kill {self.bot_pid}"
-                self._run_ssh_command(stop_cmd, self.config['chatrix_user'])
+                self._run_ssh_command(stop_cmd)
                 print("ChatrixCD stopped")
             except RuntimeError as e:
                 print(f"Warning: Failed to stop ChatrixCD: {e}")
