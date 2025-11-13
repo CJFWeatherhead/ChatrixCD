@@ -3,7 +3,7 @@
 import logging
 import aiohttp
 import ssl
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List, Any, cast
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class SemaphoreClient:
         self.ssl_client_key = ssl_client_key
         self.session: Optional[aiohttp.ClientSession] = None
 
-    def _create_ssl_context(self) -> Optional[ssl.SSLContext]:
+    def _create_ssl_context(self) -> ssl.SSLContext | bool | None:
         """Create SSL context based on configuration.
         
         Returns:
@@ -98,8 +98,10 @@ class SemaphoreClient:
             List of project dictionaries
         """
         await self._ensure_session()
+        session = cast(aiohttp.ClientSession, self.session)
+        
         try:
-            async with self.session.get(f"{self.base_url}/api/projects") as resp:
+            async with session.get(f"{self.base_url}/api/projects") as resp:
                 if resp.status == 200:
                     projects = await resp.json()
                     logger.info(f"Retrieved {len(projects)} projects")
@@ -121,8 +123,10 @@ class SemaphoreClient:
             List of template dictionaries
         """
         await self._ensure_session()
+        session = cast(aiohttp.ClientSession, self.session)
+        
         try:
-            async with self.session.get(
+            async with session.get(
                 f"{self.base_url}/api/project/{project_id}/templates"
             ) as resp:
                 if resp.status == 200:
@@ -150,13 +154,15 @@ class SemaphoreClient:
             Task dictionary or None if failed
         """
         await self._ensure_session()
+        session = cast(aiohttp.ClientSession, self.session)
+
         try:
             payload = {
                 'template_id': template_id,
                 'debug': debug,
                 'dry_run': dry_run
             }
-            async with self.session.post(
+            async with session.post(
                 f"{self.base_url}/api/project/{project_id}/tasks",
                 json=payload
             ) as resp:
@@ -173,6 +179,32 @@ class SemaphoreClient:
             logger.error(f"Error starting task: {e}")
             return None
 
+    async def get_task(self, task_id: int) -> Optional[Dict[str, Any]]:
+        """Get details of a specific task.
+        
+        Args:
+            task_id: ID of the task
+            
+        Returns:
+            Task dictionary or None if failed
+        """
+        await self._ensure_session()
+        session = cast(aiohttp.ClientSession, self.session)
+
+        try:
+            async with session.get(
+                f"{self.base_url}/api/task/{task_id}"
+            ) as resp:
+                if resp.status == 200:
+                    task = await resp.json()
+                    return task
+                else:
+                    logger.error(f"Failed to get task: {resp.status}")
+                    return None
+        except Exception as e:
+            logger.error(f"Error getting task: {e}")
+            return None
+
     async def get_task_status(self, project_id: int, task_id: int) -> Optional[Dict[str, Any]]:
         """Get status of a specific task.
         
@@ -184,8 +216,10 @@ class SemaphoreClient:
             Task dictionary with status or None if failed
         """
         await self._ensure_session()
+        session = cast(aiohttp.ClientSession, self.session)
+        
         try:
-            async with self.session.get(
+            async with session.get(
                 f"{self.base_url}/api/project/{project_id}/tasks/{task_id}"
             ) as resp:
                 if resp.status == 200:
@@ -215,8 +249,10 @@ class SemaphoreClient:
             Task output as string or None if failed
         """
         await self._ensure_session()
+        session = cast(aiohttp.ClientSession, self.session)
+        
         try:
-            async with self.session.get(
+            async with session.get(
                 f"{self.base_url}/api/project/{project_id}/tasks/{task_id}/output"
             ) as resp:
                 if resp.status == 200:
@@ -250,8 +286,10 @@ class SemaphoreClient:
             True if task was stopped successfully, False otherwise
         """
         await self._ensure_session()
+        session = cast(aiohttp.ClientSession, self.session)
+
         try:
-            async with self.session.post(
+            async with session.post(
                 f"{self.base_url}/api/project/{project_id}/tasks/{task_id}/stop"
             ) as resp:
                 if resp.status in (200, 204):
@@ -271,8 +309,10 @@ class SemaphoreClient:
             True if server responds, False otherwise
         """
         await self._ensure_session()
+        session = cast(aiohttp.ClientSession, self.session)
+
         try:
-            async with self.session.get(f"{self.base_url}/api/ping") as resp:
+            async with session.get(f"{self.base_url}/api/ping") as resp:
                 if resp.status == 200:
                     logger.info("Semaphore server ping successful")
                     return True
@@ -290,8 +330,10 @@ class SemaphoreClient:
             Server info dictionary or None if failed
         """
         await self._ensure_session()
+        session = cast(aiohttp.ClientSession, self.session)
+        
         try:
-            async with self.session.get(f"{self.base_url}/api/info") as resp:
+            async with session.get(f"{self.base_url}/api/info") as resp:
                 if resp.status == 200:
                     info = await resp.json()
                     logger.info("Retrieved Semaphore server info")

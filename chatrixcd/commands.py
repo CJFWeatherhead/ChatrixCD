@@ -173,40 +173,40 @@ class CommandHandler:
             HTML table string
         """
         # Start table with border
-        html = '<table><thead><tr>'
+        table_html = '<table><thead><tr>'
         
         # Add headers
         for header in headers:
-            html += f'<th>{html.escape(header)}</th>'
-        html += '</tr></thead><tbody>'
+            table_html += f'<th>{html.escape(header)}</th>'
+        table_html += '</tr></thead><tbody>'
         
         # Add rows
         for row in rows:
-            html += '<tr>'
+            table_html += '<tr>'
             for cell in row:
-                html += f'<td>{html.escape(str(cell))}</td>'
-            html += '</tr>'
+                table_html += f'<td>{html.escape(str(cell))}</td>'
+            table_html += '</tr>'
         
-        html += '</tbody></table>'
-        return html
+        table_html += '</tbody></table>'
+        return table_html
 
-    def _get_display_name(self, user_id: str) -> str:
+    def _get_display_name(self, user_id: str | None) -> str:
         """Get a friendly display name for a user.
         
         Returns the full Matrix ID for proper highlighting/mentions in messages.
         The markdown_to_html function will convert it to a clickable mention link.
         
         Args:
-            user_id: User ID to get display name for
+            user_id: User ID to get display name for, or None to use 'friend' as default
             
         Returns:
-            Full Matrix user ID (e.g., @username:server.com) for proper mentions
+            Full Matrix user ID (e.g., @username:server.com) for proper mentions, or 'friend' if user_id is None
         """
         # Return the full Matrix ID for proper mentions
         # The markdown_to_html function will convert it to an HTML link
-        return user_id
+        return user_id or "friend"
     
-    def _get_greeting(self, user_id: str) -> str:
+    def _get_greeting(self, user_id: str | None) -> str:
         """Get a random greeting for a user.
         
         Args:
@@ -378,14 +378,14 @@ class CommandHandler:
             logger.info(f"Unknown command '{command}' from {event.sender}, sending: {response}")
             await self.bot.send_message(room.room_id, response)
 
-    async def send_help(self, room_id: str, sender: str = None):
+    async def send_help(self, room_id: str, sender: str | None):
         """Send help message.
         
         Args:
             room_id: Room to send help to
             sender: User who requested help (for personalization)
         """
-        greeting = self._get_greeting(sender) if sender else "friend 👋"
+        greeting = self._get_greeting(sender)
         
         # Plain text version for clients without HTML support
         help_text = f"""{greeting} Here's what I can do for you! 🚀
@@ -446,14 +446,14 @@ class CommandHandler:
         logger.info(response_msg)
         await self.bot.send_message(room_id, help_text, html_text, msgtype="m.notice")
 
-    async def list_admins(self, room_id: str, sender: str = None):
+    async def list_admins(self, room_id: str, sender: str | None):
         """List admin users.
         
         Args:
             room_id: Room to send response to
             sender: User who requested the list
         """
-        greeting = self._get_greeting(sender) if sender else "friend 👋"
+        greeting = self._get_greeting(sender)
         
         # Plain text version
         if not self.admin_users:
@@ -544,7 +544,7 @@ class CommandHandler:
             logger.error(f"Failed to leave room {target_room_id}: {e}")
             await self.bot.send_message(room_id, f"❌ Failed to leave room: {e}")
 
-    async def manage_rooms(self, room_id: str, args: list, sender: str = None):
+    async def manage_rooms(self, room_id: str, args: list, sender: str | None):
         """Manage bot rooms (list, join, part).
         
         Args:
@@ -552,7 +552,7 @@ class CommandHandler:
             args: Command arguments (action, optional room_id)
             sender: User who sent the command
         """
-        user_name = self._get_display_name(sender) if sender else "friend"
+        user_name = self._get_display_name(sender)
         
         # List rooms if no action specified
         if not args:
@@ -632,7 +632,7 @@ class CommandHandler:
             # Set timeout to clear confirmation after 30 seconds
             asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 30, room_id))
 
-    async def list_projects(self, room_id: str, sender: str = None):
+    async def list_projects(self, room_id: str, sender: str | None = None):
         """List available Semaphore projects.
         
         Args:
@@ -640,7 +640,7 @@ class CommandHandler:
             sender: User who requested the list
         """
         projects = await self.semaphore.get_projects()
-        user_name = self._get_display_name(sender) if sender else "friend"
+        user_name = self._get_display_name(sender)
         
         if not projects:
             # Check if this is an empty list (successful connection) or an error
@@ -693,7 +693,7 @@ class CommandHandler:
         
         return formatted
 
-    async def list_templates(self, room_id: str, args: list, sender: str = None):
+    async def list_templates(self, room_id: str, args: list, sender: str | None = None):
         """List templates for a project.
         
         Args:
@@ -701,7 +701,7 @@ class CommandHandler:
             args: Command arguments (project_id)
             sender: User who requested the list
         """
-        user_name = self._get_display_name(sender) if sender else "friend"
+        user_name = self._get_display_name(sender)
         
         # If no args, try to get the only project if there's only one
         if not args:
@@ -916,7 +916,7 @@ class CommandHandler:
         
         asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 300, room_id))
 
-    async def _clear_confirmation_timeout(self, confirmation_key: str, timeout: int, room_id: str = None):
+    async def _clear_confirmation_timeout(self, confirmation_key: str, timeout: int, room_id: str | None):
         """Clear a pending confirmation after timeout.
         
         Args:
@@ -1128,7 +1128,7 @@ class CommandHandler:
             # Execute the task
             await self._execute_task(room_id, confirmation)
 
-    async def monitor_task(self, project_id: int, task_id: int, room_id: str, task_name: str = None):
+    async def monitor_task(self, project_id: int, task_id: int, room_id: str, task_name: str | None):
         """Monitor a task and report status updates.
         
         Args:
@@ -1251,7 +1251,7 @@ class CommandHandler:
         else:
             return f'{emoji} {status}'
 
-    async def check_status(self, room_id: str, args: list, sender: str = None):
+    async def check_status(self, room_id: str, args: list, sender: str | None = None):
         """Check status of a task.
         
         Args:
@@ -1259,7 +1259,7 @@ class CommandHandler:
             args: Command arguments (task_id) - optional
             sender: User who requested the status
         """
-        user_name = self._get_display_name(sender) if sender else "friend"
+        user_name = self._get_display_name(sender)
         
         # Determine task ID
         if not args:
@@ -1386,7 +1386,7 @@ class CommandHandler:
         Returns:
             True if this was a confirmation request, False if already confirmed
         """
-        user_name = self._get_display_name(sender) if sender else "friend"
+        user_name = self._get_display_name(sender)
         confirmation_key = f"{room_id}:{sender}"
         
         # Check if already waiting for confirmation
@@ -1433,7 +1433,7 @@ class CommandHandler:
         Returns:
             True if this was a confirmation request, False if already confirmed
         """
-        user_name = self._get_display_name(sender) if sender else "friend"
+        user_name = self._get_display_name(sender)
         confirmation_key = f"{room_id}:{sender}"
         
         # Check if already waiting for confirmation
@@ -1479,7 +1479,7 @@ class CommandHandler:
             asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 30, room_id))
             return True
 
-    async def _retrieve_task_logs(self, room_id: str, args: list, sender: str = None):
+    async def _retrieve_task_logs(self, room_id: str, args: list, sender: str | None):
         """Retrieve and display logs for a specific task.
         
         Args:
@@ -1487,7 +1487,7 @@ class CommandHandler:
             args: Command arguments (empty for last task, or task_id)
             sender: User who requested logs
         """
-        user_name = self._get_display_name(sender) if sender else "friend"
+        user_name = self._get_display_name(sender)
         
         # Determine task ID
         if not args:
@@ -1557,7 +1557,7 @@ class CommandHandler:
                 f"{user_name} 👋 - Failed to retrieve logs for task #{task_id} ❌"
             )
 
-    async def get_logs(self, room_id: str, args: list, sender: str = None):
+    async def get_logs(self, room_id: str, args: list, sender: str | None = None):
         """Get logs for a task or control global log tailing.
         
         Supports:
@@ -1875,14 +1875,14 @@ class CommandHandler:
         # Join with <br/> tags for line breaks
         return '<br/>'.join(formatted_lines)
 
-    async def ping_semaphore(self, room_id: str, sender: str = None):
+    async def ping_semaphore(self, room_id: str, sender: str | None):
         """Ping Semaphore server.
         
         Args:
             room_id: Room to send response to
             sender: User who requested the ping
         """
-        user_name = self._get_display_name(sender) if sender else "friend"
+        user_name = self._get_display_name(sender)
         success = await self.semaphore.ping()
         
         if success:
@@ -2078,14 +2078,14 @@ class CommandHandler:
         
         return bot_table_html, matrix_table_html, semaphore_table_html
 
-    async def get_semaphore_info(self, room_id: str, sender: str = None):
+    async def get_semaphore_info(self, room_id: str, sender: str | None):
         """Get Semaphore, Matrix server, and bot system info.
         
         Args:
             room_id: Room to send response to
             sender: User who requested the info
         """
-        user_name = self._get_display_name(sender) if sender else "friend"
+        user_name = self._get_display_name(sender)
         
         # Get Semaphore info
         semaphore_info = await self.semaphore.get_info()
@@ -2129,7 +2129,7 @@ class CommandHandler:
         
         await self.bot.send_message(room_id, message, html_message)
 
-    async def list_command_aliases(self, room_id: str, sender: str = None):
+    async def list_command_aliases(self, room_id: str, sender: str | None):
         """List all command aliases.
         
         Args:
@@ -2137,7 +2137,7 @@ class CommandHandler:
             sender: User who requested the list
         """
         aliases = self.alias_manager.list_aliases()
-        user_name = self._get_display_name(sender) if sender else "friend"
+        user_name = self._get_display_name(sender)
         
         if not aliases:
             plain_msg = f"{user_name} 👋 - No command aliases configured. 🔖"
