@@ -15,6 +15,7 @@ import json
 import time
 import signal
 import subprocess
+import hjson
 from pathlib import Path
 from typing import Optional
 
@@ -26,6 +27,7 @@ class IntegrationTestRunner:
         """Initialize with configuration."""
         self.config_path = Path(config_path)
         self.config = self._load_config()
+        self.bot_pid = None  # Initialize bot_pid
         self.bot_process: Optional[subprocess.Popen] = None
 
     def _load_config(self) -> dict:
@@ -44,10 +46,14 @@ class IntegrationTestRunner:
         cat_cmd = f"su {self.config['chatrix_user']} -c 'cat {self.config['chatrix_dir']}/config.json'"
         config_json = self._run_ssh_command(cat_cmd)
         
+        print(f"Raw config output (first 200 chars): {config_json[:200]}")
+        
         try:
-            remote_config = json.loads(config_json)
+            remote_config = hjson.loads(config_json)
             return remote_config
-        except json.JSONDecodeError as e:
+        except Exception as e:
+            print(f"HJSON parse error: {e}")
+            print(f"Full config output: {config_json}")
             raise RuntimeError(f"Failed to parse remote config.json: {e}") from None
 
     def _extract_matrix_config(self, remote_config: dict) -> dict:
@@ -67,12 +73,35 @@ class IntegrationTestRunner:
             raise RuntimeError("Bot user_id not found in remote config")
         
         # Extract allowed rooms (use first one as test room)
-        if 'allowed_rooms' in remote_config and remote_config['allowed_rooms']:
-            matrix_config['room_id'] = remote_config['allowed_rooms'][0]
+        if 'bot' in remote_config and 'allowed_rooms' in remote_config['bot'] and remote_config['bot']['allowed_rooms']:
+            matrix_config['room_id'] = remote_config['bot']['allowed_rooms'][0]
         else:
             raise RuntimeError("No allowed_rooms found in remote config")
         
         return matrix_config
+
+    def _run_ssh_command(self, command: str, user: str = "root") -> str:
+        """Run a command on the remote host via SSH."""
+        ssh_cmd = [
+            "ssh",
+            "-o", "StrictHostKeyChecking=no",
+            "-o", "UserKnownHostsFile=/dev/null",
+            "-i", os.path.expanduser(self.config.get("ssh_key_path", "~/.ssh/id_rsa")),
+            f"{user}@{self.config['remote_host']}",
+            command
+        ]
+
+        result = subprocess.run(
+            ssh_cmd,
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+
+        if result.returncode != 0:
+            raise RuntimeError(f"SSH command failed: {result.stderr}")
+
+        return result.stdout.strip()
 
     def start_bot(self) -> None:
         """Start ChatrixCD on the remote machine."""
