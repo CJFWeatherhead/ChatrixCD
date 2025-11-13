@@ -1,0 +1,17 @@
+{
+  "remote_host": "100.96.234.70",
+  "remote_user": "root",
+  "chatrix_user": "chatrix",
+  "chatrix_dir": "~/ChatrixCD",
+  "venv_activate": "source .venv/bin/activate",
+  "chatrix_command": "chatrix -NLCvv",
+  "matrix": {
+    "homeserver": "https://matrix.example.com",
+    "user_id": "@testuser:example.com",
+    "password": "testpassword",
+    "room_id": "!roomid:example.com",
+    "bot_user_id": "@chatrix:example.com"
+  },
+  "test_timeout": 300,
+  "ssh_key_path": "~/.ssh/id_rsa"
+}

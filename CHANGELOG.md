@@ -15,6 +15,13 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Added
+- Integration testing framework for live ChatrixCD instances
+  - Remote bot management via SSH
+  - Matrix protocol integration tests
+  - Configurable test setup for local network testing
+  - Automated start/stop of remote bot during testing
+
 ## [2025.11.09.5.1.0] - 2025-11-09
 
 ### Changed
