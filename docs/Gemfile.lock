@@ -91,9 +91,6 @@ DEPENDENCIES
   jekyll-sitemap
   just-the-docs (~> 0.8.2)
   logger
-  tzinfo (>= 1, < 3)
-  tzinfo-data
-  wdm (~> 0.1.1)
 
 BUNDLED WITH
    2.4.0
