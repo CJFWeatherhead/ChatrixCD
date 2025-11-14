@@ -1,53 +1,95 @@
-<style>
-/* Fix contrast for inline styled elements with light backgrounds */
-[style*="background: #f8f9fa"],
-[style*="background:#f8f9fa"],
-article[style*="background: #f8f9fa"],
-article[style*="background:#f8f9fa"],
-div[style*="background: #f8f9fa"],
-div[style*="background:#f8f9fa"] {
-  color: #000000 !important;
-  background-color: #f8f9fa !important;
-}
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
 
-[style*="background: #e7f3ff"],
-[style*="background:#e7f3ff"],
-div[style*="background: #e7f3ff"],
-div[style*="background:#e7f3ff"] {
-  color: #000000 !important;
-  background-color: #e7f3ff !important;
-}
+  <link rel="stylesheet" href="{{ '/assets/css/just-the-docs-default.css' | relative_url }}">
 
-/* Force headings and links to be dark within light background elements */
-[style*="background: #f8f9fa"] h1,
-[style*="background: #f8f9fa"] h2,
-[style*="background: #f8f9fa"] h3,
-[style*="background: #f8f9fa"] h4,
-[style*="background: #f8f9fa"] h5,
-[style*="background: #f8f9fa"] h6,
-article[style*="background: #f8f9fa"] h1,
-article[style*="background: #f8f9fa"] h2,
-article[style*="background: #f8f9fa"] h3,
-article[style*="background: #f8f9fa"] h4,
-article[style*="background: #f8f9fa"] h5,
-article[style*="background: #f8f9fa"] h6,
-div[style*="background: #f8f9fa"] h1,
-div[style*="background: #f8f9fa"] h2,
-div[style*="background: #f8f9fa"] h3,
-div[style*="background: #f8f9fa"] h4,
-div[style*="background: #f8f9fa"] h5,
-div[style*="background: #f8f9fa"] h6 {
-  color: #000000 !important;
-}
+  <link rel="stylesheet" href="{{ '/assets/css/just-the-docs-head-nav.css' | relative_url }}" id="jtd-head-nav-stylesheet">
 
-[style*="background: #f8f9fa"] a,
-article[style*="background: #f8f9fa"] a,
-div[style*="background: #f8f9fa"] a {
-  color: #1e7e34 !important;
-}
+  <style id="jtd-nav-activation">
+  {% include css/activation.scss.liquid %}
+  </style>
 
-[style*="background: #e7f3ff"] a,
-div[style*="background: #e7f3ff"] a {
-  color: #1e7e34 !important;
-}
-</style>
+  <style>
+  /* Fix contrast for inline styled elements with light backgrounds */
+  [style*="background: #f8f9fa"],
+  [style*="background:#f8f9fa"],
+  article[style*="background: #f8f9fa"],
+  article[style*="background:#f8f9fa"],
+  div[style*="background: #f8f9fa"],
+  div[style*="background:#f8f9fa"] {
+    color: #000000 !important;
+    background-color: #f8f9fa !important;
+  }
+
+  [style*="background: #e7f3ff"],
+  [style*="background:#e7f3ff"],
+  div[style*="background: #e7f3ff"],
+  div[style*="background:#e7f3ff"] {
+    color: #000000 !important;
+    background-color: #e7f3ff !important;
+  }
+
+  /* Force headings and links to be dark within light background elements */
+  [style*="background: #f8f9fa"] h1,
+  [style*="background: #f8f9fa"] h2,
+  [style*="background: #f8f9fa"] h3,
+  [style*="background: #f8f9fa"] h4,
+  [style*="background: #f8f9fa"] h5,
+  [style*="background: #f8f9fa"] h6,
+  article[style*="background: #f8f9fa"] h1,
+  article[style*="background: #f8f9fa"] h2,
+  article[style*="background: #f8f9fa"] h3,
+  article[style*="background: #f8f9fa"] h4,
+  article[style*="background: #f8f9fa"] h5,
+  article[style*="background: #f8f9fa"] h6,
+  div[style*="background: #f8f9fa"] h1,
+  div[style*="background: #f8f9fa"] h2,
+  div[style*="background: #f8f9fa"] h3,
+  div[style*="background: #f8f9fa"] h4,
+  div[style*="background: #f8f9fa"] h5,
+  div[style*="background: #f8f9fa"] h6 {
+    color: #000000 !important;
+  }
+
+  [style*="background: #f8f9fa"] a,
+  article[style*="background: #f8f9fa"] a,
+  div[style*="background: #f8f9fa"] a {
+    color: #1e7e34 !important;
+  }
+
+  [style*="background: #e7f3ff"] a,
+  div[style*="background: #e7f3ff"] a {
+    color: #1e7e34 !important;
+  }
+  </style>
+
+  {% if site.ga_tracking != nil %}
+    {% assign ga_tracking_ids = site.ga_tracking | split: "," %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_tracking_ids.first }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      {% for ga_property in ga_tracking_ids %}
+        gtag('config', '{{ ga_property }}'{% unless site.ga_tracking_anonymize_ip == nil %}, { 'anonymize_ip': true }{% endunless %});
+      {% endfor %}
+    </script>
+  {% endif %}
+
+  {% if site.search_enabled != false %}
+    <script src="{{ '/assets/js/vendor/lunr.min.js' | relative_url }}"></script>
+  {% endif %}
+
+  <script src="{{ '/assets/js/just-the-docs.js' | relative_url }}"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  {% include_cached favicon.html %}
+
+  {% seo %}
+
+  {% include head_custom.html %}
+
+</head>
