@@ -18,6 +18,17 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ### Added
 - **Vodozemac Migration**: Replaced deprecated libolm with vodozemac for enhanced security
   - Updated to vodozemac 0.9.0+ for improved cryptographic primitives
+
+### Removed
+- **Encryption Verification Notification**: Removed automatic notification message when bot cannot decrypt encrypted messages
+  - Users must now manually verify devices through Matrix client
+  - Reduces spam in rooms while maintaining security
+
+### Fixed
+- **Message Formatting**: Fixed markdown escaping issues by ensuring all formatted messages use proper HTML
+  - Exit confirmation now uses HTML formatting instead of mixed markdown/HTML
+  - Log tailing confirmations now use HTML formatting
+  - Prevents markdown from being displayed as escaped text in Matrix clients
 - **Encryption Issue Notifications**: Bot now sends helpful messages when it receives encrypted messages it can't decrypt
   - Automatically notifies users to verify the bot's device when encryption issues occur
   - Prevents silent failures and guides users to resolve verification problems

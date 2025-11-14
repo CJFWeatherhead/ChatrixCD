@@ -625,13 +625,18 @@ class CommandHandler:
                 'timestamp': asyncio.get_event_loop().time()
             }
             
-            message = f"{user_name} 👋 - ⚠️ <strong>Confirm Bot Shutdown</strong>\n\n"
+            message = f"{user_name} 👋 - ⚠️ **Confirm Bot Shutdown**\n\n"
             message += "Are you sure you want to shut down the bot?\n\n"
             message += f"Reply with `{self.command_prefix} exit` again to confirm.\n"
             message += "Or react with 👍 to confirm or 👎 to cancel!"
             
+            html_message = f"{user_name} 👋 - ⚠️ <strong>Confirm Bot Shutdown</strong><br/><br/>"
+            html_message += "Are you sure you want to shut down the bot?<br/><br/>"
+            html_message += f"Reply with <code>{self.command_prefix} exit</code> again to confirm.<br/>"
+            html_message += "Or react with 👍 to confirm or 👎 to cancel!"
+            
             logger.info(f"Exit requested by {sender}, requesting confirmation")
-            event_id = await self.bot.send_message(room_id, message)
+            event_id = await self.bot.send_message(room_id, message, html_message)
             
             # Track the message ID for reaction handling
             if event_id:
@@ -1422,8 +1427,10 @@ class CommandHandler:
             message += f"Reply with `{self.command_prefix} log on` again to confirm.\n"
             message += "Or react with 👍 to confirm or 👎 to cancel!"
             
+            html_message = self.markdown_to_html(message)
+            
             logger.info(f"Log tailing 'on' requested by {sender}, requesting confirmation")
-            event_id = await self.bot.send_message(room_id, message)
+            event_id = await self.bot.send_message(room_id, message, html_message)
             
             if event_id:
                 self.confirmation_message_ids[confirmation_key] = event_id
@@ -1478,8 +1485,10 @@ class CommandHandler:
             message += f"Reply with `{self.command_prefix} log off` again to confirm.\n"
             message += "Or react with 👍 to confirm or 👎 to cancel!"
             
+            html_message = self.markdown_to_html(message)
+            
             logger.info(f"Log tailing 'off' requested by {sender}, requesting confirmation")
-            event_id = await self.bot.send_message(room_id, message)
+            event_id = await self.bot.send_message(room_id, message, html_message)
             
             if event_id:
                 self.confirmation_message_ids[confirmation_key] = event_id
