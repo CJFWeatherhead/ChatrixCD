@@ -9,7 +9,7 @@ GEM
     csv (3.3.5)
     em-websocket (0.5.3)
       eventmachine (>= 0.12.9)
-      http_parser.rb (~> 0.6)
+      http_parser.rb (~> 0)
     eventmachine (1.2.7)
     ffi (1.17.2)
     forwardable-extended (2.6.0)
@@ -84,8 +84,7 @@ PLATFORMS
 DEPENDENCIES
   base64
   csv
-  http_parser.rb (~> 0.6.0)
-  jekyll (~> 4.3.3)
+  jekyll (~> 4.3.4)
   jekyll-feed
   jekyll-seo-tag
   jekyll-sitemap
