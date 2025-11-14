@@ -38,32 +38,32 @@ nav_order: 1
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 2em 0;" role="list">
 
-<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;" role="listitem">
+<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;" role="listitem">
   <h3 style="margin-top: 0;">🔐 Secure by Default</h3>
   <p>End-to-end encryption support, OIDC/SSO authentication, and device verification built-in.</p>
 </article>
 
-<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;" role="listitem">
+<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;" role="listitem">
   <h3 style="margin-top: 0;">🎭 Fun & Friendly</h3>
   <p>Sassy bot personality with emoji, and reaction confirmations. Never boring!</p>
 </article>
 
-<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;" role="listitem">
+<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;" role="listitem">
   <h3 style="margin-top: 0;">🖥️ Interactive TUI</h3>
   <p>Beautiful terminal interface for monitoring, room management, and device verification.</p>
 </article>
 
-<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;" role="listitem">
+<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;" role="listitem">
   <h3 style="margin-top: 0;">🚀 CI/CD Made Easy</h3>
   <p>Start, monitor, and manage Semaphore tasks directly from chat with real-time updates.</p>
 </article>
 
-<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;" role="listitem">
+<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;" role="listitem">
   <h3 style="margin-top: 0;">🧠 Smart Automation</h3>
   <p>Auto-fill parameters, smart log tailing, custom aliases, and confirmation flows.</p>
 </article>
 
-<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;" role="listitem">
+<article style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;" role="listitem">
   <h3 style="margin-top: 0;">🎨 Rich Formatting</h3>
   <p>Colored status indicators, formatted logs, HTML tables, and semantic emoji throughout.</p>
 </article>
@@ -76,7 +76,7 @@ nav_order: 1
 
 <ol style="list-style: none; padding: 0; margin: 2em 0;">
 
-<li style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b; background: #f8f9fa; margin-bottom: 20px;">
+<li style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b; margin-bottom: 20px;">
   <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #3e836b;" aria-hidden="true">1️⃣</div>
   <div>
     <h3 style="margin-top: 0;">Install ChatrixCD</h3>
@@ -87,7 +87,7 @@ chmod +x chatrixcd-linux-x86_64</code></pre>
   </div>
 </li>
 
-<li style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b; background: #f8f9fa; margin-bottom: 20px;">
+<li style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b; margin-bottom: 20px;">
   <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #3e836b;" aria-hidden="true">2️⃣</div>
   <div>
     <h3 style="margin-top: 0;">Configure Your Bot</h3>
@@ -108,7 +108,7 @@ chmod +x chatrixcd-linux-x86_64</code></pre>
   </div>
 </li>
 
-<li style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b; background: #f8f9fa;">
+<li style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b;">
   <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #3e836b;" aria-hidden="true">3️⃣</div>
   <div>
     <h3 style="margin-top: 0;">Start Automating!</h3>
@@ -259,7 +259,7 @@ ChatrixCD is open source under the **GNU General Public License v3.0**. See [LIC
 
 ---
 
-<section style="margin: 3em 0; padding: 2em; background: #f8f9fa; border-radius: 10px; text-align: center;" role="region" aria-label="Call to action">
+<section style="margin: 3em 0; padding: 2em; border-radius: 10px; text-align: center;" role="region" aria-label="Call to action">
   <h2 style="margin-top: 0;">Ready to automate? 🚀</h2>
   <p style="font-size: 1.1em;">Install ChatrixCD and start managing CI/CD from chat!</p>
   <a href="installation.html" style="display: inline-block; padding: 15px 40px; background: #3e836b; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin-top: 1em;" aria-label="Get started with ChatrixCD installation">

@@ -8,7 +8,7 @@ nav_order: 4
 
 Your bot's control center, right in the terminal! 🎮
 
-<div style="padding: 15px; background: #e7f3ff; border-left: 4px solid #2196F3; margin: 1em 0;">
+<div style="padding: 15px; border-left: 4px solid #2196F3; margin: 1em 0;">
   <strong>💡 What's a TUI?</strong> It's like a GUI, but in your terminal! Think mouse support, menus, and real-time updates—all without leaving the command line.
 </div>
 
@@ -18,32 +18,32 @@ Your bot's control center, right in the terminal! 🎮
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 2em 0;">
 
-<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px; background: #f8f9fa;">
+<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px;">
   <h4 style="margin-top: 0;">📊 Status Monitoring</h4>
   <p style="font-size: 0.9em;">Real-time bot status, connections, and metrics</p>
 </div>
 
-<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px; background: #f8f9fa;">
+<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px;">
   <h4 style="margin-top: 0;">🏠 Room Management</h4>
   <p style="font-size: 0.9em;">View, join, leave, and message rooms</p>
 </div>
 
-<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px; background: #f8f9fa;">
+<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px;">
   <h4 style="margin-top: 0;">🔐 Device Verification</h4>
   <p style="font-size: 0.9em;">Emoji, QR code, and fingerprint verification</p>
 </div>
 
-<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px; background: #f8f9fa;">
+<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px;">
   <h4 style="margin-top: 0;">📝 Log Viewing</h4>
   <p style="font-size: 0.9em;">Real-time log streaming in the terminal</p>
 </div>
 
-<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px; background: #f8f9fa;">
+<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px;">
   <h4 style="margin-top: 0;">🖱️ Mouse Support</h4>
   <p style="font-size: 0.9em;">Click buttons and navigate menus</p>
 </div>
 
-<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px; background: #f8f9fa;">
+<div style="padding: 15px; border: 2px solid #3e836b; border-radius: 8px;">
   <h4 style="margin-top: 0;">🎨 Pretty Colors</h4>
   <p style="font-size: 0.9em;">ChatrixCD brand green (#3e836b) 💚</p>
 </div>

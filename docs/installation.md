@@ -22,7 +22,7 @@ Choose the installation method that works best for you!
 </tr>
 </thead>
 <tbody>
-<tr style="background: #f8f9fa;">
+<tr>
 <td style="padding: 12px;"><strong>�� Pre-built Binary</strong></td>
 <td style="padding: 12px; text-align: center;">⭐ Easy</td>
 <td style="padding: 12px; text-align: center;">None!</td>
@@ -34,7 +34,7 @@ Choose the installation method that works best for you!
 <td style="padding: 12px; text-align: center;">Python 3.12+</td>
 <td style="padding: 12px;">Development, Windows/macOS</td>
 </tr>
-<tr style="background: #f8f9fa;">
+<tr>
 <td style="padding: 12px;"><strong>🐳 Docker</strong></td>
 <td style="padding: 12px; text-align: center;">⭐⭐ Medium</td>
 <td style="padding: 12px; text-align: center;">Docker</td>
@@ -62,21 +62,21 @@ Choose the installation method that works best for you!
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 2em 0;">
 
-<div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px; background: #f8f9fa;">
+<div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;">
   <h4 style="margin-top: 0;">💻 x86_64 (64-bit)</h4>
   <p><strong>Most common</strong></p>
   <p>Intel/AMD 64-bit processors</p>
   <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz" style="display: inline-block; padding: 10px 20px; background: #3e836b; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
 </div>
 
-<div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px; background: #f8f9fa;">
+<div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px;">
   <h4 style="margin-top: 0;">🖥️ i686 (32-bit)</h4>
   <p><strong>Older systems</strong></p>
   <p>32-bit Intel/AMD processors</p>
   <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686.dist.tar.gz" style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
 </div>
 
-<div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px; background: #f8f9fa;">
+<div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px;">
   <h4 style="margin-top: 0;">🥧 ARM64</h4>
   <p><strong>ARM devices</strong></p>
   <p>Raspberry Pi, ARM servers</p>
@@ -99,7 +99,7 @@ cd chatrixcd-linux-x86_64.dist
 ./chatrixcd
 ```
 
-<div style="padding: 15px; background: #e7f3ff; border-left: 4px solid #2196F3; margin: 1em 0;">
+<div style="padding: 15px; border-left: 4px solid #2196F3; margin: 1em 0;">
   <strong>💡 Pro Tip:</strong> Move the binary to <code>/usr/local/bin/chatrixcd</code> to run it from anywhere!
 </div>
 
@@ -115,7 +115,7 @@ Perfect for development, customization, or if binaries aren't available for your
 - pip (Python package manager)
 - git
 
-<details style="margin: 1em 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+<details style="margin: 1em 0; padding: 15px; border-radius: 8px;">
 <summary style="cursor: pointer; font-weight: bold;">📋 Platform-Specific Prerequisites (Click to expand)</summary>
 
 **Ubuntu/Debian:**
@@ -138,7 +138,7 @@ brew install python@3.12 git
 
 <div style="display: flex; flex-direction: column; gap: 15px; margin: 2em 0;">
 
-<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
+<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #3e836b;">
   <div style="font-size: 2em; margin-right: 15px; min-width: 40px; text-align: center;">1️⃣</div>
   <div style="flex: 1;">
     <strong>Clone the Repository</strong>
@@ -147,7 +147,7 @@ cd ChatrixCD</code></pre>
   </div>
 </div>
 
-<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
+<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #3e836b;">
   <div style="font-size: 2em; margin-right: 15px; min-width: 40px; text-align: center;">2️⃣</div>
   <div style="flex: 1;">
     <strong>Create Virtual Environment</strong>
@@ -155,7 +155,7 @@ cd ChatrixCD</code></pre>
   </div>
 </div>
 
-<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
+<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #3e836b;">
   <div style="font-size: 2em; margin-right: 15px; min-width: 40px; text-align: center;">3️⃣</div>
   <div style="flex: 1;">
     <strong>Activate Virtual Environment</strong>
@@ -167,7 +167,7 @@ source .venv/bin/activate
   </div>
 </div>
 
-<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
+<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #3e836b;">
   <div style="font-size: 2em; margin-right: 15px; min-width: 40px; text-align: center;">4️⃣</div>
   <div style="flex: 1;">
     <strong>Install Dependencies</strong>
@@ -176,7 +176,7 @@ pip install -e .</code></pre>
   </div>
 </div>
 
-<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
+<div style="display: flex; align-items: start; padding: 15px; border-left: 4px solid #3e836b;">
   <div style="font-size: 2em; margin-right: 15px; min-width: 40px; text-align: center;">5️⃣</div>
   <div style="flex: 1;">
     <strong>Run ChatrixCD</strong>
@@ -278,17 +278,17 @@ After installing, you need to:
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 2em 0;">
 
-<div style="padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
+<div style="padding: 15px; border-left: 4px solid #3e836b;">
   <strong>1️⃣ Create config.json</strong>
   <p style="font-size: 0.9em;"><a href="configuration.html">Configuration Guide →</a></p>
 </div>
 
-<div style="padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
+<div style="padding: 15px; border-left: 4px solid #3e836b;">
   <strong>2️⃣ Run ChatrixCD</strong>
   <p style="font-size: 0.9em;"><a href="quickstart.html">Quick Start Guide →</a></p>
 </div>
 
-<div style="padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
+<div style="padding: 15px; border-left: 4px solid #3e836b;">
   <strong>3️⃣ Invite to Room</strong>
   <p style="font-size: 0.9em;"><a href="quickstart.html#step-4%EF%B8%8F%E2%83%A3-invite-bot-to-your-room">Invitation Steps →</a></p>
 </div>

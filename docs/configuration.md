@@ -84,7 +84,7 @@ nav_order: 4
     <strong>💬 Version 2</strong>
     <p style="margin: 0.5rem 0; color: #6b7280;">Added greetings support</p>
   </div>
-  <div style="border: 2px solid #3b82f6; border-radius: 8px; padding: 1rem; background: #eff6ff;">
+  <div style="border: 2px solid #3b82f6; border-radius: 8px; padding: 1rem;">
     <strong>🔐 Version 3 (Current)</strong>
     <p style="margin: 0.5rem 0; color: #1e40af;">SSL/TLS + log file config</p>
   </div>
