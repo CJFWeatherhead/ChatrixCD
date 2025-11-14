@@ -20,7 +20,7 @@ aux_links:
 footer_content: "Copyright &copy; 2024 ChatrixCD Contributors. Distributed under the GNU GPL v3.0 License."
 
 # Color scheme (using custom ChatrixCD branding)
-color_scheme: light
+color_scheme: dark
 
 # Custom color overrides for ChatrixCD branding
 # Primary brand color: ChatrixCD Green (#3e836b) - WCAG AA compliant
@@ -44,7 +44,8 @@ enable_copy_code_button: true
 # Custom CSS for ChatrixCD branding
 head_custom: |
   <link rel="stylesheet" href="{{ '/assets/css/custom.css' | relative_url }}">
-  <link rel="icon" type="image/svg+xml" href="{{ '/favicon.svg' | relative_url }}">
+  <link rel="icon" type="image/svg+xml" href="{{ '/assets/favicon.svg' | relative_url }}">
+  <link rel="icon" type="image/x-icon" href="{{ '/assets/favicon.ico' | relative_url }}">
   <meta name="theme-color" content="#3e836b">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="ChatrixCD - Matrix bot for CI/CD automation through chat with Semaphore UI integration. Secure, fun, and powerful DevOps automation.">

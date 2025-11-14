@@ -220,21 +220,52 @@ img {
   }
 }
 
-/* Print Styles */
-@media print {
-  .skip-to-content,
-  .site-header,
-  .site-footer,
-  nav {
-    display: none;
-  }
+/* Dark theme overrides for better readability */
+[data-theme="dark"] {
+  /* Adjust brand colors for dark backgrounds */
+  --chatrixcd-green: #4A9B7F; /* Brighter green for dark theme */
+  --chatrixcd-green-hover: #5CB593; /* Lighter hover color */
+  --chatrixcd-green-button: #4A9B7F;
   
-  a {
-    color: #000;
-    text-decoration: underline;
-  }
-  
-  a[href]:after {
-    content: " (" attr(href) ")";
-  }
+  /* Ensure good contrast for links */
+  --chatrixcd-success: #28A745; /* Brighter success color */
+  --chatrixcd-warning: #FFC107; /* Brighter warning color */
+  --chatrixcd-error: #DC3545; /* Keep error color */
+  --chatrixcd-info: #17A2B8; /* Brighter info color */
+}
+
+/* Dark theme specific adjustments */
+[data-theme="dark"] a {
+  color: var(--chatrixcd-green);
+}
+
+[data-theme="dark"] a:hover {
+  color: var(--chatrixcd-green-hover);
+}
+
+/* Dark theme code blocks */
+[data-theme="dark"] code {
+  background-color: rgba(74, 155, 127, 0.2);
+  border: 1px solid rgba(74, 155, 127, 0.3);
+}
+
+/* Dark theme tables */
+[data-theme="dark"] table {
+  border-color: rgba(74, 155, 127, 0.3);
+}
+
+[data-theme="dark"] th {
+  background-color: rgba(74, 155, 127, 0.2);
+  border-color: rgba(74, 155, 127, 0.4);
+}
+
+/* Dark theme blockquotes */
+[data-theme="dark"] blockquote {
+  background-color: rgba(74, 155, 127, 0.1);
+}
+
+/* Dark theme search highlighting */
+[data-theme="dark"] mark,
+[data-theme="dark"] .search-result-highlight {
+  background-color: rgba(74, 155, 127, 0.4);
 }
