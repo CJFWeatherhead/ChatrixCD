@@ -489,68 +489,68 @@ class CommandHandler:
         
         await self.bot.send_message(room_id, message, html_message, msgtype="m.notice")
     
-    async def _list_rooms(self, room_id: str, user_name: str):
+    async def _list_rooms(self, room_id: str, greeting: str):
         """List all rooms the bot is in.
         
         Args:
             room_id: Room to send response to
-            user_name: Display name of requesting user
+            greeting: Greeting for the user
         """
         rooms = self.bot.client.rooms
         if not rooms:
-            plain_msg = f"{user_name} 👋 - Not currently in any rooms. 🏠"
+            plain_msg = f"{greeting} Not currently in any rooms. 🏠"
             html_msg = self.markdown_to_html(plain_msg)
             await self.bot.send_message(room_id, plain_msg, html_msg, msgtype="m.notice")
             return
         
         # Plain text version
-        message = f"{user_name} 👋 Here's where I hang out! 🏠\n\n"
+        message = f"{greeting} Here's where I hang out! 🏠\n\n"
         message += "**Rooms I'm In**\n\n"
         for room_id_key, room in rooms.items():
             room_name = room.display_name or "Unknown"
             message += f"• **{room_name}**\n  `{room_id_key}`\n"
         
         # HTML version with table
-        greeting_html = self.markdown_to_html(user_name)
+        greeting_html = self.markdown_to_html(greeting)
         table_html = '<table><thead><tr><th>Room Name</th><th>Room ID</th></tr></thead><tbody>'
         for room_id_key, room in rooms.items():
             room_name = html.escape(room.display_name or "Unknown")
             table_html += f'<tr><td><strong>{room_name}</strong></td><td><code>{html.escape(room_id_key)}</code></td></tr>'
         table_html += '</tbody></table>'
         
-        html_message = f"{greeting_html} 👋 Here's where I hang out! 🏠<br/><br/><strong>Rooms I'm In</strong><br/><br/>{table_html}"
+        html_message = f"{greeting_html} Here's where I hang out! 🏠<br/><br/><strong>Rooms I'm In</strong><br/><br/>{table_html}"
         
         await self.bot.send_message(room_id, message, html_message, msgtype="m.notice")
 
-    async def _join_room(self, room_id: str, user_name: str, target_room_id: str):
+    async def _join_room(self, room_id: str, greeting: str, target_room_id: str):
         """Join a room.
         
         Args:
             room_id: Room to send response to
-            user_name: Display name of requesting user
+            greeting: Greeting for the user
             target_room_id: Room ID to join
         """
         try:
             await self.bot.client.join(target_room_id)
-            await self.bot.send_message(room_id, f"✅ Joined room: {target_room_id}")
+            await self.bot.send_message(room_id, f"{greeting} ✅ Joined room: {target_room_id}")
         except Exception as e:
             logger.error(f"Failed to join room {target_room_id}: {e}")
-            await self.bot.send_message(room_id, f"❌ Failed to join room: {e}")
+            await self.bot.send_message(room_id, f"{greeting} ❌ Failed to join room: {e}")
 
-    async def _leave_room(self, room_id: str, user_name: str, target_room_id: str):
+    async def _leave_room(self, room_id: str, greeting: str, target_room_id: str):
         """Leave a room.
         
         Args:
             room_id: Room to send response to
-            user_name: Display name of requesting user
+            greeting: Greeting for the user
             target_room_id: Room ID to leave
         """
         try:
             await self.bot.client.room_leave(target_room_id)
-            await self.bot.send_message(room_id, f"👋 Left room: {target_room_id}")
+            await self.bot.send_message(room_id, f"{greeting} 👋 Left room: {target_room_id}")
         except Exception as e:
             logger.error(f"Failed to leave room {target_room_id}: {e}")
-            await self.bot.send_message(room_id, f"❌ Failed to leave room: {e}")
+            await self.bot.send_message(room_id, f"{greeting} ❌ Failed to leave room: {e}")
 
     async def manage_rooms(self, room_id: str, args: list, sender: str | None):
         """Manage bot rooms (list, join, part).
@@ -560,11 +560,11 @@ class CommandHandler:
             args: Command arguments (action, optional room_id)
             sender: User who sent the command
         """
-        user_name = self._get_display_name(sender)
+        greeting = self._get_greeting(sender)
         
         # List rooms if no action specified
         if not args:
-            await self._list_rooms(room_id, user_name)
+            await self._list_rooms(room_id, greeting)
             return
         
         action = args[0].lower()
@@ -574,26 +574,26 @@ class CommandHandler:
             if len(args) < 2:
                 await self.bot.send_message(
                     room_id,
-                    f"{user_name} 👋 - Usage: {self.command_prefix} rooms join <room_id>"
+                    f"{greeting} Usage: {self.command_prefix} rooms join <room_id>"
                 )
                 return
-            await self._join_room(room_id, user_name, args[1])
+            await self._join_room(room_id, greeting, args[1])
         
         # Leave room
         elif action in ('part', 'leave'):
             if len(args) < 2:
                 await self.bot.send_message(
                     room_id,
-                    f"{user_name} 👋 - Usage: {self.command_prefix} rooms part <room_id>"
+                    f"{greeting} Usage: {self.command_prefix} rooms part <room_id>"
                 )
                 return
-            await self._leave_room(room_id, user_name, args[1])
+            await self._leave_room(room_id, greeting, args[1])
         
         # Unknown action
         else:
             await self.bot.send_message(
                 room_id,
-                f"{user_name} 👋 - Unknown action: {action}. Use 'join' or 'part'."
+                f"{greeting} Unknown action: {action}. Use 'join' or 'part'."
             )
     
     async def exit_bot(self, room_id: str, sender: str):
@@ -871,7 +871,7 @@ class CommandHandler:
             sender: User who sent the command
             args: Command arguments (project_id, template_id)
         """
-        user_name = self._get_display_name(sender)
+        greeting = self._get_greeting(sender)
         
         # Resolve parameters with smart auto-selection
         project_id, template_id = await self._resolve_run_task_params(room_id, sender, args)
@@ -886,7 +886,7 @@ class CommandHandler:
             logger.info(f"Template {template_id} not found in project {project_id}")
             await self.bot.send_message(
                 room_id,
-                f"{user_name} 👋 - Template {template_id} not found in project {project_id} ❌"
+                f"{greeting} Template {template_id} not found in project {project_id} ❌"
             )
             return
         
@@ -906,7 +906,7 @@ class CommandHandler:
         
         logger.info(f"Task run requested: project={project_id}, template={template_id} ({template_name}) by {sender}")
         
-        message = f"{user_name} 👋 Ready to launch! ⚠️\n\n"
+        message = f"{greeting} Ready to launch! ⚠️\n\n"
         message += f"**Confirm Task Execution**\n\n"
         message += f"**Template:** {template_name}\n"
         message += f"**Description:** {template_desc}\n"
@@ -1267,14 +1267,14 @@ class CommandHandler:
             args: Command arguments (task_id) - optional
             sender: User who requested the status
         """
-        user_name = self._get_display_name(sender)
+        greeting = self._get_greeting(sender)
         
         # Determine task ID
         if not args:
             if self.last_task_id is None:
                 await self.bot.send_message(
                     room_id,
-                    f"{user_name} 👋 - No task ID provided and no previous task found.\n"
+                    f"{greeting} No task ID provided and no previous task found.\n"
                     f"Usage: {self.command_prefix} status <task_id>"
                 )
                 return
@@ -1285,13 +1285,13 @@ class CommandHandler:
             try:
                 task_id = int(args[0])
             except ValueError:
-                await self.bot.send_message(room_id, f"{user_name} 👋 - Invalid task ID ❌")
+                await self.bot.send_message(room_id, f"{greeting} Invalid task ID ❌")
                 return
             
             if task_id not in self.active_tasks:
                 await self.bot.send_message(
                     room_id,
-                    f"{user_name} 👋 - Task {task_id} not found in active tasks ❌"
+                    f"{greeting} Task {task_id} not found in active tasks ❌"
                 )
                 return
             
@@ -1302,7 +1302,7 @@ class CommandHandler:
         if not task:
             await self.bot.send_message(
                 room_id,
-                f"{user_name} 👋 - Could not get status for task {task_id} ❌"
+                f"{greeting} Could not get status for task {task_id} ❌"
             )
             return
         
@@ -1312,7 +1312,7 @@ class CommandHandler:
         status_emoji = self._get_status_emoji(status)
         
         # Build plain text message
-        message = f"{user_name} 👋 Here's the scoop! {status_emoji}\n\n"
+        message = f"{greeting} Here's the scoop! {status_emoji}\n\n"
         message += f"**Task {task_display} Status:** {status}\n\n"
         if task.get('start'):
             message += f"**Started:** {task.get('start')}\n"
@@ -1320,10 +1320,10 @@ class CommandHandler:
             message += f"**Ended:** {task.get('end')}\n"
         
         # Build HTML message with colored status
-        greeting_html = self.markdown_to_html(user_name)
+        greeting_html = self.markdown_to_html(greeting)
         status_colored = self._color_status(status, status_emoji)
         
-        html_message = f"{greeting_html} 👋 Here's the scoop!<br/><br/>"
+        html_message = f"{greeting_html} Here's the scoop!<br/><br/>"
         html_message += f"<strong>Task {html.escape(task_display)} Status:</strong> {status_colored}<br/><br/>"
         if task.get('start'):
             html_message += f"<strong>Started:</strong> {html.escape(str(task.get('start')))}<br/>"
@@ -1340,12 +1340,12 @@ class CommandHandler:
             sender: User who sent the command
             args: Command arguments (task_id)
         """
-        user_name = self._get_display_name(sender)
+        greeting = self._get_greeting(sender)
         
         if not args:
             await self.bot.send_message(
                 room_id,
-                f"{user_name} 👋 - Usage: {self.command_prefix} stop <task_id>"
+                f"{greeting} Usage: {self.command_prefix} stop <task_id>"
                 
             )
             return
@@ -1355,7 +1355,7 @@ class CommandHandler:
         except ValueError:
             await self.bot.send_message(
                 room_id,
-                f"{user_name} 👋 - Invalid task ID ❌"
+                f"{greeting} Invalid task ID ❌"
                 
             )
             return
@@ -1363,7 +1363,7 @@ class CommandHandler:
         if task_id not in self.active_tasks:
             await self.bot.send_message(
                 room_id,
-                f"{user_name} 👋 - Task {task_id} not found in active tasks ❌"
+                f"{greeting} Task {task_id} not found in active tasks ❌"
                 
             )
             return
@@ -1375,12 +1375,12 @@ class CommandHandler:
         success = await self.semaphore.stop_task(project_id, task_id)
         
         if success:
-            message = f"{user_name} 👋 - 🛑 Task **{task_display}** stopped"
+            message = f"{greeting} 🛑 Task **{task_display}** stopped"
             html_message = self.markdown_to_html(message)
             await self.bot.send_message(room_id, message, html_message)
             del self.active_tasks[task_id]
         else:
-            message = f"{user_name} 👋 - ❌ Failed to stop task **{task_display}**"
+            message = f"{greeting} ❌ Failed to stop task **{task_display}**"
             html_message = self.markdown_to_html(message)
             await self.bot.send_message(room_id, message, html_message)
 
@@ -1495,7 +1495,7 @@ class CommandHandler:
             args: Command arguments (empty for last task, or task_id)
             sender: User who requested logs
         """
-        user_name = self._get_display_name(sender)
+        greeting = self._get_greeting(sender)
         
         # Determine task ID
         if not args:
@@ -1503,7 +1503,7 @@ class CommandHandler:
                 logger.info(f"Log request with no args and no last task")
                 await self.bot.send_message(
                     room_id,
-                    f"{user_name} 👋 - No task ID provided and no previous task found.\n"
+                    f"{greeting} No task ID provided and no previous task found.\n"
                     f"Usage: {self.command_prefix} log [on|off|task_id]"
                 )
                 return
@@ -1516,7 +1516,7 @@ class CommandHandler:
             except ValueError:
                 await self.bot.send_message(
                     room_id,
-                    f"{user_name} 👋 - Invalid task ID ❌\n"
+                    f"{greeting} Invalid task ID ❌\n"
                     f"Usage: {self.command_prefix} log [on|off|task_id]"
                 )
                 return
@@ -1534,14 +1534,14 @@ class CommandHandler:
                     if not project_id:
                         await self.bot.send_message(
                             room_id,
-                            f"{user_name} 👋 - Could not find project for task {task_id} ❌"
+                            f"{greeting} Could not find project for task {task_id} ❌"
                         )
                         return
                 except Exception as e:
                     logger.error(f"Failed to get task info for {task_id}: {e}")
                     await self.bot.send_message(
                         room_id,
-                        f"{user_name} 👋 - Could not retrieve task info ❌"
+                        f"{greeting} Could not retrieve task info ❌"
                     )
                     return
         
@@ -1550,19 +1550,19 @@ class CommandHandler:
             logs = await self.semaphore.get_task_output(project_id, task_id)
             if logs:
                 formatted_logs = self._format_task_logs_html(logs)
-                message = f"{user_name} 👋 - 📋 **Logs for Task #{task_id}**"
+                message = f"{greeting} 📋 **Logs for Task #{task_id}**"
                 html_message = self.markdown_to_html(message) + "\n\n" + formatted_logs
                 await self.bot.send_message(room_id, message, html_message)
             else:
                 await self.bot.send_message(
                     room_id,
-                    f"{user_name} 👋 - No logs available yet for task #{task_id}"
+                    f"{greeting} No logs available yet for task #{task_id}"
                 )
         except Exception as e:
             logger.error(f"Failed to get logs for task {task_id}: {e}")
             await self.bot.send_message(
                 room_id,
-                f"{user_name} 👋 - Failed to retrieve logs for task #{task_id} ❌"
+                f"{greeting} Failed to retrieve logs for task #{task_id} ❌"
             )
 
     async def get_logs(self, room_id: str, args: list, sender: str | None = None):
@@ -1890,11 +1890,11 @@ class CommandHandler:
             room_id: Room to send response to
             sender: User who requested the ping
         """
-        user_name = self._get_display_name(sender)
+        greeting = self._get_greeting(sender)
         success = await self.semaphore.ping()
         
         if success:
-            plain_msg = self.message_manager.get_random_message('ping_success', user_name=user_name)
+            plain_msg = f"{greeting} {self.message_manager.get_random_message('ping_success')}"
             # Add color to success message
             html_msg = self.markdown_to_html(plain_msg.replace('✅', self._color_success('✅')))
             await self.bot.send_message(
@@ -1904,7 +1904,7 @@ class CommandHandler:
                 msgtype="m.notice"
             )
         else:
-            plain_msg = f"{user_name} 👋 - ❌ Uh oh! Failed to ping Semaphore server 😟"
+            plain_msg = f"{greeting} ❌ Uh oh! Failed to ping Semaphore server 😟"
             # Add color to error message
             html_msg = self.markdown_to_html(plain_msg.replace('❌', self._color_error('❌')))
             await self.bot.send_message(
@@ -2093,7 +2093,7 @@ class CommandHandler:
             room_id: Room to send response to
             sender: User who requested the info
         """
-        user_name = self._get_display_name(sender)
+        greeting = self._get_greeting(sender)
         
         # Get Semaphore info
         semaphore_info = await self.semaphore.get_info()
@@ -2103,7 +2103,7 @@ class CommandHandler:
         matrix_lines, matrix_info, matrix_connected, matrix_encrypted = self._gather_matrix_info()
         
         # Build plain text message
-        message = f"{user_name} 👋 Here's the technical stuff! ℹ️\n\n"
+        message = f"{greeting} Here's the technical stuff! ℹ️\n\n"
         message += "**System Information**\n\n"
         message += "**ChatrixCD Bot** 🤖\n"
         message += "\n".join(bot_lines) + "\n\n"
@@ -2123,12 +2123,12 @@ class CommandHandler:
             message += "• Failed to get Semaphore info ❌\n"
         
         # Build HTML message
-        greeting_html = self.markdown_to_html(user_name)
+        greeting_html = self.markdown_to_html(greeting)
         bot_table_html, matrix_table_html, semaphore_table_html = self._build_info_html_tables(
             bot_info, matrix_info, matrix_connected, matrix_encrypted, semaphore_info
         )
         
-        html_message = f"""{greeting_html} 👋 Here's the technical stuff! ℹ️<br/><br/>
+        html_message = f"""{greeting_html} Here's the technical stuff! ℹ️<br/><br/>
 <strong>System Information</strong><br/><br/>
 {bot_table_html}<br/>
 {matrix_table_html}<br/>
@@ -2145,10 +2145,10 @@ class CommandHandler:
             sender: User who requested the list
         """
         aliases = self.alias_manager.list_aliases()
-        user_name = self._get_display_name(sender)
+        greeting = self._get_greeting(sender)
         
         if not aliases:
-            plain_msg = f"{user_name} 👋 - No command aliases configured. 🔖"
+            plain_msg = f"{greeting} No command aliases configured. 🔖"
             html_msg = self.markdown_to_html(plain_msg)
             await self.bot.send_message(
                 room_id,
@@ -2159,19 +2159,19 @@ class CommandHandler:
             return
         
         # Plain text version
-        message = f"{user_name} 👋 Here are your command shortcuts! 🔖\n\n"
+        message = f"{greeting} Here are your command shortcuts! 🔖\n\n"
         message += "**Command Aliases**\n\n"
         for alias, command in aliases.items():
             message += f"• **{alias}** → `{command}`\n"
         
         # HTML version with table
-        greeting_html = self.markdown_to_html(user_name)
+        greeting_html = self.markdown_to_html(greeting)
         table_html = '<table><thead><tr><th>Alias</th><th>Command</th></tr></thead><tbody>'
         for alias, command in aliases.items():
             table_html += f'<tr><td><strong>{html.escape(alias)}</strong></td><td><code>{html.escape(command)}</code></td></tr>'
         table_html += '</tbody></table>'
         
-        html_message = f"{greeting_html} 👋 Here are your command shortcuts! 🔖<br/><br/><strong>Command Aliases</strong><br/><br/>{table_html}"
+        html_message = f"{greeting_html} Here are your command shortcuts! 🔖<br/><br/><strong>Command Aliases</strong><br/><br/>{table_html}"
         
         await self.bot.send_message(room_id, message, html_message, msgtype="m.notice")
 
@@ -2182,11 +2182,10 @@ class CommandHandler:
             room_id: Room to send response to
             sender: User who petted the bot
         """
-        user_name = self._get_display_name(sender)
+        greeting = self._get_greeting(sender)
         await self.bot.send_message(
             room_id,
-            self.message_manager.get_random_message('pet', user_name=user_name)
-            
+            f"{greeting} {self.message_manager.get_random_message('pet')}"
         )
 
     async def handle_scold(self, room_id: str, sender: str):
@@ -2196,11 +2195,10 @@ class CommandHandler:
             room_id: Room to send response to
             sender: User who scolded the bot
         """
-        user_name = self._get_display_name(sender)
+        greeting = self._get_greeting(sender)
         await self.bot.send_message(
             room_id,
-            self.message_manager.get_random_message('scold', user_name=user_name)
-            
+            f"{greeting} {self.message_manager.get_random_message('scold')}"
         )
 
     async def verify_device(self, room_id: str, sender: str, args: List[str]):

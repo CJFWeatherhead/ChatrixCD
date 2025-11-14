@@ -18,6 +18,9 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ### Added
 - **Vodozemac Migration**: Replaced deprecated libolm with vodozemac for enhanced security
   - Updated to vodozemac 0.9.0+ for improved cryptographic primitives
+- **Encryption Issue Notifications**: Bot now sends helpful messages when it receives encrypted messages it can't decrypt
+  - Automatically notifies users to verify the bot's device when encryption issues occur
+  - Prevents silent failures and guides users to resolve verification problems
 
 ### Fixed
 - **Matrix-nio API Compatibility**: Fixed `keys_query()` calls to use updated matrix-nio 0.25.x API

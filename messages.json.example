@@ -69,37 +69,37 @@
   ],
   
   "ping_success": [
-    "{user_name} 👋 - 🏓 Semaphore server is alive and kicking! ✅ Party time!",
-    "{user_name} 👋 - 🏓 Pong! Server is up! ✅ We're in business!",
-    "{user_name} 👋 - 🏓 All good on the Semaphore front! ✅ Ready to roll!",
-    "{user_name} 👋 - 🏓 Yep, it's reachable! ✅ You know it!",
-    "{user_name} 👋 - 🏓 Server says hi back! ✅ Looking good!",
-    "{user_name} 👋 - 🏓 Connection solid! ✅ We're cooking!"
+    "🏓 Semaphore server is alive and kicking! ✅ Party time!",
+    "🏓 Pong! Server is up! ✅ We're in business!",
+    "🏓 All good on the Semaphore front! ✅ Ready to roll!",
+    "🏓 Yep, it's reachable! ✅ You know it!",
+    "🏓 Server says hi back! ✅ Looking good!",
+    "🏓 Connection solid! ✅ We're cooking!"
   ],
   
   "pet": [
-    "Aww, thanks {user_name}! 🥰 *happy bot noises*",
-    "{user_name}, you're the best! 😊 *purrs digitally*",
-    "I'm just doing my job, but I appreciate you {user_name}! 💙✨",
-    "{user_name} 🤗 That made my day! *beep boop happily*",
-    "You're too kind, {user_name}! 😄 Ready for more tasks!",
-    "{user_name}, you always know how to make a bot feel appreciated! 🌟",
-    "*wags virtual tail* Thanks {user_name}! 🐕💻",
-    "Processing... 100% happiness detected! Thanks {user_name}! 😊💕",
-    "{user_name}, feeling the love! 💖 *circuits glowing*",
-    "Aww shucks, {user_name}! 😳 You're making me blush (if bots could blush)! ☺️"
+    "Aww, thanks! 🥰 *happy bot noises*",
+    "You're the best! 😊 *purrs digitally*",
+    "I'm just doing my job, but I appreciate you! 💙✨",
+    "That made my day! 🤗 *beep boop happily*",
+    "You're too kind! 😄 Ready for more tasks!",
+    "You always know how to make a bot feel appreciated! 🌟",
+    "*wags virtual tail* Thanks! 🐕💻",
+    "Processing... 100% happiness detected! Thanks! 😊💕",
+    "Feeling the love! 💖 *circuits glowing*",
+    "Aww shucks! 😳 You're making me blush (if bots could blush)! ☺️"
   ],
   
   "scold": [
-    "Oh no, {user_name}! 😢 I'll try harder, I promise!",
-    "Sorry {user_name}... 😔 What did I do wrong?",
-    "{user_name}, ouch! 💔 I'm learning, give me a chance!",
-    "*sad beep* {user_name}, I'll do better next time... 😞",
-    "{user_name}, that hurts! 😭 But I'll improve, I swear!",
-    "Noted, {user_name}. 📝😐 I'll work on that...",
-    "{user_name} 😟 I'm sorry! Tell me what I can do better?",
-    "*hangs head in shame* You're right, {user_name}... 😓",
-    "{user_name}, I'm trying my best! 🥺 Cut me some slack?",
-    "Okay okay, {user_name}! 😅 I hear you loud and clear!"
+    "Oh no! 😢 I'll try harder, I promise!",
+    "Sorry... 😔 What did I do wrong?",
+    "Ouch! 💔 I'm learning, give me a chance!",
+    "*sad beep* I'll do better next time... 😞",
+    "That hurts! 😭 But I'll improve, I swear!",
+    "Noted. 📝😐 I'll work on that...",
+    "I'm sorry! Tell me what I can do better? 😟",
+    "*hangs head in shame* You're right... 😓",
+    "I'm trying my best! 🥺 Cut me some slack?",
+    "Okay okay! 😅 I hear you loud and clear!"
   ]
 }

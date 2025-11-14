@@ -98,6 +98,10 @@ class ChatrixBot:
         # This prevents duplicate key requests
         self.requested_session_ids = set()
         
+        # Track senders we've already notified about verification issues
+        # This prevents spamming the room with verification requests
+        self.notified_verification_senders = set()
+        
         # Track bot start time to ignore old messages
         # Using milliseconds since epoch to match Matrix server_timestamp format
         self.start_time = int(time.time() * 1000)
@@ -595,6 +599,22 @@ class ChatrixBot:
             f"Unable to decrypt message in {room.display_name} ({room.room_id}) "
             f"from {event.sender}. Taking steps to establish encryption..."
         )
+        
+        # Notify the sender about verification if we haven't already
+        if event.sender not in self.notified_verification_senders:
+            try:
+                await self.send_message(
+                    room.room_id,
+                    f"🤖 I received an encrypted message from you but can't decrypt it yet. "
+                    f"This usually means we need to verify each other's devices for end-to-end encryption.\n\n"
+                    f"**To fix this:** Please verify my device `{self.device_id}` in your Matrix client "
+                    f"(I am **{self.user_id}**). Once verified, I'll be able to read your messages and respond to commands! 🔐",
+                    msgtype="m.notice"
+                )
+                self.notified_verification_senders.add(event.sender)
+                logger.info(f"Sent verification notification to {event.sender}")
+            except Exception as e:
+                logger.error(f"Failed to send verification notification to {event.sender}: {e}")
         
         # Check if encryption store is loaded before trying to request keys
         if not self.client.store or not self.client.olm:
