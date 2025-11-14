@@ -1,11 +1,7 @@
 source "https://rubygems.org"
 
-gem "jekyll", "~> 4.3.4"
+gem "jekyll", "~> 4.3"
 gem "minimal-mistakes-jekyll"
 gem "jekyll-sitemap"
 gem "jekyll-feed"
 gem "jekyll-seo-tag"
-gem "csv"
-gem "logger"
-gem "base64"
-gem "bigdecimal"
