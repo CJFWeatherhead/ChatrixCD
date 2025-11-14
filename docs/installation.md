@@ -47,7 +47,7 @@ Choose the installation method that works best for you!
 
 ## Method 1: 📦 Pre-built Binary (Recommended)
 
-<div style="padding: 20px; background: #e8f5e9; border-left: 4px solid #4caf50; margin: 1em 0;">
+<div style="padding: 20px; border-left: 4px solid #4caf50; margin: 1em 0;">
   <strong>✅ Easiest option!</strong> No Python installation required. Fully static binaries with zero dependencies.
 </div>
 
@@ -225,7 +225,7 @@ RUN pip install -e .
 CMD ["chatrixcd"]
 ```
 
-<div style="padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 1em 0;">
+<div style="padding: 15px; border-left: 4px solid #ffc107; margin: 1em 0;">
   <strong>⚠️ Remember:</strong> Mount your <code>config.json</code> and <code>store/</code> directory as volumes!
 </div>
 

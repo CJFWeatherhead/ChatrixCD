@@ -8,7 +8,7 @@ nav_order: 3
 
 Get ChatrixCD up and running in **5 minutes**! 🚀
 
-<div style="padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 1em 0;">
+<div style="padding: 15px; border-left: 4px solid #ffc107; margin: 1em 0;">
   <strong>⏱️ Time to Success:</strong> ~5 minutes<br>
   <strong>📋 What You'll Need:</strong> Matrix account, Semaphore UI access<br>
   <strong>�� What You'll Get:</strong> Fully working CI/CD bot in your chat!
@@ -88,7 +88,7 @@ Create a `config.json` file in the same directory:
 <p><small>📖 <a href="configuration.html#matrix-authentication">Full OIDC guide →</a></small></p>
 </details>
 
-<div style="padding: 15px; background: #ffebee; border-left: 4px solid #f44336; margin: 1em 0;">
+<div style="padding: 15px; border-left: 4px solid #f44336; margin: 1em 0;">
   <strong>🔒 Security Note:</strong> Never commit your <code>config.json</code> to version control! Add it to <code>.gitignore</code>.
 </div>
 
@@ -112,7 +112,7 @@ chatrixcd
 3. 🔑 Initial sync with encryption keys
 4. ✅ Ready! Bot is now online
 
-<div style="padding: 15px; background: #e8f5e9; border-left: 4px solid #4caf50; margin: 1em 0;">
+<div style="padding: 15px; border-left: 4px solid #4caf50; margin: 1em 0;">
   <strong>✅ Success!</strong> Your bot is now running. Keep this terminal open.
 </div>
 
@@ -228,19 +228,19 @@ ChatrixCD has a fun personality! Try these hidden commands:
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 2em 0;">
 
-<div style="padding: 15px; border: 2px dashed #ffc107; border-radius: 8px; background: #fffbeb;">
+<div style="padding: 15px; border: 2px dashed #ffc107; border-radius: 8px;">
   <code style="font-weight: bold;">!cd pet</code>
   <p style="font-size: 0.9em; margin-top: 10px;">🐕 Give the bot some love</p>
 </div>
 
-<div style="padding: 15px; border: 2px dashed #ffc107; border-radius: 8px; background: #fffbeb;">
+<div style="padding: 15px; border: 2px dashed #ffc107; border-radius: 8px;">
   <code style="font-weight: bold;">!cd scold</code>
   <p style="font-size: 0.9em; margin-top: 10px;">😔 Bot feels bad</p>
 </div>
 
 </div>
 
-<div style="padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 1em 0;">
+<div style="padding: 15px; border-left: 4px solid #ffc107; margin: 1em 0;">
   <strong>🤫 Shhh!</strong> These are undocumented features. Don't tell everyone! 😉
 </div>
 
@@ -278,7 +278,7 @@ ChatrixCD has a fun personality! Try these hidden commands:
 
 ---
 
-<div align="center" style="margin: 3em 0; padding: 2em; background: #e8f5e9; border-radius: 10px;">
+<div align="center" style="margin: 3em 0; padding: 2em; border-radius: 10px;">
   <h2 style="margin-top: 0;">🎉 You're All Set!</h2>
   <p style="font-size: 1.1em;">Your CI/CD automation is now chat-powered. Time to celebrate! 🎊</p>
 </div>

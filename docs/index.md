@@ -1,10 +1,8 @@
 ---
-layout: default
+layout: minimal
 title: Home
 nav_order: 1
 ---
-
-<a href="#main-content" class="skip-to-content">Skip to main content</a>
 
 <div align="center" style="margin: 2em 0;">
   <img src="assets/logo-horizontal.svg" alt="ChatrixCD - Matrix bot for CI/CD automation" width="500" style="max-width: 100%;">
