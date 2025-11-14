@@ -273,15 +273,62 @@ img {
   background-color: rgba(92, 181, 147, 0.4);
 }
 
+/* TEST RULE - Make all articles red to verify CSS is loading */
+article {
+  border: 5px solid red !important;
+  background-color: pink !important;
+}
+
 /* Fix contrast for inline styled elements with light backgrounds in dark theme */
 [style*="background: #f8f9fa"],
-[style*="background:#f8f9fa"] {
-  color: #2D3238 !important; /* Force dark text on light grey background */
+[style*="background:#f8f9fa"],
+article[style*="background: #f8f9fa"],
+article[style*="background:#f8f9fa"],
+div[style*="background: #f8f9fa"],
+div[style*="background:#f8f9fa"] {
+  color: #000000 !important; /* Force black text on light grey background */
+  background-color: #f8f9fa !important; /* Ensure background stays light */
 }
 
 [style*="background: #e7f3ff"],
-[style*="background:#e7f3ff"] {
-  color: #2D3238 !important; /* Force dark text on light blue background */
+[style*="background:#e7f3ff"],
+div[style*="background: #e7f3ff"],
+div[style*="background:#e7f3ff"] {
+  color: #000000 !important; /* Force black text on light blue background */
+  background-color: #e7f3ff !important; /* Ensure background stays light */
+}
+
+/* Force headings and links to be dark within light background elements */
+[style*="background: #f8f9fa"] h1,
+[style*="background: #f8f9fa"] h2,
+[style*="background: #f8f9fa"] h3,
+[style*="background: #f8f9fa"] h4,
+[style*="background: #f8f9fa"] h5,
+[style*="background: #f8f9fa"] h6,
+article[style*="background: #f8f9fa"] h1,
+article[style*="background: #f8f9fa"] h2,
+article[style*="background: #f8f9fa"] h3,
+article[style*="background: #f8f9fa"] h4,
+article[style*="background: #f8f9fa"] h5,
+article[style*="background: #f8f9fa"] h6,
+div[style*="background: #f8f9fa"] h1,
+div[style*="background: #f8f9fa"] h2,
+div[style*="background: #f8f9fa"] h3,
+div[style*="background: #f8f9fa"] h4,
+div[style*="background: #f8f9fa"] h5,
+div[style*="background: #f8f9fa"] h6 {
+  color: #000000 !important; /* Force black headings */
+}
+
+[style*="background: #f8f9fa"] a,
+article[style*="background: #f8f9fa"] a,
+div[style*="background: #f8f9fa"] a {
+  color: #1e7e34 !important; /* Dark green links */
+}
+
+[style*="background: #e7f3ff"] a,
+div[style*="background: #e7f3ff"] a {
+  color: #1e7e34 !important; /* Dark green links */
 }
 
 [style*="background: #f0f8ff"],
