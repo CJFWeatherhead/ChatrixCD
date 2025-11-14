@@ -1,0 +1,17 @@
+# Jekyll build output
+_site/
+
+# Jekyll cache
+.jekyll-cache/
+.jekyll-metadata
+.sass-cache/
+
+# Bundler
+.bundle/
+vendor/bundle/
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
