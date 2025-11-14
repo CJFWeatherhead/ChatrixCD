@@ -18,6 +18,18 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ### Added
 - **Vodozemac Migration**: Replaced deprecated libolm with vodozemac for enhanced security
   - Updated to vodozemac 0.9.0+ for improved cryptographic primitives
+- **Remote Store Integration**: Integration tests now copy and use remote encryption stores for proper E2E testing
+- **Log Analysis**: Automatic collection and analysis of remote bot logs for error detection and redaction assessment
+
+### Changed
+- **Integration Testing**: Removed `test_client` configuration; tests now use preauthenticated bot sessions exclusively
+- **Documentation**: Updated integration testing docs to reflect removal of separate test client requirement
+
+### Fixed
+- **Encryption Testing**: Fixed integration tests to properly decrypt and validate encrypted messages using copied stores
+
+### Changed
+- **Greeting Consistency**: Bot responses now use user display names instead of full Matrix user IDs in greetings for better readability
 
 ### Removed
 - **Encryption Verification Notification**: Removed automatic notification message when bot cannot decrypt encrypted messages

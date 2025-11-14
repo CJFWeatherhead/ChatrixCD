@@ -7,10 +7,10 @@ This directory contains tools for running integration tests against a live Chatr
 - **Remote Bot Management**: SSH-based control of ChatrixCD on remote servers
 - **Automatic Config Discovery**: Reads and parses bot configuration from remote machines
 - **OIDC Authentication Support**: Gracefully handles OIDC-authenticated bots
-- **Encrypted Message Reading**: Bots can decrypt and read each other's encrypted messages
+- **Encrypted Message Reading**: Bots can decrypt and read each other's encrypted messages using shared stores
 - **Cross-Bot Verification**: Automatic device verification between multiple bots
 - **Enhanced Redaction**: Improved log redaction for Matrix cryptographic data
-- **Flexible Testing**: Tests run with or without test client authentication
+- **Preauthenticated Testing**: Tests use existing bot sessions without separate test clients
 - **Slow Machine Support**: Extended timeouts for remote operations
 
 ## Test Types
@@ -31,23 +31,24 @@ This directory contains tools for running integration tests against a live Chatr
 
 ## OIDC Authentication Handling
 
-When the bot uses OIDC authentication (like Privacy International's setup), the integration tests:
+When the bot uses OIDC authentication (like Privacy International's setup), the integration tests use the preauthenticated bot sessions from the remote machines. No separate test client authentication is required, as the bots test each other using their existing access tokens and encryption stores.
 
-1. **Attempt test client authentication** using provided credentials
-2. **Fall back gracefully** if authentication fails
-3. **Skip interactive tests** that require sending messages
-4. **Run configuration validation** to ensure bot setup is correct
+The tests automatically:
 
-This allows the integration framework to work with both password and OIDC-authenticated bots.
+1. **Use existing sessions**: Restore bot sessions using access tokens from remote config/session files
+2. **Copy encryption stores**: Transfer remote store directories to enable decryption of encrypted messages
+3. **Perform cross-verification**: Bots verify each other to read encrypted responses
+4. **Run all tests**: Both configuration and interactive tests execute using authenticated bot sessions
 
 ## Device Verification and Encrypted Messages
 
-The integration tests now include automatic cross-verification between bots:
+The integration tests use preauthenticated bot sessions and copy remote encryption stores to enable full testing of encrypted rooms:
 
-1. **Cross-Verification Setup**: Test client automatically verifies with target bots
-2. **Encrypted Message Reading**: Tests can read decrypted content from verified bots
-3. **Verification Commands**: Tests include verification and session management commands
-4. **Real Message Validation**: Instead of "[ENCRYPTED_RESPONSE]", tests validate actual bot responses
+1. **Store Transfer**: Encryption keys and session data are copied from remote machines
+2. **Cross-Verification Setup**: Bots automatically verify each other using existing trust relationships
+3. **Encrypted Message Reading**: Tests can read and validate actual decrypted bot responses
+4. **Verification Commands**: Tests include device verification and session management commands
+5. **Real Message Validation**: All tests validate actual bot responses instead of "[ENCRYPTED_RESPONSE]"
 
 This enables comprehensive testing of bot-to-bot interactions in encrypted rooms.
 
@@ -118,10 +119,15 @@ This enables comprehensive testing of bot-to-bot interactions in encrypted rooms
    - `remote_host`: IP address of the machine running ChatrixCD
    - `remote_user`: SSH user for initial connection (usually "root")
    - `chatrix_user`: User account that runs ChatrixCD
-   - `test_client`: Credentials for the test Matrix user (user_id, password)
-   - `ssh_key_path`: Path to your SSH private key
+   - `chatrix_dir`: Directory where ChatrixCD is installed
+   - `venv_activate`: Command to activate virtual environment
+   - `chatrix_command`: Command to start ChatrixCD
+   - `matrix`: Matrix configuration (automatically read from remote, but can be overridden)
+   - `test_room`: Room ID for testing (automatically read from remote config)
+   - `test_timeout`: Timeout for operations
+   - `ssh_key_path`: Path to SSH private key
 
-   **Note**: Matrix server details (homeserver, bot user ID, room ID) are automatically read from the remote server's `config.json` file.
+   **Note**: Matrix server details (homeserver, bot user ID, room ID) are automatically read from the remote server's `config.json` file. No separate test client configuration is needed.
 
 ### Configuration Options
 
@@ -133,11 +139,6 @@ This enables comprehensive testing of bot-to-bot interactions in encrypted rooms
 - `chatrix_dir`: Directory where ChatrixCD is installed (usually "~/ChatrixCD")
 - `venv_activate`: Command to activate virtual environment
 - `chatrix_command`: Command to start ChatrixCD with desired flags
-
-### Test Client Configuration
-
-- `user_id`: Matrix user ID for the test client
-- `password`: Password for the test client
 
 ### Test Configuration
 
@@ -216,9 +217,9 @@ python tests/run_integration_tests.py tests/integration_config.json
 5. **Test Execution**: Runs the test suite
 6. **Cleanup**: Stops the bot and reports results
 
-### Expected Output for OIDC Bots
+### Expected Output
 
-When testing OIDC-authenticated bots (like Privacy International setup):
+When running integration tests with preauthenticated bot sessions:
 
 ```
 Reading configuration from remote server...
@@ -227,25 +228,26 @@ Updating ChatrixCD on remote machine...
 Starting ChatrixCD on remote machine...
 ChatrixCD started with PID: 12345
 ChatrixCD is running
+Copying encryption stores from remote machines...
 Running integration tests...
 ============================================================ test session starts =============================================================
 tests/test_integration_matrix.py::ChatrixCDIntegrationTest::test_bot_config_valid PASSED
-tests/test_integration_matrix.py::ChatrixCDIntegrationTest::test_bot_projects_command SKIPPED (Test client not authenticated)
-[... other tests SKIPPED ...]
+tests/test_integration_matrix.py::ChatrixCDIntegrationTest::test_bot_projects_command PASSED
+tests/test_integration_matrix.py::ChatrixCDIntegrationTest::test_bot_responds_to_help PASSED
+[... other tests PASSED ...]
 ```
 
 ### Test Results
 
-- **PASSED**: `test_bot_config_valid` - Bot configuration is valid
-- **SKIPPED**: Interactive tests when authentication fails (expected for OIDC)
-- **FAILED**: Only if there are actual configuration or connection issues
+- **PASSED**: All tests pass when bot sessions are properly restored and stores are copied
+- **FAILED**: Only if there are actual configuration, connection, or encryption issues
 
 ## Security Notes
 
 - Never commit `integration_config.json` with real credentials
 - Use SSH keys, not passwords
-- Ensure the test user has minimal permissions
-- The bot should be configured to only respond in the test room
+- Encryption stores are temporarily copied locally for testing but should be handled securely
+- The bot should be configured to only respond in authorized rooms
 
 ## Troubleshooting
 

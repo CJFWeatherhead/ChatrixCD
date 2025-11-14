@@ -299,6 +299,15 @@ class ChatrixBot:
                             access_token=session_data['access_token']
                         )
                         
+                        # Load encryption store after restoring session
+                        if self.client.olm:
+                            try:
+                                logger.info("Loading encryption store after session restore...")
+                                self.client.load_store()
+                                logger.info("Encryption store loaded successfully after restore")
+                            except Exception as e:
+                                logger.warning(f"Could not load encryption store after restore (this is normal on first run): {e}")
+                        
                         # Test the restored session with a sync
                         sync_response = await self.client.sync(timeout=5000)
                         if hasattr(sync_response, 'rooms'):
@@ -329,8 +338,6 @@ class ChatrixBot:
         Returns:
             List of identity provider dictionaries with 'id', 'name', 'icon', 'brand'
         """
-        import aiohttp
-        
         identity_providers = []
         try:
             async with aiohttp.ClientSession() as session:

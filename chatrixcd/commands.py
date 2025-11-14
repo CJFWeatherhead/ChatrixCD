@@ -190,32 +190,44 @@ class CommandHandler:
         table_html += '</tbody></table>'
         return table_html
 
-    def _get_display_name(self, user_id: str | None) -> str:
+    def _get_display_name(self, user_id: str | None, room_id: str | None = None) -> str:
         """Get a friendly display name for a user.
         
-        Returns the full Matrix ID for proper highlighting/mentions in messages.
+        If room_id is provided, returns the user's display name in that room.
+        Otherwise returns the full Matrix ID for proper highlighting/mentions in messages.
         The markdown_to_html function will convert it to a clickable mention link.
         
         Args:
             user_id: User ID to get display name for, or None to use 'friend' as default
+            room_id: Room ID to get display name from, or None to use user ID
             
         Returns:
-            Full Matrix user ID (e.g., @username:server.com) for proper mentions, or 'friend' if user_id is None
+            Display name if room_id provided and user found, otherwise full Matrix user ID
         """
-        # Return the full Matrix ID for proper mentions
-        # The markdown_to_html function will convert it to an HTML link
-        return user_id or "friend"
+        if not user_id:
+            return "friend"
+        
+        if room_id and room_id in self.bot.client.rooms:
+            room = self.bot.client.rooms[room_id]
+            if user_id in room.users:
+                user = room.users[user_id]
+                if user.displayname:
+                    return user.displayname
+        
+        # Fall back to full Matrix ID for proper mentions
+        return user_id
     
-    def _get_greeting(self, user_id: str | None) -> str:
+    def _get_greeting(self, user_id: str | None, room_id: str | None = None) -> str:
         """Get a random greeting for a user.
         
         Args:
             user_id: User ID to greet
+            room_id: Room ID for display name lookup
             
         Returns:
             Random greeting with user's display name
         """
-        name = self._get_display_name(user_id)
+        name = self._get_display_name(user_id, room_id)
         return self.message_manager.get_random_message('greetings', name=name)
 
     async def handle_reaction(self, room: MatrixRoom, sender: str, event_id: str, reaction_key: str):
@@ -377,7 +389,7 @@ class CommandHandler:
         elif command == 'sessions':
             await self.manage_sessions(room.room_id, event.sender, args)
         else:
-            greeting = self._get_greeting(event.sender)
+            greeting = self._get_greeting(event.sender, room.room_id)
             response = f"{greeting} - Unknown command: {command}. Type '{self.command_prefix} help' for available commands."
             logger.info(f"Unknown command '{command}' from {event.sender}, sending: {response}")
             await self.bot.send_message(room.room_id, response)
@@ -389,7 +401,7 @@ class CommandHandler:
             room_id: Room to send help to
             sender: User who requested help (for personalization)
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         
         # Plain text version for clients without HTML support
         help_text = f"""{greeting} Here's what I can do for you! 🚀
@@ -461,7 +473,7 @@ class CommandHandler:
             room_id: Room to send response to
             sender: User who requested the list
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         
         # Plain text version
         if not self.admin_users:
@@ -560,7 +572,7 @@ class CommandHandler:
             args: Command arguments (action, optional room_id)
             sender: User who sent the command
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         
         # List rooms if no action specified
         if not args:
@@ -876,7 +888,7 @@ class CommandHandler:
             sender: User who sent the command
             args: Command arguments (project_id, template_id)
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         
         # Resolve parameters with smart auto-selection
         project_id, template_id = await self._resolve_run_task_params(room_id, sender, args)
@@ -1272,7 +1284,7 @@ class CommandHandler:
             args: Command arguments (task_id) - optional
             sender: User who requested the status
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         
         # Determine task ID
         if not args:
@@ -1345,7 +1357,7 @@ class CommandHandler:
             sender: User who sent the command
             args: Command arguments (task_id)
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         
         if not args:
             await self.bot.send_message(
@@ -1504,7 +1516,7 @@ class CommandHandler:
             args: Command arguments (empty for last task, or task_id)
             sender: User who requested logs
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         
         # Determine task ID
         if not args:
@@ -1899,7 +1911,7 @@ class CommandHandler:
             room_id: Room to send response to
             sender: User who requested the ping
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         success = await self.semaphore.ping()
         
         if success:
@@ -2102,7 +2114,7 @@ class CommandHandler:
             room_id: Room to send response to
             sender: User who requested the info
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         
         # Get Semaphore info
         semaphore_info = await self.semaphore.get_info()
@@ -2154,7 +2166,7 @@ class CommandHandler:
             sender: User who requested the list
         """
         aliases = self.alias_manager.list_aliases()
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         
         if not aliases:
             plain_msg = f"{greeting} No command aliases configured. 🔖"
@@ -2191,7 +2203,7 @@ class CommandHandler:
             room_id: Room to send response to
             sender: User who petted the bot
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         await self.bot.send_message(
             room_id,
             f"{greeting} {self.message_manager.get_random_message('pet')}"
@@ -2204,7 +2216,7 @@ class CommandHandler:
             room_id: Room to send response to
             sender: User who scolded the bot
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         await self.bot.send_message(
             room_id,
             f"{greeting} {self.message_manager.get_random_message('scold')}"
@@ -2218,7 +2230,7 @@ class CommandHandler:
             sender: User who sent the command
             args: Command arguments
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         
         if not args:
             # List available verification options
@@ -2261,7 +2273,7 @@ Choose a verification method:
             sender: User who sent the command
             args: Command arguments
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         
         if not args:
             # List available session options
@@ -2308,7 +2320,7 @@ Session management commands:
             room_id: Room to send response to
             sender: User who requested the list
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         
         unverified = await self.bot.verification_manager.get_unverified_devices()
         
@@ -2339,7 +2351,7 @@ Session management commands:
             user_id: User ID of device to verify
             device_id: Device ID to verify
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         
         # Find the device
         unverified = await self.bot.verification_manager.get_unverified_devices()
@@ -2373,7 +2385,7 @@ Session management commands:
             room_id: Room to send response to
             sender: User who requested the list
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         
         pending = await self.bot.verification_manager.get_pending_verifications()
         
@@ -2400,7 +2412,7 @@ Session management commands:
             room_id: Room to send response to
             sender: User who requested auto-verification
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         
         pending = await self.bot.verification_manager.get_pending_verifications()
         
@@ -2425,7 +2437,7 @@ Session management commands:
             room_id: Room to send response to
             sender: User who requested cross-verification
         """
-        greeting = self._get_greeting(sender)
+        greeting = self._get_greeting(sender, room_id)
         
         # Get room members
         room = self.bot.client.rooms.get(room_id)

@@ -10,7 +10,7 @@
       "matrix": {
         "homeserver": "https://chat.privacyinternational.org",
         "bot_user_id": "@sparkles:privacyinternational.org",
-        "device_id": "CHATRIX",
+        "device_id": "CHATRIXCI",
         "access_token": "syt_c3BhcmtsZXM_WcDSekYBiIYqtsTSXiwV_01WJGP",
         "command_prefix": "!sharon"
       }
@@ -25,17 +25,13 @@
       "matrix": {
         "homeserver": "https://chat.privacyinternational.org",
         "bot_user_id": "@opsbot:privacyinternational.org",
-        "device_id": "CHATRIXOP",
+        "device_id": "CHATRIXOPCI",
         "access_token": "syt_b3BzYm90_QqmSqDNIrtoIcIelRHGA_01j2J2",
         "command_prefix": "!dave"
       }
     }
   ],
   "test_room": "!xStRksYFsmWPVDBVSi:privacyinternational.org",
-  "test_client": {
-    "user_id": "@testchatrix:privacyinternational.org",
-    "password": "dummy_password_for_testing"
-  },
   "test_timeout": 10,
   "ssh_key_path": "~/.ssh/id_rsa"
 }

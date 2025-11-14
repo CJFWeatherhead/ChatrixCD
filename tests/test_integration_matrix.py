@@ -47,15 +47,14 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
             # Extract all bot configs
             cls.all_bots = [host['matrix'] for host in cls.config['hosts']]
             cls.room_id = cls.config['test_room']
-            cls.test_client_config = cls.config.get('test_client', {})
         except json.JSONDecodeError as e:
             raise RuntimeError(f"Failed to parse INTEGRATION_CONFIG: {e}") from None
         except KeyError as e:
             raise RuntimeError(f"Missing required config key: {e}") from None
         
         cls.test_timeout = cls.config.get('test_timeout', 60)
-        
-        cls.test_timeout = cls.config.get('test_timeout', 60)
+
+        cls.store_paths = cls.config.get('store_paths', {})
 
     async def asyncSetUp(self):
         """Set up test client for each test."""
@@ -78,10 +77,14 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
             self.received_messages = []
             return
         
-        # Create temporary directory for test client store
-        import tempfile
-        self.test_store_dir = tempfile.mkdtemp(prefix='chatrix_test_')
-        print(f"DEBUG: Created test store directory: {self.test_store_dir}")
+        # Use the copied store directory for the tester bot
+        tester_user_id = tester_bot['bot_user_id']
+        self.test_store_dir = self.store_paths.get(tester_user_id)
+        if not self.test_store_dir:
+            print(f"DEBUG: No store path available for tester bot {tester_user_id}, creating temp dir")
+            import tempfile
+            self.test_store_dir = tempfile.mkdtemp(prefix='chatrix_test_')
+        print(f"DEBUG: Using store directory: {self.test_store_dir}")
         
         # Use the other bot as the tester (sender of commands)
         self.client = AsyncClient(

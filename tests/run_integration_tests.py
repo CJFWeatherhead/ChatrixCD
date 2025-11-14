@@ -203,6 +203,102 @@ class IntegrationTestRunner:
         except RuntimeError:
             raise RuntimeError("Failed to verify ChatrixCD is running") from None
 
+    def copy_store_from_remote(self, host_config: dict) -> str:
+        """Copy the store directory from remote machine to local temp directory."""
+        import tempfile
+        import os
+        
+        # Create local temp directory for the store
+        local_store_dir = tempfile.mkdtemp(prefix='chatrix_remote_store_')
+        print(f"Created local store directory: {local_store_dir}")
+        
+        # Remote store path
+        remote_store_path = f"{host_config['chatrix_dir']}/store"
+        
+        # Check if remote store exists
+        check_cmd = f"test -d {remote_store_path} && echo 'exists' || echo 'not exists'"
+        exists = self._run_ssh_command(check_cmd, user="root")
+        
+        if exists != 'exists':
+            print(f"Remote store directory does not exist: {remote_store_path}")
+            return local_store_dir  # Return empty dir
+        
+        # Copy the entire store directory using tar over SSH
+        print(f"Copying store from {host_config['remote_host']}:{remote_store_path} to {local_store_dir}")
+        
+        # Use tar to copy directory over SSH
+        tar_cmd = f"cd {host_config['chatrix_dir']} && tar czf - store"
+        scp_cmd = [
+            "ssh",
+            "-o", "StrictHostKeyChecking=no",
+            "-o", "UserKnownHostsFile=/dev/null",
+            "-i", os.path.expanduser(self.config.get("ssh_key_path", "~/.ssh/id_rsa")),
+            f"root@{host_config['remote_host']}",
+            tar_cmd
+        ]
+        
+        try:
+            import subprocess
+            result = subprocess.run(scp_cmd, capture_output=True, cwd=local_store_dir)
+            if result.returncode == 0:
+                # Extract the tar
+                extract_cmd = ["tar", "xzf", "-"]
+                extract_result = subprocess.run(extract_cmd, input=result.stdout, cwd=local_store_dir)
+                if extract_result.returncode == 0:
+                    print("Store copied successfully")
+                else:
+                    print(f"Failed to extract store: {extract_result.stderr.decode()}")
+            else:
+                print(f"Failed to copy store: {result.stderr.decode()}")
+        except Exception as e:
+            print(f"Error copying store: {e}")
+        
+        return local_store_dir
+
+    def collect_logs_from_remote(self, host_config: dict) -> str:
+        """Collect logs from remote machine for analysis."""
+        print(f"Collecting logs from {host_config['remote_host']}...")
+        
+        # Get the log file
+        log_cmd = f"cat {host_config['chatrix_dir']}/chatrix.log"
+        try:
+            logs = self._run_ssh_command(log_cmd, user="root", timeout=30)
+            return logs
+        except Exception as e:
+            print(f"Failed to collect logs: {e}")
+            return ""
+
+    def analyze_logs(self, logs: str, bot_user_id: str) -> None:
+        """Analyze logs for errors and redaction effectiveness."""
+        lines = logs.split('\n')
+        errors = []
+        sensitive_patterns = [
+            r'access_token.*:',
+            r'password.*:',
+            r'secret.*:',
+            r'key.*:',
+            r'token.*:',
+            r'auth.*:',
+        ]
+        
+        for line in lines:
+            if 'ERROR' in line or 'Exception' in line or 'Traceback' in line:
+                errors.append(line)
+            
+            # Check for potential sensitive data leaks (basic check)
+            for pattern in sensitive_patterns:
+                if pattern.lower() in line.lower() and ('redacted' not in line.lower()):
+                    print(f"⚠️  Potential sensitive data in log for {bot_user_id}: {line[:200]}...")
+        
+        if errors:
+            print(f"❌ Errors found in logs for {bot_user_id}:")
+            for error in errors[:5]:  # Show first 5 errors
+                print(f"  {error}")
+            if len(errors) > 5:
+                print(f"  ... and {len(errors) - 5} more errors")
+        else:
+            print(f"✅ No errors found in logs for {bot_user_id}")
+
     def stop_bot(self) -> None:
         """Stop ChatrixCD on the remote machine."""
         if self.bot_pid:
@@ -266,6 +362,10 @@ class IntegrationTestRunner:
         for bot_config in all_bot_configs:
             self.current_host = bot_config['host_config']
             try:
+                # Copy store before starting bot so it loads the existing store
+                store_path = self.copy_store_from_remote(bot_config['host_config'])
+                bot_config['store_path'] = store_path
+                
                 self.start_bot()
                 running_bots.append(bot_config)
                 print(f"✅ Started bot {bot_config['matrix_config']['bot_user_id']}")
@@ -280,6 +380,18 @@ class IntegrationTestRunner:
         # Wait for bots to fully start and sync
         print("Waiting 10 seconds for bots to sync...")
         time.sleep(10)
+        
+        # Copy stores from all running bots
+        print("Copying encryption stores from remote machines...")
+        store_paths = {}
+        for bot_config in running_bots:
+            try:
+                store_path = self.copy_store_from_remote(bot_config['host_config'])
+                store_paths[bot_config['matrix_config']['bot_user_id']] = store_path
+                print(f"✅ Copied store for {bot_config['matrix_config']['bot_user_id']}")
+            except Exception as e:
+                print(f"❌ Failed to copy store for {bot_config['matrix_config']['bot_user_id']}: {e}")
+                store_paths[bot_config['matrix_config']['bot_user_id']] = None
         
         # Now run tests for each running bot
         for i, bot_config in enumerate(running_bots):
@@ -297,6 +409,9 @@ class IntegrationTestRunner:
                 test_config['test_room'] = self.config.get('test_room')
                 test_config['test_client'] = self.config.get('test_client')
                 test_config['test_timeout'] = self.config.get('test_timeout', 10)
+                
+                # Add store paths
+                test_config['store_paths'] = store_paths
                 
                 # Set environment variable for the test
                 os.environ['INTEGRATION_CONFIG'] = json.dumps(test_config)
@@ -320,6 +435,15 @@ class IntegrationTestRunner:
                 print(f"✅ Stopped bot {bot_config['matrix_config']['bot_user_id']}")
             except Exception as e:
                 print(f"Warning: Failed to stop bot {bot_config['matrix_config']['bot_user_id']}: {e}")
+        
+        # Collect and analyze logs from all bots
+        print("\nCollecting and analyzing logs...")
+        for bot_config in running_bots:
+            try:
+                logs = self.collect_logs_from_remote(bot_config['host_config'])
+                self.analyze_logs(logs, bot_config['matrix_config']['bot_user_id'])
+            except Exception as e:
+                print(f"Failed to analyze logs for {bot_config['matrix_config']['bot_user_id']}: {e}")
         
         return overall_success
 

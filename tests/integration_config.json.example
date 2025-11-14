@@ -9,10 +9,6 @@
       "chatrix_command": "chatrix -NLCvv"
     }
   ],
-  "test_client": {
-    "user_id": "@testuser:example.com",
-    "password": "testpassword"
-  },
   "test_timeout": 10,
   "ssh_key_path": "~/.ssh/id_rsa"
 }

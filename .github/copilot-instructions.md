@@ -150,8 +150,19 @@ class TestConfig(unittest.TestCase):
 ### Running Tests
 
 ```bash
+# Ensure virtual environment is activated
+uv venv  # Create if not exists
+source .venv/bin/activate  # On Linux/macOS
+# .venv\Scripts\activate   # On Windows
+
+# Run all tests
 python -m unittest discover
-python -m unittest tests.test_config  # Specific test file
+
+# Run specific test file
+python -m unittest tests.test_config
+
+# Run integration tests (requires remote setup)
+python tests/run_integration_tests.py tests/integration_config.json
 ```
 
 ### Testing Guidelines
@@ -171,6 +182,7 @@ Testing is crucial for ChatrixCD to ensure reliability and maintainability. Foll
 - **IMPORTANT**: Tests should be meaningful, not just for coverage metrics, and should validate actual functionality.
 - Wherever possible attempt end-to-end tests that cover real-world scenarios.
     - Use public information to build realistic test cases.
+- **Integration Testing**: Do not add or reintroduce a `test_client` section in `integration_config.json`. Integration tests use preauthenticated bot sessions from remote machines to test each other. No separate test client authentication is needed.
 
 ## Text User Interface (TUI)
 
