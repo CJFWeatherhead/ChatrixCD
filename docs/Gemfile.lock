@@ -9,7 +9,7 @@ GEM
     csv (3.3.5)
     em-websocket (0.5.3)
       eventmachine (>= 0.12.9)
-      http_parser.rb (~> 0)
+      http_parser.rb (~> 0.6)
     eventmachine (1.2.7)
     ffi (1.17.2)
     forwardable-extended (2.6.0)
