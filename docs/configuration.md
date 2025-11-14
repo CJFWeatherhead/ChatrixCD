@@ -1,7 +1,9 @@
 ---
-layout: default
+layout: single
 title: Configuration
-nav_order: 4
+permalink: /configuration/
+toc: true
+toc_sticky: true
 ---
 
 # ⚙️ Configuration Guide

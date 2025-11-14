@@ -1,7 +1,9 @@
 ---
-layout: default
+layout: single
 title: Security
-nav_order: 7
+permalink: /security/
+toc: true
+toc_sticky: true
 ---
 
 # Security Policy

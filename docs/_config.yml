@@ -77,22 +77,26 @@ defaults:
 
 # Navigation
 nav:
-  - title: "Home"
+  - title: Home
     url: /
-  - title: "Installation"
+  - title: Installation
     url: /installation/
-  - title: "Quick Start"
+  - title: Quick Start
     url: /quickstart/
-  - title: "Architecture"
+  - title: Configuration
+    url: /configuration/
+  - title: TUI Guide
+    url: /tui/
+  - title: Architecture
     url: /architecture/
-  - title: "Contributing"
+  - title: Deployment
+    url: /deployment/
+  - title: Security
+    url: /security/
+  - title: Contributing
     url: /contributing/
-  - title: "Support"
+  - title: Support
     url: /support/
-
-# Reading Files
-include:
-  - _pages
 
 # Exclude from processing.
 # The following items will not be processed, by default.
@@ -137,30 +141,4 @@ search:
 enable_copy_code_button: true
 
 # Favicon configuration
-favicon_ico: "/favicon.ico"
-
-# Custom CSS for ChatrixCD branding
-head_custom: |
-  <link rel="icon" type="image/svg+xml" href="{{ '/favicon.svg' | relative_url }}">
-  <link rel="icon" type="image/x-icon" href="{{ '/favicon.ico' | relative_url }}">
-  <meta name="theme-color" content="#3e836b">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="ChatrixCD - Matrix bot for CI/CD automation through chat with Semaphore UI integration. Secure, fun, and powerful DevOps automation.">
-  <meta name="author" content="ChatrixCD Contributors">
-  <meta name="robots" content="index, follow">
-  
-  <!-- Open Graph / Social Media Meta Tags -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="ChatrixCD - CI/CD Automation Bot">
-  <meta property="og:description" content="Matrix bot that brings Semaphore UI automation to your encrypted chat rooms">
-  <meta property="og:url" content="https://chatrix.cd">
-  <meta property="og:site_name" content="ChatrixCD">
-  
-  <!-- Twitter Card Meta Tags -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ChatrixCD - CI/CD Automation Bot">
-  <meta name="twitter:description" content="Matrix bot that brings Semaphore UI automation to your encrypted chat rooms">
-  
-  <!-- Accessibility Meta Tags -->
-  <meta name="color-scheme" content="light dark">
-  <meta name="supported-color-schemes" content="light dark">
+favicon_ico: /favicon.ico

@@ -282,12 +282,12 @@ After installing, you need to:
 
 <div style="padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
   <strong>1️⃣ Create config.json</strong>
-  <p style="font-size: 0.9em;"><a href="configuration.html">Configuration Guide →</a></p>
+  <p style="font-size: 0.9em;"><a href="/configuration/">Configuration Guide →</a></p>
 </div>
 
 <div style="padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">
   <strong>2️⃣ Run ChatrixCD</strong>
-  <p style="font-size: 0.9em;"><a href="quickstart.html">Quick Start Guide →</a></p>
+  <p style="font-size: 0.9em;"><a href="/quickstart/">Quick Start Guide →</a></p>
 </div>
 
 <div style="padding: 15px; border-left: 4px solid #3e836b; background: #f8f9fa;">

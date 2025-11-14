@@ -15,7 +15,7 @@ Get help with ChatrixCD.
 ### Documentation
 
 Start with our documentation:
-- [Installation Guide](installation.html)
+- [Installation Guide](/installation/)
 - [Quick Start](quickstart.html)
 - [Configuration Guide](configuration.html)
 - [Architecture Overview](architecture.html)

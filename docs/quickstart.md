@@ -29,7 +29,7 @@ Get ChatrixCD up and running in **5 minutes**! 🚀
   <pre><code>wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
 chmod +x chatrixcd-linux-x86_64
 ./chatrixcd-linux-x86_64</code></pre>
-  <p><small>📖 <a href="installation.html#method-1-pre-built-binary-recommended">More download options →</a></small></p>
+  <p><small>📖 <a href="/installation/#method-1-pre-built-binary-recommended">More download options →</a></small></p>
 </div>
 
 <div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px; background: #f8f9fa;">
@@ -41,7 +41,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 pip install -e .</code></pre>
-  <p><small>📖 <a href="installation.html#method-2-from-source">Full source guide →</a></small></p>
+  <p><small>📖 <a href="/installation/#method-2-from-source">Full source guide →</a></small></p>
 </div>
 
 </div>
@@ -87,7 +87,7 @@ Create a `config.json` file in the same directory:
   ...
 }
 </code></pre>
-<p><small>📖 <a href="configuration.html#matrix-authentication">Full OIDC guide →</a></small></p>
+<p><small>📖 <a href="/configuration/#matrix-authentication">Full OIDC guide →</a></small></p>
 </details>
 
 <div style="padding: 15px; background: #ffebee; border-left: 4px solid #f44336; margin: 1em 0;">
@@ -255,25 +255,25 @@ ChatrixCD has a fun personality! Try these hidden commands:
 <div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;">
   <h3 style="margin-top: 0;">⚙️ Configure More</h3>
   <p>Add custom aliases, configure log tailing, set up OIDC</p>
-  <a href="configuration.html">Configuration Guide →</a>
+  <a href="/configuration/">Configuration Guide →</a>
 </div>
 
 <div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;">
   <h3 style="margin-top: 0;">🖥️ Explore the TUI</h3>
   <p>Learn about the interactive terminal interface features</p>
-  <a href="TUI.html">TUI Guide →</a>
+  <a href="/tui/">TUI Guide →</a>
 </div>
 
 <div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;">
   <h3 style="margin-top: 0;">🚀 Deploy to Production</h3>
   <p>systemd, Docker, or native deployment options</p>
-  <a href="deployment.html">Deployment Guide →</a>
+  <a href="/deployment/">Deployment Guide →</a>
 </div>
 
 <div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;">
   <h3 style="margin-top: 0;">❓ Need Help?</h3>
   <p>Troubleshooting, FAQ, and getting support</p>
-  <a href="support.html">Support Guide →</a>
+  <a href="/support/">Support Guide →</a>
 </div>
 
 </div>

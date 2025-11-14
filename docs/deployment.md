@@ -1,7 +1,9 @@
 ---
-layout: default
+layout: single
 title: Deployment
-nav_order: 8
+permalink: /deployment/
+toc: true
+toc_sticky: true
 ---
 
 # Deployment Guide
@@ -302,7 +304,7 @@ cp /etc/systemd/system/chatrixcd.service "$BACKUP_DIR/"
 
 ## Related Documentation
 
-- [Installation Guide](installation.html)
+- [Installation Guide](/installation/)
 - [Configuration Guide](configuration.html)
 - [Security Policy](security.html)
 - [Support Guide](support.html)

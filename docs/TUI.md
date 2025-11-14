@@ -1,7 +1,9 @@
 ---
-layout: default
+layout: single
 title: TUI Guide
-nav_order: 4
+permalink: /tui/
+toc: true
+toc_sticky: true
 ---
 
 # 🖥️ Text User Interface (TUI)

@@ -21,10 +21,10 @@ toc: false
 
 <nav role="navigation" aria-label="Quick access navigation">
   <div align="center" style="margin: 2em 0;">
-    <a href="installation.html" style="display: inline-block; padding: 15px 30px; background: #3e836b; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin: 10px;" aria-label="Get Started with Installation">
+    <a href="/installation/" style="display: inline-block; padding: 15px 30px; background: #3e836b; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin: 10px;" aria-label="Get Started with Installation">
       📥 Get Started
     </a>
-    <a href="quickstart.html" style="display: inline-block; padding: 15px 30px; background: #2D3238; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin: 10px;" aria-label="View Quick Start Guide">
+    <a href="/quickstart/" style="display: inline-block; padding: 15px 30px; background: #2D3238; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin: 10px;" aria-label="View Quick Start Guide">
       ⚡ Quick Start
     </a>
     <a href="https://github.com/CJFWeatherhead/ChatrixCD" style="display: inline-block; padding: 15px 30px; background: #333; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin: 10px;" aria-label="View ChatrixCD on GitHub" rel="noopener noreferrer" target="_blank">
@@ -84,7 +84,7 @@ toc: false
     <p>Download the pre-built binary for Linux (no Python needed!) or install from source:</p>
     <pre><code>wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
 chmod +x chatrixcd-linux-x86_64</code></pre>
-    <p><a href="installation.html">📖 Full Installation Guide →</a></p>
+    <p><a href="/installation/">📖 Full Installation Guide →</a></p>
   </div>
 </li>
 
@@ -105,7 +105,7 @@ chmod +x chatrixcd-linux-x86_64</code></pre>
     "api_token": "your-api-token"
   }
 }</code></pre>
-    <p><a href="configuration.html">⚙️ Configuration Guide →</a></p>
+    <p><a href="/configuration/">⚙️ Configuration Guide →</a></p>
   </div>
 </li>
 
@@ -119,7 +119,7 @@ chmod +x chatrixcd-linux-x86_64</code></pre>
 # In your Matrix room:
 !cd projects
 !cd run &lt;project_id&gt; &lt;template_id&gt;</code></pre>
-    <p><a href="quickstart.html">⚡ Quick Start Guide →</a></p>
+    <p><a href="/quickstart/">⚡ Quick Start Guide →</a></p>
   </div>
 </li>
 
@@ -160,47 +160,47 @@ chmod +x chatrixcd-linux-x86_64</code></pre>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 2em 0;">
 
 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
-  <h4 style="margin-top: 0;">📥 <a href="installation.html">Installation</a></h4>
+  <h4 style="margin-top: 0;">📥 <a href="/installation/">Installation</a></h4>
   <p style="font-size: 0.9em;">Pre-built binaries, source, Docker</p>
 </div>
 
 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
-  <h4 style="margin-top: 0;">⚡ <a href="quickstart.html">Quick Start</a></h4>
+  <h4 style="margin-top: 0;">⚡ <a href="/quickstart/">Quick Start</a></h4>
   <p style="font-size: 0.9em;">Get up and running in minutes</p>
 </div>
 
 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
-  <h4 style="margin-top: 0;">⚙️ <a href="configuration.html">Configuration</a></h4>
+  <h4 style="margin-top: 0;">⚙️ <a href="/configuration/">Configuration</a></h4>
   <p style="font-size: 0.9em;">Detailed config options</p>
 </div>
 
 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
-  <h4 style="margin-top: 0;">🖥️ <a href="TUI.html">TUI Guide</a></h4>
+  <h4 style="margin-top: 0;">🖥️ <a href="/tui/">TUI Guide</a></h4>
   <p style="font-size: 0.9em;">Terminal interface features</p>
 </div>
 
 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
-  <h4 style="margin-top: 0;">🏗️ <a href="architecture.html">Architecture</a></h4>
+  <h4 style="margin-top: 0;">🏗️ <a href="/architecture/">Architecture</a></h4>
   <p style="font-size: 0.9em;">Technical design overview</p>
 </div>
 
 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
-  <h4 style="margin-top: 0;">🚀 <a href="deployment.html">Deployment</a></h4>
+  <h4 style="margin-top: 0;">🚀 <a href="/deployment/">Deployment</a></h4>
   <p style="font-size: 0.9em;">Production deployment options</p>
 </div>
 
 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
-  <h4 style="margin-top: 0;">🔒 <a href="security.html">Security</a></h4>
+  <h4 style="margin-top: 0;">🔒 <a href="/security/">Security</a></h4>
   <p style="font-size: 0.9em;">Security policy and best practices</p>
 </div>
 
 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
-  <h4 style="margin-top: 0;">🤝 <a href="contributing.html">Contributing</a></h4>
+  <h4 style="margin-top: 0;">🤝 <a href="/contributing/">Contributing</a></h4>
   <p style="font-size: 0.9em;">How to contribute to the project</p>
 </div>
 
 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
-  <h4 style="margin-top: 0;">❓ <a href="support.html">Support</a></h4>
+  <h4 style="margin-top: 0;">❓ <a href="/support/">Support</a></h4>
   <p style="font-size: 0.9em;">Get help and troubleshooting</p>
 </div>
 
@@ -247,10 +247,10 @@ chmod +x chatrixcd-linux-x86_64</code></pre>
 
 ## 🌟 Getting Help
 
-- 📖 **Documentation**: You're looking at it! Start with [Quick Start](quickstart.html)
+- 📖 **Documentation**: You're looking at it! Start with [Quick Start](/quickstart/)
 - 🐛 **Bug Reports**: [GitHub Issues](https://github.com/CJFWeatherhead/ChatrixCD/issues)
-- 💬 **Questions**: Check [Support](support.html) or open a discussion
-- 🤝 **Contributing**: See [Contributing Guide](contributing.html)
+- 💬 **Questions**: Check [Support](/support/) or open a discussion
+- 🤝 **Contributing**: See [Contributing Guide](/contributing/)
 
 ---
 
@@ -263,7 +263,7 @@ ChatrixCD is open source under the **GNU General Public License v3.0**. See [LIC
 <section style="margin: 3em 0; padding: 2em; background: #f8f9fa; border-radius: 10px; text-align: center;" role="region" aria-label="Call to action">
   <h2 style="margin-top: 0;">Ready to automate? 🚀</h2>
   <p style="font-size: 1.1em;">Install ChatrixCD and start managing CI/CD from chat!</p>
-  <a href="installation.html" style="display: inline-block; padding: 15px 40px; background: #3e836b; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin-top: 1em;" aria-label="Get started with ChatrixCD installation">
+  <a href="/installation/" style="display: inline-block; padding: 15px 40px; background: #3e836b; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin-top: 1em;" aria-label="Get started with ChatrixCD installation">
     Get Started Now →
   </a>
 </section>
