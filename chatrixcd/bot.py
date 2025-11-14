@@ -606,7 +606,7 @@ class ChatrixBot:
         # Step 1: Query device keys for the sender to ensure we have up-to-date device information
         try:
             logger.info(f"Querying device keys for {event.sender} to establish encryption")
-            await self.client.keys_query({event.sender})
+            await self.client.keys_query(user_ids={event.sender})
             logger.debug(f"Device keys queried successfully for {event.sender}")
         except Exception as e:
             logger.error(f"Failed to query device keys for {event.sender}: {e}")
@@ -873,7 +873,7 @@ class ChatrixBot:
                                 f"with {len(users_to_query)} unique user(s)"
                             )
                             logger.info("Querying device keys for all users in encrypted rooms...")
-                            await self.client.keys_query(users_to_query)
+                            await self.client.keys_query(user_ids=users_to_query)
                             
                             # Claim one-time keys to establish Olm sessions with all devices
                             logger.info("Claiming one-time keys to establish Olm sessions...")
@@ -911,7 +911,7 @@ class ChatrixBot:
                                 f"Proactively querying device keys for {len(users_to_query)} "
                                 f"user(s) in encrypted rooms"
                             )
-                            await self.client.keys_query(users_to_query)
+                            await self.client.keys_query(user_ids=users_to_query)
             except Exception as e:
                 logger.debug(f"Error during proactive device key query: {e}")
 

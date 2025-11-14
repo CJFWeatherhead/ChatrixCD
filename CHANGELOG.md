@@ -47,6 +47,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - Modified workflow to start all bots concurrently for inter-bot testing
 
 ### Fixed
+- Fixed `keys_query` API calls to use `user_ids` parameter for matrix-nio compatibility
 - Bot response validation now works with separate test user account
 - Resolved authentication issues for OIDC-authenticated bots via session file access tokens
 - Integration tests now properly test cross-bot interactions without self-messaging
