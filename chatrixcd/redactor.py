@@ -81,6 +81,39 @@ class SensitiveInfoRedactor:
             r'(password[=:\s]+)[^\s&]+',
             re.IGNORECASE
         )
+        
+        # Cryptographic keys (ed25519, curve25519, etc.)
+        self.crypto_key_pattern = re.compile(
+            r'\b(ed25519|curve25519|olm_key|megolm_key)[\'\":\s]*[\'\"]*([A-Za-z0-9+/]{6,})[\'\"]*',
+            re.IGNORECASE
+        )
+        
+        # Matrix event IDs ($ followed by base64-like string)
+        self.event_id_pattern = re.compile(r'\$[A-Za-z0-9+/]{10,}')
+        
+        # Matrix transaction IDs (alphanumeric strings starting with specific prefixes)
+        self.transaction_id_pattern = re.compile(r'\b(t_[a-zA-Z0-9]{10,}|[a-zA-Z0-9]{20,}_[a-zA-Z0-9]{8,})\b')
+        
+        # Room keys and session data (base64 encoded)
+        self.room_key_pattern = re.compile(
+            r'\b(room_key|session_key|group_session)[\'\":\s]*[\'\"]*([A-Za-z0-9+/]{10,}=*)[\'\"]*',
+            re.IGNORECASE
+        )
+        
+        # One-time keys (base64 encoded arrays)
+        self.one_time_key_pattern = re.compile(
+            r'\b(one_time_key|otk)[\'\":\s]*\[\s*[\'\"]*[A-Za-z0-9+/=]{10,}[\'\"]*\s*\]',
+            re.IGNORECASE
+        )
+        
+        # Device key fingerprints (hex strings)
+        self.fingerprint_pattern = re.compile(r'\b[fF]ingerprint[\'\":\s]*[\'\"]*([0-9a-fA-F]{64})[\'\"]*', re.IGNORECASE)
+        
+        # Matrix sync tokens (s followed by numbers)
+        self.sync_token_pattern = re.compile(r'\bs\d+')
+        
+        # Base64 encoded data (long strings that look like base64)
+        self.base64_data_pattern = re.compile(r'\b[A-Za-z0-9+/]{50,}=*\b')
     
     def _wrap_redacted(self, text: str) -> str:
         """Wrap redacted text with color if enabled.
@@ -140,6 +173,54 @@ class SensitiveInfoRedactor:
         # Redact session IDs (after more specific patterns)
         message = self.session_id_pattern.sub(
             self._wrap_redacted('[SESSION_ID_REDACTED]'),
+            message
+        )
+        
+        # Redact cryptographic keys
+        message = self.crypto_key_pattern.sub(
+            lambda m: m.group(1) + self._wrap_redacted('[CRYPTO_KEY_REDACTED]'),
+            message
+        )
+        
+        # Redact event IDs
+        message = self.event_id_pattern.sub(
+            self._wrap_redacted('[EVENT_ID_REDACTED]'),
+            message
+        )
+        
+        # Redact transaction IDs
+        message = self.transaction_id_pattern.sub(
+            self._wrap_redacted('[TRANSACTION_ID_REDACTED]'),
+            message
+        )
+        
+        # Redact room keys and session data
+        message = self.room_key_pattern.sub(
+            lambda m: m.group(1) + self._wrap_redacted('[ROOM_KEY_REDACTED]'),
+            message
+        )
+        
+        # Redact one-time keys
+        message = self.one_time_key_pattern.sub(
+            lambda m: m.group(1) + self._wrap_redacted('[ONE_TIME_KEY_REDACTED]'),
+            message
+        )
+        
+        # Redact fingerprints
+        message = self.fingerprint_pattern.sub(
+            lambda m: m.group(1) + self._wrap_redacted('[FINGERPRINT_REDACTED]'),
+            message
+        )
+        
+        # Redact sync tokens
+        message = self.sync_token_pattern.sub(
+            self._wrap_redacted('[SYNC_TOKEN_REDACTED]'),
+            message
+        )
+        
+        # Redact long base64 data (be careful not to redact legitimate short strings)
+        message = self.base64_data_pattern.sub(
+            self._wrap_redacted('[BASE64_DATA_REDACTED]'),
             message
         )
         

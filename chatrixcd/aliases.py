@@ -48,6 +48,12 @@ class AliasManager:
             return
 
         try:
+            # Check if file is empty
+            if os.path.getsize(self.aliases_file) == 0:
+                logger.info(f"Aliases file {self.aliases_file} is empty, starting with empty aliases")
+                self.aliases = {}
+                return
+                
             with open(self.aliases_file, 'r', encoding='utf-8') as f:
                 self.aliases = json.load(f)
             logger.info(f"Loaded {len(self.aliases)} aliases from {self.aliases_file}")

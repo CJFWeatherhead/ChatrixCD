@@ -16,17 +16,22 @@ import time
 import signal
 import subprocess
 import hjson
+import logging
 from pathlib import Path
 from typing import Optional
 
+logger = logging.getLogger(__name__)
+
 
 class IntegrationTestRunner:
-    """Manages running integration tests against a remote ChatrixCD instance."""
+    """Manages running integration tests against remote ChatrixCD instances."""
 
     def __init__(self, config_path: str):
         """Initialize with configuration."""
         self.config_path = Path(config_path)
         self.config = self._load_config()
+        self.hosts = self.config.get('hosts', [self.config])  # Support both old single host and new multi-host format
+        self.current_host = None
         self.bot_pid = None  # Initialize bot_pid
         self.bot_process: Optional[subprocess.Popen] = None
 
@@ -40,10 +45,10 @@ class IntegrationTestRunner:
 
     def _get_remote_config(self) -> dict:
         """Read and parse the config.json from the remote server."""
-        print("Reading configuration from remote server...")
+        print(f"Reading configuration from remote server {self.current_host['remote_host']}...")
         
         # Read the config file from remote server (using root to access chatrix directory)
-        cat_cmd = f"cat {self.config['chatrix_dir']}/config.json"
+        cat_cmd = f"cat {self.current_host['chatrix_dir']}/config.json"
         config_json = self._run_ssh_command(cat_cmd)
         
         print(f"Raw config output (first 200 chars): {config_json[:200]}")
@@ -72,22 +77,66 @@ class IntegrationTestRunner:
         else:
             raise RuntimeError("Bot user_id not found in remote config")
         
+        # Extract device ID
+        if 'matrix' in remote_config and 'device_id' in remote_config['matrix']:
+            matrix_config['device_id'] = remote_config['matrix']['device_id']
+        
+        # Extract access token from config first (for password auth)
+        if 'matrix' in remote_config and 'access_token' in remote_config['matrix']:
+            matrix_config['access_token'] = remote_config['matrix']['access_token']
+        else:
+            # For OIDC auth, try to get access token from session file
+            try:
+                session_data = self._get_session_from_remote()
+                if session_data and 'access_token' in session_data:
+                    matrix_config['access_token'] = session_data['access_token']
+                    logger.info("Retrieved access token from remote session file")
+                else:
+                    logger.warning(f"No access token found in session data: {session_data}")
+            except Exception as e:
+                logger.warning(f"Could not retrieve access token from session file: {e}")
+        
         # Extract allowed rooms (use first one as test room)
         if 'bot' in remote_config and 'allowed_rooms' in remote_config['bot'] and remote_config['bot']['allowed_rooms']:
             matrix_config['room_id'] = remote_config['bot']['allowed_rooms'][0]
         else:
             raise RuntimeError("No allowed_rooms found in remote config")
         
+        # Extract command prefix
+        if 'bot' in remote_config and 'command_prefix' in remote_config['bot']:
+            matrix_config['command_prefix'] = remote_config['bot']['command_prefix']
+        else:
+            matrix_config['command_prefix'] = '!cd'  # Default fallback
+        
         return matrix_config
 
-    def _run_ssh_command(self, command: str, user: str = "root", max_retries: int = 3) -> str:
+    def _get_session_from_remote(self) -> Optional[dict]:
+        """Get session data from the remote machine's store directory."""
+        try:
+            # Try to read the session file from the remote machine
+            session_cmd = "cat /home/chatrix/ChatrixCD/store/session.json"
+            session_output = self._run_ssh_command(session_cmd, user="root")
+            
+            if session_output.strip():
+                logger.info(f"Raw session file content: {session_output.strip()[:200]}...")
+                session_data = json.loads(session_output.strip())
+                logger.info(f"Parsed session data keys: {list(session_data.keys()) if session_data else 'None'}")
+                return session_data
+        except json.JSONDecodeError as e:
+            logger.warning(f"Failed to parse session JSON: {e}")
+        except Exception as e:
+            logger.debug(f"Could not read session file from remote: {e}")
+        
+        return None
+
+    def _run_ssh_command(self, command: str, user: str = "root", max_retries: int = 3, timeout: int = 30) -> str:
         """Run a command on the remote host via SSH with retry logic."""
         ssh_cmd = [
             "ssh",
             "-o", "StrictHostKeyChecking=no",
             "-o", "UserKnownHostsFile=/dev/null",
             "-i", os.path.expanduser(self.config.get("ssh_key_path", "~/.ssh/id_rsa")),
-            f"{user}@{self.config['remote_host']}",
+            f"{user}@{self.current_host['remote_host']}",
             command
         ]
 
@@ -99,7 +148,7 @@ class IntegrationTestRunner:
                     ssh_cmd,
                     capture_output=True,
                     text=True,
-                    timeout=30
+                    timeout=timeout
                 )
 
                 if result.returncode == 0:
@@ -120,17 +169,17 @@ class IntegrationTestRunner:
 
     def start_bot(self) -> None:
         """Start ChatrixCD on the remote machine."""
-        print("Updating ChatrixCD on remote machine...")
+        print(f"Updating ChatrixCD on remote machine {self.current_host['remote_host']}...")
         
         # Update code and dependencies as chatrix user
-        update_cmd = f"su - {self.config['chatrix_user']} -c 'cd {self.config['chatrix_dir']} && git pull && uv pip install -r requirements.txt && uv pip install -e .'"
-        self._run_ssh_command(update_cmd)
+        update_cmd = f"su - {self.current_host['chatrix_user']} -c 'cd {self.current_host['chatrix_dir']} && git pull && (uv venv .venv || python3 -m venv .venv) && uv pip install -r requirements.txt && uv pip install -e .'"
+        self._run_ssh_command(update_cmd, timeout=120)  # Give it 2 minutes for slow machines
         print("Code updated and dependencies installed")
         
         print("Starting ChatrixCD on remote machine...")
         
         # Start the bot as chatrix user
-        start_cmd = f"su - {self.config['chatrix_user']} -c 'cd {self.config['chatrix_dir']} && {self.config['venv_activate']} && nohup {self.config['chatrix_command']} > chatrix.log 2>&1 & echo $!'"
+        start_cmd = f"su - {self.current_host['chatrix_user']} -c 'cd {self.current_host['chatrix_dir']} && {self.current_host['venv_activate']} && nohup {self.current_host['chatrix_command']} > chatrix.log 2>&1 & echo $!'"
         
         # Get the PID
         pid_output = self._run_ssh_command(start_cmd)
@@ -171,50 +220,108 @@ class IntegrationTestRunner:
         """Run the integration tests."""
         print("Running integration tests...")
 
-        # Set environment variable for config
-        env = os.environ.copy()
-        env['INTEGRATION_CONFIG'] = str(self.config_path)
-
         # Run pytest on the integration test
         test_cmd = [
             sys.executable, "-m", "pytest",
             "tests/test_integration_matrix.py",
             "-v",
-            "--tb=short"
+            "--tb=short",
+            "-s"  # Don't capture output
         ]
 
         result = subprocess.run(
             test_cmd,
             cwd=Path(__file__).parent.parent,
-            env=env,
-            timeout=self.config.get('test_timeout', 300)
+            timeout=self.config.get('test_timeout', 10) + 10  # Add some buffer
         )
 
         return result.returncode == 0
 
     def run(self) -> bool:
-        """Run the complete integration test cycle."""
-        try:
-            # Get Matrix configuration from remote server
-            remote_config = self._get_remote_config()
-            matrix_config = self._extract_matrix_config(remote_config)
+        """Run the complete integration test cycle with all bots running simultaneously."""
+        overall_success = True
+        
+        # First, collect all bot configurations
+        all_bot_configs = []
+        for host_config in self.hosts:
+            self.current_host = host_config
+            try:
+                remote_config = self._get_remote_config()
+                matrix_config = self._extract_matrix_config(remote_config)
+                all_bot_configs.append({
+                    'host': host_config['remote_host'],
+                    'matrix_config': matrix_config,
+                    'host_config': host_config
+                })
+            except Exception as e:
+                print(f"Failed to get config for host {host_config['remote_host']}: {e}")
+                overall_success = False
+                continue
+        
+        if len(all_bot_configs) < 2:
+            print("Warning: Need at least 2 bots for cross-testing. Running basic tests only.")
+        
+        # Start all bots simultaneously
+        running_bots = []
+        for bot_config in all_bot_configs:
+            self.current_host = bot_config['host_config']
+            try:
+                self.start_bot()
+                running_bots.append(bot_config)
+                print(f"✅ Started bot {bot_config['matrix_config']['bot_user_id']}")
+            except Exception as e:
+                print(f"❌ Failed to start bot {bot_config['matrix_config']['bot_user_id']}: {e}")
+                overall_success = False
+        
+        if not running_bots:
+            print("❌ No bots could be started")
+            return False
+        
+        # Wait for bots to fully start and sync
+        print("Waiting 10 seconds for bots to sync...")
+        time.sleep(10)
+        
+        # Now run tests for each running bot
+        for i, bot_config in enumerate(running_bots):
+            print(f"\n{'='*50}")
+            print(f"Testing bot {i+1}/{len(running_bots)}: {bot_config['matrix_config']['bot_user_id']} on {bot_config['host']}")
+            print(f"{'='*50}")
             
-            # Merge with local config for test environment
-            test_config = self.config.copy()
-            test_config['matrix'] = matrix_config
-            
-            # Add test client credentials
-            if 'test_client' in self.config:
-                test_config['matrix'].update(self.config['test_client'])
-            
-            # Set environment variable for the test
-            os.environ['INTEGRATION_CONFIG'] = json.dumps(test_config)
-            
-            self.start_bot()
-            success = self.run_tests()
-            return success
-        finally:
-            self.stop_bot()
+            try:
+                # Prepare test config with information about all bots
+                test_config = self.config.copy()
+                test_config['matrix'] = bot_config['matrix_config']
+                test_config['all_bots'] = [config['matrix_config'] for config in running_bots]
+                
+                # Add test configuration
+                test_config['test_room'] = self.config.get('test_room')
+                test_config['test_client'] = self.config.get('test_client')
+                test_config['test_timeout'] = self.config.get('test_timeout', 10)
+                
+                # Set environment variable for the test
+                os.environ['INTEGRATION_CONFIG'] = json.dumps(test_config)
+                
+                success = self.run_tests()
+                if not success:
+                    overall_success = False
+                    print(f"❌ Tests failed for bot {bot_config['matrix_config']['bot_user_id']}")
+                else:
+                    print(f"✅ Tests passed for bot {bot_config['matrix_config']['bot_user_id']}")
+                    
+            except Exception as e:
+                print(f"❌ Error testing bot {bot_config['matrix_config']['bot_user_id']}: {e}")
+                overall_success = False
+        
+        # Stop all bots
+        for bot_config in running_bots:
+            self.current_host = bot_config['host_config']
+            try:
+                self.stop_bot()
+                print(f"✅ Stopped bot {bot_config['matrix_config']['bot_user_id']}")
+            except Exception as e:
+                print(f"Warning: Failed to stop bot {bot_config['matrix_config']['bot_user_id']}: {e}")
+        
+        return overall_success
 
 
 def main():

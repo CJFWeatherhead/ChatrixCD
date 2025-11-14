@@ -986,6 +986,110 @@ class TestCommandHandler(unittest.TestCase):
         self.assertNotIn('IPv4:', message2)
         self.assertNotIn('IPv6:', message2)
 
+    def test_verify_command_no_args(self):
+        """Test verify command with no arguments."""
+        self.loop.run_until_complete(
+            self.handler.verify_device('!room:example.com', '@user:example.com', [])
+        )
+        
+        # Should send help message
+        self.assertEqual(self.mock_bot.send_message.call_count, 1)
+        call_args = self.mock_bot.send_message.call_args[0]
+        message = call_args[1]
+        self.assertIn('Device Verification Options', message)
+        self.assertIn('verify list', message)
+
+    def test_verify_command_list(self):
+        """Test verify list command."""
+        # Mock verification manager
+        self.mock_bot.verification_manager = MagicMock()
+        self.mock_bot.verification_manager.get_unverified_devices = AsyncMock(return_value=[
+            {'user_id': '@bot:example.com', 'device_id': 'DEVICE1', 'device_name': 'Bot Device'}
+        ])
+        
+        self.loop.run_until_complete(
+            self.handler.verify_device('!room:example.com', '@user:example.com', ['list'])
+        )
+        
+        # Should call get_unverified_devices and send message
+        self.mock_bot.verification_manager.get_unverified_devices.assert_called_once()
+        self.assertEqual(self.mock_bot.send_message.call_count, 1)
+
+    def test_verify_command_start(self):
+        """Test verify start command."""
+        # Mock verification manager
+        self.mock_bot.verification_manager = MagicMock()
+        self.mock_bot.verification_manager.get_unverified_devices = AsyncMock(return_value=[
+            {'user_id': '@bot:example.com', 'device_id': 'DEVICE1', 'device': MagicMock()}
+        ])
+        self.mock_bot.verification_manager.start_verification = AsyncMock(return_value=MagicMock())
+        
+        self.loop.run_until_complete(
+            self.handler.verify_device('!room:example.com', '@user:example.com',
+                                     ['start', '@bot:example.com', 'DEVICE1'])
+        )
+        
+        # Should call start_verification and send message
+        self.mock_bot.verification_manager.start_verification.assert_called_once()
+        self.assertEqual(self.mock_bot.send_message.call_count, 1)
+
+    def test_sessions_command_no_args(self):
+        """Test sessions command with no arguments."""
+        self.loop.run_until_complete(
+            self.handler.manage_sessions('!room:example.com', '@user:example.com', [])
+        )
+        
+        # Should send help message
+        self.assertEqual(self.mock_bot.send_message.call_count, 1)
+        call_args = self.mock_bot.send_message.call_args[0]
+        message = call_args[1]
+        self.assertIn('Session Management', message)
+        self.assertIn('sessions list', message)
+
+    def test_sessions_command_list(self):
+        """Test sessions list command."""
+        # Mock verification manager
+        self.mock_bot.verification_manager = MagicMock()
+        self.mock_bot.verification_manager.get_verified_devices = AsyncMock(return_value=[
+            {'user_id': '@bot:example.com', 'device_id': 'DEVICE1', 'device_name': 'Bot Device'}
+        ])
+        self.mock_bot.verification_manager.get_unverified_devices = AsyncMock(return_value=[])
+        
+        self.loop.run_until_complete(
+            self.handler.manage_sessions('!room:example.com', '@user:example.com', ['list'])
+        )
+        
+        # Should call device listing methods and send message
+        self.mock_bot.verification_manager.get_verified_devices.assert_called_once()
+        self.mock_bot.verification_manager.get_unverified_devices.assert_called_once()
+        self.assertEqual(self.mock_bot.send_message.call_count, 1)
+
+    def test_cross_verify_bots(self):
+        """Test cross verification with other bots."""
+        # Mock room with multiple users
+        mock_room = MagicMock()
+        mock_room.users = ['@user:example.com', '@sparkles:example.com', '@opsbot:example.com']
+        mock_room.encrypted = True
+        
+        # Mock verification manager
+        self.mock_bot.verification_manager = MagicMock()
+        self.mock_bot.verification_manager.get_unverified_devices = AsyncMock(return_value=[
+            {'user_id': '@sparkles:example.com', 'device_id': 'DEVICE1', 'device': MagicMock()}
+        ])
+        self.mock_bot.verification_manager.start_verification = AsyncMock(return_value=MagicMock())
+        
+        # Mock client.rooms
+        self.mock_bot.client = MagicMock()
+        self.mock_bot.client.rooms = {'!room:example.com': mock_room}
+        
+        self.loop.run_until_complete(
+            self.handler._cross_verify_bots('!room:example.com', '@user:example.com')
+        )
+        
+        # Should attempt to start verification with bot devices
+        self.mock_bot.verification_manager.start_verification.assert_called_once()
+        self.assertEqual(self.mock_bot.send_message.call_count, 2)  # Initial message + result
+
 
 if __name__ == '__main__':
     unittest.main()

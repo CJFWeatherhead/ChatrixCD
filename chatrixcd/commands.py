@@ -372,6 +372,10 @@ class CommandHandler:
             await self.handle_pet(room.room_id, event.sender)
         elif command == 'scold':
             await self.handle_scold(room.room_id, event.sender)
+        elif command == 'verify':
+            await self.verify_device(room.room_id, event.sender, args)
+        elif command == 'sessions':
+            await self.manage_sessions(room.room_id, event.sender, args)
         else:
             greeting = self._get_greeting(event.sender)
             response = f"{greeting} - Unknown command: {command}. Type '{self.command_prefix} help' for available commands."
@@ -405,6 +409,8 @@ class CommandHandler:
 {self.command_prefix} ping - Ping Semaphore server
 {self.command_prefix} info - Get Semaphore server info
 {self.command_prefix} aliases - List command aliases
+{self.command_prefix} verify [list|start|pending|auto|cross] - Device verification commands
+{self.command_prefix} sessions [list|reset|clear|info] - Session management commands
 
 💡 **Tip:** You can react to confirmations with 👍/👎 instead of replying!
 """
@@ -427,6 +433,8 @@ class CommandHandler:
             ['ping', 'Ping Semaphore server', '🏓'],
             ['info', 'Get Semaphore server and bot info', 'ℹ️'],
             ['aliases', 'List command aliases', '🔖'],
+            ['verify [list|start|pending|auto|cross]', 'Device verification commands', '🔐'],
+            ['sessions [list|reset|clear|info]', 'Session management commands', '🔑'],
         ]
         
         rows_html = ''
@@ -2194,3 +2202,408 @@ class CommandHandler:
             self.message_manager.get_random_message('scold', user_name=user_name)
             
         )
+
+    async def verify_device(self, room_id: str, sender: str, args: List[str]):
+        """Handle device verification commands.
+        
+        Args:
+            room_id: Room to send response to
+            sender: User who sent the command
+            args: Command arguments
+        """
+        greeting = self._get_greeting(sender)
+        
+        if not args:
+            # List available verification options
+            response = f"""{greeting} **Device Verification Options** 🔐
+
+Choose a verification method:
+
+• `{self.command_prefix} verify list` - List unverified devices
+• `{self.command_prefix} verify start <user_id> <device_id>` - Start verification with a device
+• `{self.command_prefix} verify pending` - Show pending verification requests
+• `{self.command_prefix} verify auto` - Auto-verify all pending requests (daemon mode)
+• `{self.command_prefix} verify cross` - Cross-verify with other ChatrixCD bots in this room
+"""
+            await self.bot.send_message(room_id, response)
+            return
+        
+        subcommand = args[0].lower()
+        
+        if subcommand == 'list':
+            await self._list_unverified_devices(room_id, sender)
+        elif subcommand == 'start' and len(args) >= 3:
+            user_id = args[1]
+            device_id = args[2]
+            await self._start_device_verification(room_id, sender, user_id, device_id)
+        elif subcommand == 'pending':
+            await self._list_pending_verifications(room_id, sender)
+        elif subcommand == 'auto':
+            await self._auto_verify_pending(room_id, sender)
+        elif subcommand == 'cross':
+            await self._cross_verify_bots(room_id, sender)
+        else:
+            response = f"{greeting} - Unknown verify subcommand: {subcommand}. Use `{self.command_prefix} verify` for options."
+            await self.bot.send_message(room_id, response)
+
+    async def manage_sessions(self, room_id: str, sender: str, args: List[str]):
+        """Handle session management commands.
+        
+        Args:
+            room_id: Room to send response to
+            sender: User who sent the command
+            args: Command arguments
+        """
+        greeting = self._get_greeting(sender)
+        
+        if not args:
+            # List available session options
+            response = f"""{greeting} **Session Management** 🔑
+
+Session management commands:
+
+• `{self.command_prefix} sessions list` - List all known devices and their verification status
+• `{self.command_prefix} sessions reset <user_id> <device_id>` - Reset Olm session with a device
+• `{self.command_prefix} sessions clear` - Clear all unverified devices from store
+• `{self.command_prefix} sessions info` - Show encryption session information
+"""
+            await self.bot.send_message(room_id, response)
+            return
+        
+        subcommand = args[0].lower()
+        
+        if subcommand == 'list':
+            await self._list_all_devices(room_id, sender)
+        elif subcommand == 'reset' and len(args) >= 3:
+            user_id = args[1]
+            device_id = args[2]
+            await self._reset_session(room_id, sender, user_id, device_id)
+        elif subcommand == 'clear':
+            await self._clear_unverified_devices(room_id, sender)
+        elif subcommand == 'info':
+            await self._show_session_info(room_id, sender)
+        else:
+            response = f"{greeting} - Unknown sessions subcommand: {subcommand}. Use `{self.command_prefix} sessions` for options."
+            await self.bot.send_message(room_id, response)
+
+    async def _list_unverified_devices(self, room_id: str, sender: str):
+        """List unverified devices.
+        
+        Args:
+            room_id: Room to send response to
+            sender: User who requested the list
+        """
+        greeting = self._get_greeting(sender)
+        
+        unverified = await self.bot.verification_manager.get_unverified_devices()
+        
+        if not unverified:
+            response = f"{greeting} - All known devices are verified! ✅"
+            await self.bot.send_message(room_id, response)
+            return
+        
+        response = f"{greeting} **Unverified Devices** ⚠️\n\n"
+        
+        for device in unverified[:10]:  # Limit to 10 for readability
+            response += f"• **{device['user_id']}** ({device['device_name'] or 'Unknown Device'})\n"
+            response += f"  Device ID: `{device['device_id']}`\n\n"
+        
+        if len(unverified) > 10:
+            response += f"... and {len(unverified) - 10} more devices\n\n"
+        
+        response += f"Use `{self.command_prefix} verify start <user_id> <device_id>` to verify a device."
+        
+        await self.bot.send_message(room_id, response)
+
+    async def _start_device_verification(self, room_id: str, sender: str, user_id: str, device_id: str):
+        """Start verification with a specific device.
+        
+        Args:
+            room_id: Room to send response to
+            sender: User who requested verification
+            user_id: User ID of device to verify
+            device_id: Device ID to verify
+        """
+        greeting = self._get_greeting(sender)
+        
+        # Find the device
+        unverified = await self.bot.verification_manager.get_unverified_devices()
+        target_device = None
+        
+        for device in unverified:
+            if device['user_id'] == user_id and device['device_id'] == device_id:
+                target_device = device['device']
+                break
+        
+        if not target_device:
+            response = f"{greeting} - Device `{device_id}` for user `{user_id}` not found or already verified."
+            await self.bot.send_message(room_id, response)
+            return
+        
+        # Start verification
+        sas = await self.bot.verification_manager.start_verification(target_device)
+        
+        if not sas:
+            response = f"{greeting} - Failed to start verification with device `{device_id}`."
+            await self.bot.send_message(room_id, response)
+            return
+        
+        response = f"{greeting} - Started verification with **{user_id}** device `{device_id}`. Check the other device for the verification request! 🔐"
+        await self.bot.send_message(room_id, response)
+
+    async def _list_pending_verifications(self, room_id: str, sender: str):
+        """List pending verification requests.
+        
+        Args:
+            room_id: Room to send response to
+            sender: User who requested the list
+        """
+        greeting = self._get_greeting(sender)
+        
+        pending = await self.bot.verification_manager.get_pending_verifications()
+        
+        if not pending:
+            response = f"{greeting} - No pending verification requests. 📭"
+            await self.bot.send_message(room_id, response)
+            return
+        
+        response = f"{greeting} **Pending Verification Requests** ⏳\n\n"
+        
+        for verification in pending:
+            response += f"• **{verification['user_id']}** device `{verification['device_id']}`\n"
+            response += f"  Type: {verification['type']}\n"
+            response += f"  Transaction: `{verification['transaction_id']}`\n\n"
+        
+        response += f"Use `{self.command_prefix} verify auto` to auto-verify all requests (if in daemon mode)."
+        
+        await self.bot.send_message(room_id, response)
+
+    async def _auto_verify_pending(self, room_id: str, sender: str):
+        """Auto-verify all pending verification requests.
+        
+        Args:
+            room_id: Room to send response to
+            sender: User who requested auto-verification
+        """
+        greeting = self._get_greeting(sender)
+        
+        pending = await self.bot.verification_manager.get_pending_verifications()
+        
+        if not pending:
+            response = f"{greeting} - No pending verification requests to auto-verify."
+            await self.bot.send_message(room_id, response)
+            return
+        
+        verified_count = 0
+        for verification in pending:
+            success = await self.bot.verification_manager.auto_verify_pending(verification['transaction_id'])
+            if success:
+                verified_count += 1
+        
+        response = f"{greeting} - Auto-verified {verified_count}/{len(pending)} pending requests. ✅"
+        await self.bot.send_message(room_id, response)
+
+    async def _cross_verify_bots(self, room_id: str, sender: str):
+        """Cross-verify with other ChatrixCD bots in the room.
+        
+        Args:
+            room_id: Room to send response to
+            sender: User who requested cross-verification
+        """
+        greeting = self._get_greeting(sender)
+        
+        # Get room members
+        room = self.bot.client.rooms.get(room_id)
+        if not room:
+            response = f"{greeting} - Could not find room information."
+            await self.bot.send_message(room_id, response)
+            return
+        
+        # Find other ChatrixCD bots (users with 'chatrix' in name or similar patterns)
+        potential_bots = []
+        for user_id in room.users:
+            if ('chatrix' in user_id.lower() or 
+                'sparkles' in user_id.lower() or 
+                'opsbot' in user_id.lower() or
+                'bot' in user_id.lower()):
+                potential_bots.append(user_id)
+        
+        if len(potential_bots) <= 1:
+            response = f"{greeting} - No other ChatrixCD bots found in this room for cross-verification."
+            await self.bot.send_message(room_id, response)
+            return
+        
+        response = f"{greeting} - Found {len(potential_bots)} potential bots for cross-verification. Starting verification process... 🤖🤝🤖"
+        await self.bot.send_message(room_id, response)
+        
+        # Get unverified devices for these users
+        unverified = await self.bot.verification_manager.get_unverified_devices()
+        bot_devices = [d for d in unverified if d['user_id'] in potential_bots]
+        
+        if not bot_devices:
+            response = f"All potential bot devices are already verified! ✅"
+            await self.bot.send_message(room_id, response)
+            return
+        
+        # Start verification with each unverified bot device
+        verified_count = 0
+        for device_info in bot_devices:
+            sas = await self.bot.verification_manager.start_verification(device_info['device'])
+            if sas:
+                verified_count += 1
+        
+        if verified_count > 0:
+            response = f"Started verification with {verified_count} bot devices. Check the other bots for verification requests! 🔐"
+        else:
+            response = f"Failed to start verification with any bot devices."
+        
+        await self.bot.send_message(room_id, response)
+
+    async def _list_all_devices(self, room_id: str, sender: str):
+        """List all known devices and their verification status.
+        
+        Args:
+            room_id: Room to send response to
+            sender: User who requested the list
+        """
+        greeting = self._get_greeting(sender)
+        
+        verified = await self.bot.verification_manager.get_verified_devices()
+        unverified = await self.bot.verification_manager.get_unverified_devices()
+        
+        response = f"{greeting} **Device Overview** 📱\n\n"
+        response += f"**Verified Devices:** {len(verified)} ✅\n"
+        response += f"**Unverified Devices:** {len(unverified)} ⚠️\n\n"
+        
+        if verified:
+            response += "**Verified:**\n"
+            for device in verified[:5]:  # Limit for readability
+                response += f"• **{device['user_id']}** - `{device['device_id']}` ({device['device_name'] or 'Unknown'})\n"
+            if len(verified) > 5:
+                response += f"... and {len(verified) - 5} more\n"
+            response += "\n"
+        
+        if unverified:
+            response += "**Unverified:**\n"
+            for device in unverified[:5]:  # Limit for readability
+                response += f"• **{device['user_id']}** - `{device['device_id']}` ({device['device_name'] or 'Unknown'})\n"
+            if len(unverified) > 5:
+                response += f"... and {len(unverified) - 5} more\n"
+        
+        await self.bot.send_message(room_id, response)
+
+    async def _reset_session(self, room_id: str, sender: str, user_id: str, device_id: str):
+        """Reset Olm session with a device.
+        
+        Args:
+            room_id: Room to send response to
+            sender: User who requested session reset
+            user_id: User ID of device
+            device_id: Device ID to reset session with
+        """
+        greeting = self._get_greeting(sender)
+        
+        try:
+            # Find the device
+            all_devices = (await self.bot.verification_manager.get_verified_devices() + 
+                          await self.bot.verification_manager.get_unverified_devices())
+            
+            target_device = None
+            for device in all_devices:
+                if device['user_id'] == user_id and device['device_id'] == device_id:
+                    target_device = device['device']
+                    break
+            
+            if not target_device:
+                response = f"{greeting} - Device `{device_id}` for user `{user_id}` not found."
+                await self.bot.send_message(room_id, response)
+                return
+            
+            # Reset the session by invalidating it in the Olm machine
+            if hasattr(self.bot.client, 'invalidate_session') and self.bot.client.olm:
+                # This will force a new session to be established on next message
+                self.bot.client.invalidate_session(target_device.curve25519, target_device.ed25519)
+                response = f"{greeting} - Reset Olm session with **{user_id}** device `{device_id}`. 🔄"
+            else:
+                response = f"{greeting} - Session reset not available (encryption not enabled)."
+            
+        except Exception as e:
+            logger.error(f"Error resetting session: {e}")
+            response = f"{greeting} - Failed to reset session with device `{device_id}`."
+        
+        await self.bot.send_message(room_id, response)
+
+    async def _clear_unverified_devices(self, room_id: str, sender: str):
+        """Clear all unverified devices from the device store.
+        
+        Args:
+            room_id: Room to send response to
+            sender: User who requested clearing
+        """
+        greeting = self._get_greeting(sender)
+        
+        try:
+            unverified = await self.bot.verification_manager.get_unverified_devices()
+            
+            if not unverified:
+                response = f"{greeting} - No unverified devices to clear."
+                await self.bot.send_message(room_id, response)
+                return
+            
+            cleared_count = 0
+            if hasattr(self.bot.client, 'device_store') and self.bot.client.device_store:
+                for device_info in unverified:
+                    user_devices = self.bot.client.device_store.get(device_info['user_id'])
+                    if user_devices and device_info['device_id'] in user_devices:
+                        del user_devices[device_info['device_id']]
+                        cleared_count += 1
+            
+            response = f"{greeting} - Cleared {cleared_count} unverified devices from store. 🧹"
+            
+        except Exception as e:
+            logger.error(f"Error clearing unverified devices: {e}")
+            response = f"{greeting} - Failed to clear unverified devices."
+        
+        await self.bot.send_message(room_id, response)
+
+    async def _show_session_info(self, room_id: str, sender: str):
+        """Show encryption session information.
+        
+        Args:
+            room_id: Room to send response to
+            sender: User who requested session info
+        """
+        greeting = self._get_greeting(sender)
+        
+        response = f"{greeting} **Encryption Session Info** 🔐\n\n"
+        
+        # Check if encryption is enabled
+        if not self.bot.client.olm:
+            response += "❌ E2E encryption is not enabled on this bot."
+        else:
+            response += "✅ E2E encryption is enabled.\n\n"
+            
+            # Show Olm account info
+            if hasattr(self.bot.client.olm, 'account'):
+                account = self.bot.client.olm.account
+                response += f"**Olm Account:**\n"
+                response += f"• Identity Keys: `{account.identity_keys.get('ed25519', 'N/A')[:8]}...`\n"
+                response += f"• One-Time Keys: {len(account.one_time_keys) if hasattr(account, 'one_time_keys') else 'N/A'}\n\n"
+            
+            # Show device counts
+            verified = await self.bot.verification_manager.get_verified_devices()
+            unverified = await self.bot.verification_manager.get_unverified_devices()
+            
+            response += f"**Device Store:**\n"
+            response += f"• Verified Devices: {len(verified)}\n"
+            response += f"• Unverified Devices: {len(unverified)}\n"
+            response += f"• Total Known Devices: {len(verified) + len(unverified)}\n\n"
+            
+            # Show room encryption status
+            room = self.bot.client.rooms.get(room_id)
+            if room and room.encrypted:
+                response += f"**Current Room:** Encrypted ✅\n"
+            else:
+                response += f"**Current Room:** Not Encrypted ⚠️\n"
+        
+        await self.bot.send_message(room_id, response)

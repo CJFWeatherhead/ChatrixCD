@@ -1,14 +1,18 @@
 {
-  "remote_host": "100.96.234.70",
-  "remote_user": "root",
-  "chatrix_user": "chatrix",
-  "chatrix_dir": "~/ChatrixCD",
-  "venv_activate": "source .venv/bin/activate",
-  "chatrix_command": "chatrix -NLCvv",
+  "hosts": [
+    {
+      "remote_host": "your-server-ip",
+      "remote_user": "root",
+      "chatrix_user": "chatrix",
+      "chatrix_dir": "/home/chatrix/ChatrixCD",
+      "venv_activate": "source .venv/bin/activate",
+      "chatrix_command": "chatrix -NLCvv"
+    }
+  ],
   "test_client": {
     "user_id": "@testuser:example.com",
     "password": "testpassword"
   },
-  "test_timeout": 300,
+  "test_timeout": 10,
   "ssh_key_path": "~/.ssh/id_rsa"
 }

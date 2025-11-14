@@ -16,8 +16,62 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Added
+- **Device Verification Commands**: New `!cd verify` and `!cd sessions` commands for bot-to-bot verification
+  - `verify list` - List unverified devices
+  - `verify start <user_id> <device_id>` - Start verification with a specific device
+  - `verify pending` - Show pending verification requests
+  - `verify auto` - Auto-verify all pending requests
+  - `verify cross` - Cross-verify with other ChatrixCD bots in the room
+  - `sessions list` - List all known devices and verification status
+  - `sessions reset <user_id> <device_id>` - Reset Olm session with a device
+  - `sessions clear` - Clear unverified devices from store
+  - `sessions info` - Show encryption session information
+- **Enhanced Integration Tests**: Bots can now read each other's encrypted messages
+  - Automatic cross-verification between test bots
+  - Encrypted message decryption in test framework
+  - Real message content validation instead of "[ENCRYPTED_RESPONSE]"
+- **Improved Redaction**: Enhanced redaction patterns based on real-world Matrix logs
+  - Better detection of cryptographic keys and session data
+  - Improved hostname and IP address masking
+  - Enhanced token and credential detection
+
+### Changed
 - Integration testing framework for live ChatrixCD instances
   - Remote bot management via SSH
+  - Multi-host bot deployment support
+  - Cross-bot interaction testing using existing authenticated bots
+  - Simultaneous bot execution for realistic testing scenarios
+- Integration tests now use cross-bot communication instead of separate test users
+- Reduced test timeouts from 300s to 10s for faster iteration
+- Updated test configuration to support multiple simultaneous bots
+- Modified workflow to start all bots concurrently for inter-bot testing
+
+### Fixed
+- Bot response validation now works with separate test user account
+- Resolved authentication issues for OIDC-authenticated bots via session file access tokens
+- Integration tests now properly test cross-bot interactions without self-messaging
+- Fixed message reception in tests by adding periodic sync calls
+  - Multi-host testing support for cross-bot functionality
+  - Access token retrieval from session files for OIDC-authenticated bots
+  - Reduced test timeout from 300s to 10s for faster failure detection
+  - Matrix client authentication and room joining capabilities
+
+### Changed
+- Integration test timeout reduced from 300 seconds to 10 seconds for faster iteration
+
+### Fixed
+- Access token extraction for OIDC bots from session files
+- Matrix client session restoration for testing
+
+### Known Issues
+- Integration tests require separate test user credentials to properly test bot responses
+- Current test setup uses bot's own credentials, preventing proper command/response testing
+  - Multi-host testing support for comprehensive integration testing
+  - Automatic configuration discovery from remote servers
+  - Automated test execution against running bot instances
+
+### Fixed
+- AliasManager.load_aliases() now properly handles empty alias files without logging errors
   - Matrix protocol integration tests
   - Configurable test setup for local network testing
   - Automated start/stop of remote bot during testing

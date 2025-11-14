@@ -873,7 +873,7 @@ class ChatrixBot:
                                 f"with {len(users_to_query)} unique user(s)"
                             )
                             logger.info("Querying device keys for all users in encrypted rooms...")
-                            await self.client.keys_query(user_set=users_to_query)
+                            await self.client.keys_query(users_to_query)
                             
                             # Claim one-time keys to establish Olm sessions with all devices
                             logger.info("Claiming one-time keys to establish Olm sessions...")
@@ -911,7 +911,7 @@ class ChatrixBot:
                                 f"Proactively querying device keys for {len(users_to_query)} "
                                 f"user(s) in encrypted rooms"
                             )
-                            await self.client.keys_query(user_set=users_to_query)
+                            await self.client.keys_query(users_to_query)
             except Exception as e:
                 logger.debug(f"Error during proactive device key query: {e}")
 

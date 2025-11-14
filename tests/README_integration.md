@@ -2,6 +2,55 @@
 
 This directory contains tools for running integration tests against a live ChatrixCD instance running on a remote machine.
 
+## Features
+
+- **Remote Bot Management**: SSH-based control of ChatrixCD on remote servers
+- **Automatic Config Discovery**: Reads and parses bot configuration from remote machines
+- **OIDC Authentication Support**: Gracefully handles OIDC-authenticated bots
+- **Encrypted Message Reading**: Bots can decrypt and read each other's encrypted messages
+- **Cross-Bot Verification**: Automatic device verification between multiple bots
+- **Enhanced Redaction**: Improved log redaction for Matrix cryptographic data
+- **Flexible Testing**: Tests run with or without test client authentication
+- **Slow Machine Support**: Extended timeouts for remote operations
+
+## Test Types
+
+### Configuration Tests (Always Run)
+- `test_bot_config_valid`: Validates bot configuration structure and format
+
+### Interactive Tests (Require Authentication)
+- `test_bot_projects_command`: Tests project listing
+- `test_bot_responds_to_help`: Tests help command
+- `test_bot_responds_to_invalid_command`: Tests error handling
+- `test_bot_responds_to_pet_command`: Tests hidden pet command
+- `test_bot_responds_to_scold_command`: Tests hidden scold command
+- `test_bot_status_command`: Tests status command
+- `test_verify_commands`: Tests device verification commands
+- `test_sessions_commands`: Tests session management commands
+- `test_encrypted_message_reading`: Tests ability to read encrypted messages from verified bots
+
+## OIDC Authentication Handling
+
+When the bot uses OIDC authentication (like Privacy International's setup), the integration tests:
+
+1. **Attempt test client authentication** using provided credentials
+2. **Fall back gracefully** if authentication fails
+3. **Skip interactive tests** that require sending messages
+4. **Run configuration validation** to ensure bot setup is correct
+
+This allows the integration framework to work with both password and OIDC-authenticated bots.
+
+## Device Verification and Encrypted Messages
+
+The integration tests now include automatic cross-verification between bots:
+
+1. **Cross-Verification Setup**: Test client automatically verifies with target bots
+2. **Encrypted Message Reading**: Tests can read decrypted content from verified bots
+3. **Verification Commands**: Tests include verification and session management commands
+4. **Real Message Validation**: Instead of "[ENCRYPTED_RESPONSE]", tests validate actual bot responses
+
+This enables comprehensive testing of bot-to-bot interactions in encrypted rooms.
+
 ## Local Development Setup (macOS with Homebrew)
 
 ### Prerequisites
@@ -149,6 +198,47 @@ The integration tests cover:
 - Hidden commands (`!cd pet`, `!cd scold`)
 - Status commands
 - Projects listing
+
+## Running the Tests
+
+### Basic Test Run
+
+```bash
+python tests/run_integration_tests.py tests/integration_config.json
+```
+
+### What Happens During Testing
+
+1. **SSH Connection**: Connects to the remote machine
+2. **Config Discovery**: Reads and parses the bot's configuration
+3. **Code Update**: Updates ChatrixCD code and dependencies
+4. **Bot Startup**: Starts ChatrixCD in the background
+5. **Test Execution**: Runs the test suite
+6. **Cleanup**: Stops the bot and reports results
+
+### Expected Output for OIDC Bots
+
+When testing OIDC-authenticated bots (like Privacy International setup):
+
+```
+Reading configuration from remote server...
+SSH attempt 1/3: cat /home/chatrix/ChatrixCD/config.json...
+Updating ChatrixCD on remote machine...
+Starting ChatrixCD on remote machine...
+ChatrixCD started with PID: 12345
+ChatrixCD is running
+Running integration tests...
+============================================================ test session starts =============================================================
+tests/test_integration_matrix.py::ChatrixCDIntegrationTest::test_bot_config_valid PASSED
+tests/test_integration_matrix.py::ChatrixCDIntegrationTest::test_bot_projects_command SKIPPED (Test client not authenticated)
+[... other tests SKIPPED ...]
+```
+
+### Test Results
+
+- **PASSED**: `test_bot_config_valid` - Bot configuration is valid
+- **SKIPPED**: Interactive tests when authentication fails (expected for OIDC)
+- **FAILED**: Only if there are actual configuration or connection issues
 
 ## Security Notes
 
