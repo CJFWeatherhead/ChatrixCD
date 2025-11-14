@@ -1,7 +1,9 @@
 ---
-layout: default
-title: Installation
-nav_order: 2
+layout: single
+title: "Installation"
+permalink: /installation/
+toc: true
+toc_sticky: true
 ---
 
 # 📥 Installation Guide

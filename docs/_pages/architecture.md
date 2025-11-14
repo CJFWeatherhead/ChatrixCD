@@ -1,7 +1,9 @@
 ---
-layout: default
-title: Architecture
-nav_order: 5
+layout: single
+title: "Architecture"
+permalink: /architecture/
+toc: true
+toc_sticky: true
 ---
 
 # 🏗️ Architecture

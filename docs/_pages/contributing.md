@@ -1,7 +1,9 @@
 ---
-layout: default
-title: Contributing
-nav_order: 6
+layout: single
+title: "Contributing"
+permalink: /contributing/
+toc: true
+toc_sticky: true
 ---
 
 # Contributing to ChatrixCD

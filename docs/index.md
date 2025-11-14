@@ -1,7 +1,8 @@
 ---
-layout: default
-title: Home
-nav_order: 1
+layout: home
+title: "Home"
+permalink: /
+toc: false
 ---
 
 <a href="#main-content" class="skip-to-content">Skip to main content</a>

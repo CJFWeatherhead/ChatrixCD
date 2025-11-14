@@ -62,6 +62,45 @@
   div[style*="background: #e7f3ff"] a {
     color: #1e7e34 !important;
   }
+
+  /* Fix light green background elements */
+  [style*="background: #e8f5e9"],
+  [style*="background:#e8f5e9"],
+  div[style*="background: #e8f5e9"],
+  div[style*="background:#e8f5e9"] {
+    color: #000000 !important;
+    background-color: #e8f5e9 !important;
+  }
+
+  /* Fix table alternating rows with light backgrounds */
+  table tr[style*="background: #fff"],
+  table tr[style*="background:#fff"],
+  table tr[style*="background: #ffffff"],
+  table tr[style*="background:#ffffff"] {
+    color: #000000 !important;
+    background-color: #fff !important;
+  }
+
+  /* Fix buttons with dark backgrounds */
+  a[style*="background: #3e836b"],
+  a[style*="background:#3e836b"] {
+    color: #ffffff !important;
+    background-color: #3e836b !important;
+  }
+
+  /* Fix inline code elements */
+  code {
+    background-color: #f8f9fa !important;
+    color: #000000 !important;
+    padding: 2px 4px !important;
+    border-radius: 3px !important;
+  }
+
+  /* Force links in light green elements to be dark */
+  [style*="background: #e8f5e9"] a,
+  div[style*="background: #e8f5e9"] a {
+    color: #1e7e34 !important;
+  }
   </style>
 
   {% if site.ga_tracking != nil %}

@@ -1,7 +1,9 @@
 ---
-layout: default
-title: Quick Start
-nav_order: 3
+layout: single
+title: "Quick Start"
+permalink: /quickstart/
+toc: true
+toc_sticky: true
 ---
 
 # ⚡ Quick Start Guide

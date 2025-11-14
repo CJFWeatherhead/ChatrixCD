@@ -1,7 +1,9 @@
 ---
-layout: default
-title: Support
-nav_order: 9
+layout: single
+title: "Support"
+permalink: /support/
+toc: true
+toc_sticky: true
 ---
 
 # Support Guide
