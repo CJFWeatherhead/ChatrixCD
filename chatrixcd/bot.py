@@ -121,7 +121,7 @@ class ChatrixBot:
         """Setup encryption keys after successful login.
         
         This uploads device keys and one-time keys if needed, and queries
-        device keys from other users to establish Olm sessions.
+        device keys from other users to establish encryption sessions.
         
         Returns:
             True if setup successful, False otherwise
@@ -558,6 +558,7 @@ class ChatrixBot:
         This callback is triggered for all encrypted messages (MegolmEvent).
         If the message was successfully decrypted, it will be processed as a normal message.
         If decryption failed, it will actively work to establish proper encryption and request the key.
+        In daemon/log modes, it will also attempt automatic verification of unverified devices.
         
         Args:
             room: The room the encrypted message was sent in
@@ -611,7 +612,7 @@ class ChatrixBot:
         except Exception as e:
             logger.error(f"Failed to query device keys for {event.sender}: {e}")
         
-        # Step 2: Try to claim one-time keys and establish Olm sessions with sender's devices
+        # Step 2: Try to claim one-time keys and establish encryption sessions with sender's devices
         try:
             if hasattr(self.client, 'device_store') and self.client.device_store:
                 if event.sender in self.client.device_store.users:
@@ -620,20 +621,20 @@ class ChatrixBot:
                     # Claim one-time keys for devices we don't have sessions with
                     devices_to_claim = {}
                     for device_id, device in sender_devices.items():
-                        # Check if we already have an Olm session with this device
+                        # Check if we already have an encryption session with this device
                         if not self.client.olm.session_store.get(device.curve25519):
                             devices_to_claim[event.sender] = [device_id]
                             logger.info(
-                                f"Need to establish Olm session with {event.sender}'s device {device_id}"
+                                f"Need to establish encryption session with {event.sender}'s device {device_id}"
                             )
                     
                     # Claim keys if needed
                     if devices_to_claim:
-                        logger.info(f"Claiming one-time keys to establish Olm sessions")
+                        logger.info("Claiming one-time keys to establish encryption sessions")
                         response = await self.client.keys_claim(devices_to_claim)
                         if hasattr(response, 'one_time_keys'):
                             logger.info(
-                                f"Successfully claimed one-time keys and established Olm sessions "
+                                f"Successfully claimed one-time keys and established encryption sessions "
                                 f"with {len(response.one_time_keys)} device(s)"
                             )
                         else:
@@ -641,7 +642,14 @@ class ChatrixBot:
         except Exception as e:
             logger.error(f"Failed to claim one-time keys for {event.sender}: {e}")
         
-        # Step 3: Request the room key from the sender
+        # Step 3: In daemon/log modes, automatically verify unverified devices to enable communication
+        if self.mode in ['daemon', 'log']:
+            try:
+                await self._auto_verify_sender_devices(event.sender)
+            except Exception as e:
+                logger.error(f"Failed to auto-verify devices for {event.sender}: {e}")
+        
+        # Step 4: Request the room key from the sender
         # Check if we've already requested this session key to avoid duplicate requests
         session_key = f"{event.sender}:{event.session_id}"
         if session_key in self.requested_session_ids:
@@ -680,6 +688,45 @@ class ChatrixBot:
                 # For other errors, log as error and remove from tracking so we can retry
                 logger.error(f"Failed to request room key: {e}")
                 self.requested_session_ids.discard(session_key)
+
+    async def _auto_verify_sender_devices(self, sender: str):
+        """Automatically verify all unverified devices for a sender in daemon/log modes.
+        
+        This enables the bot to communicate with users in encrypted rooms by automatically
+        trusting their devices without requiring interactive verification.
+        
+        Args:
+            sender: User ID whose devices should be auto-verified
+        """
+        if not self.client.olm or not hasattr(self.client, 'device_store') or not self.client.device_store:
+            return
+        
+        # Get unverified devices for this sender
+        unverified_devices = []
+        if sender in self.client.device_store.users:
+            sender_devices = self.client.device_store[sender]
+            for _, device in sender_devices.items():
+                if not getattr(device, 'verified', False):
+                    unverified_devices.append(device)
+        
+        if not unverified_devices:
+            logger.debug(f"No unverified devices found for {sender}")
+            return
+        
+        logger.info(f"Auto-verifying {len(unverified_devices)} device(s) for {sender}")
+        
+        # Auto-verify each device
+        for device in unverified_devices:
+            try:
+                # Mark device as verified in the store
+                self.client.verify_device(device)
+                logger.info(f"Auto-verified device {device.id} for user {sender}")
+                
+                # Share room keys with the newly verified device
+                await self.verification_manager._share_room_keys_with_device(device)
+                
+            except Exception as e:
+                logger.error(f"Failed to auto-verify device {device.id} for {sender}: {e}")
 
     async def reaction_callback(self, room: MatrixRoom, event: Event):
         """Handle incoming reactions.
@@ -853,7 +900,7 @@ class ChatrixBot:
                     encrypted_rooms_count = 0
                     
                     # Collect users from all encrypted rooms
-                    for room_id, room_info in response.rooms.join.items():
+                    for room_id, _ in response.rooms.join.items():
                         # Check if this is an encrypted room
                         room = self.client.rooms.get(room_id)
                         if room and room.encrypted:

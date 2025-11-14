@@ -2263,9 +2263,11 @@ Choose a verification method:
 Session management commands:
 
 • `{self.command_prefix} sessions list` - List all known devices and their verification status
-• `{self.command_prefix} sessions reset <user_id> <device_id>` - Reset Olm session with a device
+• `{self.command_prefix} sessions reset <user_id> <device_id>` - Reset encryption session with a device
 • `{self.command_prefix} sessions clear` - Clear all unverified devices from store
 • `{self.command_prefix} sessions info` - Show encryption session information
+• `{self.command_prefix} sessions save <filename>` - Save current session state to file
+• `{self.command_prefix} sessions restore <filename>` - Restore session state from file
 """
             await self.bot.send_message(room_id, response)
             return
@@ -2282,6 +2284,12 @@ Session management commands:
             await self._clear_unverified_devices(room_id, sender)
         elif subcommand == 'info':
             await self._show_session_info(room_id, sender)
+        elif subcommand == 'save' and len(args) >= 2:
+            filename = args[1]
+            await self._save_session_state(room_id, sender, filename)
+        elif subcommand == 'restore' and len(args) >= 2:
+            filename = args[1]
+            await self._restore_session_state(room_id, sender, filename)
         else:
             response = f"{greeting} - Unknown sessions subcommand: {subcommand}. Use `{self.command_prefix} sessions` for options."
             await self.bot.send_message(room_id, response)
@@ -2419,43 +2427,13 @@ Session management commands:
             await self.bot.send_message(room_id, response)
             return
         
-        # Find other ChatrixCD bots (users with 'chatrix' in name or similar patterns)
-        potential_bots = []
-        for user_id in room.users:
-            if ('chatrix' in user_id.lower() or 
-                'sparkles' in user_id.lower() or 
-                'opsbot' in user_id.lower() or
-                'bot' in user_id.lower()):
-                potential_bots.append(user_id)
+        # Use the verification manager's cross-verification method
+        started_count = await self.bot.verification_manager.cross_verify_with_bots(list(room.users))
         
-        if len(potential_bots) <= 1:
-            response = f"{greeting} - No other ChatrixCD bots found in this room for cross-verification."
-            await self.bot.send_message(room_id, response)
-            return
-        
-        response = f"{greeting} - Found {len(potential_bots)} potential bots for cross-verification. Starting verification process... 🤖🤝🤖"
-        await self.bot.send_message(room_id, response)
-        
-        # Get unverified devices for these users
-        unverified = await self.bot.verification_manager.get_unverified_devices()
-        bot_devices = [d for d in unverified if d['user_id'] in potential_bots]
-        
-        if not bot_devices:
-            response = f"All potential bot devices are already verified! ✅"
-            await self.bot.send_message(room_id, response)
-            return
-        
-        # Start verification with each unverified bot device
-        verified_count = 0
-        for device_info in bot_devices:
-            sas = await self.bot.verification_manager.start_verification(device_info['device'])
-            if sas:
-                verified_count += 1
-        
-        if verified_count > 0:
-            response = f"Started verification with {verified_count} bot devices. Check the other bots for verification requests! 🔐"
+        if started_count > 0:
+            response = f"{greeting} - Started verification with {started_count} bot device(s). Check the other bots for verification requests! 🔐🤖🤝🤖"
         else:
-            response = f"Failed to start verification with any bot devices."
+            response = f"{greeting} - No other ChatrixCD bots found in this room for cross-verification, or all devices are already verified."
         
         await self.bot.send_message(room_id, response)
 
@@ -2493,7 +2471,7 @@ Session management commands:
         await self.bot.send_message(room_id, response)
 
     async def _reset_session(self, room_id: str, sender: str, user_id: str, device_id: str):
-        """Reset Olm session with a device.
+        """Reset encryption session with a device.
         
         Args:
             room_id: Room to send response to
@@ -2519,11 +2497,11 @@ Session management commands:
                 await self.bot.send_message(room_id, response)
                 return
             
-            # Reset the session by invalidating it in the Olm machine
+            # Reset the session by invalidating it in the encryption machine
             if hasattr(self.bot.client, 'invalidate_session') and self.bot.client.olm:
                 # This will force a new session to be established on next message
                 self.bot.client.invalidate_session(target_device.curve25519, target_device.ed25519)
-                response = f"{greeting} - Reset Olm session with **{user_id}** device `{device_id}`. 🔄"
+                response = f"{greeting} - Reset encryption session with **{user_id}** device `{device_id}`. 🔄"
             else:
                 response = f"{greeting} - Session reset not available (encryption not enabled)."
             
@@ -2583,10 +2561,10 @@ Session management commands:
         else:
             response += "✅ E2E encryption is enabled.\n\n"
             
-            # Show Olm account info
+            # Show encryption account info
             if hasattr(self.bot.client.olm, 'account'):
                 account = self.bot.client.olm.account
-                response += f"**Olm Account:**\n"
+                response += "**Encryption Account:**\n"
                 response += f"• Identity Keys: `{account.identity_keys.get('ed25519', 'N/A')[:8]}...`\n"
                 response += f"• One-Time Keys: {len(account.one_time_keys) if hasattr(account, 'one_time_keys') else 'N/A'}\n\n"
             
@@ -2594,7 +2572,7 @@ Session management commands:
             verified = await self.bot.verification_manager.get_verified_devices()
             unverified = await self.bot.verification_manager.get_unverified_devices()
             
-            response += f"**Device Store:**\n"
+            response += "**Device Store:**\n"
             response += f"• Verified Devices: {len(verified)}\n"
             response += f"• Unverified Devices: {len(unverified)}\n"
             response += f"• Total Known Devices: {len(verified) + len(unverified)}\n\n"
@@ -2602,8 +2580,74 @@ Session management commands:
             # Show room encryption status
             room = self.bot.client.rooms.get(room_id)
             if room and room.encrypted:
-                response += f"**Current Room:** Encrypted ✅\n"
+                response += "**Current Room:** Encrypted ✅\n"
             else:
-                response += f"**Current Room:** Not Encrypted ⚠️\n"
+                response += "**Current Room:** Not Encrypted ⚠️\n"
+        
+        await self.bot.send_message(room_id, response)
+
+    async def _save_session_state(self, room_id: str, sender: str, filename: str):
+        """Save current session state to a file.
+        
+        Args:
+            room_id: Room to send response to
+            sender: User who requested session save
+            filename: Filename to save to
+        """
+        greeting = self._get_greeting(sender)
+        
+        try:
+            # Ensure filename doesn't contain path traversal
+            if '..' in filename or '/' in filename or '\\' in filename:
+                response = f"{greeting} - Invalid filename. Use a simple filename without paths."
+                await self.bot.send_message(room_id, response)
+                return
+            
+            # Save to a sessions subdirectory
+            filepath = f"sessions/{filename}.json"
+            
+            success = await self.bot.verification_manager.save_session_state(filepath)
+            
+            if success:
+                response = f"{greeting} - Session state saved to `{filepath}`. 🔄"
+            else:
+                response = f"{greeting} - Failed to save session state."
+            
+        except Exception as e:
+            logger.error(f"Error saving session state: {e}")
+            response = f"{greeting} - Error saving session state."
+        
+        await self.bot.send_message(room_id, response)
+
+    async def _restore_session_state(self, room_id: str, sender: str, filename: str):
+        """Restore session state from a file.
+        
+        Args:
+            room_id: Room to send response to
+            sender: User who requested session restore
+            filename: Filename to restore from
+        """
+        greeting = self._get_greeting(sender)
+        
+        try:
+            # Ensure filename doesn't contain path traversal
+            if '..' in filename or '/' in filename or '\\' in filename:
+                response = f"{greeting} - Invalid filename. Use a simple filename without paths."
+                await self.bot.send_message(room_id, response)
+                return
+            
+            # Load from sessions subdirectory
+            filepath = f"sessions/{filename}.json"
+            
+            success = await self.bot.verification_manager.load_session_state(filepath)
+            
+            if success:
+                response = f"{greeting} - Session state restored from `{filepath}`. 🔄"
+            else:
+                response = f"{greeting} - Failed to restore session state. File may not exist or be corrupted."
+            
+        except Exception as e:
+            logger.error(f"Error restoring session state: {e}")
+            response = f"{greeting} - Error restoring session state."
         
         await self.bot.send_message(room_id, response)

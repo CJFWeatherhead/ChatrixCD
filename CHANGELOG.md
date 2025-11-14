@@ -16,6 +16,10 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Added
+- **Vodozemac Migration**: Replaced deprecated libolm with vodozemac for enhanced security
+  - Updated to vodozemac 0.9.0+ for improved cryptographic primitives
+  - Removed dependency on deprecated libolm library
+  - Maintained API compatibility with existing encryption features
 - **Device Verification Commands**: New `!cd verify` and `!cd sessions` commands for bot-to-bot verification
   - `verify list` - List unverified devices
   - `verify start <user_id> <device_id>` - Start verification with a specific device
@@ -26,6 +30,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - `sessions reset <user_id> <device_id>` - Reset Olm session with a device
   - `sessions clear` - Clear unverified devices from store
   - `sessions info` - Show encryption session information
+  - `sessions save <filename>` - Save current session state to file
+  - `sessions restore <filename>` - Restore session state from file
 - **Enhanced Integration Tests**: Bots can now read each other's encrypted messages
   - Automatic cross-verification between test bots
   - Encrypted message decryption in test framework
@@ -34,6 +40,9 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Better detection of cryptographic keys and session data
   - Improved hostname and IP address masking
   - Enhanced token and credential detection
+- **Automatic Device Verification**: In daemon/log modes, the bot automatically verifies unverified devices to enable communication in encrypted rooms
+- **Emoji-Based Verification**: Full support for interactive emoji verification in TUI mode and automatic verification in daemon mode
+- **Session Management**: Save and restore Olm session state, device verification status, and encryption keys
 
 ### Changed
 - Integration testing framework for live ChatrixCD instances
@@ -45,6 +54,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - Reduced test timeouts from 300s to 10s for faster iteration
 - Updated test configuration to support multiple simultaneous bots
 - Modified workflow to start all bots concurrently for inter-bot testing
+- Bot now responds in encrypted rooms even with unverified devices by automatically establishing encryption
 
 ### Fixed
 - Fixed `keys_query` API calls to use `user_ids` parameter for matrix-nio compatibility

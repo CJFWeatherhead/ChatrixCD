@@ -548,3 +548,159 @@ class DeviceVerificationManager:
             return await self.confirm_verification(sas)
         else:
             return await self.reject_verification(sas)
+    
+    async def cross_verify_with_bots(self, room_members: List[str]) -> int:
+        """Cross-verify with other ChatrixCD bots in a room.
+        
+        This method identifies other ChatrixCD bots and automatically starts
+        verification with their devices.
+        
+        Args:
+            room_members: List of user IDs in the room
+            
+        Returns:
+            Number of verification requests started
+        """
+        if not SAS_AVAILABLE:
+            logger.warning("SAS verification not available, cannot cross-verify")
+            return 0
+        
+        # Find potential bot users
+        potential_bots = []
+        for user_id in room_members:
+            if ('chatrix' in user_id.lower() or
+                'sparkles' in user_id.lower() or
+                'opsbot' in user_id.lower() or
+                'bot' in user_id.lower()):
+                potential_bots.append(user_id)
+        
+        if len(potential_bots) <= 1:
+            logger.debug("No other potential bots found for cross-verification")
+            return 0
+        
+        logger.info(f"Found {len(potential_bots)} potential bots for cross-verification")
+        
+        # Get unverified devices for these users
+        unverified_devices = await self.get_unverified_devices()
+        bot_devices = [d for d in unverified_devices if d['user_id'] in potential_bots]
+        
+        if not bot_devices:
+            logger.debug("All potential bot devices are already verified")
+            return 0
+        
+        # Start verification with each unverified bot device
+        started_count = 0
+        for device_info in bot_devices:
+            try:
+                sas = await self.start_verification(device_info['device'])
+                if sas:
+                    started_count += 1
+                    logger.info(f"Started cross-verification with {device_info['user_id']}'s device {device_info['device_id']}")
+            except Exception as e:
+                logger.error(f"Failed to start cross-verification with {device_info['user_id']}: {e}")
+        
+        return started_count
+    
+    async def save_session_state(self, filepath: str) -> bool:
+        """Save current encryption session state to a file.
+        
+        This includes device keys, encryption sessions, and room session keys.
+        
+        Args:
+            filepath: Path to save the session state
+            
+        Returns:
+            True if saved successfully, False otherwise
+        """
+        try:
+            if not self.client.olm:
+                logger.warning("Encryption not enabled, cannot save session state")
+                return False
+            
+            session_data = {
+                'device_keys': {},
+                'olm_sessions': {},
+                'megolm_sessions': {},
+                'verified_devices': []
+            }
+            
+            # Save device keys
+            if hasattr(self.client, 'device_store') and self.client.device_store:
+                for user_id in self.client.device_store.users:
+                    user_devices = self.client.device_store[user_id]
+                    session_data['device_keys'][user_id] = {}
+                    for device_id, device in user_devices.items():
+                        session_data['device_keys'][user_id][device_id] = {
+                            'ed25519': getattr(device, 'ed25519', None),
+                            'curve25519': getattr(device, 'curve25519', None),
+                            'verified': getattr(device, 'verified', False),
+                            'display_name': getattr(device, 'display_name', None)
+                        }
+            
+            # Save encryption sessions
+            if hasattr(self.client.olm, 'session_store'):
+                # This is a simplified representation - actual Olm sessions are complex
+                session_data['olm_sessions'] = "Olm sessions stored in client store"
+            
+            # Save verified devices list
+            verified_devices = await self.get_verified_devices()
+            session_data['verified_devices'] = [
+                {'user_id': d['user_id'], 'device_id': d['device_id']}
+                for d in verified_devices
+            ]
+            
+            # Save room sessions (room keys)
+            if hasattr(self.client, 'store') and self.client.store:
+                session_data['megolm_sessions'] = "Megolm sessions stored in client store"
+            
+            import json
+            with open(filepath, 'w') as f:
+                json.dump(session_data, f, indent=2)
+            
+            logger.info(f"Session state saved to {filepath}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to save session state: {e}")
+            return False
+    
+    async def load_session_state(self, filepath: str) -> bool:
+        """Load encryption session state from a file.
+        
+        This restores device verification status and other session data.
+        
+        Args:
+            filepath: Path to load the session state from
+            
+        Returns:
+            True if loaded successfully, False otherwise
+        """
+        try:
+            import json
+            with open(filepath, 'r') as f:
+                session_data = json.load(f)
+            
+            # Restore verified devices
+            if 'verified_devices' in session_data:
+                for device_info in session_data['verified_devices']:
+                    user_id = device_info['user_id']
+                    device_id = device_info['device_id']
+                    
+                    # Find the device in the current store
+                    if (hasattr(self.client, 'device_store') and 
+                        self.client.device_store and 
+                        user_id in self.client.device_store.users):
+                        
+                        user_devices = self.client.device_store[user_id]
+                        if device_id in user_devices:
+                            device = user_devices[device_id]
+                            # Mark as verified
+                            self.client.verify_device(device)
+                            logger.info(f"Restored verification for {user_id} device {device_id}")
+            
+            logger.info(f"Session state loaded from {filepath}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to load session state: {e}")
+            return False

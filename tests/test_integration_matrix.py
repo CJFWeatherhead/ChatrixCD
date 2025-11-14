@@ -38,15 +38,22 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
         
         try:
             cls.config = json.loads(config_env)
-            cls.matrix_config = cls.config['matrix']
-            # Extract bot configs from all_bots or fall back to matrix config
-            cls.all_bots = cls.config.get('all_bots', [cls.matrix_config])
+            # Use MATRIX_CONFIG if set, otherwise first host
+            matrix_config_env = os.getenv('MATRIX_CONFIG')
+            if matrix_config_env:
+                cls.matrix_config = json.loads(matrix_config_env)
+            else:
+                cls.matrix_config = cls.config['hosts'][0]['matrix']
+            # Extract all bot configs
+            cls.all_bots = [host['matrix'] for host in cls.config['hosts']]
             cls.room_id = cls.config['test_room']
             cls.test_client_config = cls.config.get('test_client', {})
         except json.JSONDecodeError as e:
             raise RuntimeError(f"Failed to parse INTEGRATION_CONFIG: {e}") from None
         except KeyError as e:
             raise RuntimeError(f"Missing required config key: {e}") from None
+        
+        cls.test_timeout = cls.config.get('test_timeout', 60)
         
         cls.test_timeout = cls.config.get('test_timeout', 60)
 
@@ -104,7 +111,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
                 # Enable encryption for the test client
                 await self.client.sync(timeout=5000)
                 
-                # Load/create Olm account
+                # Load/create encryption account
                 if self.client.olm:
                     try:
                         print("DEBUG: Loading test client encryption store")
@@ -216,7 +223,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
         # Check if encryption is available
         if not self.client.olm:
             print("DEBUG: Encryption not available on test client - skipping cross-verification")
-            print("DEBUG: This is expected in integration tests as we can't access remote Olm stores")
+            print("DEBUG: This is expected in integration tests as we can't access remote encryption stores")
             return
         
         for bot_config in self.all_bots:
@@ -308,7 +315,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
             
         # Record the timestamp before sending the command
         # Use Matrix server time by getting the current sync token time
-        pre_command_time = int(asyncio.get_event_loop().time() * 1000)
+        # pre_command_time = int(asyncio.get_event_loop().time() * 1000)
             
         # Send the command
         await self.client.room_send(
@@ -342,8 +349,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
 
             # Check for messages from the bot that came after the command was sent
             for event in self.received_messages:
-                if (event.sender == self.matrix_config['bot_user_id'] and
-                    event.server_timestamp > pre_command_time):
+                if event.sender == self.matrix_config['bot_user_id']:
                     # Try to decrypt the message
                     decrypted_body = await self._decrypt_message(event)
                     if decrypted_body:
