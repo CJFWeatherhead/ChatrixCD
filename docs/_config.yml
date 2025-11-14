@@ -5,7 +5,7 @@ remote_theme: just-the-docs/just-the-docs
 lang: en
 
 # Custom domain URL
-url: https://chatrix.cd
+url: ""
 baseurl: ""
 
 # GitHub repository details
