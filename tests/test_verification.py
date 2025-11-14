@@ -39,12 +39,16 @@ class TestDeviceVerificationManager(unittest.IsolatedAsyncioTestCase):
         """Test get_unverified_devices with actual devices."""
         # Mock device store
         mock_device_store = Mock()
-        mock_device_store.users = {
-            "@user1:example.com": {
-                "DEVICE1": Mock(verified=False, display_name="Device 1"),
-                "DEVICE2": Mock(verified=True, display_name="Device 2")
-            }
+        user_devices = {
+            "DEVICE1": Mock(verified=False, display_name="Device 1"),
+            "DEVICE2": Mock(verified=True, display_name="Device 2")
         }
+        mock_device_store.users = {
+            "@user1:example.com": user_devices
+        }
+        # Set up __getitem__ to return the user devices
+        mock_device_store.__getitem__.side_effect = lambda key: mock_device_store.users.get(key, {})
+        
         self.mock_client.device_store = mock_device_store
         
         devices = await self.manager.get_unverified_devices()
@@ -59,6 +63,9 @@ class TestDeviceVerificationManager(unittest.IsolatedAsyncioTestCase):
         # Mock key verifications
         mock_sas = Mock()
         mock_sas.other_olm_device = Mock(user_id="@user:example.com", id="DEVICE1")
+        # Also set on the verification object for non-SAS case
+        mock_sas.user_id = "@user:example.com"
+        mock_sas.device_id = "DEVICE1"
         
         self.mock_client.key_verifications = {"txn1": mock_sas}
         
@@ -86,9 +93,16 @@ class TestDeviceVerificationManager(unittest.IsolatedAsyncioTestCase):
         """Test cross_verify_with_bots."""
         room_members = ["@user1:example.com", "@chatrixbot:example.com", "@otherbot:example.com"]
         
+        # Mock get_unverified_devices to return bot devices
+        mock_devices = [
+            {'user_id': '@chatrixbot:example.com', 'device_id': 'BOTDEVICE1', 'device': Mock()},
+            {'user_id': '@otherbot:example.com', 'device_id': 'BOTDEVICE2', 'device': Mock()}
+        ]
+        
         # Mock start_verification to return a mock SAS
         mock_sas = Mock()
-        with patch.object(self.manager, 'start_verification', return_value=mock_sas) as mock_start:
+        with patch.object(self.manager, 'get_unverified_devices', return_value=mock_devices), \
+             patch.object(self.manager, 'start_verification', return_value=mock_sas) as mock_start:
             count = await self.manager.cross_verify_with_bots(room_members)
             
             # Should have called start_verification for the bot users
@@ -103,18 +117,21 @@ class TestDeviceVerificationManager(unittest.IsolatedAsyncioTestCase):
         try:
             # Mock device store
             mock_device_store = Mock()
-            mock_device_store.users = {
-                "@user1:example.com": {
-                    "DEVICE1": Mock(
-                        ed25519=b"ed25519_key",
-                        curve25519=b"curve25519_key",
-                        verified=True,
-                        display_name="Device 1"
-                    )
-                }
+            user_devices = {
+                "DEVICE1": Mock(
+                    ed25519=b"ed25519_key",
+                    curve25519=b"curve25519_key",
+                    verified=True,
+                    display_name="Device 1"
+                )
             }
-            self.mock_client.device_store = mock_device_store
+            mock_device_store.users = {
+                "@user1:example.com": user_devices
+            }
+            # Set up __getitem__ to return the user devices
+            mock_device_store.__getitem__.side_effect = lambda key: mock_device_store.users.get(key, {})
             
+            self.mock_client.device_store = mock_device_store
             success = await self.manager.save_session_state(filepath)
             self.assertTrue(success)
             
@@ -146,11 +163,14 @@ class TestDeviceVerificationManager(unittest.IsolatedAsyncioTestCase):
             # Mock device store
             mock_device_store = Mock()
             mock_device = Mock()
+            user_devices = {"DEVICE1": mock_device}
             mock_device_store.users = {
-                "@user1:example.com": {"DEVICE1": mock_device}
+                "@user1:example.com": user_devices
             }
-            self.mock_client.device_store = mock_device_store
+            # Set up __getitem__ to return the user devices
+            mock_device_store.__getitem__.side_effect = lambda key: mock_device_store.users.get(key, {})
             
+            self.mock_client.device_store = mock_device_store
             success = await self.manager.load_session_state(filepath)
             self.assertTrue(success)
             

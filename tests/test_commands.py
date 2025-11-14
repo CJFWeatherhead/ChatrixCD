@@ -1071,12 +1071,21 @@ class TestCommandHandler(unittest.TestCase):
         mock_room.users = ['@user:example.com', '@sparkles:example.com', '@opsbot:example.com']
         mock_room.encrypted = True
         
-        # Mock verification manager
-        self.mock_bot.verification_manager = MagicMock()
-        self.mock_bot.verification_manager.get_unverified_devices = AsyncMock(return_value=[
+        # Create real verification manager with mock client
+        from chatrixcd.verification import DeviceVerificationManager
+        mock_client = MagicMock()
+        mock_client.olm = MagicMock()
+        mock_client.user_id = "@bot:example.com"
+        mock_client.device_id = "BOTDEVICE"
+        verification_manager = DeviceVerificationManager(mock_client)
+        
+        # Mock the methods used by cross_verify_with_bots
+        verification_manager.get_unverified_devices = AsyncMock(return_value=[
             {'user_id': '@sparkles:example.com', 'device_id': 'DEVICE1', 'device': MagicMock()}
         ])
-        self.mock_bot.verification_manager.start_verification = AsyncMock(return_value=MagicMock())
+        verification_manager.start_verification = AsyncMock(return_value=MagicMock())
+        
+        self.mock_bot.verification_manager = verification_manager
         
         # Mock client.rooms
         self.mock_bot.client = MagicMock()
@@ -1087,7 +1096,7 @@ class TestCommandHandler(unittest.TestCase):
         )
         
         # Should attempt to start verification with bot devices
-        self.mock_bot.verification_manager.start_verification.assert_called_once()
+        verification_manager.start_verification.assert_called_once()
         self.assertEqual(self.mock_bot.send_message.call_count, 2)  # Initial message + result
 
 
