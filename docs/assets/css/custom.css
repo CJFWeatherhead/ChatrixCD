@@ -222,6 +222,9 @@ img {
 
 /* Dark theme overrides for better readability */
 [data-theme="dark"] {
+  /* Override body background to match logo background */
+  --body-background-color: #2D3238;
+  
   /* Adjust brand colors for dark backgrounds - WCAG AA compliant */
   --chatrixcd-green: #5CB593; /* 4.52:1 contrast on #2D3238 (was #4A9B7F at 2.47:1) */
   --chatrixcd-green-hover: #6BC9A3; /* 5.12:1 contrast on #2D3238 (was #5CB593 at 3.13:1) */
@@ -355,4 +358,35 @@ img {
 [data-theme="dark"] [style*="background:#f8f9fa"] h5,
 [data-theme="dark"] [style*="background:#f8f9fa"] h6 {
   color: #2D3238 !important; /* Ensure headings are dark */
+}
+
+/* Fix article elements with light backgrounds */
+[data-theme="dark"] article[style*="background: #f8f9fa"],
+[data-theme="dark"] article[style*="background:#f8f9fa"] {
+  color: #2D3238 !important; /* Force dark text on light grey background */
+}
+
+[data-theme="dark"] article[style*="background: #f8f9fa"] h1,
+[data-theme="dark"] article[style*="background: #f8f9fa"] h2,
+[data-theme="dark"] article[style*="background: #f8f9fa"] h3,
+[data-theme="dark"] article[style*="background: #f8f9fa"] h4,
+[data-theme="dark"] article[style*="background: #f8f9fa"] h5,
+[data-theme="dark"] article[style*="background: #f8f9fa"] h6,
+[data-theme="dark"] article[style*="background:#f8f9fa"] h1,
+[data-theme="dark"] article[style*="background:#f8f9fa"] h2,
+[data-theme="dark"] article[style*="background:#f8f9fa"] h3,
+[data-theme="dark"] article[style*="background:#f8f9fa"] h4,
+[data-theme="dark"] article[style*="background:#f8f9fa"] h5,
+[data-theme="dark"] article[style*="background:#f8f9fa"] h6 {
+  color: #2D3238 !important; /* Ensure headings in articles are dark */
+}
+
+[data-theme="dark"] article[style*="background: #f8f9fa"] p,
+[data-theme="dark"] article[style*="background:#f8f9fa"] p {
+  color: #2D3238 !important; /* Ensure paragraphs in articles are dark */
+}
+
+[data-theme="dark"] article[style*="background: #f8f9fa"] a,
+[data-theme="dark"] article[style*="background:#f8f9fa"] a {
+  color: #1e7e34 !important; /* Dark green links for contrast */
 }
