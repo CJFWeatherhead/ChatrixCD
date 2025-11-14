@@ -1,6 +1,6 @@
 # ChatrixCD Documentation
 
-This directory contains the documentation for ChatrixCD, published at: https://chatrixcd.cjfw.me/
+This directory contains the documentation for ChatrixCD, published at: https://chatrix.cd/
 
 ## Documentation Structure
 

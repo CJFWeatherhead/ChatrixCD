@@ -38,7 +38,7 @@ Create `config.json`:
 }
 ```
 
-**Configuration options:** [Configuration Guide](https://chatrixcd.cjfw.me/configuration.html)
+**Configuration options:** [Configuration Guide](https://chatrix.cd/configuration.html)
 
 ## 3. Run
 
@@ -99,7 +99,7 @@ Invite your bot to a Matrix room, then:
 **OIDC/SSO Authentication?**
 - Set `"auth_type": "oidc"` in config
 - Bot will show login URL when starting
-- See [Authentication Guide](https://chatrixcd.cjfw.me/configuration.html#authentication)
+- See [Authentication Guide](https://chatrix.cd/configuration.html#authentication)
 
 **E2E Encrypted rooms?**
 - Bot automatically handles encryption
@@ -108,10 +108,10 @@ Invite your bot to a Matrix room, then:
 
 ## Next Steps
 
-- 📚 [Full Documentation](https://chatrixcd.cjfw.me/)
-- 🔧 [Configuration Reference](https://chatrixcd.cjfw.me/configuration.html)
-- 🎨 [Customize Messages](https://chatrixcd.cjfw.me/customization.html)
-- 🏗️ [Architecture Details](https://chatrixcd.cjfw.me/architecture.html)
+- 📚 [Full Documentation](https://chatrix.cd/)
+- 🔧 [Configuration Reference](https://chatrix.cd/configuration.html)
+- 🎨 [Customize Messages](https://chatrix.cd/customization.html)
+- 🏗️ [Architecture Details](https://chatrix.cd/architecture.html)
 - 🤝 [Contributing Guide](CONTRIBUTING.md)
 
 ---

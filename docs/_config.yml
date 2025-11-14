@@ -5,7 +5,7 @@ remote_theme: just-the-docs/just-the-docs
 lang: en
 
 # Custom domain URL
-url: https://chatrixcd.cjfw.me
+url: https://chatrix.cd
 baseurl: ""
 
 # GitHub repository details
@@ -56,7 +56,7 @@ head_custom: |
   <meta property="og:type" content="website">
   <meta property="og:title" content="ChatrixCD - CI/CD Automation Bot">
   <meta property="og:description" content="Matrix bot that brings Semaphore UI automation to your encrypted chat rooms">
-  <meta property="og:url" content="https://chatrixcd.cjfw.me">
+  <meta property="og:url" content="https://chatrix.cd">
   <meta property="og:site_name" content="ChatrixCD">
   
   <!-- Twitter Card Meta Tags -->

@@ -8,7 +8,7 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
-[![Documentation](https://img.shields.io/badge/docs-ChatrixCD-4A9B7F)](https://chatrixcd.cjfw.me/)
+[![Documentation](https://img.shields.io/badge/docs-ChatrixCD-4A9B7F)](https://chatrix.cd/)
 
 ---
 
@@ -65,10 +65,10 @@ chatrixcd                # From source install
 
 ## 📚 Need More?
 
-- **[Full Installation Guide](https://chatrixcd.cjfw.me/installation.html)** - Detailed setup for all platforms
-- **[Configuration Reference](https://chatrixcd.cjfw.me/configuration.html)** - All config options explained
-- **[Quick Start Tutorial](https://chatrixcd.cjfw.me/quickstart.html)** - Step-by-step walkthrough
-- **[Complete Documentation](https://chatrixcd.cjfw.me/)** - Everything you need to know
+- **[Full Installation Guide](https://chatrix.cd/installation.html)** - Detailed setup for all platforms
+- **[Configuration Reference](https://chatrix.cd/configuration.html)** - All config options explained
+- **[Quick Start Tutorial](https://chatrix.cd/quickstart.html)** - Step-by-step walkthrough
+- **[Complete Documentation](https://chatrix.cd/)** - Everything you need to know
 
 ## ✨ Key Features
 
@@ -150,6 +150,6 @@ This transparency aligns with emerging best practices for AI-assisted software d
 
 <div align="center">
 
-**Ready to automate your CI/CD through chat?** [Get Started →](https://chatrixcd.cjfw.me/)
+**Ready to automate your CI/CD through chat?** [Get Started →](https://chatrix.cd/)
 
 </div>

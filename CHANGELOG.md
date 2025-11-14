@@ -18,6 +18,11 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ### Added
 - **Vodozemac Migration**: Replaced deprecated libolm with vodozemac for enhanced security
   - Updated to vodozemac 0.9.0+ for improved cryptographic primitives
+
+### Changed
+- Migrated documentation hosting from GitHub Pages to Cloudflare Pages
+- Updated primary domain from chatrixcd.cjfw.me to chatrix.cd
+- Updated all documentation links to use new domain
 - **Remote Store Integration**: Integration tests now copy and use remote encryption stores for proper E2E testing
 - **Log Analysis**: Automatic collection and analysis of remote bot logs for error detection and redaction assessment
 

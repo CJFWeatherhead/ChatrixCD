@@ -110,7 +110,7 @@ Create `config.json` in your installation directory:
 }
 ```
 
-**Configuration options:** See [Configuration Reference](https://chatrixcd.cjfw.me/configuration.html)
+**Configuration options:** See [Configuration Reference](https://chatrix.cd/configuration.html)
 
 ### Authentication Options
 
@@ -252,9 +252,9 @@ chmod +x chatrixcd-linux-*
 ## Next Steps
 
 - 📖 [Quick Start Guide](QUICKSTART.md) - Get running in 5 minutes
-- ⚙️ [Configuration Reference](https://chatrixcd.cjfw.me/configuration.html) - All config options
-- 🎨 [Customization Guide](https://chatrixcd.cjfw.me/customization.html) - Customize messages and aliases
-- 📚 [Full Documentation](https://chatrixcd.cjfw.me/) - Complete docs
+- ⚙️ [Configuration Reference](https://chatrix.cd/configuration.html) - All config options
+- 🎨 [Customization Guide](https://chatrix.cd/customization.html) - Customize messages and aliases
+- 📚 [Full Documentation](https://chatrix.cd/) - Complete docs
 
 ## Getting Help
 
