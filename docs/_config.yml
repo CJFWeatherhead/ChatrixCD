@@ -46,65 +46,6 @@ favicon_ico: "/favicon.ico"
 
 # Custom CSS for ChatrixCD branding
 head_custom: |
-  <style>
-  /* TEST RULE - Make all articles red to verify CSS is loading */
-  article {
-    border: 5px solid red !important;
-    background-color: pink !important;
-  }
-  
-  /* Fix contrast for inline styled elements with light backgrounds */
-  [style*="background: #f8f9fa"],
-  [style*="background:#f8f9fa"],
-  article[style*="background: #f8f9fa"],
-  article[style*="background:#f8f9fa"],
-  div[style*="background: #f8f9fa"],
-  div[style*="background:#f8f9fa"] {
-    color: #000000 !important;
-    background-color: #f8f9fa !important;
-  }
-  
-  [style*="background: #e7f3ff"],
-  [style*="background:#e7f3ff"],
-  div[style*="background: #e7f3ff"],
-  div[style*="background:#e7f3ff"] {
-    color: #000000 !important;
-    background-color: #e7f3ff !important;
-  }
-  
-  /* Force headings and links to be dark within light background elements */
-  [style*="background: #f8f9fa"] h1,
-  [style*="background: #f8f9fa"] h2,
-  [style*="background: #f8f9fa"] h3,
-  [style*="background: #f8f9fa"] h4,
-  [style*="background: #f8f9fa"] h5,
-  [style*="background: #f8f9fa"] h6,
-  article[style*="background: #f8f9fa"] h1,
-  article[style*="background: #f8f9fa"] h2,
-  article[style*="background: #f8f9fa"] h3,
-  article[style*="background: #f8f9fa"] h4,
-  article[style*="background: #f8f9fa"] h5,
-  article[style*="background: #f8f9fa"] h6,
-  div[style*="background: #f8f9fa"] h1,
-  div[style*="background: #f8f9fa"] h2,
-  div[style*="background: #f8f9fa"] h3,
-  div[style*="background: #f8f9fa"] h4,
-  div[style*="background: #f8f9fa"] h5,
-  div[style*="background: #f8f9fa"] h6 {
-    color: #000000 !important;
-  }
-  
-  [style*="background: #f8f9fa"] a,
-  article[style*="background: #f8f9fa"] a,
-  div[style*="background: #f8f9fa"] a {
-    color: #1e7e34 !important;
-  }
-  
-  [style*="background: #e7f3ff"] a,
-  div[style*="background: #e7f3ff"] a {
-    color: #1e7e34 !important;
-  }
-  </style>
   <link rel="icon" type="image/svg+xml" href="{{ '/favicon.svg' | relative_url }}">
   <link rel="icon" type="image/x-icon" href="{{ '/favicon.ico' | relative_url }}">
   <meta name="theme-color" content="#3e836b">
