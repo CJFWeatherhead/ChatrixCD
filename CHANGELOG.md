@@ -37,6 +37,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - **Greeting Consistency**: Bot responses now use user display names instead of full Matrix user IDs in greetings for better readability
 
 ### Removed
+- **GitHub Pages Workflow**: Removed `.github/workflows/pages.yml` as documentation is now deployed via Cloudflare Pages
 - **Encryption Verification Notification**: Removed automatic notification message when bot cannot decrypt encrypted messages
   - Users must now manually verify devices through Matrix client
   - Reduces spam in rooms while maintaining security
