@@ -1,6 +1,6 @@
 title: ChatrixCD
 description: Matrix bot for CI/CD automation through chat with Semaphore UI integration
-remote_theme: just-the-docs/just-the-docs
+theme: just-the-docs
 lang: en
 
 # Custom domain URL
