@@ -2,7 +2,6 @@
 
 <img src="assets/logo-horizontal.svg" alt="ChatrixCD Logo" width="600">
 
-# ChatrixCD
 
 **Matrix bot for CI/CD automation through chat** 🚀
 
