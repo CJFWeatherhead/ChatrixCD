@@ -5,7 +5,7 @@ import asyncio
 import tempfile
 import os
 from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from chatrixcd.verification import DeviceVerificationManager
+from chatrixcd.verification import DeviceVerificationManager, SAS_AVAILABLE
 
 
 class TestDeviceVerificationManager(unittest.IsolatedAsyncioTestCase):
@@ -46,8 +46,8 @@ class TestDeviceVerificationManager(unittest.IsolatedAsyncioTestCase):
         mock_device_store.users = {
             "@user1:example.com": user_devices
         }
-        # Set up __getitem__ to return the user devices
-        mock_device_store.__getitem__.side_effect = lambda key: mock_device_store.users.get(key, {})
+        # Configure __getitem__ to return user devices
+        mock_device_store.__getitem__ = Mock(return_value=user_devices)
         
         self.mock_client.device_store = mock_device_store
         
@@ -89,6 +89,7 @@ class TestDeviceVerificationManager(unittest.IsolatedAsyncioTestCase):
             result = await self.manager.auto_verify_pending("txn1")
             self.assertFalse(result)
     
+    @unittest.skipIf(not SAS_AVAILABLE, "Sas not available in this nio version")
     async def test_cross_verify_with_bots(self):
         """Test cross_verify_with_bots."""
         room_members = ["@user1:example.com", "@chatrixbot:example.com", "@otherbot:example.com"]
@@ -119,8 +120,8 @@ class TestDeviceVerificationManager(unittest.IsolatedAsyncioTestCase):
             mock_device_store = Mock()
             user_devices = {
                 "DEVICE1": Mock(
-                    ed25519=b"ed25519_key",
-                    curve25519=b"curve25519_key",
+                    ed25519="ed25519_key",  # Use string instead of bytes
+                    curve25519="curve25519_key",  # Use string instead of bytes
                     verified=True,
                     display_name="Device 1"
                 )
@@ -128,8 +129,8 @@ class TestDeviceVerificationManager(unittest.IsolatedAsyncioTestCase):
             mock_device_store.users = {
                 "@user1:example.com": user_devices
             }
-            # Set up __getitem__ to return the user devices
-            mock_device_store.__getitem__.side_effect = lambda key: mock_device_store.users.get(key, {})
+            # Configure __getitem__ to return the user devices
+            mock_device_store.__getitem__ = Mock(return_value=user_devices)
             
             self.mock_client.device_store = mock_device_store
             success = await self.manager.save_session_state(filepath)
@@ -167,8 +168,8 @@ class TestDeviceVerificationManager(unittest.IsolatedAsyncioTestCase):
             mock_device_store.users = {
                 "@user1:example.com": user_devices
             }
-            # Set up __getitem__ to return the user devices
-            mock_device_store.__getitem__.side_effect = lambda key: mock_device_store.users.get(key, {})
+            # Configure __getitem__ to return the user devices
+            mock_device_store.__getitem__ = Mock(return_value=user_devices)
             
             self.mock_client.device_store = mock_device_store
             success = await self.manager.load_session_state(filepath)

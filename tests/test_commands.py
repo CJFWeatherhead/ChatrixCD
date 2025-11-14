@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import asyncio
 from nio import MatrixRoom, RoomMessageText
 from chatrixcd.commands import CommandHandler
+from chatrixcd.verification import SAS_AVAILABLE
 
 
 class TestCommandHandler(unittest.TestCase):
@@ -1064,6 +1065,7 @@ class TestCommandHandler(unittest.TestCase):
         self.mock_bot.verification_manager.get_unverified_devices.assert_called_once()
         self.assertEqual(self.mock_bot.send_message.call_count, 1)
 
+    @unittest.skipIf(not SAS_AVAILABLE, "Sas not available in this nio version")
     def test_cross_verify_bots(self):
         """Test cross verification with other bots."""
         # Mock room with multiple users
