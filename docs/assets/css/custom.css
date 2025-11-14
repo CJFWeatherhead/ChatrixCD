@@ -274,119 +274,119 @@ img {
 }
 
 /* Fix contrast for inline styled elements with light backgrounds in dark theme */
-[data-theme="dark"] [style*="background: #f8f9fa"],
-[data-theme="dark"] [style*="background:#f8f9fa"] {
+[style*="background: #f8f9fa"],
+[style*="background:#f8f9fa"] {
   color: #2D3238 !important; /* Force dark text on light grey background */
 }
 
-[data-theme="dark"] [style*="background: #e7f3ff"],
-[data-theme="dark"] [style*="background:#e7f3ff"] {
+[style*="background: #e7f3ff"],
+[style*="background:#e7f3ff"] {
   color: #2D3238 !important; /* Force dark text on light blue background */
 }
 
-[data-theme="dark"] [style*="background: #f0f8ff"],
-[data-theme="dark"] [style*="background:#f0f8ff"] {
+[style*="background: #f0f8ff"],
+[style*="background:#f0f8ff"] {
   color: #2D3238 !important; /* Force dark text on alice blue background */
 }
 
-[data-theme="dark"] [style*="background: #fff3cd"],
-[data-theme="dark"] [style*="background:#fff3cd"] {
+[style*="background: #fff3cd"],
+[style*="background:#fff3cd"] {
   color: #2D3238 !important; /* Force dark text on light yellow background */
 }
 
-[data-theme="dark"] [style*="background: #d1ecf1"],
-[data-theme="dark"] [style*="background:#d1ecf1"] {
+[style*="background: #d1ecf1"],
+[style*="background:#d1ecf1"] {
   color: #2D3238 !important; /* Force dark text on light cyan background */
 }
 
-[data-theme="dark"] [style*="background: #f8d7da"],
-[data-theme="dark"] [style*="background:#f8d7da"] {
+[style*="background: #f8d7da"],
+[style*="background:#f8d7da"] {
   color: #2D3238 !important; /* Force dark text on light pink background */
 }
 
-[data-theme="dark"] [style*="background: #e8f5e9"],
-[data-theme="dark"] [style*="background:#e8f5e9"] {
+[style*="background: #e8f5e9"],
+[style*="background:#e8f5e9"] {
   color: #2D3238 !important; /* Force dark text on light green background */
 }
 
-[data-theme="dark"] [style*="background: #fff3cd"],
-[data-theme="dark"] [style*="background:#fff3cd"] {
+[style*="background: #fff3cd"],
+[style*="background:#fff3cd"] {
   color: #2D3238 !important; /* Force dark text on light yellow background */
 }
 
 /* Ensure table rows with light backgrounds are readable */
-[data-theme="dark"] tr[style*="background: #f8f9fa"],
-[data-theme="dark"] tr[style*="background:#f8f9fa"] {
+tr[style*="background: #f8f9fa"],
+tr[style*="background:#f8f9fa"] {
   color: #2D3238 !important;
 }
 
-[data-theme="dark"] tr[style*="background: #f8f9fa"] td,
-[data-theme="dark"] tr[style*="background:#f8f9fa"] td {
+tr[style*="background: #f8f9fa"] td,
+tr[style*="background:#f8f9fa"] td {
   color: #2D3238 !important;
 }
 
 /* Ensure links and headings within light background elements remain readable */
-[data-theme="dark"] [style*="background: #f8f9fa"] a,
-[data-theme="dark"] [style*="background:#f8f9fa"] a,
-[data-theme="dark"] [style*="background: #e7f3ff"] a,
-[data-theme="dark"] [style*="background:#e7f3ff"] a,
-[data-theme="dark"] [style*="background: #f0f8ff"] a,
-[data-theme="dark"] [style*="background:#f0f8ff"] a,
-[data-theme="dark"] [style*="background: #fff3cd"] a,
-[data-theme="dark"] [style*="background:#fff3cd"] a,
-[data-theme="dark"] [style*="background: #d1ecf1"] a,
-[data-theme="dark"] [style*="background:#d1ecf1"] a,
-[data-theme="dark"] [style*="background: #f8d7da"] a,
-[data-theme="dark"] [style*="background:#f8d7da"] a,
-[data-theme="dark"] [style*="background: #e8f5e9"] a,
-[data-theme="dark"] [style*="background:#e8f5e9"] a,
-[data-theme="dark"] [style*="background: #fff3cd"] a,
-[data-theme="dark"] [style*="background:#fff3cd"] a {
+[style*="background: #f8f9fa"] a,
+[style*="background:#f8f9fa"] a,
+[style*="background: #e7f3ff"] a,
+[style*="background:#e7f3ff"] a,
+[style*="background: #f0f8ff"] a,
+[style*="background:#f0f8ff"] a,
+[style*="background: #fff3cd"] a,
+[style*="background:#fff3cd"] a,
+[style*="background: #d1ecf1"] a,
+[style*="background:#d1ecf1"] a,
+[style*="background: #f8d7da"] a,
+[style*="background:#f8d7da"] a,
+[style*="background: #e8f5e9"] a,
+[style*="background:#e8f5e9"] a,
+[style*="background: #fff3cd"] a,
+[style*="background:#fff3cd"] a {
   color: #1e7e34 !important; /* Dark green links for contrast */
 }
 
-[data-theme="dark"] [style*="background: #f8f9fa"] h1,
-[data-theme="dark"] [style*="background: #f8f9fa"] h2,
-[data-theme="dark"] [style*="background: #f8f9fa"] h3,
-[data-theme="dark"] [style*="background: #f8f9fa"] h4,
-[data-theme="dark"] [style*="background: #f8f9fa"] h5,
-[data-theme="dark"] [style*="background: #f8f9fa"] h6,
-[data-theme="dark"] [style*="background:#f8f9fa"] h1,
-[data-theme="dark"] [style*="background:#f8f9fa"] h2,
-[data-theme="dark"] [style*="background:#f8f9fa"] h3,
-[data-theme="dark"] [style*="background:#f8f9fa"] h4,
-[data-theme="dark"] [style*="background:#f8f9fa"] h5,
-[data-theme="dark"] [style*="background:#f8f9fa"] h6 {
+[style*="background: #f8f9fa"] h1,
+[style*="background: #f8f9fa"] h2,
+[style*="background: #f8f9fa"] h3,
+[style*="background: #f8f9fa"] h4,
+[style*="background: #f8f9fa"] h5,
+[style*="background: #f8f9fa"] h6,
+[style*="background:#f8f9fa"] h1,
+[style*="background:#f8f9fa"] h2,
+[style*="background:#f8f9fa"] h3,
+[style*="background:#f8f9fa"] h4,
+[style*="background:#f8f9fa"] h5,
+[style*="background:#f8f9fa"] h6 {
   color: #2D3238 !important; /* Ensure headings are dark */
 }
 
 /* Fix article elements with light backgrounds */
-[data-theme="dark"] article[style*="background: #f8f9fa"],
-[data-theme="dark"] article[style*="background:#f8f9fa"] {
+article[style*="background: #f8f9fa"],
+article[style*="background:#f8f9fa"] {
   color: #2D3238 !important; /* Force dark text on light grey background */
 }
 
-[data-theme="dark"] article[style*="background: #f8f9fa"] h1,
-[data-theme="dark"] article[style*="background: #f8f9fa"] h2,
-[data-theme="dark"] article[style*="background: #f8f9fa"] h3,
-[data-theme="dark"] article[style*="background: #f8f9fa"] h4,
-[data-theme="dark"] article[style*="background: #f8f9fa"] h5,
-[data-theme="dark"] article[style*="background: #f8f9fa"] h6,
-[data-theme="dark"] article[style*="background:#f8f9fa"] h1,
-[data-theme="dark"] article[style*="background:#f8f9fa"] h2,
-[data-theme="dark"] article[style*="background:#f8f9fa"] h3,
-[data-theme="dark"] article[style*="background:#f8f9fa"] h4,
-[data-theme="dark"] article[style*="background:#f8f9fa"] h5,
-[data-theme="dark"] article[style*="background:#f8f9fa"] h6 {
+article[style*="background: #f8f9fa"] h1,
+article[style*="background: #f8f9fa"] h2,
+article[style*="background: #f8f9fa"] h3,
+article[style*="background: #f8f9fa"] h4,
+article[style*="background: #f8f9fa"] h5,
+article[style*="background: #f8f9fa"] h6,
+article[style*="background:#f8f9fa"] h1,
+article[style*="background:#f8f9fa"] h2,
+article[style*="background:#f8f9fa"] h3,
+article[style*="background:#f8f9fa"] h4,
+article[style*="background:#f8f9fa"] h5,
+article[style*="background:#f8f9fa"] h6 {
   color: #2D3238 !important; /* Ensure headings in articles are dark */
 }
 
-[data-theme="dark"] article[style*="background: #f8f9fa"] p,
-[data-theme="dark"] article[style*="background:#f8f9fa"] p {
+article[style*="background: #f8f9fa"] p,
+article[style*="background:#f8f9fa"] p {
   color: #2D3238 !important; /* Ensure paragraphs in articles are dark */
 }
 
-[data-theme="dark"] article[style*="background: #f8f9fa"] a,
-[data-theme="dark"] article[style*="background:#f8f9fa"] a {
+article[style*="background: #f8f9fa"] a,
+article[style*="background:#f8f9fa"] a {
   color: #1e7e34 !important; /* Dark green links for contrast */
 }
