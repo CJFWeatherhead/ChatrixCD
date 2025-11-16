@@ -60,7 +60,7 @@ nav_order: 4
 
 ## 🔄 Configuration Versioning
 
-<div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 1rem; margin: 1rem 0;">
+<div style="border-left: 4px solid #10b981; padding: 1rem; margin: 1rem 0;">
   <strong>✅ Automatic Migration:</strong> Your config auto-upgrades when you update ChatrixCD!
 </div>
 
@@ -91,27 +91,6 @@ nav_order: 4
 </div>
 
 ---
-
-## 🎯 Configuration Priority
-
-<div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem; margin: 1rem 0;">
-  <strong>⚠️ Important:</strong> Environment variables are <strong>not supported</strong>. Use <code>config.json</code> only!
-</div>
-
-### Priority Order (Highest → Lowest)
-
-1. **🏆 Configuration File** (`config.json`) - Your settings always win
-2. **📚 Default Values** (hardcoded) - Used when not specified
-
-**Example:** If your `config.json` has `user_id` set to `@bot:example.com`:
-- `user_id` will be `@bot:example.com` (from the config file)
-- If `device_id` is NOT in the config file, it will use the hardcoded default value
-- Other unspecified fields (like `device_name`) will use hardcoded defaults
-
-This simplified configuration approach:
-- Eliminates confusion about configuration sources
-- Makes configuration more explicit and easier to debug
-- Centralizes all configuration in a single, documented file
 
 ## Configuration File Format
 

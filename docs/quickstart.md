@@ -18,7 +18,6 @@ Get ChatrixCD up and running in **5 minutes**! 🚀
 
 ## Step 1️⃣: Install ChatrixCD
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 2em 0;">
 
 <div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;">
   <h3 style="margin-top: 0;">📦 Pre-built Binary (Easiest!)</h3>
@@ -42,7 +41,6 @@ pip install -e .</code></pre>
   <p><small>📖 <a href="installation.html#method-2-from-source">Full source guide →</a></small></p>
 </div>
 
-</div>
 
 ---
 
