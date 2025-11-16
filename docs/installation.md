@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Installation
-nav_order: 2
+nav_order: 3
 ---
 
 # 📥 Installation Guide
@@ -58,40 +58,17 @@ Choose the installation method that works best for you!
 - 📦 **Self-Contained** - Everything bundled in one file
 - ⚡ **Fast** - Optimized builds with musl libc
 
-### Download Links
+### Download
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 2em 0;">
-
-<div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;">
-  <h4 style="margin-top: 0;">💻 x86_64 (64-bit)</h4>
-  <p><strong>Most common</strong></p>
-  <p>Intel/AMD 64-bit processors</p>
-  <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz" style="display: inline-block; padding: 10px 20px; background: #3e836b; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
-</div>
-
-<div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px;">
-  <h4 style="margin-top: 0;">🖥️ i686 (32-bit)</h4>
-  <p><strong>Older systems</strong></p>
-  <p>32-bit Intel/AMD processors</p>
-  <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686.dist.tar.gz" style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
-</div>
-
-<div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px;">
-  <h4 style="margin-top: 0;">🥧 ARM64</h4>
-  <p><strong>ARM devices</strong></p>
-  <p>Raspberry Pi, ARM servers</p>
-  <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64.dist.tar.gz" style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
-</div>
-
-</div>
+Visit the [Download Page](download.html) to get the latest pre-built binaries for your platform.
 
 ### Installation Steps
 
 ```bash
 # 1. Download (example for x86_64)
-wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz
+wget https://chatrix.cd/download/x86_64
 
-# 2. Extract
+# 2. Extract (if downloaded as .tar.gz)
 tar -xzf chatrixcd-linux-x86_64.dist.tar.gz
 cd chatrixcd-linux-x86_64.dist
 

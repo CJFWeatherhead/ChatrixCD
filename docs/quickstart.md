@@ -1,122 +1,40 @@
 ---
 layout: default
 title: Quick Start
-nav_order: 3
+nav_order: 4
 ---
 
 # ⚡ Quick Start Guide
 
-Get ChatrixCD up and running in **5 minutes**! 🚀
+Get ChatrixCD up and running in **2 minutes**! 🚀
 
 <div style="padding: 15px; border-left: 4px solid #ffc107; margin: 1em 0;">
-  <strong>⏱️ Time to Success:</strong> ~5 minutes<br>
+  <strong>⏱️ Time to Success:</strong> ~2 minutes<br>
   <strong>📋 What You'll Need:</strong> Matrix account, Semaphore UI access<br>
-  <strong>�� What You'll Get:</strong> Fully working CI/CD bot in your chat!
+  <strong>🎯 What You'll Get:</strong> Fully working CI/CD bot in your chat!
 </div>
 
 ---
 
-## Step 1️⃣: Install ChatrixCD
-
+## Step 1️⃣: Download & Run
 
 <div style="padding: 20px; border: 2px solid #3e836b; border-radius: 10px;">
-  <h3 style="margin-top: 0;">📦 Pre-built Binary (Easiest!)</h3>
-  <p><strong>✅ Recommended for most users</strong></p>
-  <p>No Python required! Just download and run:</p>
-  <pre><code>wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
+  <h3 style="margin-top: 0;">📦 Download from the Download Page</h3>
+  <p><strong>✅ No Python required!</strong> Pre-built binaries for Linux.</p>
+  <p>Visit the <a href="download.html">Download Page</a> to get the latest binary for your platform.</p>
+  <pre><code># Example for x86_64:
+wget https://chatrix.cd/download/x86_64
 chmod +x chatrixcd-linux-x86_64
 ./chatrixcd-linux-x86_64</code></pre>
-  <p><small>📖 <a href="installation.html#method-1-pre-built-binary-recommended">More download options →</a></small></p>
 </div>
-
-<div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px;">
-  <h3 style="margin-top: 0;">🔧 From Source (Advanced)</h3>
-  <p><strong>For development or customization</strong></p>
-  <pre><code>git clone https://github.com/CJFWeatherhead/ChatrixCD.git
-cd ChatrixCD
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-pip install -e .</code></pre>
-  <p><small>📖 <a href="installation.html#method-2-from-source">Full source guide →</a></small></p>
-</div>
-
-
----
-
-## Step 2️⃣: Create Configuration
-
-Create a `config.json` file in the same directory:
-
-<div style="padding: 15px; border-left: 4px solid #2196F3; margin: 1em 0;">
-  <strong>💡 Tip:</strong> Start with password auth for simplicity. You can switch to OIDC/SSO later!
-</div>
-
-```json
-{
-  "matrix": {
-    "homeserver": "https://matrix.org",
-    "user_id": "@your-bot:matrix.org",
-    "auth_type": "password",
-    "password": "your-secure-password"
-  },
-  "semaphore": {
-    "url": "https://your-semaphore.example.com",
-    "api_token": "your-api-token-here"
-  },
-  "bot": {
-    "command_prefix": "!cd",
-    "allowed_rooms": []
-  }
-}
-```
-
-<details style="margin: 1em 0; padding: 15px; border-radius: 8px;">
-<summary style="cursor: pointer; font-weight: bold;">🔐 Using OIDC/SSO instead? (Click to expand)</summary>
-<pre><code>{
-  "matrix": {
-    "homeserver": "https://matrix.org",
-    "user_id": "@your-bot:matrix.org",
-    "auth_type": "oidc",
-    "oidc_redirect_url": "http://localhost:8765/callback"
-  },
-  ...
-}
-</code></pre>
-<p><small>📖 <a href="configuration.html#matrix-authentication">Full OIDC guide →</a></small></p>
-</details>
-
-<div style="padding: 15px; border-left: 4px solid #f44336; margin: 1em 0;">
-  <strong>🔒 Security Note:</strong> Never commit your <code>config.json</code> to version control! Add it to <code>.gitignore</code>.
-</div>
-
----
-
-## Step 3️⃣: Run the Bot
-
-Start ChatrixCD:
-
-```bash
-# If using binary:
-./chatrixcd-linux-x86_64
-
-# If from source:
-chatrixcd
-```
-
-**What you'll see:**
-1. 🖥️ Interactive TUI launches
-2. 🔐 Bot logs into Matrix
-3. 🔑 Initial sync with encryption keys
-4. ✅ Ready! Bot is now online
 
 <div style="padding: 15px; border-left: 4px solid #4caf50; margin: 1em 0;">
-  <strong>✅ Success!</strong> Your bot is now running. Keep this terminal open.
+  <strong>✅ Success!</strong> The bot will guide you through configuration if <code>config.json</code> doesn't exist. Keep this terminal open.
 </div>
 
 ---
 
-## Step 4️⃣: Invite Bot to Your Room
+## Step 2️⃣: Invite Bot to Your Room
 
 In your Matrix client (Element, etc.):
 
@@ -150,7 +68,7 @@ In your Matrix client (Element, etc.):
 
 ---
 
-## Step 5️⃣: Start Using Commands!
+## Step 3️⃣: Start Using Commands!
 
 Try these commands in your Matrix room:
 

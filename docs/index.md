@@ -18,7 +18,7 @@ nav_order: 1
 
 <nav role="navigation" aria-label="Quick access navigation">
   <div align="center" style="margin: 2em 0;">
-    <a href="installation.html" style="display: inline-block; padding: 15px 30px; background: #3e836b; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin: 10px;" aria-label="Get Started with Installation">
+    <a href="download.html" style="display: inline-block; padding: 15px 30px; background: #3e836b; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin: 10px;" aria-label="Get Started with Download">
       📥 Get Started
     </a>
     <a href="quickstart.html" style="display: inline-block; padding: 15px 30px; background: #2D3238; color: white; text-decoration: none; border-radius: 8px; font-size: 1.2em; margin: 10px;" aria-label="View Quick Start Guide">
@@ -70,50 +70,28 @@ nav_order: 1
 
 ---
 
-## 🎯 Quick Start in 3 Steps
+## 🎯 Quick Start in 2 Steps
 
 <ol style="list-style: none; padding: 0; margin: 2em 0;">
 
 <li style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b; margin-bottom: 20px;">
   <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #3e836b;" aria-hidden="true">1️⃣</div>
   <div>
-    <h3 style="margin-top: 0;">Install ChatrixCD</h3>
+    <h3 style="margin-top: 0;">Download & Run ChatrixCD</h3>
     <p>Download the pre-built binary for Linux (no Python needed!) or install from source:</p>
-    <pre><code>wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64
-chmod +x chatrixcd-linux-x86_64</code></pre>
-    <p><a href="installation.html">📖 Full Installation Guide →</a></p>
-  </div>
-</li>
-
-<li style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b; margin-bottom: 20px;">
-  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #3e836b;" aria-hidden="true">2️⃣</div>
-  <div>
-    <h3 style="margin-top: 0;">Configure Your Bot</h3>
-    <p>Create a <code>config.json</code> with your Matrix and Semaphore details:</p>
-    <pre><code>{
-  "matrix": {
-    "homeserver": "https://matrix.org",
-    "user_id": "@your-bot:matrix.org",
-    "auth_type": "password",
-    "password": "your-password"
-  },
-  "semaphore": {
-    "url": "https://semaphore.example.com",
-    "api_token": "your-api-token"
-  }
-}</code></pre>
-    <p><a href="configuration.html">⚙️ Configuration Guide →</a></p>
+    <pre><code>wget https://chatrix.cd/download/x86_64
+chmod +x chatrixcd-linux-x86_64
+./chatrixcd-linux-x86_64</code></pre>
+    <p><a href="download.html">📖 Download Page →</a></p>
   </div>
 </li>
 
 <li style="display: flex; align-items: start; padding: 20px; border-left: 4px solid #3e836b;">
-  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #3e836b;" aria-hidden="true">3️⃣</div>
+  <div style="font-size: 2em; margin-right: 20px; min-width: 50px; text-align: center; font-weight: bold; color: #3e836b;" aria-hidden="true">2️⃣</div>
   <div>
     <h3 style="margin-top: 0;">Start Automating!</h3>
-    <p>Run the bot, invite it to your room, and start managing CI/CD tasks:</p>
-    <pre><code>./chatrixcd-linux-x86_64
-
-# In your Matrix room:
+    <p>The bot will guide you through configuration. Invite it to your room and start managing CI/CD tasks:</p>
+    <pre><code># In your Matrix room:
 !cd projects
 !cd run &lt;project_id&gt; &lt;template_id&gt;</code></pre>
     <p><a href="quickstart.html">⚡ Quick Start Guide →</a></p>
@@ -157,8 +135,13 @@ chmod +x chatrixcd-linux-x86_64</code></pre>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 2em 0;">
 
 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+  <h4 style="margin-top: 0;">📥 <a href="download.html">Download</a></h4>
+  <p style="font-size: 0.9em;">Pre-built binaries for Linux</p>
+</div>
+
+<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
   <h4 style="margin-top: 0;">📥 <a href="installation.html">Installation</a></h4>
-  <p style="font-size: 0.9em;">Pre-built binaries, source, Docker</p>
+  <p style="font-size: 0.9em;">From source, Docker, advanced options</p>
 </div>
 
 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
