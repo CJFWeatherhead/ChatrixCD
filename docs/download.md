@@ -22,21 +22,21 @@ Choose your platform and download the latest pre-built binary. No installation r
   <h4 style="margin-top: 0;">💻 x86_64 (64-bit)</h4>
   <p><strong>Most common</strong></p>
   <p>Intel/AMD 64-bit processors</p>
-  <a href="https://chatrix.cd/download/x86_64" style="display: inline-block; padding: 10px 20px; background: #3e836b; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
+  <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz" style="display: inline-block; padding: 10px 20px; background: #3e836b; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
 </div>
 
 <div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px;">
   <h4 style="margin-top: 0;">🖥️ i686 (32-bit)</h4>
   <p><strong>Older systems</strong></p>
   <p>32-bit Intel/AMD processors</p>
-  <a href="https://chatrix.cd/download/i686" style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
+  <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-i686.dist.tar.gz" style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
 </div>
 
 <div style="padding: 20px; border: 2px solid #6c757d; border-radius: 10px;">
   <h4 style="margin-top: 0;">🥧 ARM64</h4>
   <p><strong>ARM devices</strong></p>
   <p>Raspberry Pi, ARM servers</p>
-  <a href="https://chatrix.cd/download/arm64" style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
+  <a href="https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-arm64.dist.tar.gz" style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Download →</a>
 </div>
 
 </div>
@@ -47,13 +47,14 @@ Choose your platform and download the latest pre-built binary. No installation r
 
 ```bash
 # 1. Download (example for x86_64)
-wget https://chatrix.cd/download/x86_64
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz
 
-# 2. Make executable
-chmod +x chatrixcd-linux-x86_64
+# 2. Extract
+tar -xzf chatrixcd-linux-x86_64.dist.tar.gz
+cd chatrixcd-linux-x86_64.dist
 
 # 3. Run it!
-./chatrixcd-linux-x86_64
+./chatrixcd
 ```
 
 <div style="padding: 15px; border-left: 4px solid #2196F3; margin: 1em 0;">
@@ -74,7 +75,7 @@ chmod +x chatrixcd-linux-x86_64
 - **OS**: Linux (kernel 4.8+)
 - **Architecture**: x86_64, i686, or ARM64
 - **Memory**: 192MB minimum
-- **Storage**: 80MB free space
+- **Storage**: 110MB free space
 
 ---
 

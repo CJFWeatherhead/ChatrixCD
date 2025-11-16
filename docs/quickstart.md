@@ -23,9 +23,10 @@ Get ChatrixCD up and running in **2 minutes**! 🚀
   <p><strong>✅ No Python required!</strong> Pre-built binaries for Linux.</p>
   <p>Visit the <a href="download.html">Download Page</a> to get the latest binary for your platform.</p>
   <pre><code># Example for x86_64:
-wget https://chatrix.cd/download/x86_64
-chmod +x chatrixcd-linux-x86_64
-./chatrixcd-linux-x86_64</code></pre>
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz
+tar -xzf chatrixcd-linux-x86_64.dist.tar.gz
+cd chatrixcd-linux-x86_64.dist
+./chatrixcd</code></pre>
 </div>
 
 <div style="padding: 15px; border-left: 4px solid #4caf50; margin: 1em 0;">

@@ -79,9 +79,10 @@ nav_order: 1
   <div>
     <h3 style="margin-top: 0;">Download & Run ChatrixCD</h3>
     <p>Download the pre-built binary for Linux (no Python needed!) or install from source:</p>
-    <pre><code>wget https://chatrix.cd/download/x86_64
-chmod +x chatrixcd-linux-x86_64
-./chatrixcd-linux-x86_64</code></pre>
+    <pre><code>wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz
+tar -xzf chatrixcd-linux-x86_64.dist.tar.gz
+cd chatrixcd-linux-x86_64.dist
+./chatrixcd</code></pre>
     <p><a href="download.html">📖 Download Page →</a></p>
   </div>
 </li>

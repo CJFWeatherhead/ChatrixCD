@@ -66,9 +66,9 @@ Visit the [Download Page](download.html) to get the latest pre-built binaries fo
 
 ```bash
 # 1. Download (example for x86_64)
-wget https://chatrix.cd/download/x86_64
+wget https://github.com/CJFWeatherhead/ChatrixCD/releases/latest/download/chatrixcd-linux-x86_64.dist.tar.gz
 
-# 2. Extract (if downloaded as .tar.gz)
+# 2. Extract
 tar -xzf chatrixcd-linux-x86_64.dist.tar.gz
 cd chatrixcd-linux-x86_64.dist
 
