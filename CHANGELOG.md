@@ -15,6 +15,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+## [2025.11.15.5.2.0] - 2025-11-15
+
 ### Added
 - **Vodozemac Migration**: Replaced deprecated libolm with vodozemac for enhanced security
   - Updated to vodozemac 0.9.0+ for improved cryptographic primitives
@@ -1207,6 +1209,8 @@ ChatrixCD/
 
 
 
+
+- **2025.11.15.5.2.0** (2025-11-15)
 - **2025.11.09.5.1.0** (2025-11-09)
 - **2025.11.08.5.0.0** (2025-11-08)
 - **2025.11.07.4.1.0** (2025-11-07)
