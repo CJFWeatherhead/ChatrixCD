@@ -7,7 +7,6 @@ import re
 import platform
 import socket
 import psutil
-import sys
 from typing import Dict, Any, Optional, List
 from nio import MatrixRoom, RoomMessageText
 from chatrixcd.semaphore import SemaphoreClient

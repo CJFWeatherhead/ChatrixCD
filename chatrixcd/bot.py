@@ -10,6 +10,11 @@ import asyncio
 import os
 import time
 import aiohttp
+import re
+import platform
+import sys
+import subprocess
+import psutil
 from typing import Optional, Dict, Any
 from nio import (
     AsyncClient,
@@ -33,6 +38,16 @@ from chatrixcd.commands import CommandHandler
 from chatrixcd.verification import DeviceVerificationManager
 
 logger = logging.getLogger(__name__)
+
+# Compiled emoji pattern for efficient emoji detection and counting
+EMOJI_PATTERN = re.compile("["
+    "\U0001F600-\U0001F64F"  # emoticons
+    "\U0001F300-\U0001F5FF"  # symbols & pictographs
+    "\U0001F680-\U0001F6FF"  # transport & map symbols
+    "\U0001F1E0-\U0001F1FF"  # flags (iOS)
+    "\U00002702-\U000027B0"  # dingbats
+    "\U000024C2-\U0001F251"
+    "]+", flags=re.UNICODE)
 
 
 class ChatrixBot:
@@ -817,18 +832,9 @@ class ChatrixBot:
         
         # Track metrics
         self.metrics['messages_sent'] += 1
-        # Count emojis in the message (simple count of common emoji ranges)
-        import re
-        emoji_pattern = re.compile("["
-            "\U0001F600-\U0001F64F"  # emoticons
-            "\U0001F300-\U0001F5FF"  # symbols & pictographs
-            "\U0001F680-\U0001F6FF"  # transport & map symbols
-            "\U0001F1E0-\U0001F1FF"  # flags (iOS)
-            "\U00002702-\U000027B0"  # dingbats
-            "\U000024C2-\U0001F251"
-            "]+", flags=re.UNICODE)
-        emojis = emoji_pattern.findall(message)
-        self.metrics['emojis_used'] += len(emojis)
+        # Count emojis in the message (counts individual emojis, even in consecutive sequences)
+        emojis = EMOJI_PATTERN.findall(message)
+        self.metrics['emojis_used'] += sum(len(match) for match in emojis)
         
         # Return the event_id for potential reactions
         if hasattr(response, 'event_id'):
@@ -973,8 +979,6 @@ class ChatrixBot:
             - uptime: Bot uptime in seconds
         """
         from chatrixcd import __version_full__
-        import platform
-        import sys
         
         status = {
             'version': __version_full__,
@@ -1001,19 +1005,19 @@ class ChatrixBot:
                                 cpu_model = line.split(':')[1].strip()
                                 break
                 except Exception:
+                    # Ignore errors reading /proc/cpuinfo; not critical for bot operation
                     pass
             elif platform.system() == "Darwin":  # macOS
                 try:
-                    import subprocess
                     result = subprocess.run(['sysctl', '-n', 'machdep.cpu.brand_string'], 
                                            capture_output=True, text=True, timeout=1)
                     if result.returncode == 0:
                         cpu_model = result.stdout.strip()
                 except Exception:
+                    # Ignore errors getting CPU model on macOS; not critical for bot operation
                     pass
             elif platform.system() == "Windows":
                 try:
-                    import subprocess
                     result = subprocess.run(['wmic', 'cpu', 'get', 'name'], 
                                            capture_output=True, text=True, timeout=1)
                     if result.returncode == 0:
@@ -1021,16 +1025,17 @@ class ChatrixBot:
                         if len(lines_output) > 1:
                             cpu_model = lines_output[1].strip()
                 except Exception:
+                    # Ignore errors getting CPU model on Windows; not critical for bot operation
                     pass
             
             if cpu_model:
                 status['cpu_model'] = cpu_model
         except Exception:
+            # Failed to get CPU model; this is non-critical and will be omitted from status
             pass
         
         # System resources
         try:
-            import psutil
             status['cpu_percent'] = psutil.cpu_percent(interval=0.1)
             status['memory'] = {
                 'percent': psutil.virtual_memory().percent,
@@ -1038,6 +1043,7 @@ class ChatrixBot:
                 'total': psutil.virtual_memory().total // (1024**2)
             }
         except Exception:
+            # Failed to gather system resource info; not critical for bot operation
             pass
         
         # Matrix status
