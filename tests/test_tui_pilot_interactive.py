@@ -114,6 +114,23 @@ class TestNavigationWorkflows(unittest.IsolatedAsyncioTestCase):
         self.mock_bot.command_handler = Mock()
         self.mock_bot.command_handler.active_tasks = {}
         
+        # Mock get_status_info() method used by TUI
+        self.mock_bot.get_status_info = Mock(return_value={
+            'version': '2025.11.15.5.2.0',
+            'platform': 'Linux 5.15.0',
+            'architecture': 'x86_64',
+            'runtime': 'Python 3.12.0 (interpreter)',
+            'metrics': {
+                'messages_sent': 0,
+                'requests_received': 0,
+                'errors': 0,
+                'emojis_used': 0
+            },
+            'matrix_status': 'Connected',
+            'semaphore_status': 'Connected',
+            'uptime': 10000  # milliseconds
+        })
+        
         self.mock_config = Mock()
         self.mock_config.get_bot_config.return_value = {
             'admin_users': ['@admin:example.com'],
@@ -253,6 +270,31 @@ class TestWidgetUpdates(unittest.IsolatedAsyncioTestCase):
         self.mock_bot.command_handler = Mock()
         self.mock_bot.command_handler.active_tasks = {}
         
+        # Mock get_status_info() method used by TUI
+        self.mock_bot.get_status_info = Mock(return_value={
+            'version': '2025.11.15.5.2.0',
+            'platform': 'Linux 5.15.0',
+            'architecture': 'x86_64',
+            'runtime': 'Python 3.12.0 (interpreter)',
+            'metrics': {
+                'messages_sent': 0,
+                'requests_received': 0,
+                'errors': 0,
+                'emojis_used': 0
+            },
+            'matrix_status': 'Connected',
+            'semaphore_status': 'Connected',
+            'uptime': 10000  # milliseconds
+        })
+        
+        # Also mock metrics directly for backward compatibility
+        self.mock_bot.metrics = {
+            'messages_sent': 0,
+            'requests_received': 0,
+            'errors': 0,
+            'emojis_used': 0
+        }
+        
         self.mock_config = Mock()
         self.mock_config.get_bot_config.return_value = {}
 
@@ -306,6 +348,23 @@ class TestErrorHandling(unittest.IsolatedAsyncioTestCase):
         self.mock_bot.client = None  # Simulate disconnected state
         self.mock_bot.semaphore = None
         self.mock_bot.command_handler = None
+        
+        # Mock get_status_info() method - even when disconnected
+        self.mock_bot.get_status_info = Mock(return_value={
+            'version': '2025.11.15.5.2.0',
+            'platform': 'Linux 5.15.0',
+            'architecture': 'x86_64',
+            'runtime': 'Python 3.12.0 (interpreter)',
+            'metrics': {
+                'messages_sent': 0,
+                'requests_received': 0,
+                'errors': 0,
+                'emojis_used': 0
+            },
+            'matrix_status': 'Disconnected',
+            'semaphore_status': 'Unknown',
+            'uptime': 0
+        })
         
         self.mock_config = Mock()
         self.mock_config.get_bot_config.return_value = {}
@@ -369,6 +428,23 @@ class TestKeyboardShortcuts(unittest.IsolatedAsyncioTestCase):
         self.mock_bot.command_handler.active_tasks = {}
         self.mock_bot.command_handler.alias_manager = Mock()
         self.mock_bot.command_handler.alias_manager.list_aliases.return_value = {}
+        
+        # Mock get_status_info() method
+        self.mock_bot.get_status_info = Mock(return_value={
+            'version': '2025.11.15.5.2.0',
+            'platform': 'Linux 5.15.0',
+            'architecture': 'x86_64',
+            'runtime': 'Python 3.12.0 (interpreter)',
+            'metrics': {
+                'messages_sent': 0,
+                'requests_received': 0,
+                'errors': 0,
+                'emojis_used': 0
+            },
+            'matrix_status': 'Connected',
+            'semaphore_status': 'Connected',
+            'uptime': 10000
+        })
         
         self.mock_config = Mock()
         self.mock_config.get_bot_config.return_value = {}
@@ -443,6 +519,23 @@ class TestAppLifecycle(unittest.IsolatedAsyncioTestCase):
         self.mock_bot.command_handler = Mock()
         self.mock_bot.command_handler.active_tasks = {}
         
+        # Mock get_status_info() method
+        self.mock_bot.get_status_info = Mock(return_value={
+            'version': '2025.11.15.5.2.0',
+            'platform': 'Linux 5.15.0',
+            'architecture': 'x86_64',
+            'runtime': 'Python 3.12.0 (interpreter)',
+            'metrics': {
+                'messages_sent': 0,
+                'requests_received': 0,
+                'errors': 0,
+                'emojis_used': 0
+            },
+            'matrix_status': 'Connected',
+            'semaphore_status': 'Connected',
+            'uptime': 10000
+        })
+        
         self.mock_config = Mock()
         self.mock_config.get_bot_config.return_value = {}
 
@@ -467,18 +560,14 @@ class TestAppLifecycle(unittest.IsolatedAsyncioTestCase):
         """Test application metrics are initialized."""
         app = ChatrixTUI(self.mock_bot, self.mock_config)
         
-        # Check initial values
-        self.assertEqual(app.messages_processed, 0)
+        # Check initial values - TUI only tracks errors now, metrics are in bot
         self.assertEqual(app.errors, 0)
-        self.assertEqual(app.warnings, 0)
         
         async with app.run_test(size=(80, 30)) as pilot:
             await pilot.pause()
             
-            # Metrics should still be at initial values
-            self.assertEqual(app.messages_processed, 0)
+            # Errors should still be at initial value
             self.assertEqual(app.errors, 0)
-            self.assertEqual(app.warnings, 0)
 
     async def test_app_with_login_task(self):
         """Test application with login task set."""

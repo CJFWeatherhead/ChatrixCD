@@ -12,7 +12,7 @@ from nio import MatrixRoom, RoomMessageText
 from chatrixcd.semaphore import SemaphoreClient
 from chatrixcd.aliases import AliasManager
 from chatrixcd.messages import MessageManager
-from chatrixcd import __version__
+from chatrixcd import __version__, __version_full__
 
 logger = logging.getLogger(__name__)
 
@@ -515,19 +515,54 @@ class CommandHandler:
             await self.bot.send_message(room_id, plain_msg, html_msg, msgtype="m.notice")
             return
         
+        # Check if redaction is enabled
+        redact_enabled = self.config.get('redact', False)
+        
+        # Build room list with send permission info
+        room_list = []
+        for room_id_key, room in rooms.items():
+            can_send = self.bot.can_send_message_in_room(room_id_key)
+            
+            # Skip rooms where bot can't send if redaction is enabled
+            if redact_enabled and not can_send:
+                continue
+            
+            room_name = room.display_name or "Unknown"
+            room_list.append({
+                'room_id': room_id_key,
+                'room_name': room_name,
+                'can_send': can_send
+            })
+        
+        if not room_list:
+            plain_msg = f"{greeting} No rooms to display (all rooms filtered). 🏠"
+            html_msg = self.markdown_to_html(plain_msg)
+            await self.bot.send_message(room_id, plain_msg, html_msg, msgtype="m.notice")
+            return
+        
         # Plain text version
         message = f"{greeting} Here's where I hang out! 🏠\n\n"
         message += "**Rooms I'm In**\n\n"
-        for room_id_key, room in rooms.items():
-            room_name = room.display_name or "Unknown"
-            message += f"• **{room_name}**\n  `{room_id_key}`\n"
+        for room_info in room_list:
+            status = "✅ Can send" if room_info['can_send'] else "❌ Cannot send"
+            message += f"• **{room_info['room_name']}** - {status}\n  `{room_info['room_id']}`\n"
         
-        # HTML version with table
+        # HTML version with table and color coding
         greeting_html = self.markdown_to_html(greeting)
-        table_html = '<table><thead><tr><th>Room Name</th><th>Room ID</th></tr></thead><tbody>'
-        for room_id_key, room in rooms.items():
-            room_name = html.escape(room.display_name or "Unknown")
-            table_html += f'<tr><td><strong>{room_name}</strong></td><td><code>{html.escape(room_id_key)}</code></td></tr>'
+        table_html = '<table><thead><tr><th>Room Name</th><th>Room ID</th><th>Send Status</th></tr></thead><tbody>'
+        for room_info in room_list:
+            room_name = html.escape(room_info['room_name'])
+            room_id_escaped = html.escape(room_info['room_id'])
+            
+            # Color code based on send permission
+            if room_info['can_send']:
+                status_html = self._color_success("✅ Can send")
+                row_class = ""
+            else:
+                status_html = self._color_error("❌ Cannot send")
+                row_class = ' style="opacity: 0.6;"'
+            
+            table_html += f'<tr{row_class}><td><strong>{room_name}</strong></td><td><code>{room_id_escaped}</code></td><td>{status_html}</td></tr>'
         table_html += '</tbody></table>'
         
         html_message = f"{greeting_html} Here's where I hang out! 🏠<br/><br/><strong>Rooms I'm In</strong><br/><br/>{table_html}"
@@ -1938,34 +1973,51 @@ class CommandHandler:
     def _gather_bot_system_info(self) -> tuple:
         """Gather bot and system information.
         
+        Uses the centralized get_status_info() method from bot instance.
+        
         Returns:
             Tuple of (text_lines, info_dict) where text_lines are for plain text
             and info_dict contains structured data for HTML tables
         """
+        # Get centralized status info from bot
+        status = self.bot.get_status_info()
+        
         lines = []
         info_dict = {}
         
         # Basic bot info
-        lines.append(f"• **Version:** {__version__}")
-        lines.append(f"• **Platform:** {platform.system()} {platform.release()}")
-        lines.append(f"• **Architecture:** {platform.machine()}")
-        lines.append(f"• **Python:** {platform.python_version()}")
+        lines.append(f"• **Version:** {status['version']}")
+        lines.append(f"• **Platform:** {status['platform']}")
+        lines.append(f"• **Architecture:** {status['architecture']}")
+        lines.append(f"• **Runtime:** {status['runtime']}")
         
-        info_dict['version'] = __version__
-        info_dict['platform'] = f"{platform.system()} {platform.release()}"
-        info_dict['architecture'] = platform.machine()
-        info_dict['python'] = platform.python_version()
+        info_dict['version'] = status['version']
+        info_dict['platform'] = status['platform']
+        info_dict['architecture'] = status['architecture']
+        info_dict['runtime'] = status['runtime']
+        
+        # CPU model
+        if 'cpu_model' in status:
+            lines.append(f"• **CPU Model:** {status['cpu_model']}")
+            info_dict['cpu_model'] = status['cpu_model']
         
         # System resources
-        try:
-            cpu_percent = psutil.cpu_percent(interval=0.1)
-            memory = psutil.virtual_memory()
-            lines.append(f"• **CPU Usage:** {cpu_percent:.1f}%")
-            lines.append(f"• **Memory Usage:** {memory.percent:.1f}% ({memory.used // (1024**2)} MB / {memory.total // (1024**2)} MB)")
-            info_dict['cpu_percent'] = cpu_percent
-            info_dict['memory'] = memory
-        except Exception as e:
-            logger.debug(f"Could not get system resources: {e}")
+        if 'cpu_percent' in status:
+            lines.append(f"• **CPU Usage:** {status['cpu_percent']:.1f}%")
+            info_dict['cpu_percent'] = status['cpu_percent']
+        
+        if 'memory' in status:
+            mem = status['memory']
+            lines.append(f"• **Memory Usage:** {mem['percent']:.1f}% ({mem['used']} MB / {mem['total']} MB)")
+            info_dict['memory'] = status['memory']
+        
+        # Runtime metrics
+        metrics = status['metrics']
+        lines.append(f"• **Messages Sent:** {metrics['messages_sent']}")
+        lines.append(f"• **Requests Received:** {metrics['requests_received']}")
+        lines.append(f"• **Errors:** {metrics['errors']}")
+        lines.append(f"• **Emojis Used:** {metrics['emojis_used']} 😊")
+        info_dict['metrics'] = metrics
         
         # Network information (only if not redacting)
         redact_enabled = self.config.get('redact', False)
@@ -2004,37 +2056,42 @@ class CommandHandler:
     def _gather_matrix_info(self) -> tuple:
         """Gather Matrix server information.
         
+        Uses the centralized get_status_info() method from bot instance.
+        
         Returns:
             Tuple of (text_lines, info_dict, connected, encrypted)
         """
+        # Get centralized status info from bot
+        status = self.bot.get_status_info()
+        
         lines = []
         info_dict = {}
-        connected = False
-        encrypted = False
+        connected = status.get('matrix_status') == 'Connected'
+        encrypted = status.get('matrix_encrypted', False)
         
-        if self.bot.client:
-            lines.append(f"• **Homeserver:** {self.bot.client.homeserver}")
-            lines.append(f"• **User ID:** {self.bot.client.user_id}")
-            info_dict['homeserver'] = self.bot.client.homeserver
-            info_dict['user_id'] = self.bot.client.user_id
-            
-            if hasattr(self.bot.client, 'device_id') and self.bot.client.device_id:
-                lines.append(f"• **Device ID:** {self.bot.client.device_id}")
-                info_dict['device_id'] = self.bot.client.device_id
-            
-            # Connection status
-            if hasattr(self.bot.client, 'logged_in') and self.bot.client.logged_in:
-                lines.append(f"• **Status:** Connected ✅")
-                connected = True
-            else:
-                lines.append(f"• **Status:** Disconnected ❌")
-            
-            # Encryption status
-            if hasattr(self.bot.client, 'olm') and self.bot.client.olm:
-                lines.append(f"• **E2E Encryption:** Enabled 🔒")
-                encrypted = True
-            else:
-                lines.append(f"• **E2E Encryption:** Disabled")
+        if 'matrix_homeserver' in status:
+            lines.append(f"• **Homeserver:** {status['matrix_homeserver']}")
+            info_dict['homeserver'] = status['matrix_homeserver']
+        
+        if 'matrix_user_id' in status:
+            lines.append(f"• **User ID:** {status['matrix_user_id']}")
+            info_dict['user_id'] = status['matrix_user_id']
+        
+        if 'matrix_device_id' in status:
+            lines.append(f"• **Device ID:** {status['matrix_device_id']}")
+            info_dict['device_id'] = status['matrix_device_id']
+        
+        # Connection status
+        if connected:
+            lines.append(f"• **Status:** Connected ✅")
+        else:
+            lines.append(f"• **Status:** Disconnected ❌")
+        
+        # Encryption status
+        if encrypted:
+            lines.append(f"• **E2E Encryption:** Enabled 🔒")
+        else:
+            lines.append(f"• **E2E Encryption:** Disabled")
         
         return lines, info_dict, connected, encrypted
 
@@ -2053,13 +2110,29 @@ class CommandHandler:
             ['Version', bot_info['version']],
             ['Platform', bot_info['platform']],
             ['Architecture', bot_info['architecture']],
-            ['Python', bot_info['python']],
+            ['Runtime', bot_info.get('runtime', 'Unknown')],
         ]
+        if 'cpu_model' in bot_info:
+            bot_rows.append(['CPU Model', bot_info['cpu_model']])
         if 'cpu_percent' in bot_info:
             bot_rows.append(['CPU Usage', f"{bot_info['cpu_percent']:.1f}%"])
         if 'memory' in bot_info:
             mem = bot_info['memory']
-            bot_rows.append(['Memory Usage', f"{mem.percent:.1f}% ({mem.used // (1024**2)} MB / {mem.total // (1024**2)} MB)"])
+            # Check if memory is a dict (new structure) or psutil object (old structure)
+            if isinstance(mem, dict):
+                bot_rows.append(['Memory Usage', f"{mem['percent']:.1f}% ({mem['used']} MB / {mem['total']} MB)"])
+            else:
+                # Fallback for old structure
+                bot_rows.append(['Memory Usage', f"{mem.percent:.1f}% ({mem.used // (1024**2)} MB / {mem.total // (1024**2)} MB)"])
+        
+        # Add metrics if available
+        if 'metrics' in bot_info:
+            metrics = bot_info['metrics']
+            bot_rows.append(['Messages Sent', str(metrics['messages_sent'])])
+            bot_rows.append(['Requests Received', str(metrics['requests_received'])])
+            bot_rows.append(['Errors', str(metrics['errors'])])
+            bot_rows.append(['Emojis Used', f"{metrics['emojis_used']} 😊"])
+        
         if 'hostname' in bot_info and not redact_enabled:
             bot_rows.append(['Hostname', bot_info['hostname']])
         if 'ipv4' in bot_info and not redact_enabled:

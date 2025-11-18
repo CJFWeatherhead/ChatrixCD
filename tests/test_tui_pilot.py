@@ -40,6 +40,23 @@ class TestChatrixTUIMainApp(unittest.IsolatedAsyncioTestCase):
         self.mock_bot.command_handler = Mock()
         self.mock_bot.command_handler.active_tasks = {}
         
+        # Mock get_status_info() method
+        self.mock_bot.get_status_info = Mock(return_value={
+            'version': '2025.11.15.5.2.0',
+            'platform': 'Linux 5.15.0',
+            'architecture': 'x86_64',
+            'runtime': 'Python 3.12.0 (interpreter)',
+            'metrics': {
+                'messages_sent': 0,
+                'requests_received': 0,
+                'errors': 0,
+                'emojis_used': 0
+            },
+            'matrix_status': 'Connected',
+            'semaphore_status': 'Connected',
+            'uptime': 10000
+        })
+        
         self.mock_config = Mock()
         self.mock_config.get_bot_config.return_value = {
             'admin_users': ['@admin:example.com'],
@@ -671,6 +688,23 @@ class TestBotStatusWidget(unittest.IsolatedAsyncioTestCase):
         mock_bot.client = Mock()
         mock_bot.client.logged_in = True
         mock_bot.semaphore = Mock()
+        
+        # Mock get_status_info() method
+        mock_bot.get_status_info = Mock(return_value={
+            'version': '2025.11.15.5.2.0',
+            'platform': 'Linux 5.15.0',
+            'architecture': 'x86_64',
+            'runtime': 'Python 3.12.0 (interpreter)',
+            'metrics': {
+                'messages_sent': 0,
+                'requests_received': 0,
+                'errors': 0,
+                'emojis_used': 0
+            },
+            'matrix_status': 'Connected',
+            'semaphore_status': 'Connected',
+            'uptime': 10000
+        })
         
         mock_config = Mock()
         mock_config.get_bot_config.return_value = {}
