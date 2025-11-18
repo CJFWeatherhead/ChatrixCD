@@ -16,6 +16,19 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Added
+- **Plugin/Module System**: Extensible plugin architecture for bot functionality
+  - Plugin manager with complete lifecycle management (initialize, start, stop, cleanup)
+  - Plugin metadata support via `meta.json` (name, version, description, author, dependencies)
+  - Dynamic plugin discovery and loading from `/plugins` directory
+  - Mutual exclusion for conflicting plugins (e.g., only one task monitor active)
+  - Plugin status display in `!cd info` command with version and activity status
+  - Three initial plugins included:
+    - **semaphore_poll**: Traditional API polling for task monitoring (enabled by default)
+    - **semaphore_webhook**: Gotify webhook-based push notifications for task monitoring
+    - **example_plugin**: Comprehensive template demonstrating plugin API
+  - Plugin configuration section in `config.json` with per-plugin settings
+  - Comprehensive plugin development documentation and examples
+  - Complete test coverage with 18 test cases for plugin system
 - **Runtime Metrics Tracking**: Bot now tracks and displays runtime statistics
   - Messages sent count
   - Requests received count
@@ -37,6 +50,11 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Eliminates duplicate logic between different interfaces
 
 ### Changed
+- **Task Monitoring Architecture**: Refactored from built-in to plugin-based system
+  - Task monitoring now delegates to active `TaskMonitorPlugin`
+  - Command handler's `monitor_task()` uses plugin manager for monitoring
+  - Bot lifecycle includes plugin loading, starting, and cleanup phases
+  - Graceful fallback with clear messaging when no task monitor plugin is loaded
 - **TUI Status Display**: Harmonized with !cd info command
   - Updated to use centralized `get_status_info()` method
   - Consistent naming and formatting across TUI and commands
