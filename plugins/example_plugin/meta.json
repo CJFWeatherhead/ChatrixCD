@@ -1,0 +1,11 @@
+{
+  "name": "example_plugin",
+  "description": "Example plugin demonstrating the ChatrixCD plugin API. Use this as a template for creating your own plugins.",
+  "version": "1.0.0",
+  "author": "ChatrixCD Team",
+  "type": "generic",
+  "category": "example",
+  "enabled": false,
+  "dependencies": [],
+  "python_dependencies": []
+}

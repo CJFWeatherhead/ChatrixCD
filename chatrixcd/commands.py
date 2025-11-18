@@ -2095,6 +2095,97 @@ class CommandHandler:
         
         return lines, info_dict, connected, encrypted
 
+    def _gather_plugin_info(self) -> tuple:
+        """Gather plugin information.
+        
+        Returns:
+            Tuple of (text_lines, info_list) where text_lines are for plain text
+            and info_list contains structured data for HTML tables
+        """
+        lines = []
+        info_list = []
+        
+        # Check if plugin manager is available
+        if not hasattr(self.bot, 'plugin_manager'):
+            return lines, info_list
+        
+        plugin_manager = self.bot.plugin_manager
+        plugins_status = plugin_manager.get_all_plugins_status()
+        
+        if not plugins_status:
+            lines.append("• No plugins loaded")
+            return lines, info_list
+        
+        # Sort plugins by type, then name
+        plugins_status.sort(key=lambda p: (p.get('type', 'generic'), p.get('name', '')))
+        
+        for status in plugins_status:
+            name = status.get('name', 'Unknown')
+            version = status.get('version', '0.0.0')
+            plugin_type = status.get('type', 'generic')
+            enabled = status.get('enabled', False)
+            
+            # Format for plain text
+            status_icon = "✅" if enabled else "❌"
+            lines.append(f"• **{name}** v{version} ({plugin_type}) {status_icon}")
+            
+            # Store for HTML table
+            info_list.append({
+                'name': name,
+                'version': version,
+                'type': plugin_type,
+                'enabled': enabled,
+                'status': status
+            })
+        
+        return lines, info_list
+
+    def _build_plugin_html_table(self, plugin_info: list) -> str:
+        """Build HTML table for plugin display.
+        
+        Args:
+            plugin_info: List of plugin info dictionaries
+            
+        Returns:
+            HTML table string
+        """
+        if not plugin_info:
+            return ""
+        
+        table_html = '<br/><table><thead><tr><th colspan="4">Loaded Plugins 🔌</th></tr>'
+        table_html += '<tr><th>Name</th><th>Version</th><th>Type</th><th>Status</th></tr></thead><tbody>'
+        
+        for info in plugin_info:
+            name = html.escape(info['name'])
+            version = html.escape(info['version'])
+            plugin_type = html.escape(info['type'])
+            
+            # Status with color
+            if info['enabled']:
+                status_html = self._color_success("✅ Enabled")
+            else:
+                status_html = self._color_error("❌ Disabled")
+            
+            # Add extra status info if available
+            status_dict = info.get('status', {})
+            extra_info = []
+            
+            if plugin_type == 'task_monitor':
+                if 'monitoring_active' in status_dict:
+                    extra_info.append(f"Monitoring: {status_dict['monitoring_active']}")
+                if 'active_tasks' in status_dict:
+                    extra_info.append(f"Tasks: {status_dict['active_tasks']}")
+                if 'monitored_tasks' in status_dict:
+                    extra_info.append(f"Tasks: {status_dict['monitored_tasks']}")
+            
+            if extra_info:
+                status_html += f"<br/><small>{', '.join(extra_info)}</small>"
+            
+            table_html += f'<tr><td><strong>{name}</strong></td><td>{version}</td><td>{plugin_type}</td><td>{status_html}</td></tr>'
+        
+        table_html += '</tbody></table>'
+        return table_html
+
     def _build_info_html_tables(self, bot_info: dict, matrix_info: dict, 
                                 matrix_connected: bool, matrix_encrypted: bool,
                                 semaphore_info: dict) -> tuple:
@@ -2196,6 +2287,9 @@ class CommandHandler:
         bot_lines, bot_info = self._gather_bot_system_info()
         matrix_lines, matrix_info, matrix_connected, matrix_encrypted = self._gather_matrix_info()
         
+        # Get plugin information
+        plugin_lines, plugin_info = self._gather_plugin_info()
+        
         # Build plain text message
         message = f"{greeting} Here's the technical stuff! ℹ️\n\n"
         message += "**System Information**\n\n"
@@ -2216,17 +2310,26 @@ class CommandHandler:
             message += "**Semaphore Server** 🔧\n"
             message += "• Failed to get Semaphore info ❌\n"
         
+        # Plugin information
+        if plugin_lines:
+            message += "\n**Loaded Plugins** 🔌\n"
+            message += "\n".join(plugin_lines) + "\n"
+        
         # Build HTML message
         greeting_html = self.markdown_to_html(greeting)
         bot_table_html, matrix_table_html, semaphore_table_html = self._build_info_html_tables(
             bot_info, matrix_info, matrix_connected, matrix_encrypted, semaphore_info
         )
         
+        # Build plugin table
+        plugin_table_html = self._build_plugin_html_table(plugin_info)
+        
         html_message = f"""{greeting_html} Here's the technical stuff! ℹ️<br/><br/>
 <strong>System Information</strong><br/><br/>
 {bot_table_html}<br/>
 {matrix_table_html}<br/>
 {semaphore_table_html}
+{plugin_table_html}
 """
         
         await self.bot.send_message(room_id, message, html_message)

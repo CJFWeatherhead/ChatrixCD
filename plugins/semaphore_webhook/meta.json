@@ -1,0 +1,13 @@
+{
+  "name": "semaphore_webhook",
+  "description": "Semaphore UI task monitoring via Gotify webhooks. Receives push notifications when task status changes instead of polling.",
+  "version": "1.0.0",
+  "author": "ChatrixCD Team",
+  "type": "task_monitor",
+  "category": "semaphore",
+  "enabled": false,
+  "dependencies": [],
+  "python_dependencies": [
+    "aiohttp>=3.9.0"
+  ]
+}
