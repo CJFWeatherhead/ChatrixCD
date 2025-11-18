@@ -53,6 +53,8 @@ class SemaphorePollPlugin(TaskMonitorPlugin):
                 try:
                     await task
                 except asyncio.CancelledError:
+                    # Task cancellation is expected during plugin shutdown
+                    self.logger.debug(f"Monitoring task {task_id} cancelled during stop()")
                     pass
         
         self.monitoring_tasks.clear()
@@ -62,7 +64,7 @@ class SemaphorePollPlugin(TaskMonitorPlugin):
         """Clean up resources."""
         await self.stop()
     
-    async def monitor_task(self, project_id: int, task_id: int, room_id: str, task_name: Optional[str]):
+    async def monitor_task(self, project_id: int, task_id: int, room_id: str, task_name: Optional[str], sender: Optional[str] = None):
         """Monitor a Semaphore task via polling.
         
         Args:
@@ -70,6 +72,7 @@ class SemaphorePollPlugin(TaskMonitorPlugin):
             task_id: Task ID to monitor
             room_id: Matrix room ID for notifications
             task_name: Optional task name
+            sender: Optional sender user ID for personalized notifications
         """
         if not self.monitoring_active:
             self.logger.warning("Monitoring not active, ignoring task monitor request")
@@ -80,6 +83,7 @@ class SemaphorePollPlugin(TaskMonitorPlugin):
             'project_id': project_id,
             'room_id': room_id,
             'task_name': task_name,
+            'sender': sender,
             'last_status': None,
             'last_notification_time': asyncio.get_event_loop().time()
         }
@@ -161,6 +165,8 @@ class SemaphorePollPlugin(TaskMonitorPlugin):
                 html_message = self._markdown_to_html(message)
                 await self.bot.send_message(room_id, message, html_message)
             except Exception:
+                # Suppress all exceptions to avoid infinite error loops when sending error notifications
+                self.logger.debug(f"Failed to send error notification for task {task_id}", exc_info=True)
                 pass
         finally:
             await self._cleanup_task(task_id)

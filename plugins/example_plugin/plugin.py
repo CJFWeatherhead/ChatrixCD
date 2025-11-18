@@ -135,7 +135,7 @@ class ExamplePlugin(Plugin):
                 # Example: You could check for events, update status, etc.
                 
         except asyncio.CancelledError:
-            self.logger.info("Background task cancelled")
+            self.logger.info("Background task cancelled during plugin stop (expected)")
             raise
         except Exception as e:
             self.logger.error(f"Background task error: {e}", exc_info=True)

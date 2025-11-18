@@ -126,7 +126,7 @@ class TaskMonitorPlugin(Plugin):
         self.monitoring_active = False
         
     @abstractmethod
-    async def monitor_task(self, project_id: int, task_id: int, room_id: str, task_name: Optional[str]):
+    async def monitor_task(self, project_id: int, task_id: int, room_id: str, task_name: Optional[str], sender: Optional[str] = None):
         """Monitor a specific task.
         
         Args:
@@ -134,6 +134,7 @@ class TaskMonitorPlugin(Plugin):
             task_id: Task ID to monitor
             room_id: Matrix room ID for notifications
             task_name: Optional task name
+            sender: Optional sender user ID for personalized notifications
         """
         pass
     

@@ -1131,8 +1131,8 @@ class CommandHandler:
         logger.info(f"Task started successfully: task_id={task_id}, sending: {message_text}")
         await self.bot.send_message(room_id, message_text, html_message)
         
-        # Start monitoring the task via plugin
-        asyncio.create_task(self.monitor_task(project_id, task_id, room_id, template_name))
+        # Start monitoring the task via plugin (pass sender for personalized notifications)
+        asyncio.create_task(self.monitor_task(project_id, task_id, room_id, template_name, sender))
 
     async def handle_confirmation(self, room_id: str, sender: str, message: str):
         """Handle confirmation response for task execution.
@@ -1188,7 +1188,7 @@ class CommandHandler:
             # Execute the task
             await self._execute_task(room_id, confirmation)
 
-    async def monitor_task(self, project_id: int, task_id: int, room_id: str, task_name: str | None):
+    async def monitor_task(self, project_id: int, task_id: int, room_id: str, task_name: str | None, sender: str | None = None):
         """Monitor a task and report status updates.
         
         This method now delegates to the active task monitor plugin if available.
@@ -1199,6 +1199,7 @@ class CommandHandler:
             task_id: Task ID
             room_id: Room to send updates to
             task_name: Optional task name
+            sender: Optional sender user ID for personalized notifications
         """
         logger.info(f"Monitoring task {task_id}")
         
@@ -1207,7 +1208,7 @@ class CommandHandler:
             task_monitor = self.bot.plugin_manager.get_task_monitor()
             if task_monitor:
                 logger.info(f"Delegating task monitoring to plugin: {task_monitor.metadata.name}")
-                await task_monitor.monitor_task(project_id, task_id, room_id, task_name)
+                await task_monitor.monitor_task(project_id, task_id, room_id, task_name, sender)
                 return
         
         # Fallback: Log warning if no task monitor plugin is available

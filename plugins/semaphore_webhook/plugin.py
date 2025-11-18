@@ -84,6 +84,7 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
             try:
                 await self.ws_task
             except asyncio.CancelledError:
+                # Expected when cancelling the WebSocket task; safe to ignore
                 pass
         
         # Stop fallback polling
@@ -92,6 +93,7 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
             try:
                 await self.fallback_task
             except asyncio.CancelledError:
+                # Expected when cancelling the fallback polling task; safe to ignore
                 pass
         
         # Close WebSocket session
@@ -104,7 +106,7 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
         """Clean up resources."""
         await self.stop()
     
-    async def monitor_task(self, project_id: int, task_id: int, room_id: str, task_name: Optional[str]):
+    async def monitor_task(self, project_id: int, task_id: int, room_id: str, task_name: Optional[str], sender: Optional[str] = None):
         """Monitor a Semaphore task via webhooks.
         
         Args:
@@ -112,6 +114,7 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
             task_id: Task ID to monitor
             room_id: Matrix room ID for notifications
             task_name: Optional task name
+            sender: Optional sender user ID for personalized notifications
         """
         if not self.monitoring_active:
             self.logger.warning("Monitoring not active, ignoring task monitor request")
@@ -122,6 +125,7 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
             'project_id': project_id,
             'room_id': room_id,
             'task_name': task_name,
+            'sender': sender,
             'last_status': None,
             'start_time': asyncio.get_event_loop().time()
         }
@@ -135,8 +139,11 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
         """Listen for Gotify messages via WebSocket."""
         self.logger.info("Starting Gotify WebSocket listener")
         
-        # Build WebSocket URL
-        ws_url = self.gotify_url.replace('http://', 'ws://').replace('https://', 'wss://')
+        # Build WebSocket URL with proper scheme replacement
+        from urllib.parse import urlparse, urlunparse
+        parsed = urlparse(self.gotify_url)
+        scheme = 'wss' if parsed.scheme == 'https' else 'ws'
+        ws_url = urlunparse((scheme, parsed.netloc, parsed.path, parsed.params, parsed.query, parsed.fragment))
         ws_url = f"{ws_url}/stream?token={self.gotify_token}"
         
         retry_delay = 5
