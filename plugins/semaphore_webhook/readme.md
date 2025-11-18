@@ -6,7 +6,7 @@ This plugin provides task monitoring for Semaphore UI using webhook notification
 
 The Semaphore Webhook plugin provides a more efficient alternative to polling. It works by:
 1. Configuring Semaphore UI to send notifications to Gotify when task status changes
-2. Listening for Gotify notifications via websocket or webhook
+2. Listening for Gotify notifications via WebSocket or webhook
 3. Immediately sending notifications to Matrix rooms when events are received
 
 This approach is more efficient and provides instant notifications.
