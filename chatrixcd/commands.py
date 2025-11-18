@@ -1217,7 +1217,10 @@ class CommandHandler:
         # Send notification to room
         task_display = f"{task_name} ({task_id})" if task_name else str(task_id)
         message = f"⚠️ Task **{task_display}** started, but monitoring is not available.\n"
-        message += "No task monitor plugin is loaded. Please enable a task monitor plugin in your configuration."
+        message += (
+            "No task monitor plugin is loaded. Please enable either 'semaphore_poll' or "
+            "'semaphore_webhook' plugin in config.json under the 'plugins' section."
+        )
         html_message = self.markdown_to_html(message)
         await self.bot.send_message(room_id, message, html_message)
 
