@@ -142,17 +142,16 @@ class TestPluginBase(unittest.TestCase):
         plugin = MockPlugin(bot, config, metadata)
         
         # Test lifecycle
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(plugin.initialize())
+        asyncio.run(plugin.initialize())
         self.assertTrue(plugin.initialized)
         
-        loop.run_until_complete(plugin.start())
+        asyncio.run(plugin.start())
         self.assertTrue(plugin.started)
         
-        loop.run_until_complete(plugin.stop())
+        asyncio.run(plugin.stop())
         self.assertTrue(plugin.stopped)
         
-        loop.run_until_complete(plugin.cleanup())
+        asyncio.run(plugin.cleanup())
         self.assertTrue(plugin.cleaned_up)
     
     def test_plugin_status(self):
@@ -199,13 +198,12 @@ class TestTaskMonitorPlugin(unittest.TestCase):
         
         monitor = MockTaskMonitor(bot, config, metadata)
         
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(monitor.initialize())
-        loop.run_until_complete(monitor.start())
+        asyncio.run(monitor.initialize())
+        asyncio.run(monitor.start())
         
         self.assertTrue(monitor.started)
         
-        loop.run_until_complete(monitor.stop())
+        asyncio.run(monitor.stop())
         self.assertTrue(monitor.stopped)
     
     def test_task_monitor_status(self):
@@ -343,8 +341,7 @@ class TestMonitor(TaskMonitorPlugin):
         
         manager = PluginManager(self.bot, self.config, str(self.plugins_dir))
         
-        loop = asyncio.get_event_loop()
-        loaded = loop.run_until_complete(manager.load_all_plugins())
+        loaded = asyncio.run(manager.load_all_plugins())
         
         self.assertEqual(loaded, 0)
         self.assertEqual(len(manager.loaded_plugins), 0)
@@ -356,8 +353,7 @@ class TestMonitor(TaskMonitorPlugin):
         
         manager = PluginManager(self.bot, self.config, str(self.plugins_dir))
         
-        loop = asyncio.get_event_loop()
-        loaded = loop.run_until_complete(manager.load_all_plugins())
+        loaded = asyncio.run(manager.load_all_plugins())
         
         # Only one should load
         self.assertEqual(loaded, 1)
@@ -369,8 +365,7 @@ class TestMonitor(TaskMonitorPlugin):
         
         manager = PluginManager(self.bot, self.config, str(self.plugins_dir))
         
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(manager.load_all_plugins())
+        asyncio.run(manager.load_all_plugins())
         
         plugin = manager.get_plugin('test_plugin')
         self.assertIsNotNone(plugin)
@@ -389,8 +384,7 @@ class TestMonitor(TaskMonitorPlugin):
         
         manager = PluginManager(self.bot, self.config, str(self.plugins_dir))
         
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(manager.load_all_plugins())
+        asyncio.run(manager.load_all_plugins())
         
         statuses = manager.get_all_plugins_status()
         self.assertEqual(len(statuses), 2)
@@ -401,12 +395,11 @@ class TestMonitor(TaskMonitorPlugin):
         
         manager = PluginManager(self.bot, self.config, str(self.plugins_dir))
         
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(manager.load_all_plugins())
+        asyncio.run(manager.load_all_plugins())
         
         self.assertEqual(len(manager.loaded_plugins), 1)
         
-        loop.run_until_complete(manager.cleanup_plugins())
+        asyncio.run(manager.cleanup_plugins())
         
         self.assertEqual(len(manager.loaded_plugins), 0)
         self.assertIsNone(manager.task_monitor)
