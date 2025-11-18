@@ -38,9 +38,10 @@ class BotStatusWidget(Static):
     matrix_status: reactive[str] = reactive("Disconnected")
     semaphore_status: reactive[str] = reactive("Unknown")
     uptime: reactive[str] = reactive("0s")
-    messages_processed: reactive[int] = reactive(0)
+    messages_sent: reactive[int] = reactive(0)
+    requests_received: reactive[int] = reactive(0)
     errors: reactive[int] = reactive(0)
-    warnings: reactive[int] = reactive(0)
+    emojis_used: reactive[int] = reactive(0)
     
     def render(self) -> str:
         """Render the status widget."""
@@ -51,9 +52,10 @@ class BotStatusWidget(Static):
 [bold]Uptime:[/bold] {self.uptime}
 
 [bold cyan]Metrics[/bold cyan]
-[bold]Messages Processed:[/bold] {self.messages_processed}
+[bold]Messages Sent:[/bold] {self.messages_sent}
+[bold]Requests Received:[/bold] {self.requests_received}
 [bold]Errors:[/bold] {self.errors}
-[bold]Warnings:[/bold] {self.warnings}
+[bold]Emojis Used:[/bold] {self.emojis_used} 😊
 """
 
 
@@ -1690,9 +1692,7 @@ class ChatrixTUI(App):
         self.config = config
         self.use_color = use_color
         self.start_time = time.time()
-        self.messages_processed = 0
         self.errors = 0
-        self.warnings = 0
         self.login_task = None  # Will be set by run_tui_with_bot if login is needed
         self.bot_task = None  # Will store the sync task
         self.pending_verifications_count = 0  # Track pending verification requests
@@ -1909,9 +1909,18 @@ class ChatrixTUI(App):
                     minutes, seconds = divmod(remainder, 60)
                     status_widget.uptime = f"{hours}h {minutes}m {seconds}s"
                     
-                    status_widget.messages_processed = self.tui_app.messages_processed
-                    status_widget.errors = self.tui_app.errors
-                    status_widget.warnings = self.tui_app.warnings
+                    # Use bot metrics if available
+                    if self.tui_app.bot and hasattr(self.tui_app.bot, 'metrics'):
+                        metrics = self.tui_app.bot.metrics
+                        status_widget.messages_sent = metrics['messages_sent']
+                        status_widget.requests_received = metrics['requests_received']
+                        status_widget.errors = metrics['errors']
+                        status_widget.emojis_used = metrics['emojis_used']
+                    else:
+                        status_widget.messages_sent = 0
+                        status_widget.requests_received = 0
+                        status_widget.errors = 0
+                        status_widget.emojis_used = 0
                     
                     yield status_widget
                 yield Footer()
@@ -2014,7 +2023,6 @@ class ChatrixTUI(App):
         """
         if self.bot:
             await self.bot.send_message(room_id, message)
-            self.messages_processed += 1
     
     async def action_quit(self):
         """Handle quit action."""

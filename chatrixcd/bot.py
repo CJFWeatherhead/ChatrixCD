@@ -105,6 +105,14 @@ class ChatrixBot:
         # Track whether we've done initial encryption setup after first sync
         self._encryption_setup_done = False
         
+        # Runtime metrics tracking
+        self.metrics = {
+            'messages_sent': 0,
+            'requests_received': 0,
+            'errors': 0,
+            'emojis_used': 0
+        }
+        
         # Setup event callbacks
         self.client.add_event_callback(self.message_callback, RoomMessageText)
         self.client.add_event_callback(self.invite_callback, InviteMemberEvent)
@@ -543,6 +551,11 @@ class ChatrixBot:
         
         logger.info(f"Message from {event.sender} in {room.display_name}: {event.body}")
         
+        # Track requests received (only if it's a command)
+        command_prefix = self.config.get_bot_config().get('command_prefix', '!cd')
+        if event.body.strip().startswith(command_prefix):
+            self.metrics['requests_received'] += 1
+        
         # Check if message is a command
         await self.command_handler.handle_message(room, event)
 
@@ -802,6 +815,21 @@ class ChatrixBot:
             ignore_unverified_devices=True
         )
         
+        # Track metrics
+        self.metrics['messages_sent'] += 1
+        # Count emojis in the message (simple count of common emoji ranges)
+        import re
+        emoji_pattern = re.compile("["
+            "\U0001F600-\U0001F64F"  # emoticons
+            "\U0001F300-\U0001F5FF"  # symbols & pictographs
+            "\U0001F680-\U0001F6FF"  # transport & map symbols
+            "\U0001F1E0-\U0001F1FF"  # flags (iOS)
+            "\U00002702-\U000027B0"  # dingbats
+            "\U000024C2-\U0001F251"
+            "]+", flags=re.UNICODE)
+        emojis = emoji_pattern.findall(message)
+        self.metrics['emojis_used'] += len(emojis)
+        
         # Return the event_id for potential reactions
         if hasattr(response, 'event_id'):
             return response.event_id
@@ -830,6 +858,9 @@ class ChatrixBot:
                 content=content,
                 ignore_unverified_devices=True
             )
+            
+            # Track emoji usage
+            self.metrics['emojis_used'] += 1
         except Exception as e:
             logger.debug(f"Failed to send reaction: {e}")
 
@@ -878,6 +909,36 @@ class ChatrixBot:
                 logger.info(f"Sent shutdown message to room {room_id}")
             except Exception as e:
                 logger.error(f"Failed to send shutdown message to room {room_id}: {e}")
+
+    def can_send_message_in_room(self, room_id: str) -> bool:
+        """Check if bot can send messages in a room.
+        
+        Args:
+            room_id: Room ID to check
+            
+        Returns:
+            True if bot can send messages, False otherwise
+        """
+        room = self.client.rooms.get(room_id)
+        if not room:
+            return False
+        
+        # Check if bot is a member of the room
+        if self.user_id not in room.users:
+            return False
+        
+        # Check power levels
+        try:
+            # Get the bot's power level
+            bot_power_level = room.power_levels.get_user_level(self.user_id)
+            # Get the required power level to send messages
+            required_level = room.power_levels.get_event_level("m.room.message")
+            
+            return bot_power_level >= required_level
+        except (AttributeError, KeyError):
+            # If we can't determine power levels, assume we can send
+            # (default behavior - will fail gracefully if not allowed)
+            return True
 
     async def sync_callback(self, response: SyncResponse):
         """Handle sync responses and manage encryption keys.

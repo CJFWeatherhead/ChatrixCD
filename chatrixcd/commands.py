@@ -7,12 +7,13 @@ import re
 import platform
 import socket
 import psutil
+import sys
 from typing import Dict, Any, Optional, List
 from nio import MatrixRoom, RoomMessageText
 from chatrixcd.semaphore import SemaphoreClient
 from chatrixcd.aliases import AliasManager
 from chatrixcd.messages import MessageManager
-from chatrixcd import __version__
+from chatrixcd import __version__, __version_full__
 
 logger = logging.getLogger(__name__)
 
@@ -515,19 +516,54 @@ class CommandHandler:
             await self.bot.send_message(room_id, plain_msg, html_msg, msgtype="m.notice")
             return
         
+        # Check if redaction is enabled
+        redact_enabled = self.config.get('redact', False)
+        
+        # Build room list with send permission info
+        room_list = []
+        for room_id_key, room in rooms.items():
+            can_send = self.bot.can_send_message_in_room(room_id_key)
+            
+            # Skip rooms where bot can't send if redaction is enabled
+            if redact_enabled and not can_send:
+                continue
+            
+            room_name = room.display_name or "Unknown"
+            room_list.append({
+                'room_id': room_id_key,
+                'room_name': room_name,
+                'can_send': can_send
+            })
+        
+        if not room_list:
+            plain_msg = f"{greeting} No rooms to display (all rooms filtered). 🏠"
+            html_msg = self.markdown_to_html(plain_msg)
+            await self.bot.send_message(room_id, plain_msg, html_msg, msgtype="m.notice")
+            return
+        
         # Plain text version
         message = f"{greeting} Here's where I hang out! 🏠\n\n"
         message += "**Rooms I'm In**\n\n"
-        for room_id_key, room in rooms.items():
-            room_name = room.display_name or "Unknown"
-            message += f"• **{room_name}**\n  `{room_id_key}`\n"
+        for room_info in room_list:
+            status = "✅ Can send" if room_info['can_send'] else "❌ Cannot send"
+            message += f"• **{room_info['room_name']}** - {status}\n  `{room_info['room_id']}`\n"
         
-        # HTML version with table
+        # HTML version with table and color coding
         greeting_html = self.markdown_to_html(greeting)
-        table_html = '<table><thead><tr><th>Room Name</th><th>Room ID</th></tr></thead><tbody>'
-        for room_id_key, room in rooms.items():
-            room_name = html.escape(room.display_name or "Unknown")
-            table_html += f'<tr><td><strong>{room_name}</strong></td><td><code>{html.escape(room_id_key)}</code></td></tr>'
+        table_html = '<table><thead><tr><th>Room Name</th><th>Room ID</th><th>Send Status</th></tr></thead><tbody>'
+        for room_info in room_list:
+            room_name = html.escape(room_info['room_name'])
+            room_id_escaped = html.escape(room_info['room_id'])
+            
+            # Color code based on send permission
+            if room_info['can_send']:
+                status_html = self._color_success("✅ Can send")
+                row_class = ""
+            else:
+                status_html = self._color_error("❌ Cannot send")
+                row_class = ' style="opacity: 0.6;"'
+            
+            table_html += f'<tr{row_class}><td><strong>{room_name}</strong></td><td><code>{room_id_escaped}</code></td><td>{status_html}</td></tr>'
         table_html += '</tbody></table>'
         
         html_message = f"{greeting_html} Here's where I hang out! 🏠<br/><br/><strong>Rooms I'm In</strong><br/><br/>{table_html}"
@@ -1945,16 +1981,52 @@ class CommandHandler:
         lines = []
         info_dict = {}
         
-        # Basic bot info
-        lines.append(f"• **Version:** {__version__}")
+        # Basic bot info with full version (includes git commit if applicable)
+        lines.append(f"• **Version:** {__version_full__}")
         lines.append(f"• **Platform:** {platform.system()} {platform.release()}")
         lines.append(f"• **Architecture:** {platform.machine()}")
-        lines.append(f"• **Python:** {platform.python_version()}")
         
-        info_dict['version'] = __version__
+        # Determine runtime type (binary vs interpreter)
+        if getattr(sys, 'frozen', False):
+            runtime_type = "Binary (compiled)"
+        else:
+            runtime_type = f"Python {platform.python_version()} (interpreter)"
+        lines.append(f"• **Runtime:** {runtime_type}")
+        
+        info_dict['version'] = __version_full__
         info_dict['platform'] = f"{platform.system()} {platform.release()}"
         info_dict['architecture'] = platform.machine()
-        info_dict['python'] = platform.python_version()
+        info_dict['runtime'] = runtime_type
+        
+        # CPU model name
+        try:
+            cpu_model = "Unknown"
+            if platform.system() == "Linux":
+                with open('/proc/cpuinfo', 'r') as f:
+                    for line in f:
+                        if 'model name' in line:
+                            cpu_model = line.split(':')[1].strip()
+                            break
+            elif platform.system() == "Darwin":  # macOS
+                import subprocess
+                result = subprocess.run(['sysctl', '-n', 'machdep.cpu.brand_string'], 
+                                       capture_output=True, text=True, timeout=1)
+                if result.returncode == 0:
+                    cpu_model = result.stdout.strip()
+            elif platform.system() == "Windows":
+                import subprocess
+                result = subprocess.run(['wmic', 'cpu', 'get', 'name'], 
+                                       capture_output=True, text=True, timeout=1)
+                if result.returncode == 0:
+                    lines_output = result.stdout.strip().split('\n')
+                    if len(lines_output) > 1:
+                        cpu_model = lines_output[1].strip()
+            
+            if cpu_model != "Unknown":
+                lines.append(f"• **CPU Model:** {cpu_model}")
+                info_dict['cpu_model'] = cpu_model
+        except Exception as e:
+            logger.debug(f"Could not get CPU model: {e}")
         
         # System resources
         try:
@@ -1966,6 +2038,15 @@ class CommandHandler:
             info_dict['memory'] = memory
         except Exception as e:
             logger.debug(f"Could not get system resources: {e}")
+        
+        # Runtime metrics
+        if hasattr(self.bot, 'metrics'):
+            metrics = self.bot.metrics
+            lines.append(f"• **Messages Sent:** {metrics['messages_sent']}")
+            lines.append(f"• **Requests Received:** {metrics['requests_received']}")
+            lines.append(f"• **Errors:** {metrics['errors']}")
+            lines.append(f"• **Emojis Used:** {metrics['emojis_used']} 😊")
+            info_dict['metrics'] = metrics
         
         # Network information (only if not redacting)
         redact_enabled = self.config.get('redact', False)
@@ -2053,13 +2134,24 @@ class CommandHandler:
             ['Version', bot_info['version']],
             ['Platform', bot_info['platform']],
             ['Architecture', bot_info['architecture']],
-            ['Python', bot_info['python']],
+            ['Runtime', bot_info.get('runtime', 'Unknown')],
         ]
+        if 'cpu_model' in bot_info:
+            bot_rows.append(['CPU Model', bot_info['cpu_model']])
         if 'cpu_percent' in bot_info:
             bot_rows.append(['CPU Usage', f"{bot_info['cpu_percent']:.1f}%"])
         if 'memory' in bot_info:
             mem = bot_info['memory']
             bot_rows.append(['Memory Usage', f"{mem.percent:.1f}% ({mem.used // (1024**2)} MB / {mem.total // (1024**2)} MB)"])
+        
+        # Add metrics if available
+        if 'metrics' in bot_info:
+            metrics = bot_info['metrics']
+            bot_rows.append(['Messages Sent', str(metrics['messages_sent'])])
+            bot_rows.append(['Requests Received', str(metrics['requests_received'])])
+            bot_rows.append(['Errors', str(metrics['errors'])])
+            bot_rows.append(['Emojis Used', f"{metrics['emojis_used']} 😊"])
+        
         if 'hostname' in bot_info and not redact_enabled:
             bot_rows.append(['Hostname', bot_info['hostname']])
         if 'ipv4' in bot_info and not redact_enabled:
