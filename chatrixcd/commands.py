@@ -1131,7 +1131,7 @@ class CommandHandler:
         logger.info(f"Task started successfully: task_id={task_id}, sending: {message_text}")
         await self.bot.send_message(room_id, message_text, html_message)
         
-        # Start monitoring the task
+        # Start monitoring the task via plugin
         asyncio.create_task(self.monitor_task(project_id, task_id, room_id, template_name))
 
     async def handle_confirmation(self, room_id: str, sender: str, message: str):
@@ -1191,6 +1191,9 @@ class CommandHandler:
     async def monitor_task(self, project_id: int, task_id: int, room_id: str, task_name: str | None):
         """Monitor a task and report status updates.
         
+        This method now delegates to the active task monitor plugin if available.
+        Falls back to direct monitoring if no plugin is loaded.
+        
         Args:
             project_id: Project ID
             task_id: Task ID
@@ -1198,75 +1201,25 @@ class CommandHandler:
             task_name: Optional task name
         """
         logger.info(f"Monitoring task {task_id}")
-        last_status = None
-        last_notification_time = asyncio.get_event_loop().time()
-        notification_interval = 300  # 5 minutes
         
+        # Try to use the task monitor plugin
+        if hasattr(self.bot, 'plugin_manager'):
+            task_monitor = self.bot.plugin_manager.get_task_monitor()
+            if task_monitor:
+                logger.info(f"Delegating task monitoring to plugin: {task_monitor.metadata.name}")
+                await task_monitor.monitor_task(project_id, task_id, room_id, task_name)
+                return
+        
+        # Fallback: Log warning if no task monitor plugin is available
+        logger.warning("No task monitor plugin loaded. Task monitoring is disabled.")
+        logger.warning("Enable either 'semaphore_poll' or 'semaphore_webhook' plugin in config.json")
+        
+        # Send notification to room
         task_display = f"{task_name} ({task_id})" if task_name else str(task_id)
-        
-        while task_id in self.active_tasks:
-            await asyncio.sleep(10)  # Check every 10 seconds
-            
-            task = await self.semaphore.get_task_status(project_id, task_id)
-            if not task:
-                continue
-                
-            status = task.get('status')
-            current_time = asyncio.get_event_loop().time()
-            
-            if status != last_status:
-                logger.info(f"Task {task_id} status changed: {last_status} -> {status}")
-                last_status = status
-                last_notification_time = current_time
-                
-                if status == 'running':
-                    message = f"🔄 Task **{task_display}** is now running..."
-                    html_message = self.markdown_to_html(message)
-                    await self.bot.send_message(room_id, message, html_message)
-                    
-                    # Start log tailing if global log tailing is enabled for this room
-                    if self.global_log_tailing_enabled.get(room_id, False) and room_id not in self.log_tailing_sessions:
-                        logger.info(f"Auto-starting log tailing for task {task_id} (global log tailing enabled)")
-                        self.log_tailing_sessions[room_id] = {
-                            'task_id': task_id,
-                            'project_id': project_id,
-                            'last_log_size': 0
-                        }
-                        
-                        log_message = f"📋 Starting log stream for task **{task_display}**..."
-                        await self.bot.send_message(room_id, log_message, self.markdown_to_html(log_message))
-                        
-                        # Start the tailing task
-                        asyncio.create_task(self.tail_logs(room_id, task_id, project_id))
-                elif status == 'success':
-                    # Get the user who initiated this task
-                    task_sender = self.active_tasks[task_id].get('sender')
-                    sender_name = self._get_display_name(task_sender) if task_sender else "there"
-                    
-                    message = f"{sender_name} 👋 Your task **{task_display}** completed successfully! ✅"
-                    html_message = self.markdown_to_html(message)
-                    event_id = await self.bot.send_message(room_id, message, html_message)
-                    # React with party emoji
-                    if event_id:
-                        await self.bot.send_reaction(room_id, event_id, "🎉")
-                    del self.active_tasks[task_id]
-                    break
-                elif status in ('error', 'stopped'):
-                    # Get the user who initiated this task
-                    task_sender = self.active_tasks[task_id].get('sender')
-                    sender_name = self._get_display_name(task_sender) if task_sender else "there"
-                    
-                    message = f"{sender_name} 👋 Task **{task_display}** failed or was stopped. Status: {status} ❌"
-                    html_message = self.markdown_to_html(message)
-                    await self.bot.send_message(room_id, message, html_message)
-                    del self.active_tasks[task_id]
-                    break
-            elif status == 'running' and (current_time - last_notification_time) >= notification_interval:
-                # Send periodic update for long-running tasks
-                message = f"⏳ Task **{task_display}** is still running..."
-                html_message = self.markdown_to_html(message)
-                await self.bot.send_message(room_id, message, html_message)
-                last_notification_time = current_time
+        message = f"⚠️ Task **{task_display}** started, but monitoring is not available.\n"
+        message += "No task monitor plugin is loaded. Please enable a task monitor plugin in your configuration."
+        html_message = self.markdown_to_html(message)
+        await self.bot.send_message(room_id, message, html_message)
 
     def _get_status_emoji(self, status: str) -> str:
         """Get emoji for task status.
