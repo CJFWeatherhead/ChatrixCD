@@ -19,6 +19,39 @@ Metrics are stored in `bot.metrics` dictionary and are tracked automatically:
 - `send_reaction()` increments `emojis_used` 
 - `message_callback()` increments `requests_received` when a command is detected
 
+### Centralized Status Information
+
+The bot provides a `get_status_info()` method that returns a unified dictionary with all bot status information:
+
+```python
+status = bot.get_status_info()
+# Returns:
+# {
+#     'version': '2025.11.15.5.2.0-c123456',
+#     'platform': 'Linux 5.15.0',
+#     'architecture': 'x86_64',
+#     'runtime': 'Python 3.12.0 (interpreter)',
+#     'cpu_model': 'Intel Core i7-4770K',
+#     'cpu_percent': 2.5,
+#     'memory': {'percent': 15.3, 'used': 245, 'total': 1600},
+#     'metrics': {'messages_sent': 42, 'requests_received': 15, ...},
+#     'matrix_status': 'Connected',
+#     'matrix_homeserver': 'https://matrix.org',
+#     'matrix_user_id': '@bot:matrix.org',
+#     'matrix_device_id': 'DEVICEXYZ',
+#     'matrix_encrypted': True,
+#     'semaphore_status': 'Connected',
+#     'uptime': 7890000  # milliseconds
+# }
+```
+
+This centralized method is used by:
+- Command handlers (`!cd info`)
+- TUI status widget
+- Any future status displays
+
+This ensures consistent information across all interfaces.
+
 ### Emoji Counting
 
 The bot uses a Unicode regex pattern to detect and count emojis across multiple ranges:
@@ -59,9 +92,22 @@ Information is displayed in both:
 The `!cd rooms` command now includes:
 
 ### Send Permission Detection
-- Bot checks if it can send messages in each room based on:
-  - Room membership
-  - Power levels (user level vs required level for m.room.message)
+The `can_send_message_in_room()` method checks multiple conditions:
+
+1. **Configuration Check**: If `allowed_rooms` is configured in `config.json`, the room must be in that list
+2. **Room Membership**: Bot must be a member of the room
+3. **Power Levels**: Bot's power level must meet or exceed the required level for sending messages
+
+This multi-layered approach ensures the bot respects both configuration and Matrix permissions.
+
+```python
+# Example usage
+can_send = bot.can_send_message_in_room("!room:matrix.org")
+# Returns True only if:
+# - Room is in allowed_rooms (if configured)
+# - Bot is a member of the room
+# - Bot has sufficient power level
+```
 
 ### Color Coding
 - **Green (✅)**: Bot can send messages in the room

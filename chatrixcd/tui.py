@@ -1895,32 +1895,54 @@ class ChatrixTUI(App):
                 yield Header()
                 with Container():
                     status_widget = BotStatusWidget()
-                    # Update status
-                    if self.tui_app.bot and self.tui_app.bot.client:
-                        status_widget.matrix_status = "Connected" if self.tui_app.bot.client.logged_in else "Disconnected"
+                    
+                    # Use centralized status info from bot
+                    if self.tui_app.bot and hasattr(self.tui_app.bot, 'get_status_info'):
+                        status = self.tui_app.bot.get_status_info()
+                        
+                        status_widget.matrix_status = status.get('matrix_status', 'Unknown')
+                        status_widget.semaphore_status = status.get('semaphore_status', 'Unknown')
+                        
+                        # Calculate uptime from status
+                        uptime_ms = status.get('uptime', 0)
+                        uptime_seconds = uptime_ms // 1000
+                        hours, remainder = divmod(uptime_seconds, 3600)
+                        minutes, seconds = divmod(remainder, 60)
+                        status_widget.uptime = f"{hours}h {minutes}m {seconds}s"
+                        
+                        # Use metrics from centralized status
+                        metrics = status.get('metrics', {})
+                        status_widget.messages_sent = metrics.get('messages_sent', 0)
+                        status_widget.requests_received = metrics.get('requests_received', 0)
+                        status_widget.errors = metrics.get('errors', 0)
+                        status_widget.emojis_used = metrics.get('emojis_used', 0)
                     else:
-                        status_widget.matrix_status = "Not initialized"
-                    
-                    status_widget.semaphore_status = "Connected" if self.tui_app.bot and self.tui_app.bot.semaphore else "Unknown"
-                    
-                    # Calculate uptime
-                    uptime_seconds = int(time.time() - self.tui_app.start_time)
-                    hours, remainder = divmod(uptime_seconds, 3600)
-                    minutes, seconds = divmod(remainder, 60)
-                    status_widget.uptime = f"{hours}h {minutes}m {seconds}s"
-                    
-                    # Use bot metrics if available
-                    if self.tui_app.bot and hasattr(self.tui_app.bot, 'metrics'):
-                        metrics = self.tui_app.bot.metrics
-                        status_widget.messages_sent = metrics['messages_sent']
-                        status_widget.requests_received = metrics['requests_received']
-                        status_widget.errors = metrics['errors']
-                        status_widget.emojis_used = metrics['emojis_used']
-                    else:
-                        status_widget.messages_sent = 0
-                        status_widget.requests_received = 0
-                        status_widget.errors = 0
-                        status_widget.emojis_used = 0
+                        # Fallback to manual calculation if get_status_info not available
+                        if self.tui_app.bot and self.tui_app.bot.client:
+                            status_widget.matrix_status = "Connected" if self.tui_app.bot.client.logged_in else "Disconnected"
+                        else:
+                            status_widget.matrix_status = "Not initialized"
+                        
+                        status_widget.semaphore_status = "Connected" if self.tui_app.bot and self.tui_app.bot.semaphore else "Unknown"
+                        
+                        # Calculate uptime
+                        uptime_seconds = int(time.time() - self.tui_app.start_time)
+                        hours, remainder = divmod(uptime_seconds, 3600)
+                        minutes, seconds = divmod(remainder, 60)
+                        status_widget.uptime = f"{hours}h {minutes}m {seconds}s"
+                        
+                        # Use bot metrics if available
+                        if self.tui_app.bot and hasattr(self.tui_app.bot, 'metrics'):
+                            metrics = self.tui_app.bot.metrics
+                            status_widget.messages_sent = metrics['messages_sent']
+                            status_widget.requests_received = metrics['requests_received']
+                            status_widget.errors = metrics['errors']
+                            status_widget.emojis_used = metrics['emojis_used']
+                        else:
+                            status_widget.messages_sent = 0
+                            status_widget.requests_received = 0
+                            status_widget.errors = 0
+                            status_widget.emojis_used = 0
                     
                     yield status_widget
                 yield Footer()

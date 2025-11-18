@@ -1974,79 +1974,51 @@ class CommandHandler:
     def _gather_bot_system_info(self) -> tuple:
         """Gather bot and system information.
         
+        Uses the centralized get_status_info() method from bot instance.
+        
         Returns:
             Tuple of (text_lines, info_dict) where text_lines are for plain text
             and info_dict contains structured data for HTML tables
         """
+        # Get centralized status info from bot
+        status = self.bot.get_status_info()
+        
         lines = []
         info_dict = {}
         
-        # Basic bot info with full version (includes git commit if applicable)
-        lines.append(f"• **Version:** {__version_full__}")
-        lines.append(f"• **Platform:** {platform.system()} {platform.release()}")
-        lines.append(f"• **Architecture:** {platform.machine()}")
+        # Basic bot info
+        lines.append(f"• **Version:** {status['version']}")
+        lines.append(f"• **Platform:** {status['platform']}")
+        lines.append(f"• **Architecture:** {status['architecture']}")
+        lines.append(f"• **Runtime:** {status['runtime']}")
         
-        # Determine runtime type (binary vs interpreter)
-        if getattr(sys, 'frozen', False):
-            runtime_type = "Binary (compiled)"
-        else:
-            runtime_type = f"Python {platform.python_version()} (interpreter)"
-        lines.append(f"• **Runtime:** {runtime_type}")
+        info_dict['version'] = status['version']
+        info_dict['platform'] = status['platform']
+        info_dict['architecture'] = status['architecture']
+        info_dict['runtime'] = status['runtime']
         
-        info_dict['version'] = __version_full__
-        info_dict['platform'] = f"{platform.system()} {platform.release()}"
-        info_dict['architecture'] = platform.machine()
-        info_dict['runtime'] = runtime_type
-        
-        # CPU model name
-        try:
-            cpu_model = "Unknown"
-            if platform.system() == "Linux":
-                with open('/proc/cpuinfo', 'r') as f:
-                    for line in f:
-                        if 'model name' in line:
-                            cpu_model = line.split(':')[1].strip()
-                            break
-            elif platform.system() == "Darwin":  # macOS
-                import subprocess
-                result = subprocess.run(['sysctl', '-n', 'machdep.cpu.brand_string'], 
-                                       capture_output=True, text=True, timeout=1)
-                if result.returncode == 0:
-                    cpu_model = result.stdout.strip()
-            elif platform.system() == "Windows":
-                import subprocess
-                result = subprocess.run(['wmic', 'cpu', 'get', 'name'], 
-                                       capture_output=True, text=True, timeout=1)
-                if result.returncode == 0:
-                    lines_output = result.stdout.strip().split('\n')
-                    if len(lines_output) > 1:
-                        cpu_model = lines_output[1].strip()
-            
-            if cpu_model != "Unknown":
-                lines.append(f"• **CPU Model:** {cpu_model}")
-                info_dict['cpu_model'] = cpu_model
-        except Exception as e:
-            logger.debug(f"Could not get CPU model: {e}")
+        # CPU model
+        if 'cpu_model' in status:
+            lines.append(f"• **CPU Model:** {status['cpu_model']}")
+            info_dict['cpu_model'] = status['cpu_model']
         
         # System resources
-        try:
-            cpu_percent = psutil.cpu_percent(interval=0.1)
-            memory = psutil.virtual_memory()
-            lines.append(f"• **CPU Usage:** {cpu_percent:.1f}%")
-            lines.append(f"• **Memory Usage:** {memory.percent:.1f}% ({memory.used // (1024**2)} MB / {memory.total // (1024**2)} MB)")
-            info_dict['cpu_percent'] = cpu_percent
-            info_dict['memory'] = memory
-        except Exception as e:
-            logger.debug(f"Could not get system resources: {e}")
+        if 'cpu_percent' in status:
+            lines.append(f"• **CPU Usage:** {status['cpu_percent']:.1f}%")
+            info_dict['cpu_percent'] = status['cpu_percent']
+        
+        if 'memory' in status:
+            mem = status['memory']
+            lines.append(f"• **Memory Usage:** {mem['percent']:.1f}% ({mem['used']} MB / {mem['total']} MB)")
+            info_dict['memory'] = status['memory']
         
         # Runtime metrics
-        if hasattr(self.bot, 'metrics'):
-            metrics = self.bot.metrics
-            lines.append(f"• **Messages Sent:** {metrics['messages_sent']}")
-            lines.append(f"• **Requests Received:** {metrics['requests_received']}")
-            lines.append(f"• **Errors:** {metrics['errors']}")
-            lines.append(f"• **Emojis Used:** {metrics['emojis_used']} 😊")
-            info_dict['metrics'] = metrics
+        metrics = status['metrics']
+        lines.append(f"• **Messages Sent:** {metrics['messages_sent']}")
+        lines.append(f"• **Requests Received:** {metrics['requests_received']}")
+        lines.append(f"• **Errors:** {metrics['errors']}")
+        lines.append(f"• **Emojis Used:** {metrics['emojis_used']} 😊")
+        info_dict['metrics'] = metrics
         
         # Network information (only if not redacting)
         redact_enabled = self.config.get('redact', False)
@@ -2085,37 +2057,42 @@ class CommandHandler:
     def _gather_matrix_info(self) -> tuple:
         """Gather Matrix server information.
         
+        Uses the centralized get_status_info() method from bot instance.
+        
         Returns:
             Tuple of (text_lines, info_dict, connected, encrypted)
         """
+        # Get centralized status info from bot
+        status = self.bot.get_status_info()
+        
         lines = []
         info_dict = {}
-        connected = False
-        encrypted = False
+        connected = status.get('matrix_status') == 'Connected'
+        encrypted = status.get('matrix_encrypted', False)
         
-        if self.bot.client:
-            lines.append(f"• **Homeserver:** {self.bot.client.homeserver}")
-            lines.append(f"• **User ID:** {self.bot.client.user_id}")
-            info_dict['homeserver'] = self.bot.client.homeserver
-            info_dict['user_id'] = self.bot.client.user_id
-            
-            if hasattr(self.bot.client, 'device_id') and self.bot.client.device_id:
-                lines.append(f"• **Device ID:** {self.bot.client.device_id}")
-                info_dict['device_id'] = self.bot.client.device_id
-            
-            # Connection status
-            if hasattr(self.bot.client, 'logged_in') and self.bot.client.logged_in:
-                lines.append(f"• **Status:** Connected ✅")
-                connected = True
-            else:
-                lines.append(f"• **Status:** Disconnected ❌")
-            
-            # Encryption status
-            if hasattr(self.bot.client, 'olm') and self.bot.client.olm:
-                lines.append(f"• **E2E Encryption:** Enabled 🔒")
-                encrypted = True
-            else:
-                lines.append(f"• **E2E Encryption:** Disabled")
+        if 'matrix_homeserver' in status:
+            lines.append(f"• **Homeserver:** {status['matrix_homeserver']}")
+            info_dict['homeserver'] = status['matrix_homeserver']
+        
+        if 'matrix_user_id' in status:
+            lines.append(f"• **User ID:** {status['matrix_user_id']}")
+            info_dict['user_id'] = status['matrix_user_id']
+        
+        if 'matrix_device_id' in status:
+            lines.append(f"• **Device ID:** {status['matrix_device_id']}")
+            info_dict['device_id'] = status['matrix_device_id']
+        
+        # Connection status
+        if connected:
+            lines.append(f"• **Status:** Connected ✅")
+        else:
+            lines.append(f"• **Status:** Disconnected ❌")
+        
+        # Encryption status
+        if encrypted:
+            lines.append(f"• **E2E Encryption:** Enabled 🔒")
+        else:
+            lines.append(f"• **E2E Encryption:** Disabled")
         
         return lines, info_dict, connected, encrypted
 
@@ -2142,7 +2119,12 @@ class CommandHandler:
             bot_rows.append(['CPU Usage', f"{bot_info['cpu_percent']:.1f}%"])
         if 'memory' in bot_info:
             mem = bot_info['memory']
-            bot_rows.append(['Memory Usage', f"{mem.percent:.1f}% ({mem.used // (1024**2)} MB / {mem.total // (1024**2)} MB)"])
+            # Check if memory is a dict (new structure) or psutil object (old structure)
+            if isinstance(mem, dict):
+                bot_rows.append(['Memory Usage', f"{mem['percent']:.1f}% ({mem['used']} MB / {mem['total']} MB)"])
+            else:
+                # Fallback for old structure
+                bot_rows.append(['Memory Usage', f"{mem.percent:.1f}% ({mem.used // (1024**2)} MB / {mem.total // (1024**2)} MB)"])
         
         # Add metrics if available
         if 'metrics' in bot_info:

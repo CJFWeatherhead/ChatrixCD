@@ -32,12 +32,21 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Color-coded output (green for can send, red for cannot send)
   - Table format with "Send Status" column
   - Rooms where bot cannot send are hidden when `-R` (redaction) flag is set
+- **Centralized Status Information**: New `get_status_info()` method in bot instance
+  - Provides unified structure for bot status used by both TUI and commands
+  - Eliminates duplicate logic between different interfaces
 
 ### Changed
 - **TUI Status Display**: Harmonized with !cd info command
-  - Updated metrics display to use bot.metrics directly
+  - Updated to use centralized `get_status_info()` method
   - Consistent naming and formatting across TUI and commands
 - **Version Display**: All version displays now use full version with commit ID when applicable
+- **Room Permission Checking**: Enhanced `can_send_message_in_room()` method
+  - Now also checks `allowed_rooms` configuration setting
+  - Combines Matrix power levels with config-based restrictions
+
+### Fixed
+- Fixed duplicate return statement in `_gather_matrix_info()` method
 
 ## [2025.11.15.5.2.0] - 2025-11-15
 
