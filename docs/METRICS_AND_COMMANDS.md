@@ -146,7 +146,7 @@ The `_get_version_with_commit()` function in `__init__.py`:
 The full version (with commit if applicable) is displayed in:
 - `!cd info` command output
 - `-V` / `--version` CLI flag
-- TUI status display (once implemented)
+- TUI status display
 - Startup log messages
 
 ## TUI Harmonization
