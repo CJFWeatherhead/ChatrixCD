@@ -143,8 +143,9 @@
     },
     
     // Semaphore Webhook Plugin - Task monitoring via Gotify webhooks
-    // NOTE: This is mutually exclusive with semaphore_poll
-    // Only one task monitor plugin can be active at a time
+    // NOTE: This is mutually exclusive with semaphore_poll.
+    // Only one task monitor plugin can be active at a time.
+    // If both are enabled, only the first one discovered will be loaded.
     "semaphore_webhook": {
       "enabled": false,
       "gotify_url": "https://gotify.example.com",
