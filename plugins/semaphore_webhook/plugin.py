@@ -142,40 +142,44 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
         retry_delay = 5
         max_retry_delay = 300
         
-        while self.monitoring_active:
-            try:
-                # Create session if needed
-                if self.ws_session is None or self.ws_session.closed:
-                    self.ws_session = aiohttp.ClientSession()
-                
-                # Connect to WebSocket
-                self.logger.info(f"Connecting to Gotify WebSocket: {self.gotify_url}")
-                async with self.ws_session.ws_connect(ws_url) as ws:
-                    self.ws_connected = True
-                    self.logger.info("Connected to Gotify WebSocket")
-                    retry_delay = 5  # Reset retry delay on successful connection
+        try:
+            while self.monitoring_active:
+                try:
+                    # Create session if needed
+                    if self.ws_session is None or self.ws_session.closed:
+                        self.ws_session = aiohttp.ClientSession()
                     
-                    # Listen for messages
-                    async for msg in ws:
-                        if msg.type == aiohttp.WSMsgType.TEXT:
-                            await self._handle_gotify_message(msg.data)
-                        elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
-                            break
-                    
+                    # Connect to WebSocket
+                    self.logger.info(f"Connecting to Gotify WebSocket: {self.gotify_url}")
+                    async with self.ws_session.ws_connect(ws_url) as ws:
+                        self.ws_connected = True
+                        self.logger.info("Connected to Gotify WebSocket")
+                        retry_delay = 5  # Reset retry delay on successful connection
+                        
+                        # Listen for messages
+                        async for msg in ws:
+                            if msg.type == aiohttp.WSMsgType.TEXT:
+                                await self._handle_gotify_message(msg.data)
+                            elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
+                                break
+                        
+                        self.ws_connected = False
+                        self.logger.warning("Gotify WebSocket connection closed")
+                        
+                except asyncio.CancelledError:
+                    self.logger.info("Gotify WebSocket listener cancelled")
+                    raise
+                except Exception as e:
                     self.ws_connected = False
-                    self.logger.warning("Gotify WebSocket connection closed")
+                    self.logger.error(f"Gotify WebSocket error: {e}")
                     
-            except asyncio.CancelledError:
-                self.logger.info("Gotify WebSocket listener cancelled")
-                raise
-            except Exception as e:
-                self.ws_connected = False
-                self.logger.error(f"Gotify WebSocket error: {e}")
-                
-                # Exponential backoff for reconnection
-                self.logger.info(f"Retrying WebSocket connection in {retry_delay}s...")
-                await asyncio.sleep(retry_delay)
-                retry_delay = min(retry_delay * 2, max_retry_delay)
+                    # Exponential backoff for reconnection
+                    self.logger.info(f"Retrying WebSocket connection in {retry_delay}s...")
+                    await asyncio.sleep(retry_delay)
+                    retry_delay = min(retry_delay * 2, max_retry_delay)
+        finally:
+            if self.ws_session is not None and not self.ws_session.closed:
+                await self.ws_session.close()
     
     async def _handle_gotify_message(self, data: str):
         """Handle a message received from Gotify.
