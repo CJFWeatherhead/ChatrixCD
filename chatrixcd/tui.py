@@ -38,9 +38,10 @@ class BotStatusWidget(Static):
     matrix_status: reactive[str] = reactive("Disconnected")
     semaphore_status: reactive[str] = reactive("Unknown")
     uptime: reactive[str] = reactive("0s")
-    messages_processed: reactive[int] = reactive(0)
+    messages_sent: reactive[int] = reactive(0)
+    requests_received: reactive[int] = reactive(0)
     errors: reactive[int] = reactive(0)
-    warnings: reactive[int] = reactive(0)
+    emojis_used: reactive[int] = reactive(0)
     
     def render(self) -> str:
         """Render the status widget."""
@@ -51,9 +52,10 @@ class BotStatusWidget(Static):
 [bold]Uptime:[/bold] {self.uptime}
 
 [bold cyan]Metrics[/bold cyan]
-[bold]Messages Processed:[/bold] {self.messages_processed}
+[bold]Messages Sent:[/bold] {self.messages_sent}
+[bold]Requests Received:[/bold] {self.requests_received}
 [bold]Errors:[/bold] {self.errors}
-[bold]Warnings:[/bold] {self.warnings}
+[bold]Emojis Used:[/bold] {self.emojis_used} 😊
 """
 
 
@@ -1690,9 +1692,7 @@ class ChatrixTUI(App):
         self.config = config
         self.use_color = use_color
         self.start_time = time.time()
-        self.messages_processed = 0
         self.errors = 0
-        self.warnings = 0
         self.login_task = None  # Will be set by run_tui_with_bot if login is needed
         self.bot_task = None  # Will store the sync task
         self.pending_verifications_count = 0  # Track pending verification requests
@@ -1895,23 +1895,54 @@ class ChatrixTUI(App):
                 yield Header()
                 with Container():
                     status_widget = BotStatusWidget()
-                    # Update status
-                    if self.tui_app.bot and self.tui_app.bot.client:
-                        status_widget.matrix_status = "Connected" if self.tui_app.bot.client.logged_in else "Disconnected"
+                    
+                    # Use centralized status info from bot
+                    if self.tui_app.bot and hasattr(self.tui_app.bot, 'get_status_info'):
+                        status = self.tui_app.bot.get_status_info()
+                        
+                        status_widget.matrix_status = status.get('matrix_status', 'Unknown')
+                        status_widget.semaphore_status = status.get('semaphore_status', 'Unknown')
+                        
+                        # Calculate uptime from status
+                        uptime_ms = status.get('uptime', 0)
+                        uptime_seconds = uptime_ms // 1000
+                        hours, remainder = divmod(uptime_seconds, 3600)
+                        minutes, seconds = divmod(remainder, 60)
+                        status_widget.uptime = f"{hours}h {minutes}m {seconds}s"
+                        
+                        # Use metrics from centralized status
+                        metrics = status.get('metrics', {})
+                        status_widget.messages_sent = metrics.get('messages_sent', 0)
+                        status_widget.requests_received = metrics.get('requests_received', 0)
+                        status_widget.errors = metrics.get('errors', 0)
+                        status_widget.emojis_used = metrics.get('emojis_used', 0)
                     else:
-                        status_widget.matrix_status = "Not initialized"
-                    
-                    status_widget.semaphore_status = "Connected" if self.tui_app.bot and self.tui_app.bot.semaphore else "Unknown"
-                    
-                    # Calculate uptime
-                    uptime_seconds = int(time.time() - self.tui_app.start_time)
-                    hours, remainder = divmod(uptime_seconds, 3600)
-                    minutes, seconds = divmod(remainder, 60)
-                    status_widget.uptime = f"{hours}h {minutes}m {seconds}s"
-                    
-                    status_widget.messages_processed = self.tui_app.messages_processed
-                    status_widget.errors = self.tui_app.errors
-                    status_widget.warnings = self.tui_app.warnings
+                        # Fallback to manual calculation if get_status_info not available
+                        if self.tui_app.bot and self.tui_app.bot.client:
+                            status_widget.matrix_status = "Connected" if self.tui_app.bot.client.logged_in else "Disconnected"
+                        else:
+                            status_widget.matrix_status = "Not initialized"
+                        
+                        status_widget.semaphore_status = "Connected" if self.tui_app.bot and self.tui_app.bot.semaphore else "Unknown"
+                        
+                        # Calculate uptime
+                        uptime_seconds = int(time.time() - self.tui_app.start_time)
+                        hours, remainder = divmod(uptime_seconds, 3600)
+                        minutes, seconds = divmod(remainder, 60)
+                        status_widget.uptime = f"{hours}h {minutes}m {seconds}s"
+                        
+                        # Use bot metrics if available
+                        if self.tui_app.bot and hasattr(self.tui_app.bot, 'metrics'):
+                            metrics = self.tui_app.bot.metrics
+                            status_widget.messages_sent = metrics['messages_sent']
+                            status_widget.requests_received = metrics['requests_received']
+                            status_widget.errors = metrics['errors']
+                            status_widget.emojis_used = metrics['emojis_used']
+                        else:
+                            status_widget.messages_sent = 0
+                            status_widget.requests_received = 0
+                            status_widget.errors = 0
+                            status_widget.emojis_used = 0
                     
                     yield status_widget
                 yield Footer()
@@ -2014,7 +2045,6 @@ class ChatrixTUI(App):
         """
         if self.bot:
             await self.bot.send_message(room_id, message)
-            self.messages_processed += 1
     
     async def action_quit(self):
         """Handle quit action."""

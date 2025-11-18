@@ -10,6 +10,11 @@ import asyncio
 import os
 import time
 import aiohttp
+import re
+import platform
+import sys
+import subprocess
+import psutil
 from typing import Optional, Dict, Any
 from nio import (
     AsyncClient,
@@ -33,6 +38,16 @@ from chatrixcd.commands import CommandHandler
 from chatrixcd.verification import DeviceVerificationManager
 
 logger = logging.getLogger(__name__)
+
+# Compiled emoji pattern for efficient emoji detection and counting
+EMOJI_PATTERN = re.compile("["
+    "\U0001F600-\U0001F64F"  # emoticons
+    "\U0001F300-\U0001F5FF"  # symbols & pictographs
+    "\U0001F680-\U0001F6FF"  # transport & map symbols
+    "\U0001F1E0-\U0001F1FF"  # flags (iOS)
+    "\U00002702-\U000027B0"  # dingbats
+    "\U000024C2-\U0001F251"
+    "]+", flags=re.UNICODE)
 
 
 class ChatrixBot:
@@ -104,6 +119,14 @@ class ChatrixBot:
         
         # Track whether we've done initial encryption setup after first sync
         self._encryption_setup_done = False
+        
+        # Runtime metrics tracking
+        self.metrics = {
+            'messages_sent': 0,
+            'requests_received': 0,
+            'errors': 0,
+            'emojis_used': 0
+        }
         
         # Setup event callbacks
         self.client.add_event_callback(self.message_callback, RoomMessageText)
@@ -543,6 +566,11 @@ class ChatrixBot:
         
         logger.info(f"Message from {event.sender} in {room.display_name}: {event.body}")
         
+        # Track requests received (only if it's a command)
+        command_prefix = self.config.get_bot_config().get('command_prefix', '!cd')
+        if event.body.strip().startswith(command_prefix):
+            self.metrics['requests_received'] += 1
+        
         # Check if message is a command
         await self.command_handler.handle_message(room, event)
 
@@ -802,6 +830,12 @@ class ChatrixBot:
             ignore_unverified_devices=True
         )
         
+        # Track metrics
+        self.metrics['messages_sent'] += 1
+        # Count emojis in the message (counts individual emojis, even in consecutive sequences)
+        emojis = EMOJI_PATTERN.findall(message)
+        self.metrics['emojis_used'] += sum(len(match) for match in emojis)
+        
         # Return the event_id for potential reactions
         if hasattr(response, 'event_id'):
             return response.event_id
@@ -830,6 +864,9 @@ class ChatrixBot:
                 content=content,
                 ignore_unverified_devices=True
             )
+            
+            # Track emoji usage
+            self.metrics['emojis_used'] += 1
         except Exception as e:
             logger.debug(f"Failed to send reaction: {e}")
 
@@ -878,6 +915,152 @@ class ChatrixBot:
                 logger.info(f"Sent shutdown message to room {room_id}")
             except Exception as e:
                 logger.error(f"Failed to send shutdown message to room {room_id}: {e}")
+
+    def can_send_message_in_room(self, room_id: str) -> bool:
+        """Check if bot can send messages in a room.
+        
+        Checks both Matrix power levels and config allowed_rooms setting.
+        
+        Args:
+            room_id: Room ID to check
+            
+        Returns:
+            True if bot can send messages, False otherwise
+        """
+        # Check if room is in allowed_rooms config (if configured)
+        bot_config = self.config.get_bot_config()
+        allowed_rooms = bot_config.get('allowed_rooms', [])
+        if allowed_rooms and room_id not in allowed_rooms:
+            return False
+        
+        room = self.client.rooms.get(room_id)
+        if not room:
+            return False
+        
+        # Check if bot is a member of the room
+        if self.user_id not in room.users:
+            return False
+        
+        # Check power levels
+        try:
+            # Get the bot's power level
+            bot_power_level = room.power_levels.get_user_level(self.user_id)
+            # Get the required power level to send messages
+            required_level = room.power_levels.get_event_level("m.room.message")
+            
+            return bot_power_level >= required_level
+        except (AttributeError, KeyError):
+            # If we can't determine power levels, assume we can send
+            # (default behavior - will fail gracefully if not allowed)
+            return True
+
+    def get_status_info(self) -> dict:
+        """Get centralized bot status information.
+        
+        This method provides a unified structure for bot status that can be used
+        by both the TUI and command handlers for consistent display.
+        
+        Returns:
+            Dictionary with status information including:
+            - version: Full version string with git commit if applicable
+            - platform: OS platform and version
+            - architecture: System architecture
+            - runtime: Runtime type (binary or interpreter)
+            - cpu_model: CPU model name (if available)
+            - cpu_percent: Current CPU usage percentage (if available)
+            - memory: Memory usage info (if available)
+            - metrics: Runtime metrics (messages_sent, requests_received, etc.)
+            - matrix_status: Connection status ('Connected' or 'Disconnected')
+            - matrix_homeserver: Matrix homeserver URL
+            - matrix_user_id: Bot's Matrix user ID
+            - matrix_device_id: Bot's device ID
+            - matrix_encrypted: Whether E2E encryption is enabled
+            - semaphore_status: Semaphore connection status
+            - uptime: Bot uptime in seconds
+        """
+        from chatrixcd import __version_full__
+        
+        status = {
+            'version': __version_full__,
+            'platform': f"{platform.system()} {platform.release()}",
+            'architecture': platform.machine(),
+            'metrics': self.metrics.copy(),
+            'uptime': int(time.time() * 1000) - self.start_time  # milliseconds
+        }
+        
+        # Determine runtime type
+        if getattr(sys, 'frozen', False):
+            status['runtime'] = "Binary (compiled)"
+        else:
+            status['runtime'] = f"Python {platform.python_version()} (interpreter)"
+        
+        # CPU model (try to get, but don't fail if unavailable)
+        try:
+            cpu_model = None
+            if platform.system() == "Linux":
+                try:
+                    with open('/proc/cpuinfo', 'r') as f:
+                        for line in f:
+                            if 'model name' in line:
+                                cpu_model = line.split(':')[1].strip()
+                                break
+                except Exception:
+                    # Ignore errors reading /proc/cpuinfo; not critical for bot operation
+                    pass
+            elif platform.system() == "Darwin":  # macOS
+                try:
+                    result = subprocess.run(['sysctl', '-n', 'machdep.cpu.brand_string'], 
+                                           capture_output=True, text=True, timeout=1)
+                    if result.returncode == 0:
+                        cpu_model = result.stdout.strip()
+                except Exception:
+                    # Ignore errors getting CPU model on macOS; not critical for bot operation
+                    pass
+            elif platform.system() == "Windows":
+                try:
+                    result = subprocess.run(['wmic', 'cpu', 'get', 'name'], 
+                                           capture_output=True, text=True, timeout=1)
+                    if result.returncode == 0:
+                        lines_output = result.stdout.strip().split('\n')
+                        if len(lines_output) > 1:
+                            cpu_model = lines_output[1].strip()
+                except Exception:
+                    # Ignore errors getting CPU model on Windows; not critical for bot operation
+                    pass
+            
+            if cpu_model:
+                status['cpu_model'] = cpu_model
+        except Exception:
+            # Failed to get CPU model; this is non-critical and will be omitted from status
+            pass
+        
+        # System resources
+        try:
+            status['cpu_percent'] = psutil.cpu_percent(interval=0.1)
+            status['memory'] = {
+                'percent': psutil.virtual_memory().percent,
+                'used': psutil.virtual_memory().used // (1024**2),
+                'total': psutil.virtual_memory().total // (1024**2)
+            }
+        except Exception:
+            # Failed to gather system resource info; not critical for bot operation
+            pass
+        
+        # Matrix status
+        if self.client:
+            status['matrix_status'] = 'Connected' if (hasattr(self.client, 'logged_in') and self.client.logged_in) else 'Disconnected'
+            status['matrix_homeserver'] = self.client.homeserver
+            status['matrix_user_id'] = self.client.user_id
+            if hasattr(self.client, 'device_id'):
+                status['matrix_device_id'] = self.client.device_id
+            status['matrix_encrypted'] = hasattr(self.client, 'olm') and self.client.olm is not None
+        else:
+            status['matrix_status'] = 'Not initialized'
+        
+        # Semaphore status (simple check if client exists)
+        status['semaphore_status'] = 'Connected' if self.semaphore else 'Unknown'
+        
+        return status
 
     async def sync_callback(self, response: SyncResponse):
         """Handle sync responses and manage encryption keys.

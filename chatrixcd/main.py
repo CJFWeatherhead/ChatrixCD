@@ -5,7 +5,7 @@ import asyncio
 import logging
 import os
 import sys
-from chatrixcd import __version__
+from chatrixcd import __version__, __version_full__
 from chatrixcd.config import Config
 from chatrixcd.bot import ChatrixBot
 from chatrixcd.redactor import SensitiveInfoRedactor, RedactingFilter
@@ -95,7 +95,7 @@ def parse_args():
     parser.add_argument(
         '-V', '--version',
         action='version',
-        version=f'ChatrixCD {__version__}'
+        version=f'ChatrixCD {__version_full__}'
     )
     
     parser.add_argument(
@@ -390,7 +390,7 @@ def main():
         setup_logging(verbosity=args.verbosity, color=False, redact=args.redact, log_file=log_file, tui_mode=False)  # No color in daemon mode
         logger = logging.getLogger(__name__)
     
-    logger.info(f"ChatrixCD {__version__} starting...")
+    logger.info(f"ChatrixCD {__version_full__} starting...")
     
     # Validate configuration before starting
     validation_errors = config.validate_schema()
