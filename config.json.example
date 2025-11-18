@@ -1,6 +1,6 @@
 {
   // Configuration file version - do not modify
-  "_config_version": 4,
+  "_config_version": 5,
   
   // Matrix homeserver connection settings
   "matrix": {
@@ -129,37 +129,10 @@
     //   - "debug": Detailed debug information (verbose logging)
     // Command-line -v flags override this setting:
     //   -v sets to "debug", -vv sets to "debug" with library logs
-    "verbosity": "info"
-  },
-  
-  // Plugin configuration
-  "plugins": {
-    // Semaphore Poll Plugin - Task monitoring via API polling (default)
-    // This is the traditional polling-based task monitoring mechanism
-    "semaphore_poll": {
-      "enabled": true,
-      "poll_interval": 10,
-      "notification_interval": 300
-    },
+    "verbosity": "info",
     
-    // Semaphore Webhook Plugin - Task monitoring via Gotify webhooks
-    // NOTE: This is mutually exclusive with semaphore_poll.
-    // Only one task monitor plugin can be active at a time.
-    // If both are enabled, only the first one discovered will be loaded.
-    "semaphore_webhook": {
-      "enabled": false,
-      "gotify_url": "https://gotify.example.com",
-      "gotify_token": "your_gotify_client_token",
-      "gotify_app_token": "your_gotify_app_token",
-      "webhook_mode": "websocket",
-      "fallback_poll_interval": 60
-    },
-    
-    // Example Plugin - Template for creating custom plugins
-    "example_plugin": {
-      "enabled": false,
-      "example_setting": "value",
-      "another_setting": 42
-    }
+    // Enable/disable plugin loading (default: true)
+    // When false, no plugins will be loaded regardless of individual plugin settings
+    "load_plugins": true
   }
 }

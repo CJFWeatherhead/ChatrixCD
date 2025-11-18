@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 # Current configuration schema version
-CURRENT_CONFIG_VERSION = 4
+CURRENT_CONFIG_VERSION = 5
 
 
 class ConfigMigrator:
@@ -21,6 +21,7 @@ class ConfigMigrator:
     - v2: Added greetings_enabled, greeting_rooms, startup_message, shutdown_message
     - v3: Added SSL certificate options, log_file configuration
     - v4: Added TUI mode options, mouse support, color settings, verbosity
+    - v5: Added plugin system with load_plugins control, moved plugins config to separate files
     
     All migrations are handled by default values in Config class.
     This migrator only updates the version number.
@@ -154,6 +155,7 @@ class Config:
                 'color_enabled': False,  # Enable colored output
                 'color_theme': 'default',  # Theme: 'default', 'midnight', 'grayscale', 'windows31', 'msdos'
                 'verbosity': 'info',  # Verbosity: 'silent', 'error', 'info', 'debug'
+                'load_plugins': True,  # Enable/disable plugin loading
             },
         }
     

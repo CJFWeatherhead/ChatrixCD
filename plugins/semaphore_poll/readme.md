@@ -13,17 +13,15 @@ This is a reliable approach that works with any Semaphore UI installation withou
 
 ## Configuration
 
-Add the following to your `config.json`:
+This plugin is configured through its `plugin.json` file located in the plugin directory.
+
+### plugin.json
 
 ```json
 {
-  "plugins": {
-    "semaphore_poll": {
-      "enabled": true,
-      "poll_interval": 10,
-      "notification_interval": 300
-    }
-  }
+  "enabled": true,
+  "poll_interval": 10,
+  "notification_interval": 300
 }
 ```
 
@@ -32,6 +30,27 @@ Add the following to your `config.json`:
 - **`enabled`** (boolean, default: `true`): Enable or disable the plugin
 - **`poll_interval`** (integer, default: `10`): Interval in seconds between status checks
 - **`notification_interval`** (integer, default: `300`): Interval in seconds for periodic "still running" notifications
+
+### Overriding Configuration
+
+You can override plugin configuration in the main `config.json` file under the `plugins` section (for backwards compatibility):
+
+```json
+{
+  "bot": {
+    "load_plugins": true
+  },
+  "plugins": {
+    "semaphore_poll": {
+      "enabled": true,
+      "poll_interval": 5,
+      "notification_interval": 180
+    }
+  }
+}
+```
+
+**Note:** Settings in `config.json` will override those in `plugin.json`.
 
 ## Usage
 

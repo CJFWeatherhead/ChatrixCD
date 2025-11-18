@@ -1178,10 +1178,13 @@ class ChatrixBot:
         if hasattr(self.command_handler.message_manager, 'start_auto_reload'):
             self.command_handler.message_manager.start_auto_reload()
         
-        # Load plugins
-        logger.info("Loading plugins...")
-        plugins_loaded = await self.plugin_manager.load_all_plugins()
-        logger.info(f"Loaded {plugins_loaded} plugin(s)")
+        # Load plugins if enabled
+        if self.config.get('bot.load_plugins', True):
+            logger.info("Loading plugins...")
+            plugins_loaded = await self.plugin_manager.load_all_plugins()
+            logger.info(f"Loaded {plugins_loaded} plugin(s)")
+        else:
+            logger.info("Plugin loading is disabled in configuration")
         
         # Login
         if not await self.login():
@@ -1189,8 +1192,9 @@ class ChatrixBot:
             return
         
         # Start plugins after successful login
-        logger.info("Starting plugins...")
-        await self.plugin_manager.start_plugins()
+        if self.config.get('bot.load_plugins', True):
+            logger.info("Starting plugins...")
+            await self.plugin_manager.start_plugins()
         
         # Send startup message
         await self.send_startup_message()

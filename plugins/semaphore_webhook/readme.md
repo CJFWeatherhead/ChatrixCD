@@ -33,20 +33,18 @@ Configure Semaphore UI to send notifications to your Gotify server:
 
 ### 3. Configure ChatrixCD
 
-Add the following to your `config.json`:
+This plugin is configured through its `plugin.json` file located in the plugin directory.
+
+#### plugin.json
 
 ```json
 {
-  "plugins": {
-    "semaphore_webhook": {
-      "enabled": true,
-      "gotify_url": "https://gotify.example.com",
-      "gotify_token": "your_gotify_client_token",
-      "gotify_app_token": "your_gotify_app_token",
-      "webhook_mode": "websocket",
-      "fallback_poll_interval": 60
-    }
-  }
+  "enabled": false,
+  "gotify_url": "https://gotify.example.com",
+  "gotify_token": "your_gotify_client_token",
+  "gotify_app_token": "your_gotify_app_token",
+  "webhook_mode": "websocket",
+  "fallback_poll_interval": 60
 }
 ```
 
@@ -58,6 +56,28 @@ Add the following to your `config.json`:
 - **`gotify_app_token`** (string, required): Gotify application token
 - **`webhook_mode`** (string, default: `"websocket"`): Connection mode (`"websocket"` or `"polling"`)
 - **`fallback_poll_interval`** (integer, default: `60`): Fallback polling interval if webhook connection fails
+
+### Overriding Configuration
+
+You can override plugin configuration in the main `config.json` file (for backwards compatibility):
+
+```json
+{
+  "bot": {
+    "load_plugins": true
+  },
+  "plugins": {
+    "semaphore_webhook": {
+      "enabled": true,
+      "gotify_url": "https://your-gotify.com",
+      "gotify_token": "your_token",
+      "gotify_app_token": "your_app_token"
+    }
+  }
+}
+```
+
+**Note:** Settings in `config.json` will override those in `plugin.json`.
 
 ## Usage
 

@@ -74,24 +74,48 @@ class YourPlugin(Plugin):
 
 ## Configuration
 
-Add plugin-specific configuration to your `config.json`:
+Each plugin has two configuration options:
+
+### 1. plugin.json (in plugin directory)
+
+Contains default settings for the plugin:
 
 ```json
 {
+  "enabled": false,
+  "example_setting": "default_value",
+  "another_setting": 42
+}
+```
+
+### 2. config.json override (optional)
+
+You can override plugin settings in the main `config.json` under the `plugins` section:
+
+```json
+{
+  "bot": {
+    "load_plugins": true
+  },
   "plugins": {
     "example_plugin": {
       "enabled": true,
-      "example_setting": "value",
-      "another_setting": 42
+      "example_setting": "custom_value",
+      "another_setting": 100
     }
   }
 }
 ```
 
+**Note:** Settings in `config.json` will override those in `plugin.json`.
+
+### Accessing Configuration
+
 Access configuration in your plugin:
 
 ```python
 self.config.get('example_setting', 'default_value')
+self.config.get('another_setting', 0)
 ```
 
 ## Accessing Bot Functionality

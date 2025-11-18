@@ -1,0 +1,13 @@
+{
+  // Plugin configuration for Example Plugin
+  // This file contains default settings that can be overridden
+  
+  // Enable or disable this plugin (default: false)
+  "enabled": false,
+  
+  // Example string setting
+  "example_setting": "default_value",
+  
+  // Example integer setting
+  "another_setting": 42
+}

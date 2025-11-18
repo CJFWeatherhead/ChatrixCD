@@ -7,7 +7,7 @@ webhooks), custom commands, or other extensions.
 
 import logging
 import json
-import os
+import hjson
 import importlib.util
 import sys
 from pathlib import Path
@@ -205,6 +205,37 @@ class PluginManager:
             logger.error(f"Error loading metadata from {meta_file}: {e}")
             return None
     
+    def load_plugin_config(self, plugin_dir: Path, metadata: PluginMetadata) -> Dict[str, Any]:
+        """Load plugin configuration from plugin.json file.
+        
+        Args:
+            plugin_dir: Path to plugin directory
+            metadata: Plugin metadata
+            
+        Returns:
+            Plugin configuration dictionary
+        """
+        config_file = plugin_dir / 'plugin.json'
+        plugin_config = {}
+        
+        # Try to load plugin.json
+        if config_file.exists():
+            try:
+                with open(config_file, 'r') as f:
+                    import hjson
+                    plugin_config = hjson.load(f)
+                logger.debug(f"Loaded configuration for plugin '{metadata.name}' from {config_file}")
+            except Exception as e:
+                logger.warning(f"Failed to load configuration from {config_file}: {e}")
+        
+        # Override with config from main config.json if present (for backwards compatibility)
+        main_config_override = self.config.get('plugins', {}).get(metadata.name, {})
+        if main_config_override:
+            logger.debug(f"Applying configuration overrides for plugin '{metadata.name}' from main config")
+            plugin_config.update(main_config_override)
+        
+        return plugin_config
+    
     def load_plugin_module(self, plugin_dir: Path, metadata: PluginMetadata) -> Optional[Type[Plugin]]:
         """Load the plugin Python module.
         
@@ -289,8 +320,8 @@ class PluginManager:
         if plugin_class is None:
             return False
         
-        # Get plugin-specific configuration
-        plugin_config = self.config.get('plugins', {}).get(metadata.name, {})
+        # Get plugin-specific configuration from plugin.json
+        plugin_config = self.load_plugin_config(plugin_dir, metadata)
         
         # Instantiate the plugin
         try:

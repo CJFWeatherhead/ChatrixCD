@@ -1,0 +1,24 @@
+{
+  // Plugin configuration for Semaphore Webhook
+  // This file contains default settings that can be overridden
+  
+  // Enable or disable this plugin (default: false)
+  // NOTE: This plugin is mutually exclusive with semaphore_poll
+  // Only one task monitor plugin can be active at a time
+  "enabled": false,
+  
+  // Gotify server URL (required)
+  "gotify_url": "https://gotify.example.com",
+  
+  // Gotify client token for authentication (required)
+  "gotify_token": "your_gotify_client_token",
+  
+  // Gotify application token (required)
+  "gotify_app_token": "your_gotify_app_token",
+  
+  // Connection mode: "websocket" or "polling" (default: "websocket")
+  "webhook_mode": "websocket",
+  
+  // Fallback polling interval in seconds when webhook connection fails (default: 60)
+  "fallback_poll_interval": 60
+}
