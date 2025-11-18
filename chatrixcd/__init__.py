@@ -3,7 +3,7 @@
 import os
 import subprocess
 
-__version__ = "2025.11.15.5.2.0"
+__version__ = "2025.11.18.5.2.1"
 
 def _get_version_with_commit():
     """Get version with git commit if running from git repository.

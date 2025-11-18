@@ -15,6 +15,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+## [2025.11.18.5.2.1] - 2025-11-18
+
 ### Added
 - **Runtime Metrics Tracking**: Bot now tracks and displays runtime statistics
   - Messages sent count
@@ -1243,6 +1245,8 @@ ChatrixCD/
 
 
 
+
+- **2025.11.18.5.2.1** (2025-11-18)
 - **2025.11.15.5.2.0** (2025-11-15)
 - **2025.11.09.5.1.0** (2025-11-09)
 - **2025.11.08.5.0.0** (2025-11-08)
