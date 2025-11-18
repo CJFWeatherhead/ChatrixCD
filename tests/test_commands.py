@@ -903,7 +903,30 @@ class TestCommandHandler(unittest.TestCase):
             'version': '2.8.0'
         })
         
-        # Mock bot client
+        # Mock bot.get_status_info() to return proper status dictionary
+        self.mock_bot.get_status_info = MagicMock(return_value={
+            'version': '2025.11.15.5.2.0-c123456',
+            'platform': 'Linux 5.15.0',
+            'architecture': 'x86_64',
+            'runtime': 'Python 3.12.0 (interpreter)',
+            'cpu_percent': 2.5,
+            'memory': {'percent': 15.3, 'used': 245, 'total': 1600},
+            'metrics': {
+                'messages_sent': 42,
+                'requests_received': 15,
+                'errors': 0,
+                'emojis_used': 128
+            },
+            'matrix_status': 'Connected',
+            'matrix_homeserver': 'https://matrix.example.com',
+            'matrix_user_id': '@bot:example.com',
+            'matrix_device_id': 'DEVICE123',
+            'matrix_encrypted': True,
+            'semaphore_status': 'Connected',
+            'uptime': 7890000
+        })
+        
+        # Mock bot client (still needed for some direct access)
         self.mock_bot.client = MagicMock()
         self.mock_bot.client.homeserver = 'https://matrix.example.com'
         self.mock_bot.client.user_id = '@bot:example.com'
@@ -940,6 +963,27 @@ class TestCommandHandler(unittest.TestCase):
         """Test that get_semaphore_info respects redact flag for IP addresses."""
         # Mock semaphore info
         self.mock_semaphore.get_info = AsyncMock(return_value={})
+        
+        # Mock bot.get_status_info() with base status
+        base_status = {
+            'version': '2025.11.15.5.2.0',
+            'platform': 'Linux 5.15.0',
+            'architecture': 'x86_64',
+            'runtime': 'Python 3.12.0 (interpreter)',
+            'metrics': {
+                'messages_sent': 0,
+                'requests_received': 0,
+                'errors': 0,
+                'emojis_used': 0
+            },
+            'matrix_status': 'Connected',
+            'matrix_homeserver': 'https://matrix.example.com',
+            'matrix_user_id': '@bot:example.com',
+            'matrix_encrypted': False,
+            'semaphore_status': 'Connected',
+            'uptime': 0
+        }
+        self.mock_bot.get_status_info = MagicMock(return_value=base_status)
         
         # Mock bot client
         self.mock_bot.client = MagicMock()

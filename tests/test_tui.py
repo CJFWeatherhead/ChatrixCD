@@ -79,14 +79,19 @@ class TestTUICreation(unittest.TestCase):
         from chatrixcd.tui import ChatrixTUI
         
         mock_bot = Mock()
+        mock_bot.metrics = {
+            'messages_sent': 0,
+            'requests_received': 0,
+            'errors': 0,
+            'emojis_used': 0
+        }
         mock_config = Mock()
         mock_config.get_bot_config.return_value = {}
         
         tui = ChatrixTUI(mock_bot, mock_config)
         
-        self.assertEqual(tui.messages_processed, 0)
-        self.assertEqual(tui.errors, 0)
-        self.assertEqual(tui.warnings, 0)
+        # TUI no longer has its own metrics - they're in bot.metrics
+        self.assertEqual(tui.errors, 0)  # Only errors remain in TUI
 
 
 class TestTUIScreens(unittest.TestCase):
@@ -138,9 +143,11 @@ class TestBotStatusWidget(unittest.TestCase):
         self.assertIsNotNone(widget)
         self.assertEqual(widget.matrix_status, "Disconnected")
         self.assertEqual(widget.semaphore_status, "Unknown")
-        self.assertEqual(widget.messages_processed, 0)
+        # New metric names
+        self.assertEqual(widget.messages_sent, 0)
+        self.assertEqual(widget.requests_received, 0)
         self.assertEqual(widget.errors, 0)
-        self.assertEqual(widget.warnings, 0)
+        self.assertEqual(widget.emojis_used, 0)
 
 
 class TestCLIIntegration(unittest.TestCase):
