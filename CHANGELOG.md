@@ -15,6 +15,30 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Added
+- **Runtime Metrics Tracking**: Bot now tracks and displays runtime statistics
+  - Messages sent count
+  - Requests received count
+  - Errors count
+  - Number of emojis used in messages
+- **Enhanced !cd info Command**: Extended bot info display
+  - CPU model name (e.g., "Intel i7 4770K")
+  - Runtime type (binary vs Python interpreter)
+  - All runtime metrics displayed in both plain text and HTML table format
+- **Git Version Detection**: Automatic commit ID appending for git-based deployments
+  - Format: `x.x.x.x.x-c123456` for git vs `x.x.x.x.x` for releases
+  - Helps distinguish between release and development versions
+- **Enhanced !cd rooms Command**: Improved room listing with send permissions
+  - Color-coded output (green for can send, red for cannot send)
+  - Table format with "Send Status" column
+  - Rooms where bot cannot send are hidden when `-R` (redaction) flag is set
+
+### Changed
+- **TUI Status Display**: Harmonized with !cd info command
+  - Updated metrics display to use bot.metrics directly
+  - Consistent naming and formatting across TUI and commands
+- **Version Display**: All version displays now use full version with commit ID when applicable
+
 ## [2025.11.15.5.2.0] - 2025-11-15
 
 ### Added
