@@ -36,6 +36,7 @@ from chatrixcd.auth import MatrixAuth
 from chatrixcd.semaphore import SemaphoreClient
 from chatrixcd.commands import CommandHandler
 from chatrixcd.verification import DeviceVerificationManager
+from chatrixcd.plugin_manager import PluginManager
 
 logger = logging.getLogger(__name__)
 
@@ -104,6 +105,13 @@ class ChatrixBot:
             bot=self,
             config=config.get_bot_config(),
             semaphore=self.semaphore
+        )
+        
+        # Initialize plugin manager
+        self.plugin_manager = PluginManager(
+            bot=self,
+            config=config.config,
+            plugins_dir='plugins'
         )
         
         # Initialize verification manager
@@ -1170,10 +1178,23 @@ class ChatrixBot:
         if hasattr(self.command_handler.message_manager, 'start_auto_reload'):
             self.command_handler.message_manager.start_auto_reload()
         
+        # Load plugins if enabled
+        if self.config.get('bot.load_plugins', True):
+            logger.info("Loading plugins...")
+            plugins_loaded = await self.plugin_manager.load_all_plugins()
+            logger.info(f"Loaded {plugins_loaded} plugin(s)")
+        else:
+            logger.info("Plugin loading is disabled in configuration")
+        
         # Login
         if not await self.login():
             logger.error("Failed to login, exiting")
             return
+        
+        # Start plugins after successful login
+        if self.config.get('bot.load_plugins', True):
+            logger.info("Starting plugins...")
+            await self.plugin_manager.start_plugins()
         
         # Send startup message
         await self.send_startup_message()
@@ -1378,6 +1399,14 @@ class ChatrixBot:
     async def close(self):
         """Clean up resources."""
         logger.info("Shutting down bot...")
+        
+        # Stop plugins
+        logger.info("Stopping plugins...")
+        await self.plugin_manager.stop_plugins()
+        
+        # Cleanup plugins
+        logger.info("Cleaning up plugins...")
+        await self.plugin_manager.cleanup_plugins()
         
         # Send shutdown message before closing
         await self.send_shutdown_message()

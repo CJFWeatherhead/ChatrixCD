@@ -16,6 +16,24 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Added
+- **Plugin/Module System**: Extensible plugin architecture for bot functionality
+  - Plugin manager with complete lifecycle management (initialize, start, stop, cleanup)
+  - Plugin metadata support via `meta.json` (name, version, description, author, dependencies)
+  - Dynamic plugin discovery and loading from `/plugins` directory
+  - Mutual exclusion for conflicting plugins (e.g., only one task monitor active)
+  - Plugin status display in `!cd info` command with version and activity status
+  - Plugin-specific configuration via `plugin.json` files with config.json override support
+  - Global `load_plugins` flag in bot configuration to enable/disable plugin loading
+  - Three initial plugins included:
+    - **semaphore_poll**: Traditional API polling for task monitoring (enabled by default)
+    - **semaphore_webhook**: Gotify webhook-based push notifications for task monitoring
+    - **example_plugin**: Comprehensive template demonstrating plugin API
+  - Comprehensive plugin development documentation and examples
+  - Complete test coverage with 18 test cases for plugin system
+- **Configuration Version 5**: Updated configuration schema
+  - Added `bot.load_plugins` boolean flag to control plugin loading
+  - Each plugin now has its own `plugin.json` for default configuration
+  - Settings in main `config.json` override plugin-specific settings
 - **Runtime Metrics Tracking**: Bot now tracks and displays runtime statistics
   - Messages sent count
   - Requests received count
@@ -37,6 +55,15 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Eliminates duplicate logic between different interfaces
 
 ### Changed
+- **Task Monitoring Architecture**: Refactored from built-in to plugin-based system
+  - Task monitoring now delegates to active `TaskMonitorPlugin`
+  - Command handler's `monitor_task()` uses plugin manager for monitoring
+  - Bot lifecycle includes plugin loading, starting, and cleanup phases
+  - Graceful fallback with clear messaging when no task monitor plugin is loaded
+  - Task monitor plugins receive sender information for personalized notifications
+- **Configuration Migration**: Automatic migration from v4 to v5
+  - Plugins now use dedicated `plugin.json` files for configuration
+  - Main config.json can override plugin settings for backwards compatibility
 - **TUI Status Display**: Harmonized with !cd info command
   - Updated to use centralized `get_status_info()` method
   - Consistent naming and formatting across TUI and commands
@@ -46,7 +73,10 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Combines Matrix power levels with config-based restrictions
 
 ### Fixed
+- Fixed missing sender information in task completion notifications
+- Fixed URL parsing in semaphore_webhook plugin (now uses urllib.parse)
 - Fixed duplicate return statement in `_gather_matrix_info()` method
+- Added explanatory comments to exception handlers per code review
 
 ## [2025.11.15.5.2.0] - 2025-11-15
 

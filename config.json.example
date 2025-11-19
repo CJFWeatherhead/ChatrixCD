@@ -1,6 +1,6 @@
 {
   // Configuration file version - do not modify
-  "_config_version": 4,
+  "_config_version": 5,
   
   // Matrix homeserver connection settings
   "matrix": {
@@ -129,6 +129,10 @@
     //   - "debug": Detailed debug information (verbose logging)
     // Command-line -v flags override this setting:
     //   -v sets to "debug", -vv sets to "debug" with library logs
-    "verbosity": "info"
+    "verbosity": "info",
+    
+    // Enable/disable plugin loading (default: true)
+    // When false, no plugins will be loaded regardless of individual plugin settings
+    "load_plugins": true
   }
 }

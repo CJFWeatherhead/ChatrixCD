@@ -24,6 +24,20 @@ class TestChatrixBot(unittest.TestCase):
         
         # Mock configuration
         self.config = MagicMock(spec=Config)
+        
+        # Add .config attribute for plugin manager
+        self.config.config = {
+            'bot': {
+                'load_plugins': False  # Disable plugins in tests
+            },
+            'plugins': {}
+        }
+        
+        # Add get method to config for plugin manager
+        self.config.get = MagicMock(side_effect=lambda key, default=None: {
+            'bot.load_plugins': False
+        }.get(key, default))
+        
         self.config.get_matrix_config.return_value = {
             'homeserver': 'https://matrix.example.test',
             'user_id': '@bot:example.test',

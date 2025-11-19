@@ -1,0 +1,13 @@
+{
+  "name": "semaphore_poll",
+  "description": "Semaphore UI task monitoring via polling. Monitors task status by periodically polling the Semaphore API.",
+  "version": "1.0.0",
+  "author": "ChatrixCD Team",
+  "type": "task_monitor",
+  "category": "semaphore",
+  "enabled": true,
+  "dependencies": [],
+  "python_dependencies": [
+    "aiohttp>=3.9.0"
+  ]
+}
