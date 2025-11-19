@@ -285,8 +285,8 @@ class TestConfig(unittest.TestCase):
         
         try:
             config = Config(temp_file)
-            # v2 config should be migrated to v4 (current version)
-            self.assertEqual(config.get_config_version(), 4)
+            # v2 config should be migrated to v5 (current version)
+            self.assertEqual(config.get_config_version(), 5)
         finally:
             os.unlink(temp_file)
     
@@ -484,8 +484,8 @@ class TestConfig(unittest.TestCase):
         
         try:
             config = Config(temp_file)
-            # v3 config should be migrated to v4 (current version)
-            self.assertEqual(config.get_config_version(), 4)
+            # v3 config should be migrated to v5 (current version)
+            self.assertEqual(config.get_config_version(), 5)
             self.assertEqual(config.get('matrix.homeserver'), 'https://matrix.org')
         finally:
             os.unlink(temp_file)
