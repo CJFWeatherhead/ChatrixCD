@@ -1,0 +1,55 @@
+Update bot.py to use OIDC plugin:
+
+Line 357: Replace
+```
+                # OIDC authentication using Matrix SSO flow
+                return await self._login_oidc(token_callback=oidc_token_callback)
+```
+
+With:
+```
+                # OIDC authentication - delegate to plugin if available
+                if hasattr(self, 'oidc_plugin') and self.oidc_plugin:
+                    logger.info("Using OIDC authentication plugin")
+                    return await self.oidc_plugin.login_oidc(self)
+                else:
+                    logger.error(
+                        "OIDC authentication requested but oidc_auth plugin is not loaded.\n"
+                        "Please ensure the oidc_auth plugin is enabled in your configuration.\n"
+                        "Alternatively, use password authentication by setting auth_type to 'password'."
+                    )
+                    return False
+```
+
+Update main.py to remove temporary OIDC error and setup TUI reference:
+
+Lines 513-531: Replace entire oidc_token_callback function
+
+With:
+```
+    # Store reference to TUI app in bot for plugin access
+    bot.tui_app = tui_app
+```
+
+Remove lines 257-268 (old login signature with oidc_token_callback parameter)
+Change to:
+```
+    async def login(self) -> bool:
+        """Login to Matrix server using configured authentication method.
+        
+        Supports two authentication methods:
+        1. Password authentication: Direct login with username/password (built-in)
+        2. OIDC authentication: Interactive SSO login via oidc_auth plugin
+        
+        For OIDC, if a valid session is saved, it will be restored automatically
+        without requiring interactive login. The oidc_auth plugin must be enabled.
+        
+        Returns:
+            True if login successful, False otherwise
+        """
+```
+
+Update line 540:
+```
+        login_success = await bot.login()
+```

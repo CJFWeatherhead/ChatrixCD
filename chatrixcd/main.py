@@ -501,52 +501,25 @@ async def run_tui_with_bot(bot, config, use_color: bool, mouse: bool = False, th
     import logging
     from nio import SyncResponse
     
-    # Import the TUI module
-    from chatrixcd.tui import ChatrixTUI as TUIClass, OIDCAuthScreen
-    
     logger = logging.getLogger(__name__)
+    
+    # Import the TUI module
+    from chatrixcd.tui.app import ChatrixTUI as TUIClass
+    logger.info("Using modular TUI")
     
     # Create TUI app
     tui_app = TUIClass(bot, config, use_color=use_color, theme=theme)
     
-    # Create OIDC callback that uses the TUI
-    async def oidc_token_callback(sso_url: str, redirect_url: str, identity_providers: list) -> str:
-        """TUI-based OIDC token input.
-        
-        Args:
-            sso_url: SSO authentication URL
-            redirect_url: Redirect URL for callback
-            identity_providers: List of available identity providers
-            
-        Returns:
-            Login token from user
-        """
-        logger.debug("OIDC callback invoked, pushing OIDC auth screen to TUI")
-        
-        # Create a future to receive the token
-        token_future = asyncio.Future()
-        
-        def handle_result(token):
-            logger.debug(f"OIDC screen dismissed with token: {'<provided>' if token else '<cancelled>'}")
-            if token:
-                token_future.set_result(token)
-            else:
-                token_future.set_exception(Exception("OIDC authentication cancelled"))
-        
-        # Show OIDC screen (TUI must be running for this to work)
-        tui_app.push_screen(OIDCAuthScreen(sso_url, redirect_url, identity_providers), handle_result)
-        
-        # Wait for user to submit token
-        token = await token_future
-        return token
+    # Store reference to TUI app in bot for plugin access (e.g., OIDC plugin)
+    bot.tui_app = tui_app
     
     # Set up login task that will be executed after TUI starts
     async def perform_login_and_sync():
         """Perform login and start sync loop after TUI is mounted."""
         logger.debug("Starting login process within TUI context")
         
-        # Perform login with TUI callback for OIDC
-        login_success = await bot.login(oidc_token_callback=oidc_token_callback)
+        # Perform login (OIDC handled by plugin if enabled)
+        login_success = await bot.login()
         
         if not login_success:
             logger.error("Failed to login, exiting TUI")

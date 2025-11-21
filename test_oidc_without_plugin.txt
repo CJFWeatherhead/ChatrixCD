@@ -1,0 +1,29 @@
+    def test_login_oidc_without_plugin_fails(self):
+        """Test that OIDC login fails gracefully when plugin is not loaded."""
+        from nio import LoginInfoResponse
+        
+        # Configure for OIDC authentication
+        self.config.get_matrix_config.return_value = {
+            'homeserver': 'https://matrix.example.test',
+            'user_id': '@bot:example.test',
+            'device_id': 'TESTDEVICE',
+            'device_name': 'Test Bot',
+            'store_path': self.temp_dir,
+            'auth_type': 'oidc',
+            'oidc_redirect_url': 'http://localhost:8080/callback'
+        }
+        
+        bot = ChatrixBot(self.config)
+        
+        # Create LoginInfoResponse
+        login_info = LoginInfoResponse(flows=['m.login.sso', 'm.login.token'])
+        bot.client.login_info = AsyncMock(return_value=login_info)
+        
+        # DON'T set bot.oidc_plugin - simulate plugin not loaded
+        
+        # Call login - should fail with error message
+        result = self.loop.run_until_complete(bot.login())
+        
+        # Verify login failed
+        self.assertFalse(result)
+

@@ -1,0 +1,11 @@
+{
+  "name": "aliases",
+  "description": "Command alias management for ChatrixCD. Allows users to create shortcuts for frequently used commands.",
+  "version": "1.0.0",
+  "author": "ChatrixCD Team",
+  "type": "generic",
+  "category": "core",
+  "enabled": true,
+  "dependencies": [],
+  "python_dependencies": []
+}

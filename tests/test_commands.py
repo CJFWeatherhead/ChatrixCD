@@ -20,6 +20,13 @@ class TestCommandHandler(unittest.TestCase):
         self.mock_bot = MagicMock()
         self.mock_bot.send_message = AsyncMock()
         
+        # Mock plugin manager and alias plugin
+        self.mock_plugin_manager = MagicMock()
+        self.mock_alias_plugin = MagicMock()
+        self.mock_alias_plugin.resolve_alias.side_effect = lambda cmd: cmd  # Return command unchanged by default
+        self.mock_plugin_manager.get_plugin.return_value = self.mock_alias_plugin
+        self.mock_bot.plugin_manager = self.mock_plugin_manager
+        
         # Mock semaphore client
         self.mock_semaphore = MagicMock()
         

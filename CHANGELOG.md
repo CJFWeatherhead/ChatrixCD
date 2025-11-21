@@ -16,6 +16,31 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Added
+- **Modular TUI Architecture**: Complete redesign of Text User Interface
+  - Modular screen system with dynamic registration
+  - Plugin-aware: plugins can register their own TUI screens
+  - Event-driven architecture for component communication
+  - Reusable widget library (StatusIndicator, MetricDisplay, DataGrid, etc.)
+  - Comprehensive testing framework with Textual pilot tests
+  - Screen registry for managing available screens
+  - Plugin TUI integration system (PluginTUIExtension, PluginScreenMixin)
+  - Example implementation for aliases plugin
+  - Complete documentation (TUI_ARCHITECTURE.md, TUI_QUICKSTART.md)
+  - Core screens: Main Menu, Status, Rooms, Logs, Configuration
+  - Type-safe events: ScreenChangeEvent, DataUpdateEvent, PluginLoadedEvent, etc.
+- **Plugin TUI Integration**: Plugins can now extend the TUI
+  - `register_tui_screens()` method for plugins
+  - Dynamic screen registration during plugin load
+  - Plugin screen cleanup on plugin unload
+  - Example TUI extension for aliases plugin
+- **OIDC Authentication Plugin**: OIDC/SSO authentication moved to plugin
+  - New `plugins/oidc_auth/` plugin for OIDC authentication
+  - Interactive TUI modal for token input in interactive mode
+  - Console fallback for non-interactive/log-only mode
+  - Automatic session restoration
+  - Multiple identity provider support
+  - Enabled by default, can be disabled in config
+  - Comprehensive documentation in plugin README
 - **Plugin/Module System**: Extensible plugin architecture for bot functionality
   - Plugin manager with complete lifecycle management (initialize, start, stop, cleanup)
   - Plugin metadata support via `meta.json` (name, version, description, author, dependencies)
@@ -25,6 +50,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Plugin-specific configuration via `plugin.json` files with config.json override support
   - Global `load_plugins` flag in bot configuration to enable/disable plugin loading
   - Three initial plugins included:
+    - **aliases**: Command alias management migrated from built-in AliasManager (enabled by default)
     - **semaphore_poll**: Traditional API polling for task monitoring (enabled by default)
     - **semaphore_webhook**: Gotify webhook-based push notifications for task monitoring
     - **example_plugin**: Comprehensive template demonstrating plugin API
@@ -55,6 +81,15 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Eliminates duplicate logic between different interfaces
 
 ### Changed
+- **TUI Architecture**: Replaced monolithic TUI with modular architecture
+  - Old `chatrixcd/tui.py` (2000+ lines) removed in favor of modular design
+  - New structure in `chatrixcd/tui/` with separated concerns
+  - Better maintainability, testability, and extensibility
+- **Bot Authentication API**: `bot.login()` no longer takes `oidc_token_callback` parameter
+  - OIDC authentication now handled by `oidc_auth` plugin
+  - Core bot only handles password authentication
+  - Cleaner separation of concerns between auth methods
+  - Plugin registers itself as `bot.oidc_plugin` during initialization
 - **Task Monitoring Architecture**: Refactored from built-in to plugin-based system
   - Task monitoring now delegates to active `TaskMonitorPlugin`
   - Command handler's `monitor_task()` uses plugin manager for monitoring
@@ -76,7 +111,18 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - Fixed missing sender information in task completion notifications
 - Fixed URL parsing in semaphore_webhook plugin (now uses urllib.parse)
 - Fixed duplicate return statement in `_gather_matrix_info()` method
+- Fixed `MetricDisplay` widget to properly accept initialization parameters
 - Added explanatory comments to exception handlers per code review
+
+### Removed
+- **Legacy TUI (TUI v1)**: Removed monolithic TUI implementation
+  - Old `chatrixcd/tui.py` file removed (2000+ lines)
+  - `chatrixcd/tui_manager.py` version selector removed
+  - Environment variable `CHATRIXCD_TUI_VERSION` no longer needed
+  - New modular TUI is now the only TUI implementation
+- **OIDC Authentication Screen**: Temporarily removed pending reimplementation
+  - OIDC authentication will show error message directing to password auth
+  - Will be reimplemented in modular TUI in future release
 
 ## [2025.11.15.5.2.0] - 2025-11-15
 
@@ -1258,20 +1304,6 @@ ChatrixCD/
 ---
 
 ## Version History
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 - **2025.11.15.5.2.0** (2025-11-15)
 - **2025.11.09.5.1.0** (2025-11-09)

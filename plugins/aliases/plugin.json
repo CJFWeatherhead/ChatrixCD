@@ -1,0 +1,10 @@
+{
+  "enabled": true,
+  "aliases_file": "aliases.json",
+  "auto_reload": true,
+  "reserved_commands": [
+    "help", "projects", "templates", "run", "status",
+    "stop", "logs", "ping", "info", "pet", "scold",
+    "admins", "rooms", "exit", "aliases"
+  ]
+}

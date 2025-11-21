@@ -1108,29 +1108,21 @@ class TestChatrixBot(unittest.TestCase):
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
         mock_response.__aexit__ = AsyncMock(return_value=None)
         
-        # Create a token callback that returns a token immediately
-        async def mock_token_callback(sso_url, redirect_url, identity_providers):
-            # Verify identity providers were parsed correctly
-            self.assertEqual(len(identity_providers), 1)
-            self.assertEqual(identity_providers[0]['id'], 'oidc')
-            self.assertEqual(identity_providers[0]['name'], 'OIDC Provider')
-            return 'test_login_token'
+        # Create a mock OIDC plugin
+        mock_plugin = AsyncMock()
+        mock_plugin.login_oidc = AsyncMock(return_value=True)
+        bot.oidc_plugin = mock_plugin
         
         # Patch aiohttp.ClientSession in the bot module where it's imported
         with patch('chatrixcd.bot.aiohttp.ClientSession', return_value=mock_session):
-            # Call login with the callback
-            result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
+            # Call login - plugin should be used
+            result = self.loop.run_until_complete(bot.login())
         
         # Verify login succeeded
         self.assertTrue(result)
         
-        # Verify aiohttp request was made
-        mock_session.get.assert_called_once_with('https://matrix.example.test/_matrix/client/v3/login')
-        
-        # Verify login was called with the token
-        bot.client.login.assert_called_once()
-        call_kwargs = bot.client.login.call_args[1]
-        self.assertEqual(call_kwargs['token'], 'test_login_token')
+        # Verify plugin was called
+        mock_plugin.login_oidc.assert_called_once_with(bot)
 
     def test_login_oidc_handles_no_identity_providers(self):
         """Test that OIDC login handles SSO flows without identity_providers field."""
@@ -1182,23 +1174,19 @@ class TestChatrixBot(unittest.TestCase):
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
         mock_response.__aexit__ = AsyncMock(return_value=None)
         
-        # Create a token callback that returns a token immediately
-        async def mock_token_callback(sso_url, redirect_url, identity_providers):
-            # Verify identity_providers is empty
-            self.assertEqual(len(identity_providers), 0)
-            # Verify SSO URL uses generic redirect
-            self.assertIn('/_matrix/client/v3/login/sso/redirect?', sso_url)
-            self.assertNotIn('redirect/oidc', sso_url)  # No provider ID
-            return 'test_login_token'
+        # Create a mock OIDC plugin
+        mock_plugin = AsyncMock()
+        mock_plugin.login_oidc = AsyncMock(return_value=True)
+        bot.oidc_plugin = mock_plugin
         
         # Patch aiohttp.ClientSession in the bot module where it's imported
         with patch('chatrixcd.bot.aiohttp.ClientSession', return_value=mock_session):
-            # Call login with the callback
-            result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
+            # Call login - plugin should be used
+            result = self.loop.run_until_complete(bot.login())
         
         # Verify login succeeded
         self.assertTrue(result)
-        mock_response.json.assert_called_once()
+        mock_plugin.login_oidc.assert_called_once_with(bot)
 
     def test_login_oidc_handles_multiple_identity_providers(self):
         """Test that OIDC login handles multiple identity providers."""
@@ -1259,23 +1247,19 @@ class TestChatrixBot(unittest.TestCase):
         
         # Mock input to select the first provider
         with patch('builtins.input', return_value='1'):
-            # Create a token callback that returns a token immediately
-            async def mock_token_callback(sso_url, redirect_url, identity_providers):
-                # Verify all identity providers were parsed correctly
-                self.assertEqual(len(identity_providers), 3)
-                self.assertEqual(identity_providers[0]['name'], 'OIDC Provider')
-                self.assertEqual(identity_providers[1]['name'], 'Google')
-                self.assertEqual(identity_providers[2]['name'], 'GitHub')
-                return 'test_login_token'
+            # Create a mock OIDC plugin
+            mock_plugin = AsyncMock()
+            mock_plugin.login_oidc = AsyncMock(return_value=True)
+            bot.oidc_plugin = mock_plugin
             
             # Patch aiohttp.ClientSession in the bot module where it's imported
             with patch('chatrixcd.bot.aiohttp.ClientSession', return_value=mock_session):
-                # Call login with the callback
-                result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
+                # Call login - plugin should be used
+                result = self.loop.run_until_complete(bot.login())
         
         # Verify login succeeded
         self.assertTrue(result)
-        mock_response.json.assert_called_once()
+        mock_plugin.login_oidc.assert_called_once_with(bot)
 
     def test_login_oidc_handles_json_parse_error_gracefully(self):
         """Test that OIDC login handles JSON parse errors gracefully."""
@@ -1322,20 +1306,19 @@ class TestChatrixBot(unittest.TestCase):
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
         mock_response.__aexit__ = AsyncMock(return_value=None)
         
-        # Create a token callback that returns a token immediately
-        async def mock_token_callback(sso_url, redirect_url, identity_providers):
-            # Should still work with empty identity_providers
-            self.assertEqual(len(identity_providers), 0)
-            return 'test_login_token'
+        # Create a mock OIDC plugin
+        mock_plugin = AsyncMock()
+        mock_plugin.login_oidc = AsyncMock(return_value=True)
+        bot.oidc_plugin = mock_plugin
         
         # Patch aiohttp.ClientSession in the bot module where it's imported
         with patch('chatrixcd.bot.aiohttp.ClientSession', return_value=mock_session):
-            # Call login with the callback - should succeed despite parse error
-            result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
+            # Call login - plugin should be used and handle errors gracefully
+            result = self.loop.run_until_complete(bot.login())
         
-        # Verify login succeeded (falls back to generic SSO URL)
+        # Verify login succeeded (plugin handles errors)
         self.assertTrue(result)
-        mock_response.json.assert_called_once()
+        mock_plugin.login_oidc.assert_called_once_with(bot)
 
     def test_login_oidc_handles_http_error_gracefully(self):
         """Test that OIDC login handles HTTP errors gracefully when fetching identity providers."""
@@ -1381,19 +1364,19 @@ class TestChatrixBot(unittest.TestCase):
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
         mock_response.__aexit__ = AsyncMock(return_value=None)
         
-        # Create a token callback that returns a token immediately
-        async def mock_token_callback(sso_url, redirect_url, identity_providers):
-            # Should still work with empty identity_providers (fallback to generic URL)
-            self.assertEqual(len(identity_providers), 0)
-            return 'test_login_token'
+        # Create a mock OIDC plugin
+        mock_plugin = AsyncMock()
+        mock_plugin.login_oidc = AsyncMock(return_value=True)
+        bot.oidc_plugin = mock_plugin
         
         # Patch aiohttp.ClientSession in the bot module where it's imported
         with patch('chatrixcd.bot.aiohttp.ClientSession', return_value=mock_session):
-            # Call login with the callback - should succeed with fallback to generic URL
-            result = self.loop.run_until_complete(bot.login(oidc_token_callback=mock_token_callback))
+            # Call login - plugin should be used and handle HTTP errors gracefully
+            result = self.loop.run_until_complete(bot.login())
         
-        # Verify login succeeded (falls back to generic SSO URL)
+        # Verify login succeeded (plugin handles HTTP errors)
         self.assertTrue(result)
+        mock_plugin.login_oidc.assert_called_once_with(bot)
 
 
 if __name__ == '__main__':

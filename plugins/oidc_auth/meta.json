@@ -1,0 +1,10 @@
+{
+  "name": "OIDC Authentication",
+  "version": "1.0.0",
+  "description": "Enables OIDC/SSO authentication for Matrix login. Provides interactive TUI screen for token input.",
+  "author": "ChatrixCD Team",
+  "dependencies": [],
+  "config": {
+    "enabled": true
+  }
+}

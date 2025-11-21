@@ -10,7 +10,6 @@ import psutil
 from typing import Dict, Any, Optional, List
 from nio import MatrixRoom, RoomMessageText
 from chatrixcd.semaphore import SemaphoreClient
-from chatrixcd.aliases import AliasManager
 from chatrixcd.messages import MessageManager
 from chatrixcd import __version__, __version_full__
 
@@ -40,9 +39,6 @@ class CommandHandler:
         # Track last task run (for status/logs without args)
         self.last_task_id: Optional[int] = None
         self.last_project_id: Optional[int] = None
-        
-        # Initialize alias manager with auto-reload
-        self.alias_manager = AliasManager(auto_reload=True)
         
         # Initialize message manager with auto-reload
         self.message_manager = MessageManager(auto_reload=True)
@@ -345,7 +341,7 @@ class CommandHandler:
             return
         
         # Resolve aliases
-        resolved_command = self.alias_manager.resolve_command(command_text)
+        resolved_command = self._resolve_alias(command_text)
         parts = resolved_command.split()
         
         command = parts[0].lower()
@@ -379,7 +375,7 @@ class CommandHandler:
         elif command == 'info':
             await self.get_semaphore_info(room.room_id, event.sender)
         elif command == 'aliases':
-            await self.list_command_aliases(room.room_id, event.sender)
+            await self.handle_aliases_command(room.room_id, args, event.sender)
         elif command == 'pet':
             await self.handle_pet(room.room_id, event.sender)
         elif command == 'scold':
@@ -2298,11 +2294,15 @@ class CommandHandler:
             room_id: Room to send response to
             sender: User who requested the list
         """
-        aliases = self.alias_manager.list_aliases()
+        alias_plugin = self._get_alias_plugin()
+        aliases = alias_plugin.list_aliases() if alias_plugin else {}
         greeting = self._get_greeting(sender, room_id)
         
         if not aliases:
             plain_msg = f"{greeting} No command aliases configured. 🔖"
+            if not alias_plugin:
+                plain_msg += " (Plugin not loaded)"
+            
             html_msg = self.markdown_to_html(plain_msg)
             await self.bot.send_message(
                 room_id,
@@ -2803,3 +2803,76 @@ Session management commands:
             response = f"{greeting} - Error restoring session state."
         
         await self.bot.send_message(room_id, response)
+
+    def _get_alias_plugin(self):
+        """Get the aliases plugin if loaded."""
+        if hasattr(self.bot, 'plugin_manager'):
+            return self.bot.plugin_manager.get_plugin('aliases')
+        return None
+
+    def _resolve_alias(self, command: str) -> str:
+        """Resolve command alias using plugin."""
+        alias_plugin = self._get_alias_plugin()
+        if alias_plugin:
+            return alias_plugin.resolve_alias(command)
+        return command
+
+    async def handle_aliases_command(self, room_id: str, args: List[str], sender: str):
+        """Handle aliases command - delegated to plugin."""
+        alias_plugin = self._get_alias_plugin()
+        
+        if not alias_plugin:
+            await self.bot.send_message(
+                room_id,
+                "❌ Aliases plugin is not loaded. Enable it in configuration."
+            )
+            return
+        
+        if not args:
+            # List aliases
+            await self.list_command_aliases(room_id, sender)
+            return
+
+        # Check admin permissions for modification
+        if not self.is_admin(sender):
+            await self.bot.send_message(
+                room_id,
+                "🚫 You don't have permission to manage aliases."
+            )
+            return
+
+        subcommand = args[0].lower()
+        
+        if subcommand == 'add' and len(args) >= 3:
+            alias = args[1]
+            command = ' '.join(args[2:])
+            if alias_plugin.add_alias(alias, command):
+                await self.bot.send_message(
+                    room_id,
+                    f"✅ Alias added: **{alias}** → `{command}`"
+                )
+            else:
+                await self.bot.send_message(
+                    room_id,
+                    f"❌ Failed to add alias '{alias}'. It might be a reserved command."
+                )
+        elif subcommand in ('remove', 'rm', 'delete') and len(args) >= 2:
+            alias = args[1]
+            if alias_plugin.remove_alias(alias):
+                await self.bot.send_message(
+                    room_id,
+                    f"✅ Alias removed: **{alias}**"
+                )
+            else:
+                await self.bot.send_message(
+                    room_id,
+                    f"❌ Alias '{alias}' not found."
+                )
+        else:
+            await self.bot.send_message(
+                room_id,
+                "Usage:\n"
+                "• `!cd aliases` - List aliases\n"
+                "• `!cd aliases add <alias> <command>` - Add alias\n"
+                "• `!cd aliases remove <alias>` - Remove alias"
+            )

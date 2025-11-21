@@ -254,21 +254,15 @@ class ChatrixBot:
             logger.warning(f"Failed to load session: {e}")
             return None
     
-    async def login(self, oidc_token_callback=None) -> bool:
+    async def login(self) -> bool:
         """Login to Matrix server using configured authentication method.
         
         Supports two authentication methods:
-        1. Password authentication: Direct login with username/password
-        2. OIDC authentication: Interactive SSO login with browser callback
+        1. Password authentication: Direct login with username/password (built-in)
+        2. OIDC authentication: Interactive SSO login via oidc_auth plugin
         
         For OIDC, if a valid session is saved, it will be restored automatically
-        without requiring interactive login.
-        
-        Args:
-            oidc_token_callback: Optional async callback for OIDC token input.
-                               Useful for TUI integration. Should accept
-                               (sso_url, redirect_url, identity_providers)
-                               and return the login token.
+        without requiring interactive login. The oidc_auth plugin must be enabled.
         
         Returns:
             True if login successful, False otherwise
@@ -353,8 +347,17 @@ class ChatrixBot:
                         logger.warning(f"Failed to restore session: {e}")
                         # Fall through to interactive OIDC login
                 
-                # OIDC authentication using Matrix SSO flow
-                return await self._login_oidc(token_callback=oidc_token_callback)
+                # OIDC authentication - delegate to plugin if available
+                if hasattr(self, 'oidc_plugin') and self.oidc_plugin:
+                    logger.info("Using OIDC authentication plugin")
+                    return await self.oidc_plugin.login_oidc(self)
+                else:
+                    logger.error(
+                        "OIDC authentication requested but oidc_auth plugin is not loaded.\n"
+                        "Please ensure the oidc_auth plugin is enabled in your configuration.\n"
+                        "Alternatively, use password authentication by setting auth_type to 'password'."
+                    )
+                    return False
             else:
                 logger.error(f"Unknown auth_type: {auth_type}")
                 return False
@@ -1173,8 +1176,6 @@ class ChatrixBot:
         # Start auto-reload for config, aliases, and messages (if not already started)
         if hasattr(self.config, 'start_auto_reload'):
             self.config.start_auto_reload()
-        if hasattr(self.command_handler.alias_manager, 'start_auto_reload'):
-            self.command_handler.alias_manager.start_auto_reload()
         if hasattr(self.command_handler.message_manager, 'start_auto_reload'):
             self.command_handler.message_manager.start_auto_reload()
         

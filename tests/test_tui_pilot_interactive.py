@@ -31,11 +31,14 @@ class TestAliasManagementWorkflow(unittest.IsolatedAsyncioTestCase):
         self.mock_bot.semaphore = Mock()
         self.mock_bot.command_handler = Mock()
         self.mock_bot.command_handler.active_tasks = {}
-        self.mock_bot.command_handler.alias_manager = Mock()
-        self.mock_bot.command_handler.alias_manager.list_aliases.return_value = {}
-        self.mock_bot.command_handler.alias_manager.validate_command.return_value = True
-        self.mock_bot.command_handler.alias_manager.add_alias.return_value = True
-        self.mock_bot.command_handler.alias_manager.remove_alias.return_value = True
+        
+        # Mock the new plugin interface
+        self.mock_alias_plugin = Mock()
+        self.mock_alias_plugin.list_aliases.return_value = {}
+        self.mock_alias_plugin.validate_command.return_value = True
+        self.mock_alias_plugin.add_alias.return_value = True
+        self.mock_alias_plugin.remove_alias.return_value = True
+        self.mock_bot.command_handler._get_alias_plugin.return_value = self.mock_alias_plugin
         
         self.mock_config = Mock()
         self.mock_config.get_bot_config.return_value = {
@@ -46,7 +49,7 @@ class TestAliasManagementWorkflow(unittest.IsolatedAsyncioTestCase):
     async def test_alias_screen_button_selection(self):
         """Test selecting an alias by clicking its button."""
         # Add existing aliases
-        self.mock_bot.command_handler.alias_manager.list_aliases.return_value = {
+        self.mock_alias_plugin.list_aliases.return_value = {
             'deploy': 'run 1 5',
             'status': 'status 123'
         }
@@ -64,7 +67,7 @@ class TestAliasManagementWorkflow(unittest.IsolatedAsyncioTestCase):
 
     async def test_alias_screen_keyboard_navigation(self):
         """Test alias screen keyboard navigation."""
-        self.mock_bot.command_handler.alias_manager.list_aliases.return_value = {}
+        self.mock_alias_plugin.list_aliases.return_value = {}
         
         app = ChatrixTUI(self.mock_bot, self.mock_config)
         
@@ -82,7 +85,7 @@ class TestAliasManagementWorkflow(unittest.IsolatedAsyncioTestCase):
 
     async def test_alias_screen_escape_navigation(self):
         """Test alias screen escape key navigation."""
-        self.mock_bot.command_handler.alias_manager.list_aliases.return_value = {}
+        self.mock_alias_plugin.list_aliases.return_value = {}
         
         app = ChatrixTUI(self.mock_bot, self.mock_config)
         
@@ -426,8 +429,11 @@ class TestKeyboardShortcuts(unittest.IsolatedAsyncioTestCase):
         self.mock_bot.semaphore = Mock()
         self.mock_bot.command_handler = Mock()
         self.mock_bot.command_handler.active_tasks = {}
-        self.mock_bot.command_handler.alias_manager = Mock()
-        self.mock_bot.command_handler.alias_manager.list_aliases.return_value = {}
+        
+        # Mock the new plugin interface
+        self.mock_alias_plugin = Mock()
+        self.mock_alias_plugin.list_aliases.return_value = {}
+        self.mock_bot.command_handler._get_alias_plugin.return_value = self.mock_alias_plugin
         
         # Mock get_status_info() method
         self.mock_bot.get_status_info = Mock(return_value={
