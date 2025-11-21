@@ -1,6 +1,5 @@
 """Base widget classes for TUI."""
 
-from typing import Optional
 from textual.widget import Widget
 from textual.reactive import reactive
 

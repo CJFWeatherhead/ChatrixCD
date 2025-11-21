@@ -2,7 +2,7 @@
 
 import json
 import copy
-from textual.containers import Container, Vertical, ScrollableContainer
+from textual.containers import Container, Vertical
 from textual.widgets import Static, Button, TextArea
 from textual.binding import Binding
 from .base import BaseScreen

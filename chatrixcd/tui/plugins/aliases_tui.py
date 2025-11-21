@@ -4,7 +4,6 @@ from textual.containers import (
     Container,
     Vertical,
     Horizontal,
-    ScrollableContainer,
 )
 from textual.widgets import Static, Button, Input, Label
 from textual.binding import Binding
@@ -15,7 +14,7 @@ from chatrixcd.tui.plugin_integration import (
     PluginTUIExtension,
     PluginScreenMixin,
 )
-from chatrixcd.tui.widgets.common import ActionButton, DataGrid
+from chatrixcd.tui.widgets.common import DataGrid
 
 
 class AliasInputModal(ModalScreen):

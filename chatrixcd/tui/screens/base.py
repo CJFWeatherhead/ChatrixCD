@@ -48,15 +48,17 @@ class BaseScreen(Screen):
         # by making tui_app optional. When mounted by Textual, Screen.app
         # will be set automatically by the framework.
         self.tui_app = tui_app
-        logger_name = "tui.screen." + self.SCREEN_TITLE.lower().replace(
-            " ", "_"
-        )
+        # Construct a concise logger name for the screen
+        screen_title = self.SCREEN_TITLE.lower()
+        screen_key = screen_title.replace(" ", "_")
+        logger_name = "tui.screen." + screen_key
         self.logger = logging.getLogger(logger_name)
 
     def compose(self):
         """Compose the base screen layout.
 
-        Override compose_content() in subclasses to add screen-specific content.
+        Override compose_content() in subclasses to add
+        screen-specific content.
         """
         if self.SHOW_HEADER:
             yield Header()

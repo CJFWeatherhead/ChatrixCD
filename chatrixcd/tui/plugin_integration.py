@@ -4,7 +4,7 @@ Provides base classes and utilities for plugins to integrate with the TUI.
 """
 
 import logging
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 from abc import abstractmethod
 
 if TYPE_CHECKING:

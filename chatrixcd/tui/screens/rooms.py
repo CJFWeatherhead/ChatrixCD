@@ -1,6 +1,6 @@
 """Rooms screen showing Matrix rooms."""
 
-from textual.containers import Container, ScrollableContainer
+from textual.containers import Container
 from textual.widgets import Static
 from .base import BaseScreen
 from ..widgets.common import DataGrid
