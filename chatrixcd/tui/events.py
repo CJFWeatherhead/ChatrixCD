@@ -9,7 +9,7 @@ from textual.message import Message
 
 class TUIEvent(Message):
     """Base class for all TUI events."""
-    
+
     def __init__(self, source: str, data: Optional[dict] = None):
         super().__init__()
         self.source = source
@@ -18,8 +18,10 @@ class TUIEvent(Message):
 
 class ScreenChangeEvent(TUIEvent):
     """Event fired when screen changes."""
-    
-    def __init__(self, screen_name: str, previous_screen: Optional[str] = None):
+
+    def __init__(
+        self, screen_name: str, previous_screen: Optional[str] = None
+    ):
         super().__init__(source="screen_manager")
         self.screen_name = screen_name
         self.previous_screen = previous_screen
@@ -27,7 +29,7 @@ class ScreenChangeEvent(TUIEvent):
 
 class DataUpdateEvent(TUIEvent):
     """Event fired when data updates occur."""
-    
+
     def __init__(self, data_type: str, data: Any):
         super().__init__(source="data_manager")
         self.data_type = data_type
@@ -36,7 +38,7 @@ class DataUpdateEvent(TUIEvent):
 
 class PluginLoadedEvent(TUIEvent):
     """Event fired when a plugin is loaded."""
-    
+
     def __init__(self, plugin_name: str, plugin_type: str):
         super().__init__(source="plugin_manager")
         self.plugin_name = plugin_name
@@ -45,7 +47,7 @@ class PluginLoadedEvent(TUIEvent):
 
 class PluginUnloadedEvent(TUIEvent):
     """Event fired when a plugin is unloaded."""
-    
+
     def __init__(self, plugin_name: str):
         super().__init__(source="plugin_manager")
         self.plugin_name = plugin_name
@@ -53,7 +55,7 @@ class PluginUnloadedEvent(TUIEvent):
 
 class TaskUpdateEvent(TUIEvent):
     """Event fired when task status updates."""
-    
+
     def __init__(self, task_id: int, status: str, project_id: int):
         super().__init__(source="task_monitor")
         self.task_id = task_id
@@ -63,7 +65,7 @@ class TaskUpdateEvent(TUIEvent):
 
 class RoomJoinedEvent(TUIEvent):
     """Event fired when bot joins a room."""
-    
+
     def __init__(self, room_id: str, room_name: str):
         super().__init__(source="matrix_client")
         self.room_id = room_id
@@ -72,7 +74,7 @@ class RoomJoinedEvent(TUIEvent):
 
 class RoomLeftEvent(TUIEvent):
     """Event fired when bot leaves a room."""
-    
+
     def __init__(self, room_id: str):
         super().__init__(source="matrix_client")
         self.room_id = room_id
@@ -80,7 +82,7 @@ class RoomLeftEvent(TUIEvent):
 
 class ConfigChangedEvent(TUIEvent):
     """Event fired when configuration changes."""
-    
+
     def __init__(self, config_key: str, old_value: Any, new_value: Any):
         super().__init__(source="config_manager")
         self.config_key = config_key
@@ -90,8 +92,10 @@ class ConfigChangedEvent(TUIEvent):
 
 class NotificationEvent(TUIEvent):
     """Event for displaying notifications to user."""
-    
+
     def __init__(self, message: str, severity: str = "information"):
         super().__init__(source="notification_manager")
         self.message = message
-        self.severity = severity  # "information", "warning", "error", "success"
+        self.severity = (
+            severity  # "information", "warning", "error", "success"
+        )

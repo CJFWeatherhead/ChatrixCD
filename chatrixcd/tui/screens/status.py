@@ -8,39 +8,59 @@ from ..widgets.common import StatusIndicator, MetricDisplay
 
 class StatusScreen(BaseScreen):
     """Screen showing detailed bot status and metrics."""
-    
+
     SCREEN_TITLE = "Bot Status"
-    
+
     def compose_content(self):
         """Compose status screen content."""
         with Container(classes="status-container"):
-            yield Static("[bold cyan]Bot Status[/bold cyan]", classes="section-header")
-            
+            yield Static(
+                "[bold cyan]Bot Status[/bold cyan]", classes="section-header"
+            )
+
             # Connection status
             with Grid(classes="status-grid"):
-                yield StatusIndicator(service_name="Matrix", id="matrix-status")
-                yield StatusIndicator(service_name="Semaphore", id="semaphore-status")
-                
-            yield Static("[bold cyan]Metrics[/bold cyan]", classes="section-header")
-            
+                yield StatusIndicator(
+                    service_name="Matrix", id="matrix-status"
+                )
+                yield StatusIndicator(
+                    service_name="Semaphore", id="semaphore-status"
+                )
+
+            yield Static(
+                "[bold cyan]Metrics[/bold cyan]", classes="section-header"
+            )
+
             # Metrics display
             with Vertical(classes="metrics-container"):
                 yield MetricDisplay(label="Uptime", id="uptime", icon="⏱️")
-                yield MetricDisplay(label="Messages Sent", id="messages_sent", icon="📨")
-                yield MetricDisplay(label="Requests Received", id="requests_received", icon="📥")
-                yield MetricDisplay(label="Active Tasks", id="active_tasks", icon="🔧")
+                yield MetricDisplay(
+                    label="Messages Sent", id="messages_sent", icon="📨"
+                )
+                yield MetricDisplay(
+                    label="Requests Received",
+                    id="requests_received",
+                    icon="📥",
+                )
+                yield MetricDisplay(
+                    label="Active Tasks", id="active_tasks", icon="🔧"
+                )
                 yield MetricDisplay(label="Errors", id="errors", icon="❌")
-                yield MetricDisplay(label="Emojis Used", id="emojis_used", icon="😊")
-                
+                yield MetricDisplay(
+                    label="Emojis Used", id="emojis_used", icon="😊"
+                )
+
             # Active tasks section
-            yield Static("[bold cyan]Active Tasks[/bold cyan]", classes="section-header")
+            yield Static(
+                "[bold cyan]Active Tasks[/bold cyan]", classes="section-header"
+            )
             yield Static(id="active-tasks-list", classes="tasks-list")
-            
+
     async def on_screen_mount(self):
         """Set up periodic refresh."""
         await self.refresh_data()
         self.set_interval(3.0, self.refresh_data)
-        
+
     async def refresh_data(self):
         """Refresh status and metrics data."""
         try:
@@ -53,55 +73,69 @@ class StatusScreen(BaseScreen):
                     matrix_status.status = "Disconnected"
             else:
                 matrix_status.status = "Unknown"
-                
+
             # Update Semaphore status
-            semaphore_status = self.query_one("#semaphore-status", StatusIndicator)
+            semaphore_status = self.query_one(
+                "#semaphore-status", StatusIndicator
+            )
             if self.tui_app.bot and self.tui_app.bot.semaphore:
                 # Simple check - could be enhanced with actual health check
                 semaphore_status.status = "Connected"
             else:
                 semaphore_status.status = "Unknown"
-                
+
             # Update metrics
-            if hasattr(self.tui_app.bot, 'metrics'):
+            if hasattr(self.tui_app.bot, "metrics"):
                 metrics = self.tui_app.bot.metrics
-                
-                self.query_one("#uptime", MetricDisplay).value = self._format_uptime(
-                    metrics.get('uptime', 0)
+
+                self.query_one("#uptime", MetricDisplay).value = (
+                    self._format_uptime(metrics.get("uptime", 0))
                 )
-                self.query_one("#messages_sent", MetricDisplay).value = metrics.get('messages_sent', 0)
-                self.query_one("#requests_received", MetricDisplay).value = metrics.get('requests_received', 0)
-                self.query_one("#errors", MetricDisplay).value = metrics.get('errors', 0)
-                self.query_one("#emojis_used", MetricDisplay).value = metrics.get('emojis_used', 0)
-                
+                self.query_one("#messages_sent", MetricDisplay).value = (
+                    metrics.get("messages_sent", 0)
+                )
+                self.query_one("#requests_received", MetricDisplay).value = (
+                    metrics.get("requests_received", 0)
+                )
+                self.query_one("#errors", MetricDisplay).value = metrics.get(
+                    "errors", 0
+                )
+                self.query_one("#emojis_used", MetricDisplay).value = (
+                    metrics.get("emojis_used", 0)
+                )
+
             # Update active tasks
-            if hasattr(self.tui_app.bot, 'command_handler'):
-                active_tasks = getattr(self.tui_app.bot.command_handler, 'active_tasks', {})
-                self.query_one("#active_tasks", MetricDisplay).value = len(active_tasks)
-                
+            if hasattr(self.tui_app.bot, "command_handler"):
+                active_tasks = getattr(
+                    self.tui_app.bot.command_handler, "active_tasks", {}
+                )
+                self.query_one("#active_tasks", MetricDisplay).value = len(
+                    active_tasks
+                )
+
                 # Format active tasks list
                 tasks_widget = self.query_one("#active-tasks-list", Static)
                 if active_tasks:
                     tasks_text = []
                     for task_id, task_info in active_tasks.items():
-                        status = task_info.get('status', 'unknown')
-                        project_id = task_info.get('project_id', '?')
-                        
+                        status = task_info.get("status", "unknown")
+                        project_id = task_info.get("project_id", "?")
+
                         # Color code by status
                         color = {
-                            'running': 'yellow',
-                            'success': 'green',
-                            'error': 'red',
-                            'stopping': 'orange',
-                        }.get(status, 'white')
-                        
+                            "running": "yellow",
+                            "success": "green",
+                            "error": "red",
+                            "stopping": "orange",
+                        }.get(status, "white")
+
                         icon = {
-                            'running': '🔄',
-                            'success': '✅',
-                            'error': '❌',
-                            'stopping': '⏸️',
-                        }.get(status, '•')
-                        
+                            "running": "🔄",
+                            "success": "✅",
+                            "error": "❌",
+                            "stopping": "⏸️",
+                        }.get(status, "•")
+
                         tasks_text.append(
                             f"[{color}]{icon} Task {task_id}[/{color}] "
                             f"(Project {project_id}): {status}"
@@ -109,10 +143,10 @@ class StatusScreen(BaseScreen):
                     tasks_widget.update("\n".join(tasks_text))
                 else:
                     tasks_widget.update("[dim]No active tasks[/dim]")
-                    
+
         except Exception as e:
             self.logger.error(f"Error refreshing status: {e}")
-            
+
     def _format_uptime(self, seconds: float) -> str:
         """Format uptime in human-readable format."""
         try:
@@ -125,7 +159,7 @@ class StatusScreen(BaseScreen):
 
         hours, remainder = divmod(total, 3600)
         minutes, secs = divmod(remainder, 60)
-        
+
         if hours > 0:
             return f"{hours}h {minutes}m {secs}s"
         elif minutes > 0:
