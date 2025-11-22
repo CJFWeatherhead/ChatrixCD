@@ -2,401 +2,486 @@
 
 import unittest
 import yaml
-import os
 from pathlib import Path
 
 
 class TestWorkflowConfiguration(unittest.TestCase):
     """Test suite for validating GitHub Actions workflow files."""
-    
+
     @classmethod
     def setUpClass(cls):
         """Load workflow files for testing."""
-        cls.workflow_dir = Path(__file__).parent.parent / '.github' / 'workflows'
-        cls.build_workflow_path = cls.workflow_dir / 'build.yml'
-        
+        cls.workflow_dir = (
+            Path(__file__).parent.parent / ".github" / "workflows"
+        )
+        cls.build_workflow_path = cls.workflow_dir / "build.yml"
+
         # Load build workflow
-        with open(cls.build_workflow_path, 'r') as f:
+        with open(cls.build_workflow_path, "r") as f:
             cls.build_workflow = yaml.safe_load(f)
-        
+
         # Load Dockerfile.build for validation
-        cls.dockerfile_path = Path(__file__).parent.parent / 'Dockerfile.build'
-        cls.dockerfile_content = ''
+        cls.dockerfile_path = Path(__file__).parent.parent / "Dockerfile.build"
+        cls.dockerfile_content = ""
         if cls.dockerfile_path.exists():
-            with open(cls.dockerfile_path, 'r') as f:
+            with open(cls.dockerfile_path, "r") as f:
                 cls.dockerfile_content = f.read()
-    
+
     @classmethod
     def has_dockerfile_build(cls):
         """Check if Dockerfile.build exists and has content."""
-        return cls.dockerfile_path.exists() and bool(cls.dockerfile_content.strip())
-    
+        return cls.dockerfile_path.exists() and bool(
+            cls.dockerfile_content.strip()
+        )
+
     def test_build_workflow_exists(self):
         """Test that build.yml workflow exists."""
         self.assertTrue(
             self.build_workflow_path.exists(),
-            "build.yml workflow file should exist"
+            "build.yml workflow file should exist",
         )
-    
+
     def test_build_workflow_valid_yaml(self):
         """Test that build.yml is valid YAML."""
         self.assertIsNotNone(
-            self.build_workflow,
-            "build.yml should be valid YAML"
+            self.build_workflow, "build.yml should be valid YAML"
         )
-    
+
     def test_build_workflow_has_required_triggers(self):
         """Test that build workflow has correct triggers."""
         # YAML parses 'on' as True (boolean), so we check for True key
         self.assertIn(True, self.build_workflow)
         triggers = self.build_workflow[True]
-        
+
         # Should have workflow_dispatch for manual triggers (on-demand only)
-        self.assertIn('workflow_dispatch', triggers)
-        self.assertIn('inputs', triggers['workflow_dispatch'])
-        
+        self.assertIn("workflow_dispatch", triggers)
+        self.assertIn("inputs", triggers["workflow_dispatch"])
+
         # Check workflow_dispatch inputs
-        inputs = triggers['workflow_dispatch']['inputs']
-        self.assertIn('version_type', inputs)
-        
+        inputs = triggers["workflow_dispatch"]["inputs"]
+        self.assertIn("version_type", inputs)
+
         # Should NOT have pull_request trigger (on-demand only)
-        self.assertNotIn('pull_request', triggers)
-    
+        self.assertNotIn("pull_request", triggers)
+
     def test_build_workflow_has_test_job(self):
         """Test that build workflow has a test job."""
-        self.assertIn('jobs', self.build_workflow)
-        jobs = self.build_workflow['jobs']
-        self.assertIn('test', jobs)
-        
-        test_job = jobs['test']
-        self.assertIn('runs-on', test_job)
-        self.assertEqual(test_job['runs-on'], 'ubuntu-latest')
-        
+        self.assertIn("jobs", self.build_workflow)
+        jobs = self.build_workflow["jobs"]
+        self.assertIn("test", jobs)
+
+        test_job = jobs["test"]
+        self.assertIn("runs-on", test_job)
+        self.assertEqual(test_job["runs-on"], "ubuntu-latest")
+
         # Should run unit tests
-        steps = test_job['steps']
-        test_step_names = [step.get('name', '') for step in steps]
+        steps = test_job["steps"]
+        test_step_names = [step.get("name", "") for step in steps]
         self.assertTrue(
-            any('unit test' in name.lower() for name in test_step_names),
-            "Test job should include a unit test step"
+            any("unit test" in name.lower() for name in test_step_names),
+            "Test job should include a unit test step",
         )
-    
+
     def test_build_workflow_has_platform_builds(self):
         """Test that build workflow builds for all required platforms."""
-        jobs = self.build_workflow['jobs']
-        
+        jobs = self.build_workflow["jobs"]
+
         # Should have Linux build job
-        self.assertIn('build-linux', jobs)
-        linux_job = jobs['build-linux']
-        self.assertIn('strategy', linux_job)
-        self.assertIn('matrix', linux_job['strategy'])
-        linux_archs = linux_job['strategy']['matrix']['arch']
-        self.assertIn('x86_64', linux_archs, "Should build for Linux x86_64")
-        self.assertIn('i686', linux_archs, "Should build for Linux i686")
-        self.assertIn('arm64', linux_archs, "Should build for Linux arm64")
-        
+        self.assertIn("build-linux", jobs)
+        linux_job = jobs["build-linux"]
+        self.assertIn("strategy", linux_job)
+        self.assertIn("matrix", linux_job["strategy"])
+        linux_archs = linux_job["strategy"]["matrix"]["arch"]
+        self.assertIn("x86_64", linux_archs, "Should build for Linux x86_64")
+        self.assertIn("i686", linux_archs, "Should build for Linux i686")
+        self.assertIn("arm64", linux_archs, "Should build for Linux arm64")
+
         # Windows and macOS build jobs removed due to python-olm build issues
-        self.assertNotIn('build-windows', jobs, "Windows builds removed")
-        self.assertNotIn('build-macos', jobs, "macOS builds removed")
-    
+        self.assertNotIn("build-windows", jobs, "Windows builds removed")
+        self.assertNotIn("build-macos", jobs, "macOS builds removed")
+
     def test_build_workflow_uses_nuitka_action(self):
         """Test that build workflow uses Nuitka for building (Docker-based with Alpine/musl)."""
-        jobs = self.build_workflow['jobs']
-        
+        jobs = self.build_workflow["jobs"]
+
         # Check Linux build job for Nuitka usage in Docker containers
-        for job_name in ['build-linux']:
+        for job_name in ["build-linux"]:
             job = jobs[job_name]
-            steps = job['steps']
-            
+            steps = job["steps"]
+
             # Find Nuitka build steps (now run via Docker buildx or docker run)
             nuitka_steps = [
-                step for step in steps
-                if 'Build with Nuitka' in step.get('name', '')
+                step
+                for step in steps
+                if "Build with Nuitka" in step.get("name", "")
             ]
-            
+
             # Should have build steps for all architectures
             self.assertGreater(
-                len(nuitka_steps), 0,
-                f"{job_name} should have Nuitka build steps"
+                len(nuitka_steps),
+                0,
+                f"{job_name} should have Nuitka build steps",
             )
-            
+
             # Check that steps use Alpine Linux (musl) and static compilation
             for nuitka_step in nuitka_steps:
-                step_name = nuitka_step.get('name', '')
-                run_command = nuitka_step.get('run', '')
-                uses_action = nuitka_step.get('uses', '')
-                with_params = nuitka_step.get('with', {})
-                
+                step_name = nuitka_step.get("name", "")
+                run_command = nuitka_step.get("run", "")
+                uses_action = nuitka_step.get("uses", "")
+                with_params = nuitka_step.get("with", {})
+
                 # If using docker buildx action, check Dockerfile.build
-                if 'docker/build-push-action' in uses_action and self.has_dockerfile_build():
+                if (
+                    "docker/build-push-action" in uses_action
+                    and self.has_dockerfile_build()
+                ):
                     # Verify the step references Dockerfile.build
-                    dockerfile_file = with_params.get('file', '')
-                    self.assertIn('Dockerfile.build', dockerfile_file,
-                                 f"{step_name} should use Dockerfile.build")
-                    
+                    dockerfile_file = with_params.get("file", "")
+                    self.assertIn(
+                        "Dockerfile.build",
+                        dockerfile_file,
+                        f"{step_name} should use Dockerfile.build",
+                    )
+
                     # Verify Dockerfile.build uses Alpine Linux
-                    self.assertIn('alpine', self.dockerfile_content.lower(),
-                                 "Dockerfile.build should use Alpine Linux")
-                    
+                    self.assertIn(
+                        "alpine",
+                        self.dockerfile_content.lower(),
+                        "Dockerfile.build should use Alpine Linux",
+                    )
+
                     # Verify Dockerfile.build uses Nuitka
-                    self.assertIn('nuitka', self.dockerfile_content.lower(),
-                                 "Dockerfile.build should use Nuitka")
-                    
+                    self.assertIn(
+                        "nuitka",
+                        self.dockerfile_content.lower(),
+                        "Dockerfile.build should use Nuitka",
+                    )
+
                     # Verify static compilation flags in Dockerfile
-                    self.assertIn('--static-libpython=yes', self.dockerfile_content,
-                                 "Dockerfile.build should use static libpython")
-                    
+                    self.assertIn(
+                        "--static-libpython=yes",
+                        self.dockerfile_content,
+                        "Dockerfile.build should use static libpython",
+                    )
+
                     # Verify LTO is configurable via build args
-                    self.assertIn('--lto=${ENABLE_LTO}', self.dockerfile_content,
-                                 "Dockerfile.build should support configurable LTO")
-                    
+                    self.assertIn(
+                        "--lto=${ENABLE_LTO}",
+                        self.dockerfile_content,
+                        "Dockerfile.build should support configurable LTO",
+                    )
+
                     # Verify parallel compilation is enabled
-                    self.assertIn('--jobs=', self.dockerfile_content,
-                                 "Dockerfile.build should use parallel compilation")
-                    
+                    self.assertIn(
+                        "--jobs=",
+                        self.dockerfile_content,
+                        "Dockerfile.build should use parallel compilation",
+                    )
+
                     # Verify standalone mode is used for all architectures (consistency)
-                    self.assertIn('--mode=standalone', self.dockerfile_content,
-                                 "Dockerfile.build should use standalone mode for all architectures")
+                    self.assertIn(
+                        "--mode=standalone",
+                        self.dockerfile_content,
+                        "Dockerfile.build should use standalone mode for all architectures",
+                    )
                     # Verify onefile mode is NOT used (all use standalone now)
-                    self.assertNotIn('--mode=onefile', self.dockerfile_content,
-                                 "Dockerfile.build should not use onefile mode (standalone for all)")
-                    
+                    self.assertNotIn(
+                        "--mode=onefile",
+                        self.dockerfile_content,
+                        "Dockerfile.build should not use onefile mode (standalone for all)",
+                    )
+
                     # Verify ccache is configured in Dockerfile
-                    self.assertIn('ccache', self.dockerfile_content,
-                                 "Dockerfile.build should use ccache for faster rebuilds")
-                
+                    self.assertIn(
+                        "ccache",
+                        self.dockerfile_content,
+                        "Dockerfile.build should use ccache for faster rebuilds",
+                    )
+
                 # Legacy check for docker run commands
                 elif run_command:
                     # Verify Alpine/musl is used
-                    self.assertIn('alpine', run_command.lower(), 
-                                 f"{step_name} should use Alpine Linux")
-                    
+                    self.assertIn(
+                        "alpine",
+                        run_command.lower(),
+                        f"{step_name} should use Alpine Linux",
+                    )
+
                     # Verify Nuitka is used
-                    self.assertIn('nuitka', run_command.lower(),
-                                 f"{step_name} should use Nuitka")
-                    
+                    self.assertIn(
+                        "nuitka",
+                        run_command.lower(),
+                        f"{step_name} should use Nuitka",
+                    )
+
                     # Verify static compilation flags
-                    self.assertIn('--static-libpython=yes', run_command,
-                                 f"{step_name} should use static libpython")
-                    
+                    self.assertIn(
+                        "--static-libpython=yes",
+                        run_command,
+                        f"{step_name} should use static libpython",
+                    )
+
                     # Verify LTO setting (disabled for ARM64 for performance)
                     # ARM64 builds use --lto=no for faster compilation
                     # x86_64 and i686 use --lto=yes for optimization
-                    if 'arm64' in step_name.lower():
-                        self.assertIn('--lto=no', run_command,
-                                     f"{step_name} should disable LTO for faster ARM64 compilation")
+                    if "arm64" in step_name.lower():
+                        self.assertIn(
+                            "--lto=no",
+                            run_command,
+                            f"{step_name} should disable LTO for faster ARM64 compilation",
+                        )
                     else:
-                        self.assertIn('--lto=yes', run_command,
-                                     f"{step_name} should use LTO")
-                    
+                        self.assertIn(
+                            "--lto=yes",
+                            run_command,
+                            f"{step_name} should use LTO",
+                        )
+
                     # Verify parallel compilation is enabled
-                    self.assertIn('--jobs=', run_command,
-                                 f"{step_name} should use parallel compilation")
-                    
+                    self.assertIn(
+                        "--jobs=",
+                        run_command,
+                        f"{step_name} should use parallel compilation",
+                    )
+
                     # Verify onefile mode
-                    self.assertIn('--mode=onefile', run_command,
-                                 f"{step_name} should use onefile mode")
-                    
+                    self.assertIn(
+                        "--mode=onefile",
+                        run_command,
+                        f"{step_name} should use onefile mode",
+                    )
+
                     # Verify ccache is configured
-                    self.assertIn('ccache', run_command,
-                                 f"{step_name} should use ccache for faster rebuilds")
-    
+                    self.assertIn(
+                        "ccache",
+                        run_command,
+                        f"{step_name} should use ccache for faster rebuilds",
+                    )
+
     def test_build_workflow_has_version_calculation(self):
         """Test that build workflow calculates versions correctly."""
-        jobs = self.build_workflow['jobs']
-        
+        jobs = self.build_workflow["jobs"]
+
         # Check Linux build job has version calculation (Windows/macOS removed)
-        for job_name in ['build-linux']:
+        for job_name in ["build-linux"]:
             job = jobs[job_name]
-            steps = job['steps']
-            
+            steps = job["steps"]
+
             version_steps = [
-                step for step in steps
-                if 'Calculate version' in step.get('name', '')
+                step
+                for step in steps
+                if "Calculate version" in step.get("name", "")
             ]
-            
+
             self.assertGreater(
-                len(version_steps), 0,
-                f"{job_name} should calculate version"
+                len(version_steps), 0, f"{job_name} should calculate version"
             )
-    
+
     def test_build_workflow_has_release_job(self):
         """Test that build workflow has a release job."""
-        jobs = self.build_workflow['jobs']
-        self.assertIn('release', jobs)
-        
-        release_job = jobs['release']
-        
+        jobs = self.build_workflow["jobs"]
+        self.assertIn("release", jobs)
+
+        release_job = jobs["release"]
+
         # Should depend on all build jobs (Linux only)
-        self.assertIn('needs', release_job)
-        needs = release_job['needs']
-        self.assertIn('build-linux', needs)
+        self.assertIn("needs", release_job)
+        needs = release_job["needs"]
+        self.assertIn("build-linux", needs)
         # Windows and macOS builds removed due to python-olm build issues
-        self.assertNotIn('build-windows', needs)
-        self.assertNotIn('build-macos', needs)
-        
+        self.assertNotIn("build-windows", needs)
+        self.assertNotIn("build-macos", needs)
+
         # Should download artifacts
-        steps = release_job['steps']
+        steps = release_job["steps"]
         download_steps = [
-            step for step in steps
-            if 'download' in step.get('name', '').lower()
+            step
+            for step in steps
+            if "download" in step.get("name", "").lower()
         ]
         self.assertGreater(
-            len(download_steps), 0,
-            "Release job should download artifacts"
+            len(download_steps), 0, "Release job should download artifacts"
         )
-        
+
         # Should create GitHub release
         gh_release_steps = [
-            step for step in steps
-            if 'uses' in step and 'action-gh-release' in step['uses']
+            step
+            for step in steps
+            if "uses" in step and "action-gh-release" in step["uses"]
         ]
         self.assertGreater(
-            len(gh_release_steps), 0,
-            "Release job should create GitHub release"
+            len(gh_release_steps),
+            0,
+            "Release job should create GitHub release",
         )
-    
+
     def test_build_workflow_has_metadata(self):
         """Test that build workflow includes appropriate metadata (Windows build removed)."""
         # Windows and macOS builds removed due to python-olm build issues
         # This test is kept for potential future re-enablement but currently skipped
-        self.skipTest("Windows and macOS builds removed - test no longer applicable")
-    
+        self.skipTest(
+            "Windows and macOS builds removed - test no longer applicable"
+        )
+
     def test_build_workflow_includes_assets(self):
         """Test that build workflow includes assets directory (Docker-based builds)."""
-        jobs = self.build_workflow['jobs']
-        
+        jobs = self.build_workflow["jobs"]
+
         # Check Linux build job for assets (Windows/macOS removed)
-        for job_name in ['build-linux']:
+        for job_name in ["build-linux"]:
             job = jobs[job_name]
-            steps = job['steps']
-            
+            steps = job["steps"]
+
             # Find build steps (now Docker-based with buildx or run commands)
             nuitka_steps = [
-                step for step in steps
-                if 'Build with Nuitka' in step.get('name', '')
+                step
+                for step in steps
+                if "Build with Nuitka" in step.get("name", "")
             ]
-            
+
             self.assertGreater(
-                len(nuitka_steps), 0,
-                f"{job_name} should have Nuitka build steps"
+                len(nuitka_steps),
+                0,
+                f"{job_name} should have Nuitka build steps",
             )
-            
+
             # Check that each build step includes assets
             for nuitka_step in nuitka_steps:
-                run_command = nuitka_step.get('run', '')
-                uses_action = nuitka_step.get('uses', '')
-                step_name = nuitka_step.get('name', '')
-                
+                run_command = nuitka_step.get("run", "")
+                uses_action = nuitka_step.get("uses", "")
+                step_name = nuitka_step.get("name", "")
+
                 # If using docker buildx action, check Dockerfile.build
-                if 'docker/build-push-action' in uses_action and self.has_dockerfile_build():
+                if (
+                    "docker/build-push-action" in uses_action
+                    and self.has_dockerfile_build()
+                ):
                     # Verify that assets are included in Dockerfile.build
-                    self.assertIn('--include-data-dir=assets=assets', self.dockerfile_content,
-                                 "Dockerfile.build should include assets directory")
+                    self.assertIn(
+                        "--include-data-dir=assets=assets",
+                        self.dockerfile_content,
+                        "Dockerfile.build should include assets directory",
+                    )
                 # Legacy check for docker run commands
                 elif run_command:
                     # Verify that assets are included via --include-data-dir flag
-                    self.assertIn('--include-data-dir=assets=assets', run_command,
-                                 f"{step_name} should include assets directory")
-    
+                    self.assertIn(
+                        "--include-data-dir=assets=assets",
+                        run_command,
+                        f"{step_name} should include assets directory",
+                    )
+
     def test_build_workflow_moves_x86_64_artifact(self):
         """Test that build workflow creates artifacts correctly (Docker builds directly in source)."""
-        jobs = self.build_workflow['jobs']
-        linux_job = jobs['build-linux']
-        steps = linux_job['steps']
-        
+        jobs = self.build_workflow["jobs"]
+        linux_job = jobs["build-linux"]
+        steps = linux_job["steps"]
+
         # With Docker-based builds, artifacts are created directly in the source directory
         # Standalone mode creates a directory, not a single file
-        
+
         # Find build steps
         build_steps = [
-            step for step in steps
-            if 'Build with Nuitka' in step.get('name', '')
+            step
+            for step in steps
+            if "Build with Nuitka" in step.get("name", "")
         ]
-        
+
         self.assertGreater(
-            len(build_steps), 0,
-            "Linux build should have Nuitka build steps"
+            len(build_steps), 0, "Linux build should have Nuitka build steps"
         )
-        
+
         # Verify that build steps use standalone mode
         for build_step in build_steps:
-            run_command = build_step.get('run', '')
-            uses_action = build_step.get('uses', '')
-            step_name = build_step.get('name', '')
-            
+            run_command = build_step.get("run", "")
+            uses_action = build_step.get("uses", "")
+            step_name = build_step.get("name", "")
+
             # If using docker buildx action, check Dockerfile.build
-            if 'docker/build-push-action' in uses_action and self.has_dockerfile_build():
+            if (
+                "docker/build-push-action" in uses_action
+                and self.has_dockerfile_build()
+            ):
                 # Check that standalone mode creates directories
-                self.assertIn('--output-dir=', self.dockerfile_content,
-                             "Dockerfile.build should specify output directory for standalone mode")
+                self.assertIn(
+                    "--output-dir=",
+                    self.dockerfile_content,
+                    "Dockerfile.build should specify output directory for standalone mode",
+                )
                 # Verify directory renaming is done
-                self.assertIn('mv main.dist', self.dockerfile_content,
-                             "Dockerfile.build should rename output directory")
+                self.assertIn(
+                    "mv main.dist",
+                    self.dockerfile_content,
+                    "Dockerfile.build should rename output directory",
+                )
             # Legacy check for docker run commands
             elif run_command:
                 # Check that output is specified in Nuitka command
                 self.assertTrue(
-                    '--output-filename=' in run_command or '--output-dir=' in run_command,
-                    f"{step_name} should specify output"
+                    "--output-filename=" in run_command
+                    or "--output-dir=" in run_command,
+                    f"{step_name} should specify output",
                 )
-                self.assertIn('--output-filename=chatrixcd-linux-', run_command,
-                             f"{step_name} should specify output filename")
+                self.assertIn(
+                    "--output-filename=chatrixcd-linux-",
+                    run_command,
+                    f"{step_name} should specify output filename",
+                )
 
 
 class TestIconFiles(unittest.TestCase):
     """Test suite for validating icon files."""
-    
+
     @classmethod
     def setUpClass(cls):
         """Setup paths to icon files."""
-        cls.assets_dir = Path(__file__).parent.parent / 'assets'
-        cls.icon_ico_path = cls.assets_dir / 'icon.ico'
-        cls.icon_png_path = cls.assets_dir / 'icon.png'
-    
+        cls.assets_dir = Path(__file__).parent.parent / "assets"
+        cls.icon_ico_path = cls.assets_dir / "icon.ico"
+        cls.icon_png_path = cls.assets_dir / "icon.png"
+
     def test_icon_ico_exists(self):
         """Test that icon.ico exists for Windows builds."""
         self.assertTrue(
             self.icon_ico_path.exists(),
-            "icon.ico should exist for Windows builds"
+            "icon.ico should exist for Windows builds",
         )
-    
+
     def test_icon_png_exists(self):
         """Test that icon.png exists for macOS/Linux builds."""
         self.assertTrue(
             self.icon_png_path.exists(),
-            "icon.png should exist for macOS/Linux builds"
+            "icon.png should exist for macOS/Linux builds",
         )
-    
+
     def test_icon_ico_is_valid(self):
         """Test that icon.ico is a valid ICO file."""
         if not self.icon_ico_path.exists():
             self.skipTest("icon.ico does not exist")
-        
-        with open(self.icon_ico_path, 'rb') as f:
+
+        with open(self.icon_ico_path, "rb") as f:
             # ICO files start with 0x00 0x00 0x01 0x00
             header = f.read(4)
             self.assertEqual(
-                header[:2], b'\x00\x00',
-                "ICO file should start with 0x00 0x00"
+                header[:2], b"\x00\x00", "ICO file should start with 0x00 0x00"
             )
             self.assertEqual(
-                header[2:4], b'\x01\x00',
-                "ICO file should have type 0x01 0x00"
+                header[2:4], b"\x01\x00", "ICO file should have type 0x01 0x00"
             )
-    
+
     def test_icon_png_is_valid(self):
         """Test that icon.png is a valid PNG file."""
         if not self.icon_png_path.exists():
             self.skipTest("icon.png does not exist")
-        
-        with open(self.icon_png_path, 'rb') as f:
+
+        with open(self.icon_png_path, "rb") as f:
             # PNG files start with PNG signature
             header = f.read(8)
             self.assertEqual(
-                header, b'\x89PNG\r\n\x1a\n',
-                "PNG file should have correct signature"
+                header,
+                b"\x89PNG\r\n\x1a\n",
+                "PNG file should have correct signature",
             )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

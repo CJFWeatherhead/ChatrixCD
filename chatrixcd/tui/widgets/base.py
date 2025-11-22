@@ -21,7 +21,6 @@ class BaseWidget(Widget):
 
         Override this method to update widget content from external sources.
         """
-        pass
 
 
 class StatusWidget(BaseWidget):

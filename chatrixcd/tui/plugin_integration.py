@@ -40,7 +40,6 @@ class PluginTUIExtension:
             registry: Screen registry
             tui_app: TUI application instance
         """
-        pass
 
     def _register_screen(
         self,

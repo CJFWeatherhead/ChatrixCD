@@ -85,7 +85,6 @@ class BaseScreen(Screen):
 
         Override this instead of on_mount() in subclasses.
         """
-        pass
 
     async def on_show(self):
         """Called when screen is shown."""
@@ -97,7 +96,6 @@ class BaseScreen(Screen):
 
         Override this method to update screen content from external sources.
         """
-        pass
 
     def action_go_back(self):
         """Navigate back to previous screen."""

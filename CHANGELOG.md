@@ -108,6 +108,10 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Combines Matrix power levels with config-based restrictions
 
 ### Fixed
+- Fixed TUI screen import test to only test existing screens (removed references to deprecated SayScreen, LogScreen, SetScreen, ShowScreen)
+- Fixed async test class in test_aliases_plugin.py to use IsolatedAsyncioTestCase for proper coroutine handling
+- Fixed mock setup in test_commands.py to properly mock async task monitor methods
+- Fixed test cleanup in test_commands.py to properly cancel background tasks and suppress mock-related warnings
 - Fixed missing sender information in task completion notifications
 - Fixed URL parsing in semaphore_webhook plugin (now uses urllib.parse)
 - Fixed duplicate return statement in `_gather_matrix_info()` method
