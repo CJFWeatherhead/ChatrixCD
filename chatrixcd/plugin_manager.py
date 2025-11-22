@@ -104,6 +104,7 @@ class Plugin(ABC):
         """
         return {
             "name": self.metadata.name,
+            "description": self.metadata.description,
             "version": self.metadata.version,
             "type": self.metadata.plugin_type,
             "category": self.metadata.category,

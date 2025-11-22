@@ -50,6 +50,12 @@ class StatusScreen(BaseScreen):
                     label="Emojis Used", id="emojis_used", icon="😊"
                 )
 
+            # Plugins section
+            yield Static(
+                "[bold cyan]Loaded Plugins[/bold cyan]", classes="section-header"
+            )
+            yield Static(id="plugins-list", classes="plugins-list")
+
             # Active tasks section
             yield Static(
                 "[bold cyan]Active Tasks[/bold cyan]", classes="section-header"
@@ -143,6 +149,40 @@ class StatusScreen(BaseScreen):
                     tasks_widget.update("\n".join(tasks_text))
                 else:
                     tasks_widget.update("[dim]No active tasks[/dim]")
+
+                # Update plugins list
+                plugins_widget = self.query_one("#plugins-list", Static)
+                if hasattr(self.tui_app.bot, "plugin_manager"):
+                    plugin_manager = self.tui_app.bot.plugin_manager
+                    plugins_status = plugin_manager.get_all_plugins_status()
+
+                    if plugins_status:
+                        plugins_text = []
+                        for status in plugins_status:
+                            name = status.get("name", "Unknown")
+                            version = status.get("version", "0.0.0")
+                            plugin_type = status.get("type", "generic")
+                            description = status.get("description", "")
+                            enabled = status.get("enabled", False)
+
+                            # Color and icon based on enabled status
+                            if enabled:
+                                color = "green"
+                                icon = "✅"
+                            else:
+                                color = "red"
+                                icon = "❌"
+
+                            plugin_line = f"[{color}]{icon} {name} v{version}[/{color}] ({plugin_type})"
+                            if description:
+                                plugin_line += f" - {description}"
+                            plugins_text.append(plugin_line)
+
+                        plugins_widget.update("\n".join(plugins_text))
+                    else:
+                        plugins_widget.update("[dim]No plugins loaded[/dim]")
+                else:
+                    plugins_widget.update("[dim]Plugin manager not available[/dim]")
 
         except Exception as e:
             self.logger.error(f"Error refreshing status: {e}")

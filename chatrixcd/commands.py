@@ -2361,20 +2361,23 @@ class CommandHandler:
 
         for status in plugins_status:
             name = status.get("name", "Unknown")
+            description = status.get("description", "")
             version = status.get("version", "0.0.0")
             plugin_type = status.get("type", "generic")
             enabled = status.get("enabled", False)
 
             # Format for plain text
             status_icon = "✅" if enabled else "❌"
-            lines.append(
-                f"• **{name}** v{version} ({plugin_type}) {status_icon}"
-            )
+            line = f"• **{name}** v{version} ({plugin_type}) {status_icon}"
+            if description:
+                line += f" - {description}"
+            lines.append(line)
 
             # Store for HTML table
             info_list.append(
                 {
                     "name": name,
+                    "description": description,
                     "version": version,
                     "type": plugin_type,
                     "enabled": enabled,
@@ -2396,11 +2399,12 @@ class CommandHandler:
         if not plugin_info:
             return ""
 
-        table_html = '<br/><table><thead><tr><th colspan="4">Loaded Plugins 🔌</th></tr>'
-        table_html += "<tr><th>Name</th><th>Version</th><th>Type</th><th>Status</th></tr></thead><tbody>"
+        table_html = '<br/><table><thead><tr><th colspan="5">Loaded Plugins 🔌</th></tr>'
+        table_html += "<tr><th>Name</th><th>Description</th><th>Version</th><th>Type</th><th>Status</th></tr></thead><tbody>"
 
         for info in plugin_info:
             name = html.escape(info["name"])
+            description = html.escape(info.get("description", ""))
             version = html.escape(info["version"])
             plugin_type = html.escape(info["type"])
 
@@ -2429,7 +2433,7 @@ class CommandHandler:
             if extra_info:
                 status_html += f"<br/><small>{', '.join(extra_info)}</small>"
 
-            table_html += f"<tr><td><strong>{name}</strong></td><td>{version}</td><td>{plugin_type}</td><td>{status_html}</td></tr>"
+            table_html += f"<tr><td><strong>{name}</strong></td><td>{description}</td><td>{version}</td><td>{plugin_type}</td><td>{status_html}</td></tr>"
 
         table_html += "</tbody></table>"
         return table_html

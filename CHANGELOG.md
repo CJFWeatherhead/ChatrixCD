@@ -46,7 +46,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Plugin metadata support via `meta.json` (name, version, description, author, dependencies)
   - Dynamic plugin discovery and loading from `/plugins` directory
   - Mutual exclusion for conflicting plugins (e.g., only one task monitor active)
-  - Plugin status display in `!cd info` command with version and activity status
+  - Plugin status display in `!cd info` command with version, activity status, and descriptions
   - Plugin-specific configuration via `plugin.json` files with config.json override support
   - Global `load_plugins` flag in bot configuration to enable/disable plugin loading
   - Three initial plugins included:
@@ -102,6 +102,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - **TUI Status Display**: Harmonized with !cd info command
   - Updated to use centralized `get_status_info()` method
   - Consistent naming and formatting across TUI and commands
+  - Added loaded plugins section with names, versions, types, and descriptions
 - **Version Display**: All version displays now use full version with commit ID when applicable
 - **Room Permission Checking**: Enhanced `can_send_message_in_room()` method
   - Now also checks `allowed_rooms` configuration setting
