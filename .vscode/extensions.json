@@ -1,0 +1,17 @@
+{
+    "recommendations": [
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-python.flake8",
+        "ms-python.mypy-type-checker",
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "eamodio.gitlens",
+        "mhutchie.git-graph",
+        "ms-azuretools.vscode-docker",
+        "formulahendry.code-runner",
+        "aaron-bond.better-comments",
+        "christian-kohler.path-intellisense",
+        "shd101wyy.markdown-preview-enhanced"
+    ]
+}

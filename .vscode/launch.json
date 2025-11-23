@@ -1,0 +1,47 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "ChatrixCD (Log Only)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/chatrixcd/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-L",
+                "-v"
+            ],
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "ChatrixCD (TUI)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/chatrixcd/main.py",
+            "console": "integratedTerminal",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "ChatrixCD (Config Wizard)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/chatrixcd/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-I"
+            ],
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Python: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "python": "${workspaceFolder}/.venv/bin/python"
+        }
+    ]
+}
