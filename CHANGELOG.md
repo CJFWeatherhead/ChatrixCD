@@ -15,6 +15,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+## [2025.11.25.6.0.0] - 2025-11-25
+
 ### Added
 - **Modular TUI Architecture**: Complete redesign of Text User Interface
   - Modular screen system with dynamic registration
@@ -1310,6 +1312,8 @@ ChatrixCD/
 
 ## Version History
 
+
+- **2025.11.25.6.0.0** (2025-11-25)
 - **2025.11.15.5.2.0** (2025-11-15)
 - **2025.11.09.5.1.0** (2025-11-09)
 - **2025.11.08.5.0.0** (2025-11-08)
