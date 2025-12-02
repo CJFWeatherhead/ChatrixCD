@@ -1,10 +1,11 @@
 """TUI integration for OIDC authentication plugin."""
 
 import asyncio
-from textual.containers import Container, Vertical, Horizontal
-from textual.widgets import Static, Button, Input, Label
-from textual.screen import ModalScreen
+
 from textual.binding import Binding
+from textual.containers import Container, Horizontal, Vertical
+from textual.screen import ModalScreen
+from textual.widgets import Button, Input, Label, Static
 
 from chatrixcd.tui.plugin_integration import PluginTUIExtension
 
@@ -84,9 +85,7 @@ class OIDCAuthScreen(ModalScreen):
             css = css.replace(f"${k}", v)
         return css
 
-    def __init__(
-        self, sso_url: str, redirect_url: str, identity_providers: list
-    ):
+    def __init__(self, sso_url: str, redirect_url: str, identity_providers: list):
         """Initialize OIDC auth screen.
 
         Args:
@@ -103,9 +102,7 @@ class OIDCAuthScreen(ModalScreen):
     def compose(self):
         """Compose the OIDC auth screen."""
         with Container():
-            yield Static(
-                "🔐 OIDC Authentication Required", classes="auth-title"
-            )
+            yield Static("🔐 OIDC Authentication Required", classes="auth-title")
 
             yield Static(
                 "Please complete these steps to authenticate:",
@@ -118,9 +115,7 @@ class OIDCAuthScreen(ModalScreen):
             )
             yield Static(self.sso_url, classes="auth-url")
 
-            yield Static(
-                "2. Log in with your credentials", classes="auth-instructions"
-            )
+            yield Static("2. Log in with your credentials", classes="auth-instructions")
 
             yield Static(
                 f"3. After login, you'll be redirected to:\n   {self.redirect_url}?loginToken=...",
@@ -143,9 +138,7 @@ class OIDCAuthScreen(ModalScreen):
 
             with Vertical(classes="input-container"):
                 yield Label("Login Token:")
-                yield Input(
-                    placeholder="Paste your login token here", id="token-input"
-                )
+                yield Input(placeholder="Paste your login token here", id="token-input")
 
             with Horizontal(classes="button-container"):
                 yield Button("Submit", variant="primary", id="submit-btn")
@@ -177,12 +170,47 @@ class OIDCAuthScreen(ModalScreen):
             token_input.placeholder = "Error: Token cannot be empty"
             return
 
+        # Parse loginToken from URL if full URL was pasted
+        token = self._parse_token_from_input(token)
+
         # Set result and dismiss
         if not self.token_future.done():
             self.token_future.set_result(token)
         self.dismiss(token)
 
-    async def cancel(self):
+    def _parse_token_from_input(self, user_input: str) -> str:
+        """Parse login token from user input, handling both direct tokens and full URLs.
+
+        Args:
+            user_input: Raw input from user (could be token or full URL)
+
+        Returns:
+            Extracted login token
+        """
+        import urllib.parse
+
+        user_input = user_input.strip()
+
+        # Check if input looks like a URL
+        if user_input.startswith(("http://", "https://")):
+            try:
+                parsed_url = urllib.parse.urlparse(user_input)
+                query_params = urllib.parse.parse_qs(parsed_url.query)
+
+                # Extract loginToken parameter
+                if "loginToken" in query_params:
+                    token = query_params["loginToken"][0]  # Take first value
+                    # Could show a message that token was extracted, but TUI doesn't have logger
+                    return token
+                else:
+                    # Could show warning, but for now just return as-is
+                    return user_input
+            except Exception:
+                # Return as-is on parse error
+                return user_input
+        else:
+            # Not a URL, assume it's already the token
+            return user_input
         """Cancel authentication."""
         if not self.token_future.done():
             self.token_future.set_result(None)

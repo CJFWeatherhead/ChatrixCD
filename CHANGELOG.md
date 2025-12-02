@@ -16,6 +16,20 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+### Added
+
+- **OIDC URL Token Parsing**: Support for pasting full redirect URLs containing login tokens
+  - Users can now paste complete URLs like `http://localhost:8080/callback?loginToken=abc123`
+  - Automatically extracts the `loginToken` parameter from URLs
+  - Works in both TUI and console modes
+  - Backward compatible with direct token input
+
+### Fixed
+
+- **OIDC Rate Limit Error Handling**: Improved error messages for rate-limited OIDC authentication attempts
+  - Added specific handling for `M_LIMIT_EXCEEDED` errors with helpful troubleshooting guidance
+  - Users now get clear instructions when hitting Matrix server rate limits during login
+
 ## [2025.11.25.6.0.0] - 2025-11-25
 
 ### Added
@@ -1419,7 +1433,6 @@ ChatrixCD/
 ---
 
 ## Version History
-
 
 - **2025.11.25.6.0.0** (2025-11-25)
 - **2025.11.15.5.2.0** (2025-11-15)

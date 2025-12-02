@@ -159,9 +159,27 @@ class OIDCAuthPlugin(Plugin):
                 await bot.setup_encryption()
                 return True
             else:
-                # Provide helpful error message
+                # Check if this is a token-related error that can be retried
                 error_msg = str(response)
-                if "Invalid login token" in error_msg or "M_FORBIDDEN" in error_msg:
+                is_token_error = (
+                    "Invalid login token" in error_msg or "M_FORBIDDEN" in error_msg
+                )
+                is_rate_limit = (
+                    "M_LIMIT_EXCEEDED" in error_msg or "Too Many Requests" in error_msg
+                )
+
+                if is_rate_limit:
+                    self.logger.error(
+                        f"OIDC login failed due to rate limiting: {response}\n"
+                        "The Matrix server is rate-limiting authentication attempts.\n"
+                        "This usually happens after multiple failed login attempts.\n"
+                        "Please wait a few minutes before trying again, or:\n"
+                        "  1. Ensure you're using a fresh login token\n"
+                        "  2. Check that your OIDC redirect URL is correct\n"
+                        "  3. Avoid running multiple bot instances simultaneously"
+                    )
+                    return False
+                elif is_token_error:
                     self.logger.error(
                         f"OIDC login failed: {response}\n"
                         "The login token is invalid or has expired. This can happen if:\n"
@@ -170,9 +188,10 @@ class OIDCAuthPlugin(Plugin):
                         "  3. The token was already used\n"
                         "Please try the OIDC login process again."
                     )
+                    return False
                 else:
                     self.logger.error(f"OIDC login failed: {response}")
-                return False
+                    return False
 
         except Exception as e:
             self.logger.error(f"OIDC login error: {e}")
@@ -316,10 +335,53 @@ class OIDCAuthPlugin(Plugin):
                 self.logger.error("No login token provided")
                 return None
 
+            # Parse loginToken from URL if full URL was pasted
+            login_token = self._parse_token_from_input(login_token)
+
             return login_token
+
+    def _parse_token_from_input(self, user_input: str) -> str:
+        """Parse login token from user input, handling both direct tokens and full URLs.
+
+        Args:
+            user_input: Raw input from user (could be token or full URL)
+
+        Returns:
+            Extracted login token
+        """
+        import urllib.parse
+
+        user_input = user_input.strip()
+
+        # Check if input looks like a URL
+        if user_input.startswith(("http://", "https://")):
+            try:
+                parsed_url = urllib.parse.urlparse(user_input)
+                query_params = urllib.parse.parse_qs(parsed_url.query)
+
+                # Extract loginToken parameter
+                if "loginToken" in query_params:
+                    token = query_params["loginToken"][0]  # Take first value
+                    self.logger.info("Extracted login token from URL")
+                    return token
+                else:
+                    self.logger.warning(
+                        "URL provided but no loginToken parameter found"
+                    )
+                    return user_input  # Return as-is if no token found
+            except Exception as e:
+                self.logger.warning(f"Failed to parse URL: {e}")
+                return user_input  # Return as-is on parse error
+        else:
+            # Not a URL, assume it's already the token
+            return user_input
 
     async def register_tui_screens(self, registry, tui_app):
         """Register TUI screens for this plugin.
+
+        Args:
+            registry: Screen registry
+            tui_app: TUI application instance
 
         Returns:
             List of screen registrations
