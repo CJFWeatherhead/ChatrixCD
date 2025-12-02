@@ -1,16 +1,65 @@
 """Main menu screen for TUI."""
 
-from textual.containers import Container, Vertical, ScrollableContainer
-from textual.widgets import Static, Button
 from textual.binding import Binding
+from textual.containers import Container, Horizontal, ScrollableContainer, Vertical
+from textual.widgets import Button, Static
+
+from ..widgets.common import MetricDisplay, StatusIndicator
 from .base import BaseScreen
-from ..widgets.common import StatusIndicator, MetricDisplay
 
 
 class MainMenuScreen(BaseScreen):
     """Main menu screen showing bot status and navigation."""
 
     SCREEN_TITLE = "Main Menu"
+
+    # Add responsive CSS
+    CSS = """
+    .main-content {
+        height: auto;
+    }
+
+    .top-section {
+        height: auto;
+    }
+
+    /* Stack vertically on small screens */
+    .compact .top-section {
+        layout: vertical;
+    }
+    
+    .compact .status-section, .compact .metrics-section {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Horizontal layout on larger screens */
+    .top-section {
+        layout: horizontal;
+    }
+    
+    .status-section, .metrics-section {
+        width: 50%;
+    }
+
+    .menu-section {
+        height: auto;
+        max-height: 10;
+    }
+
+    .compact .menu-section {
+        max-height: 6;
+    }
+
+    .compact .menu-section {
+        max-height: 8;
+    }
+
+    #menu-buttons {
+        height: auto;
+    }
+    """
 
     BINDINGS = [
         Binding("q", "quit", "Quit", priority=True),
@@ -28,34 +77,36 @@ class MainMenuScreen(BaseScreen):
                 classes="title-banner",
             )
 
-            # Status section
-            with Vertical(classes="status-section"):
-                yield Static("[bold]Status[/bold]", classes="section-header")
-                yield StatusIndicator(service_name="Matrix")
-                yield StatusIndicator(service_name="Semaphore")
+            # Use responsive grid layout
+            with Vertical(classes="main-content"):
+                # Status and metrics in a horizontal layout for larger screens
+                with Horizontal(classes="top-section"):
+                    # Status section
+                    with Vertical(classes="status-section"):
+                        yield Static("[bold]Status[/bold]", classes="section-header")
+                        yield StatusIndicator(service_name="Matrix")
+                        yield StatusIndicator(service_name="Semaphore")
 
-            # Metrics section
-            with Vertical(classes="metrics-section"):
-                yield Static("[bold]Metrics[/bold]", classes="section-header")
-                yield MetricDisplay(label="Uptime", id="uptime-metric")
-                yield MetricDisplay(
-                    label="Messages", id="messages-metric", icon="📨"
-                )
-                yield MetricDisplay(
-                    label="Tasks", id="tasks-metric", icon="🔧"
-                )
-                yield MetricDisplay(
-                    label="Errors", id="errors-metric", icon="❌"
-                )
-                # Expose ActiveTasksWidget for tests that query '#active_tasks'
-                from .. import ActiveTasksWidget
+                    # Metrics section
+                    with Vertical(classes="metrics-section"):
+                        yield Static("[bold]Metrics[/bold]", classes="section-header")
+                        yield MetricDisplay(label="Uptime", id="uptime-metric")
+                        yield MetricDisplay(
+                            label="Messages", id="messages-metric", icon="📨"
+                        )
+                        yield MetricDisplay(label="Tasks", id="tasks-metric", icon="🔧")
+                        yield MetricDisplay(
+                            label="Errors", id="errors-metric", icon="❌"
+                        )
+                        # Expose ActiveTasksWidget for tests that query '#active_tasks'
+                        from .. import ActiveTasksWidget
 
-                yield ActiveTasksWidget(id="active_tasks")
+                        yield ActiveTasksWidget(id="active_tasks")
 
-            # Menu buttons - dynamically populated from registry
-            with ScrollableContainer(classes="menu-section"):
-                yield Static("[bold]Menu[/bold]", classes="section-header")
-                yield Container(id="menu-buttons")
+                # Menu buttons - dynamically populated from registry
+                with ScrollableContainer(classes="menu-section"):
+                    yield Static("[bold]Menu[/bold]", classes="section-header")
+                    yield Container(id="menu-buttons")
 
     async def on_screen_mount(self):
         """Initialize menu when screen mounts."""
@@ -64,6 +115,14 @@ class MainMenuScreen(BaseScreen):
 
         # Set up periodic refresh
         self.set_interval(5.0, self.refresh_data)
+
+        # Focus the first button for better navigation
+        try:
+            first_button = self.query("Button").first()
+            if first_button:
+                first_button.focus()
+        except Exception:
+            pass  # Ignore if no buttons found
 
     async def populate_menu(self):
         """Populate menu with registered screens."""
@@ -141,13 +200,9 @@ class MainMenuScreen(BaseScreen):
                 metrics = self.tui_app.bot.metrics
 
                 uptime_metric = self.query_one("#uptime-metric", MetricDisplay)
-                uptime_metric.value = self._format_uptime(
-                    metrics.get("uptime", 0)
-                )
+                uptime_metric.value = self._format_uptime(metrics.get("uptime", 0))
 
-                messages_metric = self.query_one(
-                    "#messages-metric", MetricDisplay
-                )
+                messages_metric = self.query_one("#messages-metric", MetricDisplay)
                 messages_metric.value = metrics.get("messages_sent", 0)
 
                 tasks_metric = self.query_one("#tasks-metric", MetricDisplay)

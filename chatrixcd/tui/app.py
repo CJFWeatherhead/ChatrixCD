@@ -9,14 +9,14 @@ from typing import Any
 from textual.app import App
 from textual.design import ColorSystem
 
+from .events import (
+    NotificationEvent,
+    PluginLoadedEvent,
+    PluginUnloadedEvent,
+)
 from .registry import ScreenRegistry
 from .screens.base import BaseScreen
 from .screens.main_menu import MainMenuScreen
-from .events import (
-    PluginLoadedEvent,
-    PluginUnloadedEvent,
-    NotificationEvent,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -33,14 +33,68 @@ class ChatrixTUI(App):
         background: {background};
     }}
 
+    /* Compact layout for smaller screens */
+    .compact .status-section, .compact .metrics-section, .compact .menu-section {{
+        margin: 0;
+        padding: 0;
+        border: none;
+    }}
+
+    .compact .menu-button {{
+        margin: 0;
+        width: 100%;
+    }}
+
+    .compact Button {{
+        margin: 0;
+        width: 100%;
+    }}
+
+    .compact .title-banner {{
+        padding: 0;
+    }}
+
+    .compact .section-header {{
+        padding: 0;
+    }}
+
+    /* Normal layout for larger screens */
+    .status-section, .metrics-section, .menu-section {{
+        margin: 1;
+        padding: 1;
+        border: solid {primary};
+    }}
+
+    .menu-button {{
+        margin: 0 1;
+    }}
+
+    Button {{
+        margin: 1;
+        width: auto;
+        min-width: 20;
+    }}
+
+    Button.primary {{
+        background: {primary};
+        color: {text};
+    }}
+
+    Button:focus {{
+        background: {accent};
+        color: {text};
+    }}
+
     Header {{
         background: {primary};
         color: {text};
+        height: 1;
     }}
 
     Footer {{
         background: {surface};
         color: {text};
+        height: 1;
     }}
 
     .title-banner {{
@@ -55,40 +109,24 @@ class ChatrixTUI(App):
         color: {accent};
     }}
 
-    .status-section, .metrics-section, .menu-section {{
-        margin: 1;
-        padding: 1;
-        border: solid {primary};
-    }}
-
     .menu-category {{
         padding: 1 0;
         color: {accent};
     }}
 
-    .menu-button {{
-        margin: 0 1;
-    }}
-
-    Button {{
-        margin: 1;
-    }}
-
-    Button.primary {{
-        background: {primary};
-        color: {text};
-    }}
-
     DataTable {{
         height: auto;
+        max-height: 20;
     }}
 
     Input {{
         margin: 1;
+        width: 100%;
     }}
 
     Select {{
         margin: 1;
+        width: 100%;
     }}
 
     .field-label {{
@@ -104,8 +142,10 @@ class ChatrixTUI(App):
         background: {surface};
         border: solid {primary};
         padding: 2;
-        width: 60%;
+        width: 90%;
+        max-width: 80;
         height: auto;
+        max-height: 80%;
     }}
 
     .dialog-message {{
@@ -116,6 +156,17 @@ class ChatrixTUI(App):
     .dialog-buttons {{
         height: auto;
         align: center middle;
+    }}
+
+    /* Ensure proper scrolling for small screens */
+    ScrollableContainer {{
+        height: auto;
+        max-height: 15;
+    }}
+
+    /* Focus indicators for better navigation */
+    *:focus {{
+        border: solid {accent};
     }}
     """
 
@@ -218,9 +269,7 @@ class ChatrixTUI(App):
                 # Fallback simple CSS
                 self.CSS = ""
 
-        logger.info(
-            f"ChatrixTUI initialized (theme: {theme}, color: {use_color})"
-        )
+        logger.info(f"ChatrixTUI initialized (theme: {theme}, color: {use_color})")
 
     def _apply_theme(self, theme_name: str):
         """Apply color theme.
@@ -311,10 +360,11 @@ class ChatrixTUI(App):
     def _register_core_screens(self):
         """Register core screens."""
         # Import core screens
-        from .screens.status import StatusScreen
-        from .screens.rooms import RoomsScreen
-        from .screens.logs import LogsScreen
         from .screens.config import ConfigScreen
+        from .screens.logs import LogsScreen
+        from .screens.rooms import RoomsScreen
+        from .screens.status import StatusScreen
+        from .screens.verification import VerificationScreen
 
         # Register screens with registry
         self.screen_registry.register(
@@ -355,6 +405,16 @@ class ChatrixTUI(App):
             priority=40,
             category="settings",
             icon="⚙️",
+        )
+
+        self.screen_registry.register(
+            name="verification",
+            screen_class=VerificationScreen,
+            title="Device Verification",
+            key_binding="v",
+            priority=35,
+            category="security",
+            icon="🔐",
         )
 
         # Register lightweight local Admins and Sessions screens for tests
@@ -417,11 +477,28 @@ class ChatrixTUI(App):
         """Called when app is mounted."""
         logger.info("TUI mounted")
 
+        # Check screen size and apply compact mode if needed
+        self._apply_compact_mode()
+
         # Push main menu screen
         self.push_screen(MainMenuScreen(self))
 
         # Load plugin TUI extensions
         await self._load_plugin_screens()
+
+    def _apply_compact_mode(self):
+        """Apply compact mode for small screens."""
+        try:
+            # Get terminal size
+            size = self.console.size
+            if size.width < 100 or size.height < 24:
+                # Apply compact class to app
+                self.add_class("compact")
+                logger.debug(f"Applied compact mode for screen size {size}")
+        except Exception as e:
+            logger.debug(f"Could not determine screen size: {e}")
+            # Default to compact mode if we can't determine size
+            self.add_class("compact")
 
     async def _load_plugin_screens(self):
         """Load TUI extensions from plugins."""
@@ -455,12 +532,8 @@ class ChatrixTUI(App):
             # Check if plugin provides TUI extension
             if hasattr(plugin, "register_tui_screens"):
                 try:
-                    await plugin.register_tui_screens(
-                        self.screen_registry, self
-                    )
-                    logger.info(
-                        f"Loaded TUI extension from plugin: {plugin_name}"
-                    )
+                    await plugin.register_tui_screens(self.screen_registry, self)
+                    logger.info(f"Loaded TUI extension from plugin: {plugin_name}")
                 except Exception as e:
                     logger.error(
                         f"Failed to load TUI extension from {plugin_name}: {e}"
@@ -536,9 +609,7 @@ class ChatrixTUI(App):
                         except Exception:
                             pass
                 except Exception as e:
-                    logger.error(
-                        f"Failed to instantiate screen for key '{key}': {e}"
-                    )
+                    logger.error(f"Failed to instantiate screen for key '{key}': {e}")
         except Exception:
             # Don't let global key handling crash the app during tests
             logger.exception("Error handling global key event")

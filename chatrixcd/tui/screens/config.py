@@ -1,18 +1,42 @@
 """Configuration screen for viewing and editing config."""
 
-import json
 import copy
-from textual.containers import Container, Vertical
-from textual.widgets import Static, Button, TextArea
+import json
+
 from textual.binding import Binding
+from textual.containers import Container, Vertical
+from textual.widgets import Button, Static, TextArea
+
 from .base import BaseScreen
-from chatrixcd.redactor import SensitiveInfoRedactor
 
 
 class ConfigScreen(BaseScreen):
     """Screen for viewing and editing configuration."""
 
     SCREEN_TITLE = "Configuration"
+
+    CSS = """
+    .config-container {
+        height: auto;
+    }
+
+    .config-viewer {
+        height: auto;
+        max-height: 18;
+        min-height: 10;
+    }
+
+    .config-actions {
+        height: auto;
+        margin-top: 1;
+    }
+
+    /* Responsive config viewer sizing */
+    .compact .config-viewer {
+        max-height: 12;
+        min-height: 8;
+    }
+    """
 
     BINDINGS = [
         Binding("escape", "go_back", "Back", priority=True),
@@ -68,21 +92,40 @@ class ConfigScreen(BaseScreen):
         await self.refresh_data()
 
     async def refresh_data(self):
-        """Refresh configuration display."""
+        """Refresh configuration data."""
         try:
-            # Deep copy config to avoid modifying original
+            # Get config dict
             config_dict = copy.deepcopy(self.tui_app.config.config)
 
-            # Redact sensitive fields
-            redactor = SensitiveInfoRedactor()
-            config_dict = redactor.redact_dict(config_dict)
+            # Redact sensitive fields manually (same as main.py)
+            sensitive_fields = [
+                "password",
+                "access_token",
+                "api_token",
+                "client_secret",
+                "oidc_client_secret",
+            ]
+
+            def redact_sensitive(obj, path=""):
+                """Recursively redact sensitive fields."""
+                if isinstance(obj, dict):
+                    for key, value in obj.items():
+                        if key in sensitive_fields and value:
+                            obj[key] = "***REDACTED***"
+                        else:
+                            redact_sensitive(value, f"{path}.{key}" if path else key)
+                elif isinstance(obj, list):
+                    for item in obj:
+                        redact_sensitive(item, path)
+
+            redact_sensitive(config_dict)
 
             # Format as JSON
             config_text = json.dumps(config_dict, indent=2)
 
             # Update text area
             text_area = self.query_one("#config-content", TextArea)
-            text_area.text = config_text
+            await text_area.load_text(config_text)
 
         except Exception as e:
             self.logger.error(f"Error loading config: {e}")
@@ -136,9 +179,7 @@ class ConfigScreen(BaseScreen):
             # Note: This is a simplified version. In production, you'd want
             # more sophisticated validation and merging logic
 
-            config_file = getattr(
-                self.tui_app.config, "config_file", "config.json"
-            )
+            config_file = getattr(self.tui_app.config, "config_file", "config.json")
 
             with open(config_file, "w") as f:
                 json.dump(new_config, f, indent=2)

@@ -1,9 +1,10 @@
 """Status screen showing detailed bot status."""
 
-from textual.containers import Container, Vertical, Grid
+from textual.containers import Container, Grid, Vertical
 from textual.widgets import Static
+
+from ..widgets.common import MetricDisplay, StatusIndicator
 from .base import BaseScreen
-from ..widgets.common import StatusIndicator, MetricDisplay
 
 
 class StatusScreen(BaseScreen):
@@ -11,25 +12,53 @@ class StatusScreen(BaseScreen):
 
     SCREEN_TITLE = "Bot Status"
 
+    CSS = """
+    .status-container {
+        height: auto;
+    }
+
+    .status-grid {
+        grid-size: 2;
+        height: auto;
+    }
+
+    /* Stack status indicators vertically on small screens */
+    .compact .status-grid {
+        grid-size: 1;
+    }
+
+    .metrics-container {
+        height: auto;
+        max-height: 10;
+    }
+
+    .compact .metrics-container {
+        max-height: 8;
+    }
+
+    .plugins-list {
+        height: auto;
+        max-height: 5;
+    }
+
+    .tasks-list {
+        height: auto;
+        max-height: 5;
+    }
+    """
+
     def compose_content(self):
         """Compose status screen content."""
         with Container(classes="status-container"):
-            yield Static(
-                "[bold cyan]Bot Status[/bold cyan]", classes="section-header"
-            )
+            yield Static("[bold cyan]Bot Status[/bold cyan]", classes="section-header")
 
             # Connection status
             with Grid(classes="status-grid"):
-                yield StatusIndicator(
-                    service_name="Matrix", id="matrix-status"
-                )
-                yield StatusIndicator(
-                    service_name="Semaphore", id="semaphore-status"
-                )
+                yield StatusIndicator(service_name="Matrix", id="matrix-status")
+                yield StatusIndicator(service_name="Semaphore", id="semaphore-status")
+                yield StatusIndicator(service_name="Encryption", id="encryption-status")
 
-            yield Static(
-                "[bold cyan]Metrics[/bold cyan]", classes="section-header"
-            )
+            yield Static("[bold cyan]Metrics[/bold cyan]", classes="section-header")
 
             # Metrics display
             with Vertical(classes="metrics-container"):
@@ -42,13 +71,9 @@ class StatusScreen(BaseScreen):
                     id="requests_received",
                     icon="📥",
                 )
-                yield MetricDisplay(
-                    label="Active Tasks", id="active_tasks", icon="🔧"
-                )
+                yield MetricDisplay(label="Active Tasks", id="active_tasks", icon="🔧")
                 yield MetricDisplay(label="Errors", id="errors", icon="❌")
-                yield MetricDisplay(
-                    label="Emojis Used", id="emojis_used", icon="😊"
-                )
+                yield MetricDisplay(label="Emojis Used", id="emojis_used", icon="😊")
 
             # Plugins section
             yield Static(
@@ -81,33 +106,58 @@ class StatusScreen(BaseScreen):
                 matrix_status.status = "Unknown"
 
             # Update Semaphore status
-            semaphore_status = self.query_one(
-                "#semaphore-status", StatusIndicator
-            )
+            semaphore_status = self.query_one("#semaphore-status", StatusIndicator)
             if self.tui_app.bot and self.tui_app.bot.semaphore:
                 # Simple check - could be enhanced with actual health check
                 semaphore_status.status = "Connected"
             else:
                 semaphore_status.status = "Unknown"
 
+            # Update Encryption status
+            encryption_status = self.query_one("#encryption-status", StatusIndicator)
+            if self.tui_app.bot and self.tui_app.bot.client:
+                if self.tui_app.bot.client.olm:
+                    # Check if we have any verified devices
+                    try:
+                        from ...verification import DeviceVerificationManager
+
+                        verification_manager = DeviceVerificationManager(
+                            self.tui_app.bot.client
+                        )
+                        verified_devices = (
+                            await verification_manager.get_verified_devices()
+                        )
+                        if verified_devices:
+                            encryption_status.status = (
+                                f"E2E ({len(verified_devices)} verified)"
+                            )
+                        else:
+                            encryption_status.status = "E2E (unverified)"
+                    except Exception:
+                        encryption_status.status = "E2E (unknown)"
+                else:
+                    encryption_status.status = "Disabled"
+            else:
+                encryption_status.status = "Unknown"
+
             # Update metrics
             if hasattr(self.tui_app.bot, "metrics"):
                 metrics = self.tui_app.bot.metrics
 
-                self.query_one("#uptime", MetricDisplay).value = (
-                    self._format_uptime(metrics.get("uptime", 0))
+                self.query_one("#uptime", MetricDisplay).value = self._format_uptime(
+                    metrics.get("uptime", 0)
                 )
-                self.query_one("#messages_sent", MetricDisplay).value = (
-                    metrics.get("messages_sent", 0)
+                self.query_one("#messages_sent", MetricDisplay).value = metrics.get(
+                    "messages_sent", 0
                 )
-                self.query_one("#requests_received", MetricDisplay).value = (
-                    metrics.get("requests_received", 0)
+                self.query_one("#requests_received", MetricDisplay).value = metrics.get(
+                    "requests_received", 0
                 )
                 self.query_one("#errors", MetricDisplay).value = metrics.get(
                     "errors", 0
                 )
-                self.query_one("#emojis_used", MetricDisplay).value = (
-                    metrics.get("emojis_used", 0)
+                self.query_one("#emojis_used", MetricDisplay).value = metrics.get(
+                    "emojis_used", 0
                 )
 
             # Update active tasks
@@ -115,9 +165,7 @@ class StatusScreen(BaseScreen):
                 active_tasks = getattr(
                     self.tui_app.bot.command_handler, "active_tasks", {}
                 )
-                self.query_one("#active_tasks", MetricDisplay).value = len(
-                    active_tasks
-                )
+                self.query_one("#active_tasks", MetricDisplay).value = len(active_tasks)
 
                 # Format active tasks list
                 tasks_widget = self.query_one("#active-tasks-list", Static)

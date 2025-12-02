@@ -1,15 +1,31 @@
 """Rooms screen showing Matrix rooms."""
 
 from textual.containers import Container
-from textual.widgets import Static
+from textual.widgets import DataTable, Static
+
 from .base import BaseScreen
-from ..widgets.common import DataGrid
 
 
 class RoomsScreen(BaseScreen):
     """Screen showing Matrix rooms the bot has joined."""
 
     SCREEN_TITLE = "Rooms"
+
+    CSS = """
+    .rooms-container {
+        height: auto;
+    }
+
+    #rooms-table {
+        height: auto;
+        max-height: 15;
+    }
+
+    /* Responsive table sizing */
+    .compact #rooms-table {
+        max-height: 8;
+    }
+    """
 
     def __init__(self, rooms=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -24,19 +40,22 @@ class RoomsScreen(BaseScreen):
             )
             yield Static("Rooms the bot has joined:", classes="description")
 
-            yield DataGrid(
-                columns=["Room Name", "Room ID", "Members", "Encrypted"],
+            yield DataTable(
                 id="rooms-table",
             )
 
     async def on_screen_mount(self):
         """Load rooms data."""
+        # Set up table columns
+        table = self.query_one("#rooms-table", DataTable)
+        table.add_columns("Room Name", "Room ID", "Members", "Encrypted")
+
         await self.refresh_data()
 
     async def refresh_data(self):
         """Refresh rooms data."""
         try:
-            table = self.query_one("#rooms-table", DataGrid)
+            table = self.query_one("#rooms-table", DataTable)
             table.clear()
 
             if not self.tui_app.bot or not self.tui_app.bot.client:

@@ -24,11 +24,19 @@ class OIDCAuthScreen(ModalScreen):
     }
     
     OIDCAuthScreen > Container {
-        width: 80;
+        width: 90%;
+        max-width: 80;
         height: auto;
         border: solid $accent;
         background: $surface;
         padding: 2;
+    }
+    
+    /* Responsive adjustments for small screens */
+    .compact OIDCAuthScreen > Container {
+        width: 95%;
+        max-width: 95%;
+        padding: 1;
     }
     
     .auth-title {

@@ -24,6 +24,14 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Works in both TUI and console modes
   - Backward compatible with direct token input
 
+- **Device Verification TUI Screen**: Complete device verification interface in TUI
+  - View verified and unverified devices with detailed information
+  - Interactive emoji-based verification with real-time feedback
+  - Accept/reject pending verification requests
+  - Cross-verification with other ChatrixCD bots in shared rooms
+  - Encryption status indicator in status screen
+  - Full integration with existing verification backend
+
 ### Fixed
 
 - **OIDC Rate Limit Error Handling**: Improved error messages for rate-limited OIDC authentication attempts

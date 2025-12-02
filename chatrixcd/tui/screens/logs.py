@@ -1,9 +1,11 @@
 """Logs screen showing bot logs."""
 
 import os
+
+from textual.binding import Binding
 from textual.containers import Container
 from textual.widgets import Static, TextArea
-from textual.binding import Binding
+
 from .base import BaseScreen
 
 
@@ -11,6 +13,24 @@ class LogsScreen(BaseScreen):
     """Screen for viewing bot logs."""
 
     SCREEN_TITLE = "Logs"
+
+    CSS = """
+    .logs-container {
+        height: auto;
+    }
+
+    .log-viewer {
+        height: auto;
+        max-height: 20;
+        min-height: 10;
+    }
+
+    /* Responsive log viewer sizing */
+    .compact .log-viewer {
+        max-height: 12;
+        min-height: 8;
+    }
+    """
 
     BINDINGS = [
         Binding("escape", "go_back", "Back", priority=True),
@@ -21,12 +41,8 @@ class LogsScreen(BaseScreen):
     def compose_content(self):
         """Compose logs screen content."""
         with Container(classes="logs-container"):
-            yield Static(
-                "[bold cyan]Bot Logs[/bold cyan]", classes="section-header"
-            )
-            yield Static(
-                "Last 1000 lines (most recent first):", classes="description"
-            )
+            yield Static("[bold cyan]Bot Logs[/bold cyan]", classes="section-header")
+            yield Static("Last 1000 lines (most recent first):", classes="description")
 
             yield TextArea(
                 id="log-content",
@@ -44,7 +60,7 @@ class LogsScreen(BaseScreen):
         try:
             log_content = self._load_logs()
             text_area = self.query_one("#log-content", TextArea)
-            text_area.text = log_content
+            await text_area.load_text(log_content)
 
         except Exception as e:
             self.logger.error(f"Error loading logs: {e}")
@@ -72,9 +88,7 @@ class LogsScreen(BaseScreen):
                 lines = f.readlines()
 
             # Get last max_lines, reverse so newest is first
-            recent_lines = (
-                lines[-max_lines:] if len(lines) > max_lines else lines
-            )
+            recent_lines = lines[-max_lines:] if len(lines) > max_lines else lines
             recent_lines.reverse()
 
             return "".join(recent_lines)

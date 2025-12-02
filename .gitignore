@@ -235,3 +235,4 @@ __marimo__/
 # Configuration backups
 *.backup
 *.backup.*
+.trunk
