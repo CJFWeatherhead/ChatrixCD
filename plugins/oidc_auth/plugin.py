@@ -12,9 +12,10 @@ Features:
 """
 
 import logging
-import aiohttp
 from typing import Optional
-from nio import LoginResponse, LoginInfoResponse
+
+import aiohttp
+from nio import LoginInfoResponse, LoginResponse
 
 from chatrixcd.plugin_manager import Plugin
 
@@ -22,14 +23,15 @@ from chatrixcd.plugin_manager import Plugin
 class OIDCAuthPlugin(Plugin):
     """Plugin that provides OIDC/SSO authentication support."""
 
-    def __init__(self, bot, config: dict):
+    def __init__(self, bot, config: dict, metadata):
         """Initialize OIDC auth plugin.
 
         Args:
             bot: Bot instance
             config: Plugin configuration
+            metadata: Plugin metadata
         """
-        super().__init__(bot, config)
+        super().__init__(bot, config, metadata)
         self.logger = logging.getLogger(__name__)
         self.name = "oidc_auth"
         self.description = "OIDC/SSO Authentication"
@@ -152,19 +154,14 @@ class OIDCAuthPlugin(Plugin):
             )
 
             if isinstance(response, LoginResponse):
-                self.logger.info(
-                    f"Successfully logged in as {bot.user_id} via OIDC"
-                )
+                self.logger.info(f"Successfully logged in as {bot.user_id} via OIDC")
                 bot._save_session(response.access_token, response.device_id)
                 await bot.setup_encryption()
                 return True
             else:
                 # Provide helpful error message
                 error_msg = str(response)
-                if (
-                    "Invalid login token" in error_msg
-                    or "M_FORBIDDEN" in error_msg
-                ):
+                if "Invalid login token" in error_msg or "M_FORBIDDEN" in error_msg:
                     self.logger.error(
                         f"OIDC login failed: {response}\n"
                         "The login token is invalid or has expired. This can happen if:\n"
@@ -205,9 +202,7 @@ class OIDCAuthPlugin(Plugin):
 
                         for flow in flows:
                             if flow.get("type") == "m.login.sso":
-                                identity_providers = flow.get(
-                                    "identity_providers", []
-                                )
+                                identity_providers = flow.get("identity_providers", [])
                                 break
 
                         self.logger.debug(
@@ -222,9 +217,7 @@ class OIDCAuthPlugin(Plugin):
 
         return identity_providers
 
-    async def _build_redirect_url(
-        self, bot, identity_providers: list
-    ) -> tuple:
+    async def _build_redirect_url(self, bot, identity_providers: list) -> tuple:
         """Build SSO redirect URL based on available identity providers.
 
         Args:
@@ -302,9 +295,7 @@ class OIDCAuthPlugin(Plugin):
             self.logger.info("")
             self.logger.info("2. Log in with your credentials")
             self.logger.info("")
-            self.logger.info(
-                "3. After successful login, you'll be redirected to:"
-            )
+            self.logger.info("3. After successful login, you'll be redirected to:")
             self.logger.info(f"   {redirect_url}?loginToken=...")
             self.logger.info("")
             self.logger.info("4. Copy the 'loginToken' value from the URL")
@@ -327,7 +318,7 @@ class OIDCAuthPlugin(Plugin):
 
             return login_token
 
-    def register_tui_screens(self) -> list:
+    async def register_tui_screens(self, registry, tui_app):
         """Register TUI screens for this plugin.
 
         Returns:
@@ -337,13 +328,10 @@ class OIDCAuthPlugin(Plugin):
             from chatrixcd.tui.plugins.oidc_tui import OIDCAuthPluginTUI
 
             tui_extension = OIDCAuthPluginTUI(self)
-            return tui_extension.get_screen_registrations()
+            await tui_extension.register_tui_screens(registry, tui_app)
 
         except ImportError:
-            self.logger.debug(
-                "TUI not available, skipping screen registration"
-            )
-            return []
+            self.logger.debug("TUI not available, skipping screen registration")
 
 
 def create_plugin(bot, config: dict):

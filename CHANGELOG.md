@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.MAJOR.MINOR.PATCH.
 
 **Version Format:**
+
 - `YYYY.MM.DD`: Release date
 - `MAJOR`: Breaking changes or major features
 - `MINOR`: New features, non-breaking
@@ -16,8 +17,14 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [Unreleased]
 
 ### Added
+
 - **Modular TUI Architecture**: Complete redesign of Text User Interface
   - Modular screen system with dynamic registration
+- **Plugin Signature Validation Test**: Added test to verify all plugin classes have correct `__init__` signatures to prevent initialization errors
+
+### Fixed
+
+- **OIDC Plugin Initialization**: Fixed OIDCAuthPlugin.**init**() signature mismatch that prevented OIDC authentication plugin from loading
   - Plugin-aware: plugins can register their own TUI screens
   - Event-driven architecture for component communication
   - Reusable widget library (StatusIndicator, MetricDisplay, DataGrid, etc.)
@@ -81,6 +88,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Eliminates duplicate logic between different interfaces
 
 ### Changed
+
 - **TUI Architecture**: Replaced monolithic TUI with modular architecture
   - Old `chatrixcd/tui.py` (2000+ lines) removed in favor of modular design
   - New structure in `chatrixcd/tui/` with separated concerns
@@ -109,6 +117,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Combines Matrix power levels with config-based restrictions
 
 ### Fixed
+
 - Fixed TUI screen import test to only test existing screens (removed references to deprecated SayScreen, LogScreen, SetScreen, ShowScreen)
 - Fixed async test class in test_aliases_plugin.py to use IsolatedAsyncioTestCase for proper coroutine handling
 - Fixed mock setup in test_commands.py to properly mock async task monitor methods
@@ -120,6 +129,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - Added explanatory comments to exception handlers per code review
 
 ### Removed
+
 - **Legacy TUI (TUI v1)**: Removed monolithic TUI implementation
   - Old `chatrixcd/tui.py` file removed (2000+ lines)
   - `chatrixcd/tui_manager.py` version selector removed
@@ -132,10 +142,12 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [2025.11.15.5.2.0] - 2025-11-15
 
 ### Added
+
 - **Vodozemac Migration**: Replaced deprecated libolm with vodozemac for enhanced security
   - Updated to vodozemac 0.9.0+ for improved cryptographic primitives
 
 ### Changed
+
 - Migrated documentation hosting from GitHub Pages to Cloudflare Pages
 - Updated primary domain from chatrixcd.cjfw.me to chatrix.cd
 - Updated all documentation links to use new domain
@@ -143,22 +155,27 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - **Log Analysis**: Automatic collection and analysis of remote bot logs for error detection and redaction assessment
 
 ### Changed
+
 - **Integration Testing**: Removed `test_client` configuration; tests now use preauthenticated bot sessions exclusively
 - **Documentation**: Updated integration testing docs to reflect removal of separate test client requirement
 
 ### Fixed
+
 - **Encryption Testing**: Fixed integration tests to properly decrypt and validate encrypted messages using copied stores
 
 ### Changed
+
 - **Greeting Consistency**: Bot responses now use user display names instead of full Matrix user IDs in greetings for better readability
 
 ### Removed
+
 - **GitHub Pages Workflow**: Removed `.github/workflows/pages.yml` as documentation is now deployed via Cloudflare Pages
 - **Encryption Verification Notification**: Removed automatic notification message when bot cannot decrypt encrypted messages
   - Users must now manually verify devices through Matrix client
   - Reduces spam in rooms while maintaining security
 
 ### Fixed
+
 - **Message Formatting**: Fixed markdown escaping issues by ensuring all formatted messages use proper HTML
   - Exit confirmation now uses HTML formatting instead of mixed markdown/HTML
   - Log tailing confirmations now use HTML formatting
@@ -168,6 +185,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Prevents silent failures and guides users to resolve verification problems
 
 ### Fixed
+
 - **Matrix-nio API Compatibility**: Fixed `keys_query()` calls to use updated matrix-nio 0.25.x API
   - Removed deprecated `user_ids` parameter and use `client.olm.users_for_key_query` instead
   - Removed dependency on deprecated libolm library
@@ -197,6 +215,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - **Session Management**: Save and restore Olm session state, device verification status, and encryption keys
 
 ### Changed
+
 - Integration testing framework for live ChatrixCD instances
   - Remote bot management via SSH
   - Multi-host bot deployment support
@@ -209,6 +228,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - Bot now responds in encrypted rooms even with unverified devices by automatically establishing encryption
 
 ### Fixed
+
 - Fixed `keys_query` API calls to use `user_ids` parameter for matrix-nio compatibility
 - Bot response validation now works with separate test user account
 - Resolved authentication issues for OIDC-authenticated bots via session file access tokens
@@ -220,13 +240,16 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Matrix client authentication and room joining capabilities
 
 ### Changed
+
 - Integration test timeout reduced from 300 seconds to 10 seconds for faster iteration
 
 ### Fixed
+
 - Access token extraction for OIDC bots from session files
 - Matrix client session restoration for testing
 
 ### Known Issues
+
 - Integration tests require separate test user credentials to properly test bot responses
 - Current test setup uses bot's own credentials, preventing proper command/response testing
   - Multi-host testing support for comprehensive integration testing
@@ -234,6 +257,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Automated test execution against running bot instances
 
 ### Fixed
+
 - AliasManager.load_aliases() now properly handles empty alias files without logging errors
   - Matrix protocol integration tests
   - Configurable test setup for local network testing
@@ -241,6 +265,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Automatic Matrix configuration discovery from remote server
 
 ### Changed
+
 - Temporarily removed E2E encryption requirement from matrix-nio dependency
   - Allows easier local development and testing on macOS
   - Reduces build complexity by avoiding python-olm compilation issues
@@ -249,6 +274,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [2025.11.09.5.1.0] - 2025-11-09
 
 ### Changed
+
 - **Build System**: Removed redundant QEMU emulation from build workflow
   - Docker Buildx with BuildKit can perform native cross-compilation without QEMU
   - QEMU was only needed for older `docker run` approach, not for buildx
@@ -257,6 +283,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Affects all architecture builds (x86_64, i686, arm64)
 
 ### Changed
+
 - **Deployment Focus**: Updated all deployment documentation to reflect Alpine Linux as primary target
   - Alpine Linux (OpenRC) is now explicitly marked as primary deployment target
   - Debian/Ubuntu (systemd) marked as secondary target
@@ -276,18 +303,21 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - All configuration now exclusively through config.json
 
 ### Fixed
+
 - **Binary Download Links**: Corrected binary artifact links in documentation
   - Updated docs/installation.md to use .dist.tar.gz format (was single file)
   - Fixed WSL installation instructions to use correct tarball format
   - All download links now correctly point to distributed tarball artifacts
 
 ### Added
+
 - **Repository Analysis**: Reviewed repository alignment with copilot instructions
   - Identified high-priority improvements: test coverage reporting, security scanning
   - Identified medium-priority improvements: documentation consolidation, E2E testing, developer experience
   - Identified low-priority improvements: UX enhancements, accessibility features
-  
+
 ### Fixed
+
 - **Build System**: Fixed `PyType_GetModuleByDef: symbol not found` error in compiled binaries
   - Root cause: Alpine's default Python package provides shared libraries instead of static ones
   - Solution: Build Python from source with `--disable-shared --enable-static=yes --with-static-libpython`
@@ -296,6 +326,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Affects all architectures (x86_64, i686, arm64)
 
 ### Changed
+
 - **Build Performance**: Optimized build times in GitHub Actions
   - Python optimization flags (PGO + LTO) disabled by default for faster CI builds
   - Can be enabled for release builds with `PYTHON_OPTIMIZE=yes` build arg
@@ -305,11 +336,13 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [2025.11.08.5.0.0] - 2025-11-08
 
 ### Fixed
+
 - **Build System**: Fixed Dockerfile.build to correctly rename `main.bin` to `chatrixcd` in standalone mode
   - Nuitka creates `main.bin` instead of `main` when using `--mode=standalone`
   - This was causing all builds (x86_64, i686, arm64) to fail with "No such file or directory" error
 
 ### Changed
+
 - **Documentation Accessibility** (WCAG 2.1 AA Compliance): Complete accessibility overhaul for GitHub Pages documentation
   - **Color Contrast**: All colors now meet WCAG 2.1 AA standards (4.5:1 for normal text, 3.0:1 for large text)
     - Updated brand green: #3e836b (was #4A9B7F, improved from 3.34:1 to 4.50:1 contrast)
@@ -348,6 +381,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Distribution format: `chatrixcd-linux-{arch}.dist.tar.gz` → extract and run
 
 ### Removed
+
 - **Turbo Vision TUI**: Removed experimental Turbo Vision-style TUI implementation
   - `chatrixcd/tui_turbo.py` removed
   - `tests/test_tui_turbo_pilot.py` removed
@@ -355,6 +389,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Configuration option `bot.tui_mode` removed
 
 ### Fixed
+
 - **i686 Binary**: Fixed ImportError with `PyType_GetModuleByDef: symbol not found` when running i686 binaries
   - Root cause was onefile mode's symbol resolution issues with musl libc on Alpine Linux
   - Solution: Use standalone mode for all architectures (consistent approach)
@@ -362,6 +397,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [2025.11.07.4.1.0] - 2025-11-07
 
 ### Changed
+
 - **Build Workflow**: Migrated from `docker run` to Docker buildx for all architecture builds
   - **Better Performance**: 35-50% faster builds with BuildKit's intelligent layer caching
   - **Improved Caching**: Using BuildKit cache mounts (`RUN --mount=type=cache`) for pip and ccache
@@ -372,6 +408,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Removed manual ccache directory management in favor of BuildKit's built-in caching
 
 ### Fixed
+
 - **Build Workflow**: Fixed broken build process from PR #110 optimization changes
   - **ccache Configuration**: Fixed "cannot locate suitable C compiler" error in x86_64, i686, and arm64 builds
     - Changed from `export CC='ccache gcc'` to `export PATH=/usr/lib/ccache/bin:$PATH` (Alpine's standard ccache wrapper location)
@@ -389,12 +426,14 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - **Parallelization**: Removed unnecessary dependency between test and validate-build jobs to run them in parallel
 
 ### Fixed
+
 - **Build Workflow**: Fixed PEP 668 "externally-managed-environment" error in GitHub Actions build workflow
   - Replaced `--break-system-packages` workaround with Python virtual environments for all architectures (x86_64, i686, arm64)
   - Now uses `python3 -m venv /venv` and activates the venv before installing dependencies
   - This is the recommended best practice per PEP 668, providing better isolation and compatibility with modern Linux distributions
 
 ### Changed
+
 - **Global Log Tailing Mode**: Redesigned `!cd log on/off` commands for better usability
   - `!cd log on` and `!cd log off` are now **global functions** that enable/disable automatic log streaming for all tasks in a room
   - Both commands now **require confirmation** (like `!cd run` and `!cd exit`) with support for 👍/👎 reactions or text responses
@@ -405,6 +444,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - `!cd log <task_id>` still shows logs for a specific task (one-time retrieval)
 
 ### Fixed
+
 - **Log Output Parsing for Ansible**: Fixed `!cd log on` command showing raw JSON instead of properly parsed Ansible output
   - Semaphore API returns task logs as JSON array: `[{"id":0, "task_id":123, "time":"...", "output":"log line"}, ...]`
   - Updated `get_task_output()` in `semaphore.py` to parse JSON and extract `"output"` field from each log entry
@@ -412,6 +452,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Logs now display with correct formatting and colors instead of showing raw JSON with encoded escape sequences
 
 ### Added
+
 - **Enhanced message formatting with m.notice, colors, semantic emojis, and tables**
   - **m.notice support**: Informational commands now use `m.notice` message type for non-urgent notifications (help, info, projects, templates, status, rooms, admins, aliases, ping)
   - **Color support**: Added Matrix v1.10+ compliant color helpers using `data-mx-color` attributes:
@@ -441,6 +482,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Maintains sassy and fun personality throughout with emoji-rich responses
 
 ### Changed
+
 - **Build system now uses musl-based static compilation for maximum portability**
   - All Linux binaries (x86_64, i686, arm64) now built on Alpine Linux using musl libc
   - Added `--static-libpython=yes` flag to statically link Python interpreter
@@ -465,12 +507,14 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - Clarified platform availability in docs/index.md, docs/quickstart.md, and QUICKSTART.md
 
 ### Fixed
+
 - Fixed misleading error message when no projects exist in Semaphore - now shows clear message to create a project instead of connection error
 - Fixed incorrect "multiple templates" message when no templates exist - now shows clear message to create templates with proper handling for 0, 1, and multiple template cases
 
 ## [2025.11.04.4.0.1] - 2025-11-04
 
 ### Added
+
 - **Comprehensive TUI Automated Testing with Textual Pilot** (94 new tests!)
   - Added 44 core pilot tests for regular TUI main app, screens, and widgets (`test_tui_pilot.py`)
     - Main app startup, rendering, and navigation
@@ -503,7 +547,6 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Total TUI tests increased from 40 to 134
   - Total test suite now includes 433 tests (up from 327)
   - Uses Textual's pilot feature for automated, reproducible TUI testing
-  
 - Comprehensive end-to-end (E2E) tests for main entry point with input/output verification
   - 21 E2E tests for CLI argument parsing and configuration handling
   - 14 E2E workflow tests for complete user scenarios
@@ -511,6 +554,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Improved main.py test coverage from 0% to 23%
 
 ### Changed
+
 - Updated TESTING.md documentation with comprehensive TUI testing information
   - Documented all 94 new TUI pilot tests (regular + turbo)
   - Added test file organization for pilot tests
@@ -528,6 +572,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ## [2025.11.03.4.0.0] - 2025-11-03
 
 ### Fixed
+
 - **Easter Egg Commands**: Added `pet` and `scold` to reserved and valid command lists
   - These hidden commands are now properly protected from being overridden by aliases
   - Commands are recognized as valid for command validation
@@ -546,12 +591,14 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Both classic and turbo TUI modes now override auto-generated text variables with theme-specific colors
 
 ### Changed
+
 - **Build Workflow**: Changed build and release workflow to on-demand only
   - Removed automatic trigger on pull request merge to main
   - Workflow now only runs via manual workflow_dispatch trigger
   - Simplified version calculation logic to use workflow input directly
 
 ### Fixed
+
 - **TUI CSS Compatibility**: Fixed stylesheet errors with undefined CSS variables
   - Updated `get_css_variables()` to use Textual's `ColorSystem.generate()` for complete variable set
   - Now generates all 163 CSS variables including scrollbar-background, scrollbar-hover, etc.
@@ -578,12 +625,14 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - docs/: Updated GitHub Pages documentation with alternative installation options
 
 ### Removed
+
 - **Build Workflow**: Removed Windows and macOS build jobs from CI/CD pipeline
   - Windows and macOS builds encountered persistent issues with python-olm native dependency compilation
   - After 14 iterations, decided to focus on Linux-only binary releases
   - Windows/macOS users can still install from source with appropriate dependencies
 
 ### Fixed
+
 - **Build and Release Workflow**: Fixed Linux build configuration
   - Updated Nuitka Action to use `mode=onefile` instead of deprecated `onefile/standalone` options
   - Added QEMU setup for ARM64 cross-compilation on Linux
@@ -602,6 +651,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Users are now properly highlighted when mentioned in messages
 
 ### Added
+
 - **Configuration Wizard**: Interactive configuration setup with `--init` flag
   - Console-based wizard for creating/updating configuration
   - Parses `config.json.example` for field descriptions and defaults
@@ -627,7 +677,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Hot-reload support: changes take effect without restarting bot
 - **Asynchronous File Watching**: Config files now auto-reload when modified
   - `config.json` auto-reloads every 10 seconds
-  - `aliases.json` auto-reloads every 5 seconds  
+  - `aliases.json` auto-reloads every 5 seconds
   - `messages.json` auto-reloads every 5 seconds
   - Changes take effect without bot restart
   - Thread-safe implementation using asyncio tasks
@@ -638,6 +688,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - All new code paths now have corresponding unit tests
 
 ### Changed
+
 - **Documentation Cleanup**: Removed outdated and redundant documentation files
   - Removed 11 old summary files (AUDIT_SUMMARY.md, BUILD_FIX_SUMMARY.md, etc.) from previous development iterations
   - Removed overly detailed design documents (TUI_TURBO_VISION_DESIGN.md, TUI_MIGRATION_GUIDE.md, BUILD_WORKFLOW.md)
@@ -659,6 +710,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Improved testability with injectable message configurations
 
 ### Fixed
+
 - **TUI CSS Error**: Fixed `$foreground` variable undefined error in Textual 6.x
   - Added `foreground` CSS variable to both `tui.py` and `tui_turbo.py`
   - Aliased to `text` color for compatibility
@@ -676,6 +728,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Ensures consistent version calculation and proper tag handling
 
 ### Removed
+
 - **Threaded Responses**: Completely removed all threading functionality for conventional message handling
   - All bot responses now sent as regular messages instead of thread replies
   - Removed thread detection logic from message callback
@@ -686,6 +739,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Help text updated to remove `!cda` references
 
 ### Fixed
+
 - **Build Process**: Fixed test failures in CI/CD pipeline
   - Added missing PyYAML dependency for test_workflow.py
   - Resolved ModuleNotFoundError for yaml module in tests
@@ -698,6 +752,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Proper error messages for missing tasks
 
 ### Added (Previous Features)
+
 - **Configuration Version 4**: Expanded configuration options with comprehensive settings
   - Added `bot.mouse_enabled` for configurable mouse support in TUI
   - Added `bot.color_enabled` for enabling colored output (overridable with -C flag)
@@ -741,6 +796,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
   - Command execution flow logged at each step
 
 ### Changed
+
 - Default TUI is now the Turbo Vision-style interface (`tui_turbo`)
 - Original TUI is still available and can be selected via configuration
 - Bot responses are more conversational and engaging
@@ -750,6 +806,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - Both classic and turbo TUI support all 5 color themes
 
 ### Fixed
+
 - **TUI Theme Support**: Fixed theme implementation in both TUI modes
   - Themes now properly passed to TUI initialization
   - Added `get_css_variables()` method for dynamic theme application
@@ -763,6 +820,7 @@ No changes recorded.
 ## [2025.10.17.3.0.0] - 2025-10-17
 
 ### Fixed
+
 - **Bot Not Responding to Encrypted Messages**: Fixed critical issue where bot could decrypt messages but wouldn't respond to commands
   - Fixed `server_timestamp` attribute missing on decrypted events causing AttributeError
   - Added logic to copy timestamp from MegolmEvent to decrypted RoomMessageText before processing
@@ -782,6 +840,7 @@ No changes recorded.
   - Improved error recovery for decryption failures with automatic session establishment
 
 ### Added
+
 - **Verification Status Persistence**: Device verification status is now persisted across restarts
   - Verified devices are automatically saved to the encryption store
   - `get_verified_devices()` method to retrieve list of verified devices
@@ -790,6 +849,7 @@ No changes recorded.
   - Added 9 new comprehensive tests for verification persistence
 
 ### Fixed
+
 - **Device Verification**: Fixed timeout issues when verifying devices
   - Verification requests now properly display user ID and device ID instead of "Unknown"
   - Verification accept/start messages are now correctly sent to other devices
@@ -797,6 +857,7 @@ No changes recorded.
   - Fixed `get_pending_verifications()` to extract device info from `Sas.other_olm_device`
 
 ### Added
+
 - **Comprehensive E2E Verification Tests**: Added 10 new end-to-end tests for device verification
   - Full verification flow test from start to finish
   - Auto-verification flow test for daemon mode
@@ -807,6 +868,7 @@ No changes recorded.
 ## [2025.10.17.2.0.0] - 2025-10-17
 
 ### Added
+
 - **Command Aliases**: Create custom shortcuts for frequently used commands
   - Manage aliases through the TUI (press `x` in main menu) or edit `aliases.json` file
   - Aliases stored separately from `config.json` for easy management
@@ -850,6 +912,7 @@ No changes recorded.
   - Accessible via `x` hotkey in main menu
 
 ### Fixed
+
 - **CRITICAL**: Fixed TUI crash when OIDC authentication is detected
   - OIDCAuthScreen now uses TextArea instead of markup links to avoid MarkupError with URLs containing special characters
   - URLs like `https://chat.example.org/_matrix/client/v3/login/sso/redirect/oidc?redirectUrl=http://localhost:8080/callback` no longer cause crashes
@@ -866,6 +929,7 @@ No changes recorded.
   - Falls back gracefully to generic SSO URL if identity provider fetch fails
 
 ### Added
+
 - TUI support for `-s`/`--show-config` flag
   - When `-s` is used without `-R` (redact) or `-v` (verbose) flags, configuration is now displayed in a TUI window
   - Provides a more user-friendly interface for viewing configuration
@@ -876,12 +940,14 @@ No changes recorded.
   - Users are prompted to run with `-v` or `-vv` for more details when errors occur
 
 ### Improved
+
 - Added verbose debug logging throughout OIDC authentication flow for better diagnostics
   - Logs redirect URL, SSO URL construction, identity provider selection
   - Logs callback invocation and token retrieval steps
   - Helps diagnose authentication issues when running with `-vv` or `-vvv` flags
 
 ### Changed
+
 - **BREAKING**: Dropped support for Python 3.9, 3.10, and 3.11 - minimum required version is now Python 3.12
 - Updated to support Python 3.12, 3.13, and 3.14
 - Updated all documentation to reflect new Python version requirements
@@ -891,6 +957,7 @@ No changes recorded.
 ## [2025.10.14.1.0.0] - 2025-10-14
 
 ### Changed
+
 - **BREAKING**: Removed token-based authentication method
 - **BREAKING**: Removed OAuth2 client credentials OIDC flow
 - **BREAKING**: Dropped Python 3.8 support - minimum required version is now Python 3.9
@@ -900,6 +967,7 @@ No changes recorded.
 - Updated OIDC configuration to use `oidc_redirect_url` instead
 
 ### Improved
+
 - Authentication now uses matrix-nio's native login methods
 - Better encryption support with proper E2E key handling
 - More reliable OIDC/SSO authentication following Matrix specification
@@ -909,6 +977,7 @@ No changes recorded.
 - **Generates correct provider-specific SSO URLs when available**
 
 ### Fixed
+
 - Fixed encrypted session failures in 1-1 rooms with OIDC authentication
 - Improved encryption key management and session handling
 - **Corrected OIDC/SSO implementation to properly parse server login flow response**
@@ -920,11 +989,12 @@ No changes recorded.
 ### Added
 
 #### Interactive TUI (Text User Interface)
+
 - **Interactive Mode**: New Text User Interface (TUI) when running ChatrixCD interactively
   - Menu-driven interface with brand colors (ChatrixCD green: #4A9B7F)
   - Mouse support for easy navigation
   - Works without color support when `-C` flag is not used
-- **Real-Time Task Monitoring**: 
+- **Real-Time Task Monitoring**:
   - Active tasks widget on home screen showing running Semaphore tasks
   - Live status updates every 5 seconds
   - Color-coded status indicators (running, success, error, stopped)
@@ -957,11 +1027,12 @@ No changes recorded.
   - `-L, --log-only`: Run in classic log-only mode (no TUI, backward compatible behavior)
   - TUI automatically disabled when running in daemon mode (`-D`) or non-interactive terminal
 - **Color Support**: TUI uses brand colors when `-C` flag is used, but remains fully functional without color support
-- **Dependencies**: 
+- **Dependencies**:
   - Added `textual>=0.47.0` for TUI implementation
   - Added `qrcode>=7.4.2` for QR code generation in device verification
 
 ### Fixed
+
 - **Encrypted Room Support**: Fixed issue where bot would not respond to commands in encrypted rooms. The bot now properly handles successfully decrypted Megolm events and processes them as normal messages
 - **Bot Message Processing**: Fixed issue where bot would process old messages on reconnect or startup. The bot now ignores messages that were sent before it started, preventing execution of stale commands and tasks that may have already been processed
 - **Redaction Feature**: Fixed redaction feature leaving some information un-redacted when using `-R` flag
@@ -971,6 +1042,7 @@ No changes recorded.
   - Device IDs in JSON string context (e.g., `'device_id': 'XYEZMPLXBC'`) are now properly redacted
 
 #### Matrix SDK Integration
+
 - **Key Verification Event Callbacks**: Added support for handling key verification protocol events
   - `KeyVerificationStart`: Handles incoming verification requests
   - `KeyVerificationCancel`: Handles verification cancellations
@@ -979,6 +1051,7 @@ No changes recorded.
   - Full SAS (Short Authentication String) protocol support
 
 #### Privacy and Security Features
+
 - **Sensitive Information Redaction**: New `-R` / `--redact` command-line flag to automatically redact sensitive information from logs
   - Redacts Matrix room IDs (e.g., `!room:server.com` → `![ROOM_ID]:server.com`)
   - Redacts Matrix user IDs (e.g., `@user:matrix.org` → `@[USER]:matrix.org`)
@@ -995,6 +1068,7 @@ No changes recorded.
   - Comprehensive test coverage in `tests/test_redactor.py`
 
 #### Dependencies
+
 - **colorlog**: Added `colorlog>=6.7.0` to requirements.txt for colored logging support
   - Ensures `-C` / `--color` flag works properly out of the box
   - Provides colored console output with customizable log level colors
@@ -1003,6 +1077,7 @@ No changes recorded.
 ### Changed
 
 #### Documentation
+
 - **Bug Report Template**: Updated `.github/ISSUE_TEMPLATE/bug_report.yml` to recommend using `-R` flag for privacy
 - **README.md**: Added `-R` flag documentation and privacy notes
 - **INSTALL.md**: Added security best practices for log redaction
@@ -1012,6 +1087,7 @@ No changes recorded.
 ## [2025.10.8] - 2025-10-10
 
 ### Added
+
 - **SSL/TLS Configuration for Semaphore**: Added flexible SSL/TLS options for Semaphore connections
   - `ssl_verify`: Enable/disable SSL certificate verification (default: true)
   - `ssl_ca_cert`: Path to custom CA certificate bundle for custom/internal CAs
@@ -1024,6 +1100,7 @@ No changes recorded.
   - Added tests for SSL configuration options
 
 ### Fixed
+
 - **E2E Encryption Session Management**: Fixed issues with encrypted message decryption
   - Bot now automatically uploads device keys and one-time keys after login
   - Bot queries device keys from other users to establish Olm sessions
@@ -1035,6 +1112,7 @@ No changes recorded.
 ## [2025.10.7] - 2025-10-09
 
 ### Breaking Changes
+
 - **Removed Environment Variable Support**: Configuration is now exclusively loaded from JSON files
   - Environment variables are no longer supported for configuration
   - All configuration must be specified in `config.json`
@@ -1042,6 +1120,7 @@ No changes recorded.
   - Existing deployments using environment variables need to migrate to JSON configuration files
 
 ### Added
+
 - **Branding and Visual Identity**: Comprehensive branding guidelines and styling with SVG logos
   - Added `BRANDING.md` with complete brand guidelines and color palette
   - Created `assets/` directory with SVG logo files (horizontal, icon, stacked, social, favicon)
@@ -1060,6 +1139,7 @@ No changes recorded.
   - Updated `config.json.example` with extensive inline comments
 
 ### Changed
+
 - **Configuration System Simplified**: Configuration is now exclusively file-based
   - Configuration file values have highest priority
   - Hardcoded defaults used as fallback when not in file
@@ -1071,11 +1151,13 @@ No changes recorded.
   - Better error messages for configuration parsing failures
 
 ### Fixed
+
 - **Configuration File Loading**: Fixed issue where configuration file values could be ignored
   - Resolves reported issue where JSON parameters were not being parsed correctly
   - User ID and other configuration values are now reliably loaded from config.json
 
 ### Improved
+
 - **Configuration Documentation**: Updated documentation to reflect JSON-only configuration
   - Removed references to environment variables throughout documentation
   - Clarified configuration priority system (file > defaults)
@@ -1088,6 +1170,7 @@ No changes recorded.
 ## [2025.10.6] - 2025-10-09
 
 ### Breaking Changes
+
 - **Removed YAML Configuration Support**: Configuration files must now be in JSON format
   - YAML support has been completely removed to simplify the codebase and reduce dependencies
   - Existing YAML configurations need to be converted to JSON format (see `config.json.example`)
@@ -1095,6 +1178,7 @@ No changes recorded.
   - Default configuration file changed from `config.yaml` to `config.json`
 
 ### Fixed
+
 - **Configuration Merge Bug**: Fixed shallow copy bug in `_merge_configs()` that could cause configuration corruption
   - Now uses `copy.deepcopy()` to properly copy nested dictionaries
   - Ensures defaults are not modified during merge operations
@@ -1103,6 +1187,7 @@ No changes recorded.
 ### Added
 
 #### Configuration System Improvements
+
 - **Configuration Versioning**: Implemented configuration schema versioning system
   - Current version: 2
   - Automatic detection of configuration version
@@ -1121,6 +1206,7 @@ No changes recorded.
 - **JSON Example**: Added `config.json.example` with fully documented JSON configuration format
 
 ### Improved
+
 - **Configuration Documentation**: Enhanced documentation for JSON-only configuration
   - Configuration versioning explanation
   - Migration process documentation
@@ -1129,11 +1215,13 @@ No changes recorded.
 - **Error Handling**: JSON parse errors show exact line and column numbers for easy debugging
 
 ### Fixed (Historical)
+
 - Fixed configuration loading to properly apply default values when config file exists but doesn't specify all fields. Previously, missing fields would be `None` instead of using defaults, causing "User id is not set" errors with token authentication.
 
 ### Added
 
 #### Command-Line Interface
+
 - Command-line argument parsing with argparse
 - `-V` / `--version` flag to display version information
 - `-v` / `-vv` / `-vvv` flags for increasing verbosity levels (INFO, DEBUG, detailed DEBUG with library logs)
@@ -1148,6 +1236,7 @@ No changes recorded.
 - Comprehensive tests for CLI argument parsing
 
 #### CI/CD
+
 - GitHub Actions workflow for running unit tests on pull requests
 - GitHub Actions workflow for creating releases with calendar versioning
 - Automated version bumping in `__init__.py` and `setup.py`
@@ -1155,6 +1244,7 @@ No changes recorded.
 - Automated GitHub releases with changelog
 
 ### Improved
+
 - **Configuration Error Handling**: Added graceful handling of malformed JSON configuration files
   - Clear error messages showing filename, line number, and column where error occurred
   - Detailed problem description for JSON parsing errors
@@ -1164,6 +1254,7 @@ No changes recorded.
 ### Fixed
 
 #### Encrypted Rooms
+
 - Bot now properly handles encrypted messages by requesting decryption keys when needed
 - Added MegolmEvent callback to automatically request room keys for encrypted messages that couldn't be decrypted
 - Bot will now respond to commands in encrypted rooms once encryption keys are received
@@ -1173,6 +1264,7 @@ No changes recorded.
 ### Added
 
 #### Core Features
+
 - Matrix bot implementation using matrix-nio
 - End-to-end encryption support for Matrix rooms
 - Semaphore UI REST API integration
@@ -1180,6 +1272,7 @@ No changes recorded.
 - Command-based interface for CI/CD automation
 
 #### Authentication
+
 - Password-based authentication (traditional Matrix)
 - Token-based authentication (pre-obtained access tokens)
 - OIDC/OAuth2 authentication support with client credentials flow
@@ -1187,6 +1280,7 @@ No changes recorded.
 - Support for OIDC discovery via `.well-known/openid-configuration`
 
 #### Commands
+
 - `!cd help` - Display help message
 - `!cd projects` - List available Semaphore projects
 - `!cd templates <project_id>` - List templates for a project
@@ -1196,12 +1290,14 @@ No changes recorded.
 - `!cd logs <task_id>` - Get logs from a task
 
 #### Configuration
+
 - YAML configuration file support
 - Environment variable configuration
 - Hierarchical configuration with dot notation access
 - Separate configuration sections for Matrix, Semaphore, and bot settings
 
 #### Deployment
+
 - Docker support with Dockerfile
 - Docker Compose configuration
 - Systemd service file for Linux
@@ -1209,6 +1305,7 @@ No changes recorded.
 - Quick start guide
 
 #### Documentation
+
 - Comprehensive README with features and usage
 - Detailed installation guide (INSTALL.md)
 - Quick start guide (QUICKSTART.md)
@@ -1216,10 +1313,12 @@ No changes recorded.
 - Example configuration files
 
 #### Testing
+
 - Unit tests for configuration module
 - Test suite using Python unittest
 
 #### Security
+
 - Encryption key storage with configurable path
 - Room-based access control (allowed_rooms)
 - User-based access control (admin_users)
@@ -1229,11 +1328,13 @@ No changes recorded.
 ### Technical Details
 
 #### Dependencies
+
 - matrix-nio[e2e] >= 0.24.0 - Matrix client with E2E encryption
 - aiohttp >= 3.9.0 - Async HTTP client for REST APIs
 - PyYAML >= 6.0 - Configuration file parsing
 
 #### Project Structure
+
 ```
 ChatrixCD/
 ├── chatrixcd/           # Main package
@@ -1260,6 +1361,7 @@ ChatrixCD/
 #### Key Implementation Details
 
 **OIDC Authentication Flow**:
+
 1. Discover OIDC endpoints from issuer
 2. Use client credentials grant to obtain token
 3. Set token on Matrix client
@@ -1267,17 +1369,20 @@ ChatrixCD/
 5. Support token refresh when available
 
 **Task Monitoring**:
+
 - Async background task for each running job
 - Polls Semaphore API every 10 seconds
 - Sends status updates to Matrix room
 - Automatically removes completed tasks
 
 **E2E Encryption**:
+
 - Automatic key storage in configurable directory
 - Support for encrypted rooms
 - Device management via matrix-nio
 
 ### Security Considerations
+
 - Credentials stored in configuration files or environment variables
 - Access tokens not logged
 - Support for restrictive file permissions
@@ -1285,12 +1390,14 @@ ChatrixCD/
 - Secure OIDC implementation with HTTPS-only endpoints
 
 ### Platform Support
+
 - Linux (tested)
 - macOS (should work)
 - Windows (should work)
 - Docker (Linux containers)
 
 ### Known Limitations
+
 - No interactive task parameter input yet
 - No task scheduling support
 - Single Semaphore instance per bot
@@ -1298,6 +1405,7 @@ ChatrixCD/
 - No web interface
 
 ### Future Plans
+
 - Interactive task configuration
 - Task scheduling with cron syntax
 - Multi-tenant support

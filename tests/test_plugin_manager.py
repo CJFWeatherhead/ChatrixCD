@@ -1,16 +1,17 @@
 """Tests for plugin manager."""
 
-import unittest
-import tempfile
-import json
 import asyncio
+import json
+import tempfile
+import unittest
 from pathlib import Path
 from unittest.mock import Mock
+
 from chatrixcd.plugin_manager import (
     Plugin,
-    TaskMonitorPlugin,
     PluginManager,
     PluginMetadata,
+    TaskMonitorPlugin,
 )
 
 
@@ -415,6 +416,73 @@ class TestMonitor(TaskMonitorPlugin):
 
         self.assertEqual(len(manager.loaded_plugins), 0)
         self.assertIsNone(manager.task_monitor)
+
+    def test_plugin_init_signatures(self):
+        """Test that all plugin classes have correct __init__ signatures."""
+        import inspect
+        from pathlib import Path
+
+        # Get the plugins directory
+        plugins_dir = Path(__file__).parent.parent / "plugins"
+
+        if not plugins_dir.exists():
+            self.skipTest("Plugins directory not found")
+
+        # Create a plugin manager instance
+        manager = PluginManager(self.bot, self.config, str(plugins_dir))
+
+        # Discover plugin directories
+        plugin_dirs = manager.discover_plugins()
+
+        if not plugin_dirs:
+            self.skipTest("No plugins found")
+
+        for plugin_dir in plugin_dirs:
+            with self.subTest(plugin_dir=plugin_dir.name):
+                # Load plugin metadata
+                metadata = manager.load_plugin_metadata(plugin_dir)
+                if metadata is None:
+                    continue
+
+                # Load plugin class
+                plugin_class = manager.load_plugin_module(plugin_dir, metadata)
+                if plugin_class is None:
+                    continue
+
+                # Check __init__ signature
+                init_signature = inspect.signature(plugin_class.__init__)
+                params = list(init_signature.parameters.keys())
+
+                # Should have exactly 4 parameters: self, bot, config, metadata
+                self.assertEqual(
+                    len(params),
+                    4,
+                    f"Plugin {plugin_dir.name} __init__ should have 4 parameters, got {len(params)}: {params}",
+                )
+
+                self.assertEqual(
+                    params[0],
+                    "self",
+                    f"Plugin {plugin_dir.name} first parameter should be 'self', got '{params[0]}'",
+                )
+
+                self.assertEqual(
+                    params[1],
+                    "bot",
+                    f"Plugin {plugin_dir.name} second parameter should be 'bot', got '{params[1]}'",
+                )
+
+                self.assertEqual(
+                    params[2],
+                    "config",
+                    f"Plugin {plugin_dir.name} third parameter should be 'config', got '{params[2]}'",
+                )
+
+                self.assertEqual(
+                    params[3],
+                    "metadata",
+                    f"Plugin {plugin_dir.name} fourth parameter should be 'metadata', got '{params[3]}'",
+                )
 
 
 if __name__ == "__main__":
