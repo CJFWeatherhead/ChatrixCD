@@ -18,10 +18,17 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ### Added
 
+- Support for access token authentication in configuration (`matrix.access_token`) for integration testing and pre-authenticated scenarios
+
+### Changed
+
+### Fixed
+
 - **OIDC URL Token Parsing**: Support for pasting full redirect URLs containing login tokens
   - Users can now paste complete URLs like `http://localhost:8080/callback?loginToken=abc123`
   - Automatically extracts the `loginToken` parameter from URLs
   - Works in both TUI and console modes
+- Fixed bug in auto-verification that called non-existent method for sharing room keys
   - Backward compatible with direct token input
 
 - **Device Verification TUI Screen**: Complete device verification interface in TUI

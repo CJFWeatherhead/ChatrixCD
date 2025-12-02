@@ -1,12 +1,14 @@
 """Tests for bot module."""
 
-import unittest
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 import asyncio
 import os
-import time
 import tempfile
-from nio import MegolmEvent, MatrixRoom, RoomMessageText, SyncResponse, Rooms
+import time
+import unittest
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+
+from nio import MatrixRoom, MegolmEvent, RoomMessageText, Rooms, SyncResponse
+
 from chatrixcd.bot import ChatrixBot
 from chatrixcd.config import Config
 
@@ -33,9 +35,9 @@ class TestChatrixBot(unittest.TestCase):
 
         # Add get method to config for plugin manager
         self.config.get = MagicMock(
-            side_effect=lambda key, default=None: {
-                "bot.load_plugins": False
-            }.get(key, default)
+            side_effect=lambda key, default=None: {"bot.load_plugins": False}.get(
+                key, default
+            )
         )
 
         self.config.get_matrix_config.return_value = {
@@ -103,27 +105,19 @@ class TestChatrixBot(unittest.TestCase):
         callbacks = bot.client.event_callbacks
 
         # Check that we have callbacks for the right event types
-        from nio import RoomMessageText, InviteMemberEvent, MegolmEvent
+        from nio import InviteMemberEvent, MegolmEvent, RoomMessageText
 
         # Find callbacks for each event type
         # Each callback is a ClientCallback object with a 'filter' attribute
-        has_message_callback = any(
-            cb.filter == RoomMessageText for cb in callbacks
-        )
-        has_invite_callback = any(
-            cb.filter == InviteMemberEvent for cb in callbacks
-        )
+        has_message_callback = any(cb.filter == RoomMessageText for cb in callbacks)
+        has_invite_callback = any(cb.filter == InviteMemberEvent for cb in callbacks)
         has_megolm_callback = any(cb.filter == MegolmEvent for cb in callbacks)
 
-        self.assertTrue(
-            has_message_callback, "RoomMessageText callback not registered"
-        )
+        self.assertTrue(has_message_callback, "RoomMessageText callback not registered")
         self.assertTrue(
             has_invite_callback, "InviteMemberEvent callback not registered"
         )
-        self.assertTrue(
-            has_megolm_callback, "MegolmEvent callback not registered"
-        )
+        self.assertTrue(has_megolm_callback, "MegolmEvent callback not registered")
 
     def test_decryption_failure_callback(self):
         """Test that decryption failure callback requests room keys."""
@@ -208,9 +202,7 @@ class TestChatrixBot(unittest.TestCase):
         event = MagicMock(spec=RoomMessageText)
         event.sender = "@other:example.com"  # Different user
         event.body = "!cd help"
-        event.server_timestamp = (
-            bot.start_time + 1000
-        )  # Message sent after bot started
+        event.server_timestamp = bot.start_time + 1000  # Message sent after bot started
 
         # Call the callback
         self.loop.run_until_complete(bot.message_callback(room, event))
@@ -346,6 +338,50 @@ class TestChatrixBot(unittest.TestCase):
         # Verify client.login was NOT called
         bot.client.login.assert_not_called()
 
+    def test_login_access_token_success(self):
+        """Test successful login using access token."""
+        # Configure with access_token
+        self.config.get_matrix_config.return_value = {
+            "homeserver": "https://matrix.example.test",
+            "user_id": "@test:example.test",
+            "device_id": "TESTDEVICE",
+            "device_name": "Test Bot",
+            "store_path": self.temp_dir,
+            "access_token": "test_access_token",
+        }
+        self.config.get.return_value = self.config.get_matrix_config.return_value
+
+        bot = ChatrixBot(self.config)
+
+        # Mock client methods
+        bot.client.restore_login = AsyncMock()
+        bot.client.sync = AsyncMock(return_value=MagicMock(rooms=[]))
+        bot.client.olm = True
+        bot.client.load_store = MagicMock()
+        bot.setup_encryption = AsyncMock()
+
+        # Call login
+        result = self.loop.run_until_complete(bot.login())
+
+        # Verify login succeeded
+        self.assertTrue(result, "Login should succeed with access token")
+
+        # Verify restore_login was called with correct parameters
+        bot.client.restore_login.assert_called_once_with(
+            user_id="@test:example.test",
+            device_id="TESTDEVICE",
+            access_token="test_access_token",
+        )
+
+        # Verify sync was called
+        bot.client.sync.assert_called_once()
+
+        # Verify load_store was called
+        bot.client.load_store.assert_called_once()
+
+        # Verify setup_encryption was called
+        bot.setup_encryption.assert_called_once()
+
     def test_send_startup_message_greetings_disabled(self):
         """Test that startup message is skipped when greetings are disabled."""
         self.config.get_bot_config.return_value = {
@@ -422,9 +458,7 @@ class TestChatrixBot(unittest.TestCase):
         bot = ChatrixBot(self.config)
 
         # Make first call fail, second succeed
-        bot.send_message = AsyncMock(
-            side_effect=[Exception("Network error"), None]
-        )
+        bot.send_message = AsyncMock(side_effect=[Exception("Network error"), None])
 
         # Should not raise exception
         self.loop.run_until_complete(bot.send_startup_message())
@@ -515,9 +549,7 @@ class TestChatrixBot(unittest.TestCase):
         bot.client.room_send = AsyncMock()
 
         self.loop.run_until_complete(
-            bot.send_message(
-                "!test:example.com", "Hello world", "<b>Hello world</b>"
-            )
+            bot.send_message("!test:example.com", "Hello world", "<b>Hello world</b>")
         )
 
         # Verify formatted message was sent
@@ -634,9 +666,7 @@ class TestChatrixBot(unittest.TestCase):
         # Mock device_store as a property
         mock_device_store = MagicMock()
         mock_device_store.__contains__ = MagicMock(return_value=False)
-        type(bot.client).device_store = PropertyMock(
-            return_value=mock_device_store
-        )
+        type(bot.client).device_store = PropertyMock(return_value=mock_device_store)
 
         # Create mock room and event
         room = MagicMock(spec=MatrixRoom)
@@ -675,9 +705,7 @@ class TestChatrixBot(unittest.TestCase):
         # Mock device_store as a property
         mock_device_store = MagicMock()
         mock_device_store.__contains__ = MagicMock(return_value=False)
-        type(bot.client).device_store = PropertyMock(
-            return_value=mock_device_store
-        )
+        type(bot.client).device_store = PropertyMock(return_value=mock_device_store)
 
         # Create mock room
         room = MagicMock(spec=MatrixRoom)
@@ -795,9 +823,7 @@ class TestChatrixBot(unittest.TestCase):
         event = MagicMock(spec=MegolmEvent)
         event.sender = "@user:example.com"
         event.session_id = "test_session_id"
-        event.server_timestamp = (
-            bot.start_time + 1000
-        )  # Message sent after bot started
+        event.server_timestamp = bot.start_time + 1000  # Message sent after bot started
         event.decrypted = decrypted_event  # Message was successfully decrypted
 
         # Call the callback
@@ -811,9 +837,7 @@ class TestChatrixBot(unittest.TestCase):
         self.assertEqual(call_args[0], room)
         self.assertEqual(call_args[1], decrypted_event)
         # The decrypted event should now have the server_timestamp attribute set
-        self.assertEqual(
-            decrypted_event.server_timestamp, event.server_timestamp
-        )
+        self.assertEqual(decrypted_event.server_timestamp, event.server_timestamp)
 
     def test_megolm_event_doesnt_overwrite_existing_timestamp(self):
         """Test that existing server_timestamp on decrypted event is not overwritten."""
@@ -832,17 +856,13 @@ class TestChatrixBot(unittest.TestCase):
         decrypted_event = MagicMock(spec=RoomMessageText)
         decrypted_event.sender = "@user:example.com"
         decrypted_event.body = "!cd help"
-        decrypted_event.server_timestamp = (
-            bot.start_time + 2000
-        )  # Different timestamp
+        decrypted_event.server_timestamp = bot.start_time + 2000  # Different timestamp
 
         # Create a MegolmEvent with different timestamp
         event = MagicMock(spec=MegolmEvent)
         event.sender = "@user:example.com"
         event.session_id = "test_session_id"
-        event.server_timestamp = (
-            bot.start_time + 1000
-        )  # Different from decrypted event
+        event.server_timestamp = bot.start_time + 1000  # Different from decrypted event
         event.decrypted = decrypted_event  # Message was successfully decrypted
 
         # Call the callback
@@ -853,12 +873,8 @@ class TestChatrixBot(unittest.TestCase):
 
         # The decrypted event should keep its ORIGINAL timestamp
         # We don't overwrite if it's already set
-        self.assertEqual(
-            decrypted_event.server_timestamp, bot.start_time + 2000
-        )
-        self.assertNotEqual(
-            decrypted_event.server_timestamp, event.server_timestamp
-        )
+        self.assertEqual(decrypted_event.server_timestamp, bot.start_time + 2000)
+        self.assertNotEqual(decrypted_event.server_timestamp, event.server_timestamp)
 
     def test_sync_callback_uploads_keys(self):
         """Test that sync callback uploads keys when needed."""
@@ -984,7 +1000,7 @@ class TestChatrixBot(unittest.TestCase):
 
     def test_invite_callback_with_nio_join_response(self):
         """Test invite callback using nio JoinResponse."""
-        from nio import JoinResponse, InviteMemberEvent
+        from nio import InviteMemberEvent, JoinResponse
 
         bot = ChatrixBot(self.config)
 
@@ -1045,9 +1061,7 @@ class TestChatrixBot(unittest.TestCase):
             # Simulate sending a reply
             await bot.send_message(room.room_id, "Response message")
 
-        bot.command_handler.handle_message = AsyncMock(
-            side_effect=mock_handle_message
-        )
+        bot.command_handler.handle_message = AsyncMock(side_effect=mock_handle_message)
 
         # Mock room_send to return a real response with proper signature
         # RoomSendResponse(event_id, room_id)
@@ -1093,9 +1107,7 @@ class TestChatrixBot(unittest.TestCase):
         # Create LoginInfoResponse
         login_info = LoginInfoResponse(flows=["m.login.sso", "m.login.token"])
 
-        login_info.oidc_redirect_url = (
-            None  # Add missing attribute for refactored code
-        )
+        login_info.oidc_redirect_url = None  # Add missing attribute for refactored code
 
         bot.client.login_info = AsyncMock(return_value=login_info)
 
@@ -1116,9 +1128,7 @@ class TestChatrixBot(unittest.TestCase):
                 "flows": [
                     {
                         "type": "m.login.sso",
-                        "identity_providers": [
-                            {"id": "oidc", "name": "OIDC Provider"}
-                        ],
+                        "identity_providers": [{"id": "oidc", "name": "OIDC Provider"}],
                     },
                     {"type": "m.login.token"},
                 ]
@@ -1138,9 +1148,7 @@ class TestChatrixBot(unittest.TestCase):
         bot.oidc_plugin = mock_plugin
 
         # Patch aiohttp.ClientSession in the bot module where it's imported
-        with patch(
-            "chatrixcd.bot.aiohttp.ClientSession", return_value=mock_session
-        ):
+        with patch("chatrixcd.bot.aiohttp.ClientSession", return_value=mock_session):
             # Call login - plugin should be used
             result = self.loop.run_until_complete(bot.login())
 
@@ -1170,9 +1178,7 @@ class TestChatrixBot(unittest.TestCase):
         # Create LoginInfoResponse
         login_info = LoginInfoResponse(flows=["m.login.sso", "m.login.token"])
 
-        login_info.oidc_redirect_url = (
-            None  # Add missing attribute for refactored code
-        )
+        login_info.oidc_redirect_url = None  # Add missing attribute for refactored code
 
         bot.client.login_info = AsyncMock(return_value=login_info)
 
@@ -1210,9 +1216,7 @@ class TestChatrixBot(unittest.TestCase):
         bot.oidc_plugin = mock_plugin
 
         # Patch aiohttp.ClientSession in the bot module where it's imported
-        with patch(
-            "chatrixcd.bot.aiohttp.ClientSession", return_value=mock_session
-        ):
+        with patch("chatrixcd.bot.aiohttp.ClientSession", return_value=mock_session):
             # Call login - plugin should be used
             result = self.loop.run_until_complete(bot.login())
 
@@ -1240,9 +1244,7 @@ class TestChatrixBot(unittest.TestCase):
         # Create LoginInfoResponse
         login_info = LoginInfoResponse(flows=["m.login.sso", "m.login.token"])
 
-        login_info.oidc_redirect_url = (
-            None  # Add missing attribute for refactored code
-        )
+        login_info.oidc_redirect_url = None  # Add missing attribute for refactored code
 
         bot.client.login_info = AsyncMock(return_value=login_info)
 
@@ -1320,9 +1322,7 @@ class TestChatrixBot(unittest.TestCase):
         # Create LoginInfoResponse
         login_info = LoginInfoResponse(flows=["m.login.sso", "m.login.token"])
 
-        login_info.oidc_redirect_url = (
-            None  # Add missing attribute for refactored code
-        )
+        login_info.oidc_redirect_url = None  # Add missing attribute for refactored code
 
         bot.client.login_info = AsyncMock(return_value=login_info)
 
@@ -1338,9 +1338,7 @@ class TestChatrixBot(unittest.TestCase):
         # Mock aiohttp to raise an error when json() is called
         mock_response = AsyncMock()
         mock_response.status = 200  # Status 200 so that json() gets called
-        mock_response.json = AsyncMock(
-            side_effect=Exception("JSON parse error")
-        )
+        mock_response.json = AsyncMock(side_effect=Exception("JSON parse error"))
 
         mock_session = AsyncMock()
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
@@ -1355,9 +1353,7 @@ class TestChatrixBot(unittest.TestCase):
         bot.oidc_plugin = mock_plugin
 
         # Patch aiohttp.ClientSession in the bot module where it's imported
-        with patch(
-            "chatrixcd.bot.aiohttp.ClientSession", return_value=mock_session
-        ):
+        with patch("chatrixcd.bot.aiohttp.ClientSession", return_value=mock_session):
             # Call login - plugin should be used and handle errors gracefully
             result = self.loop.run_until_complete(bot.login())
 
@@ -1385,9 +1381,7 @@ class TestChatrixBot(unittest.TestCase):
         # Create LoginInfoResponse
         login_info = LoginInfoResponse(flows=["m.login.sso", "m.login.token"])
 
-        login_info.oidc_redirect_url = (
-            None  # Add missing attribute for refactored code
-        )
+        login_info.oidc_redirect_url = None  # Add missing attribute for refactored code
 
         bot.client.login_info = AsyncMock(return_value=login_info)
 
@@ -1417,9 +1411,7 @@ class TestChatrixBot(unittest.TestCase):
         bot.oidc_plugin = mock_plugin
 
         # Patch aiohttp.ClientSession in the bot module where it's imported
-        with patch(
-            "chatrixcd.bot.aiohttp.ClientSession", return_value=mock_session
-        ):
+        with patch("chatrixcd.bot.aiohttp.ClientSession", return_value=mock_session):
             # Call login - plugin should be used and handle HTTP errors gracefully
             result = self.loop.run_until_complete(bot.login())
 

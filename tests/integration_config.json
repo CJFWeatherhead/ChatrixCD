@@ -1,7 +1,7 @@
 {
   "hosts": [
     {
-      "remote_host": "100.96.234.70",
+      "remote_host": "fd7a:115c:a1e0:c7df:beaa:b867:dce3:5aa9",
       "remote_user": "root",
       "chatrix_user": "chatrix",
       "chatrix_dir": "/home/chatrix/ChatrixCD",
@@ -16,7 +16,7 @@
       }
     },
     {
-      "remote_host": "100.72.16.131",
+      "remote_host": "fd7a:115c:a1e0:88c:7dc8:cc04:a999:dc74",
       "remote_user": "root",
       "chatrix_user": "chatrix",
       "chatrix_dir": "/home/chatrix/ChatrixCD",

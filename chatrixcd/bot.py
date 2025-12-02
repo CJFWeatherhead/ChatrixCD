@@ -5,38 +5,40 @@ GitHub Copilot. The implementation follows Matrix protocol specifications and
 uses matrix-nio for client functionality.
 """
 
-import logging
 import asyncio
+import logging
 import os
-import time
-import aiohttp
-import re
 import platform
-import sys
+import re
 import subprocess
+import sys
+import time
+from typing import Dict, Optional
+
+import aiohttp
 import psutil
-from typing import Optional, Dict
 from nio import (
     AsyncClient,
-    MatrixRoom,
-    RoomMessageText,
+    Event,
     InviteMemberEvent,
-    MegolmEvent,
-    LoginResponse,
-    LoginInfoResponse,
-    SyncResponse,
-    KeyVerificationStart,
     KeyVerificationCancel,
     KeyVerificationKey,
     KeyVerificationMac,
-    Event,
+    KeyVerificationStart,
+    LoginInfoResponse,
+    LoginResponse,
+    MatrixRoom,
+    MegolmEvent,
+    RoomMessageText,
+    SyncResponse,
 )
-from chatrixcd.config import Config
+
 from chatrixcd.auth import MatrixAuth
-from chatrixcd.semaphore import SemaphoreClient
 from chatrixcd.commands import CommandHandler
-from chatrixcd.verification import DeviceVerificationManager
+from chatrixcd.config import Config
 from chatrixcd.plugin_manager import PluginManager
+from chatrixcd.semaphore import SemaphoreClient
+from chatrixcd.verification import DeviceVerificationManager
 
 logger = logging.getLogger(__name__)
 
@@ -278,9 +280,10 @@ class ChatrixBot:
     async def login(self) -> bool:
         """Login to Matrix server using configured authentication method.
 
-        Supports two authentication methods:
+        Supports three authentication methods:
         1. Password authentication: Direct login with username/password (built-in)
         2. OIDC authentication: Interactive SSO login via oidc_auth plugin
+        3. Access token authentication: Direct login with pre-obtained access token
 
         For OIDC, if a valid session is saved, it will be restored automatically
         without requiring interactive login. The oidc_auth plugin must be enabled.
@@ -294,6 +297,45 @@ class ChatrixBot:
                 "user_id is not set in configuration. Please add 'user_id' to config.json"
             )
             return False
+
+        # Check if access_token is provided for direct token authentication
+        matrix_config = self.config.get_matrix_config()
+        access_token = matrix_config.get("access_token")
+        if access_token:
+            logger.info("Using access token authentication")
+            try:
+                self.client.restore_login(
+                    user_id=self.user_id,
+                    device_id=self.device_id,
+                    access_token=access_token,
+                )
+                # Test the restored session with a sync
+                sync_response = await self.client.sync(timeout=5000)
+                if hasattr(sync_response, "rooms"):
+                    logger.info("Successfully authenticated with access token")
+                    # Load encryption store after restoring session
+                    if self.client.olm:
+                        try:
+                            logger.info(
+                                "Loading encryption store after token authentication..."
+                            )
+                            self.client.load_store()
+                            logger.info(
+                                "Encryption store loaded successfully after token auth"
+                            )
+                        except Exception as e:
+                            logger.warning(
+                                f"Could not load encryption store after token auth (this is normal on first run): {e}"
+                            )
+                    # Setup encryption keys after successful authentication
+                    await self.setup_encryption()
+                    return True
+                else:
+                    logger.error(f"Access token authentication failed: {sync_response}")
+                    return False
+            except Exception as e:
+                logger.error(f"Access token authentication error: {e}")
+                return False
 
         # Load existing encryption store if it exists
         # This must be done before login to restore device keys
@@ -330,9 +372,7 @@ class ChatrixBot:
                 if isinstance(response, LoginResponse):
                     logger.info(f"Successfully logged in as {self.user_id}")
                     # Save session for future use
-                    self._save_session(
-                        response.access_token, response.device_id
-                    )
+                    self._save_session(response.access_token, response.device_id)
                     # Setup encryption keys after successful login
                     await self.setup_encryption()
                     return True
@@ -370,9 +410,7 @@ class ChatrixBot:
                         # Test the restored session with a sync
                         sync_response = await self.client.sync(timeout=5000)
                         if hasattr(sync_response, "rooms"):
-                            logger.info(
-                                "Successfully restored session from saved data"
-                            )
+                            logger.info("Successfully restored session from saved data")
                             await self.setup_encryption()
                             return True
                         else:
@@ -422,26 +460,20 @@ class ChatrixBot:
 
                         for flow in flows:
                             if flow.get("type") == "m.login.sso":
-                                identity_providers = flow.get(
-                                    "identity_providers", []
-                                )
+                                identity_providers = flow.get("identity_providers", [])
                                 break
 
                         logger.debug(
                             f"Found {len(identity_providers)} identity providers"
                         )
                     else:
-                        logger.warning(
-                            f"Failed to get login flows: HTTP {resp.status}"
-                        )
+                        logger.warning(f"Failed to get login flows: HTTP {resp.status}")
         except Exception as e:
             logger.warning(f"Failed to fetch identity providers: {e}")
 
         return identity_providers
 
-    async def _build_oidc_redirect_url(
-        self, identity_providers: list
-    ) -> tuple:
+    async def _build_oidc_redirect_url(self, identity_providers: list) -> tuple:
         """Build SSO redirect URL based on available identity providers.
 
         Args:
@@ -528,9 +560,7 @@ class ChatrixBot:
             if identity_providers and len(identity_providers) > 1:
                 logger.info("Available Identity Providers:")
                 for i, idp in enumerate(identity_providers, 1):
-                    logger.info(
-                        f"   {i}. {idp.get('name', idp.get('id', 'Unknown'))}"
-                    )
+                    logger.info(f"   {i}. {idp.get('name', idp.get('id', 'Unknown'))}")
                 logger.info("")
 
             logger.info("=" * 70)
@@ -575,8 +605,8 @@ class ChatrixBot:
 
             # Step 2: Get identity providers and build redirect URL
             identity_providers = await self._get_oidc_identity_providers()
-            sso_redirect_url, redirect_url = (
-                await self._build_oidc_redirect_url(identity_providers)
+            sso_redirect_url, redirect_url = await self._build_oidc_redirect_url(
+                identity_providers
             )
 
             # Step 3: Get login token from user
@@ -597,19 +627,14 @@ class ChatrixBot:
             )
 
             if isinstance(response, LoginResponse):
-                logger.info(
-                    f"Successfully logged in as {self.user_id} via OIDC"
-                )
+                logger.info(f"Successfully logged in as {self.user_id} via OIDC")
                 self._save_session(response.access_token, response.device_id)
                 await self.setup_encryption()
                 return True
             else:
                 # Provide helpful error message
                 error_msg = str(response)
-                if (
-                    "Invalid login token" in error_msg
-                    or "M_FORBIDDEN" in error_msg
-                ):
+                if "Invalid login token" in error_msg or "M_FORBIDDEN" in error_msg:
                     logger.error(
                         f"OIDC login failed: {response}\n"
                         "The login token is invalid or has expired. This can happen if:\n"
@@ -649,23 +674,17 @@ class ChatrixBot:
             )
             return
 
-        logger.info(
-            f"Message from {event.sender} in {room.display_name}: {event.body}"
-        )
+        logger.info(f"Message from {event.sender} in {room.display_name}: {event.body}")
 
         # Track requests received (only if it's a command)
-        command_prefix = self.config.get_bot_config().get(
-            "command_prefix", "!cd"
-        )
+        command_prefix = self.config.get_bot_config().get("command_prefix", "!cd")
         if event.body.strip().startswith(command_prefix):
             self.metrics["requests_received"] += 1
 
         # Check if message is a command
         await self.command_handler.handle_message(room, event)
 
-    async def invite_callback(
-        self, room: MatrixRoom, event: InviteMemberEvent
-    ):
+    async def invite_callback(self, room: MatrixRoom, event: InviteMemberEvent):
         """Handle room invites.
 
         Args:
@@ -678,9 +697,7 @@ class ChatrixBot:
         await self.client.join(room.room_id)
         logger.info(f"Joined room {room.room_id}")
 
-    async def megolm_event_callback(
-        self, room: MatrixRoom, event: MegolmEvent
-    ):
+    async def megolm_event_callback(self, room: MatrixRoom, event: MegolmEvent):
         """Handle Megolm encrypted messages.
 
         This callback is triggered for all encrypted messages (MegolmEvent).
@@ -740,20 +757,13 @@ class ChatrixBot:
             if self.client.olm:
                 self.client.olm.users_for_key_query.add(event.sender)
             await self.client.keys_query()
-            logger.debug(
-                f"Device keys queried successfully for {event.sender}"
-            )
+            logger.debug(f"Device keys queried successfully for {event.sender}")
         except Exception as e:
-            logger.error(
-                f"Failed to query device keys for {event.sender}: {e}"
-            )
+            logger.error(f"Failed to query device keys for {event.sender}: {e}")
 
         # Step 2: Try to claim one-time keys and establish encryption sessions with sender's devices
         try:
-            if (
-                hasattr(self.client, "device_store")
-                and self.client.device_store
-            ):
+            if hasattr(self.client, "device_store") and self.client.device_store:
                 if event.sender in self.client.device_store.users:
                     sender_devices = self.client.device_store[event.sender]
 
@@ -761,9 +771,7 @@ class ChatrixBot:
                     devices_to_claim = {}
                     for device_id, device in sender_devices.items():
                         # Check if we already have an encryption session with this device
-                        if not self.client.olm.session_store.get(
-                            device.curve25519
-                        ):
+                        if not self.client.olm.session_store.get(device.curve25519):
                             devices_to_claim[event.sender] = [device_id]
                             logger.info(
                                 f"Need to establish encryption session with {event.sender}'s device {device_id}"
@@ -774,9 +782,7 @@ class ChatrixBot:
                         logger.info(
                             "Claiming one-time keys to establish encryption sessions"
                         )
-                        response = await self.client.keys_claim(
-                            devices_to_claim
-                        )
+                        response = await self.client.keys_claim(devices_to_claim)
                         if hasattr(response, "one_time_keys"):
                             logger.info(
                                 f"Successfully claimed one-time keys and established encryption sessions "
@@ -787,18 +793,14 @@ class ChatrixBot:
                                 f"Keys claim returned unexpected response: {response}"
                             )
         except Exception as e:
-            logger.error(
-                f"Failed to claim one-time keys for {event.sender}: {e}"
-            )
+            logger.error(f"Failed to claim one-time keys for {event.sender}: {e}")
 
         # Step 3: In daemon/log modes, automatically verify unverified devices to enable communication
         if self.mode in ["daemon", "log"]:
             try:
                 await self._auto_verify_sender_devices(event.sender)
             except Exception as e:
-                logger.error(
-                    f"Failed to auto-verify devices for {event.sender}: {e}"
-                )
+                logger.error(f"Failed to auto-verify devices for {event.sender}: {e}")
 
         # Step 4: Request the room key from the sender
         # Check if we've already requested this session key to avoid duplicate requests
@@ -870,22 +872,22 @@ class ChatrixBot:
             logger.debug(f"No unverified devices found for {sender}")
             return
 
-        logger.info(
-            f"Auto-verifying {len(unverified_devices)} device(s) for {sender}"
-        )
+        logger.info(f"Auto-verifying {len(unverified_devices)} device(s) for {sender}")
 
         # Auto-verify each device
         for device in unverified_devices:
             try:
                 # Mark device as verified in the store
                 self.client.verify_device(device)
-                logger.info(
-                    f"Auto-verified device {device.id} for user {sender}"
-                )
+                logger.info(f"Auto-verified device {device.id} for user {sender}")
 
                 # Share room keys with the newly verified device
-                await self.verification_manager._share_room_keys_with_device(
-                    device
+                # Note: In Matrix, room keys are typically shared when sending messages
+                # or when explicitly requested. For historical messages, the device
+                # will request keys as needed when it encounters encrypted messages
+                # it cannot decrypt.
+                logger.debug(
+                    f"Device {device.id} verified - room keys will be shared as needed"
                 )
 
             except Exception as e:
@@ -1021,22 +1023,16 @@ class ChatrixBot:
             return
 
         if not greeting_rooms:
-            logger.info(
-                "No greeting rooms configured, skipping startup message"
-            )
+            logger.info("No greeting rooms configured, skipping startup message")
             return
 
-        logger.info(
-            f"Sending startup message to {len(greeting_rooms)} room(s)"
-        )
+        logger.info(f"Sending startup message to {len(greeting_rooms)} room(s)")
         for room_id in greeting_rooms:
             try:
                 await self.send_message(room_id, startup_message)
                 logger.info(f"Sent startup message to room {room_id}")
             except Exception as e:
-                logger.error(
-                    f"Failed to send startup message to room {room_id}: {e}"
-                )
+                logger.error(f"Failed to send startup message to room {room_id}: {e}")
 
     async def send_shutdown_message(self):
         """Send shutdown message to configured greeting rooms."""
@@ -1053,22 +1049,16 @@ class ChatrixBot:
             return
 
         if not greeting_rooms:
-            logger.info(
-                "No greeting rooms configured, skipping shutdown message"
-            )
+            logger.info("No greeting rooms configured, skipping shutdown message")
             return
 
-        logger.info(
-            f"Sending shutdown message to {len(greeting_rooms)} room(s)"
-        )
+        logger.info(f"Sending shutdown message to {len(greeting_rooms)} room(s)")
         for room_id in greeting_rooms:
             try:
                 await self.send_message(room_id, shutdown_message)
                 logger.info(f"Sent shutdown message to room {room_id}")
             except Exception as e:
-                logger.error(
-                    f"Failed to send shutdown message to room {room_id}: {e}"
-                )
+                logger.error(f"Failed to send shutdown message to room {room_id}: {e}")
 
     def can_send_message_in_room(self, room_id: str) -> bool:
         """Check if bot can send messages in a room.
@@ -1100,9 +1090,7 @@ class ChatrixBot:
             # Get the bot's power level
             bot_power_level = room.power_levels.get_user_level(self.user_id)
             # Get the required power level to send messages
-            required_level = room.power_levels.get_event_level(
-                "m.room.message"
-            )
+            required_level = room.power_levels.get_event_level("m.room.message")
 
             return bot_power_level >= required_level
         except (AttributeError, KeyError):
@@ -1141,17 +1129,14 @@ class ChatrixBot:
             "platform": f"{platform.system()} {platform.release()}",
             "architecture": platform.machine(),
             "metrics": self.metrics.copy(),
-            "uptime": int(time.time() * 1000)
-            - self.start_time,  # milliseconds
+            "uptime": int(time.time() * 1000) - self.start_time,  # milliseconds
         }
 
         # Determine runtime type
         if getattr(sys, "frozen", False):
             status["runtime"] = "Binary (compiled)"
         else:
-            status["runtime"] = (
-                f"Python {platform.python_version()} (interpreter)"
-            )
+            status["runtime"] = f"Python {platform.python_version()} (interpreter)"
 
         # CPU model (try to get, but don't fail if unavailable)
         try:
@@ -1217,9 +1202,7 @@ class ChatrixBot:
         if self.client:
             status["matrix_status"] = (
                 "Connected"
-                if (
-                    hasattr(self.client, "logged_in") and self.client.logged_in
-                )
+                if (hasattr(self.client, "logged_in") and self.client.logged_in)
                 else "Disconnected"
             )
             status["matrix_homeserver"] = self.client.homeserver
@@ -1233,9 +1216,7 @@ class ChatrixBot:
             status["matrix_status"] = "Not initialized"
 
         # Semaphore status (simple check if client exists)
-        status["semaphore_status"] = (
-            "Connected" if self.semaphore else "Unknown"
-        )
+        status["semaphore_status"] = "Connected" if self.semaphore else "Unknown"
 
         return status
 
@@ -1264,9 +1245,7 @@ class ChatrixBot:
             # Proactively query device keys for all members of encrypted rooms
             # This ensures we have up-to-date device information for all users we might need to encrypt to
             try:
-                if hasattr(response, "rooms") and hasattr(
-                    response.rooms, "join"
-                ):
+                if hasattr(response, "rooms") and hasattr(response.rooms, "join"):
                     users_to_query = set()
                     encrypted_rooms_count = 0
 
@@ -1309,13 +1288,8 @@ class ChatrixBot:
                                 and self.client.device_store
                             ):
                                 for user_id in users_to_query:
-                                    if (
-                                        user_id
-                                        in self.client.device_store.users
-                                    ):
-                                        user_devices = (
-                                            self.client.device_store[user_id]
-                                        )
+                                    if user_id in self.client.device_store.users:
+                                        user_devices = self.client.device_store[user_id]
                                         device_ids = []
                                         for (
                                             device_id,
@@ -1328,9 +1302,7 @@ class ChatrixBot:
                                                 device_ids.append(device_id)
 
                                         if device_ids:
-                                            devices_to_claim[user_id] = (
-                                                device_ids
-                                            )
+                                            devices_to_claim[user_id] = device_ids
 
                             if devices_to_claim:
                                 logger.info(
@@ -1435,10 +1407,7 @@ class ChatrixBot:
                         logger.error("Max retries reached for sync loop")
                         break
 
-                elif (
-                    "Invalid login token" in error_msg
-                    or "M_FORBIDDEN" in error_msg
-                ):
+                elif "Invalid login token" in error_msg or "M_FORBIDDEN" in error_msg:
                     # Authentication error - not recoverable
                     logger.error(
                         f"Authentication error: {error_msg}\n"
@@ -1470,9 +1439,7 @@ class ChatrixBot:
         # Cleanup
         await self.close()
 
-    async def key_verification_start_callback(
-        self, event: KeyVerificationStart
-    ):
+    async def key_verification_start_callback(self, event: KeyVerificationStart):
         """Handle incoming key verification start events.
 
         This callback is triggered when another device initiates verification with the bot.
@@ -1511,9 +1478,7 @@ class ChatrixBot:
         Args:
             transaction_id: Transaction ID of the verification request
         """
-        success = await self.verification_manager.auto_verify_pending(
-            transaction_id
-        )
+        success = await self.verification_manager.auto_verify_pending(transaction_id)
         if success:
             logger.info(
                 f"Successfully auto-verified device in transaction {transaction_id}"
@@ -1545,9 +1510,7 @@ class ChatrixBot:
                 break
 
         if not verification_info:
-            logger.warning(
-                f"Cannot verify: verification {transaction_id} not found"
-            )
+            logger.warning(f"Cannot verify: verification {transaction_id} not found")
             return
 
         # Define callback to display emojis and get user confirmation
@@ -1586,9 +1549,7 @@ class ChatrixBot:
             logger.error("Failed to complete interactive verification")
             print("Failed to complete verification. See logs for details.")
 
-    async def key_verification_cancel_callback(
-        self, event: KeyVerificationCancel
-    ):
+    async def key_verification_cancel_callback(self, event: KeyVerificationCancel):
         """Handle key verification cancellation events.
 
         Args:
