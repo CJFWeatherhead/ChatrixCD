@@ -3,7 +3,7 @@
 import os
 import subprocess
 
-__version__ = "2025.11.15.5.2.0"
+__version__ = "2025.11.25.6.0.0"
 
 
 def _get_version_with_commit():
