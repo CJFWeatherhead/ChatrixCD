@@ -12,6 +12,7 @@ This directory contains documentation that was generated or heavily influenced b
 ## Organization
 
 Files in this directory are typically:
+
 - Named with underscores and block capitals (e.g., `ENCRYPTION_FIXES_SUMMARY.md`)
 - Generated during feature implementation or problem-solving
 - Used for reference and historical context
@@ -20,6 +21,7 @@ Files in this directory are typically:
 ## When to Add Files Here
 
 Add documentation to this directory when:
+
 - An AI/LLM generates context or planning documents
 - Creating audit trails of significant changes
 - Recording implementation details for future reference
@@ -29,6 +31,7 @@ Add documentation to this directory when:
 ## Main Documentation
 
 For user-facing and critical project documentation, see:
+
 - `/docs` - GitHub Pages documentation (user guides, tutorials)
 - `/README.md` - Project overview
 - `/CONTRIBUTING.md` - Contribution guidelines

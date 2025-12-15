@@ -435,6 +435,7 @@ Context documentation, audit trails, and non-critical project documentation shou
 **Naming Convention**: Use underscores and block capitals (e.g., `ENCRYPTION_FIXES_SUMMARY.md`)
 
 **What NOT to put here**:
+
 - User-facing documentation (goes in `/docs` for GitHub Pages)
 - Core project documentation (README, CONTRIBUTING, etc. stay in root)
 - Code documentation (use docstrings and inline comments)
