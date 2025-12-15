@@ -240,6 +240,10 @@ class ChatrixBot:
                 response = await self.client.keys_query()
                 logger.info("Device key query completed")
 
+            # In daemon/log modes, display device ID and fingerprint for verification
+            if self.mode in ("daemon", "log"):
+                await self._log_device_info()
+
             return True
 
         except Exception as e:
@@ -915,6 +919,53 @@ class ChatrixBot:
                 # For other errors, log as error and remove from tracking so we can retry
                 logger.error(f"Failed to request room key: {e}")
                 self.requested_session_ids.discard(session_key)
+
+    async def _log_device_info(self):
+        """Log device ID and fingerprint for manual verification.
+
+        In daemon/log modes, this displays the bot's device information so users
+        can manually verify the bot using commands like /verify in Element.
+        """
+        if not self.client.olm:
+            return
+
+        try:
+            # Get our own device from the device store
+            if (
+                hasattr(self.client, "device_store")
+                and self.client.device_store
+                and self.user_id in self.client.device_store.users
+            ):
+                user_devices = self.client.device_store[self.user_id]
+                if self.device_id in user_devices:
+                    device = user_devices[self.device_id]
+                    # Get the Ed25519 key (fingerprint)
+                    fingerprint = getattr(device, "ed25519", "unavailable")
+                    device_name = getattr(device, "display_name", self.device_name)
+
+                    logger.info(
+                        f"\n"
+                        f"═══════════════════════════════════════════════════════════════\n"
+                        f"  Bot Device Information\n"
+                        f"═══════════════════════════════════════════════════════════════\n"
+                        f"  User ID:     {self.user_id}\n"
+                        f"  Device ID:   {self.device_id}\n"
+                        f"  Device Name: {device_name}\n"
+                        f"  Fingerprint: {fingerprint}\n"
+                        f"\n"
+                        f"  To verify this device from another client:\n"
+                        f"    /verify {self.device_id} {fingerprint}\n"
+                        f"═══════════════════════════════════════════════════════════════\n"
+                    )
+                else:
+                    logger.warning(
+                        f"Could not find own device {self.device_id} in device store"
+                    )
+            else:
+                logger.warning("Device store not available for fingerprint logging")
+
+        except Exception as e:
+            logger.debug(f"Error logging device info: {e}")
 
     async def _auto_verify_sender_devices(self, sender: str):
         """Automatically verify all unverified devices for a sender in daemon/log modes.

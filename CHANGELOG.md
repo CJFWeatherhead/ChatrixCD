@@ -27,6 +27,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - **Alpine Linux Encryption Fix**: Complete documentation and deployment script for Alpine Linux encryption initialization (`docs/ALPINE_ENCRYPTION_FIX.md`)
 - **Alpine Deployment Script**: `scripts/alpine_encryption_fix.sh` for automated Alpine Linux encryption fix deployment
 - **Manual Verification Helper**: When auto-verification fails in daemon/log mode, bot now logs device ID and fingerprint for manual verification via Element's `/verify` command
+- **Startup Device Info**: Bot now displays device ID and Ed25519 fingerprint on startup in daemon/log modes for easy manual verification
+- **Verification Cancellation Tracking**: Bot now tracks device verification cancellations and shows manual verification instructions when verification fails
 - **Cross-Verification Test**: Added integration test to verify device verification between bots, including unverify/reverify cycle testing
 
 ### Changed
