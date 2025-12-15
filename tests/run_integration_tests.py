@@ -224,10 +224,19 @@ class IntegrationTestRunner:
         )
 
         # Update code and dependencies as chatrix user
-        update_cmd = f"su - {self.current_host['chatrix_user']} -c 'cd {self.current_host['chatrix_dir']} && git pull && (uv venv .venv || python3 -m venv .venv) && uv pip install -r requirements.txt && uv pip install -e .'"
+        # Use uv with explicit Python path to install into the venv
+        chatrix_dir = self.current_host['chatrix_dir']
+        chatrix_user = self.current_host['chatrix_user']
+        update_cmd = (
+            f"su - {chatrix_user} -c "
+            f"'cd {chatrix_dir} && git pull && "
+            f"uv venv .venv && "
+            f"uv pip install --python .venv/bin/python -r requirements.txt && "
+            f"uv pip install --python .venv/bin/python -e .'"
+        )
         self._run_ssh_command(
-            update_cmd, timeout=120
-        )  # Give it 2 minutes for slow machines
+            update_cmd, timeout=180
+        )  # Give it 3 minutes for wheel downloads
         print("Code updated and dependencies installed")
 
         print("Starting ChatrixCD on remote machine...")

@@ -19,10 +19,24 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 ### Added
 
 - Support for access token authentication in configuration (`matrix.access_token`) for integration testing and pre-authenticated scenarios
+- Logging for encryption availability during bot initialization to help diagnose encryption issues
+- Encryption diagnostics logging to validate encryption library installation and AsyncClient configuration
+- INTEGRATION_TEST_ENCRYPTION_SETUP.md guide documenting encryption setup for remote integration tests
 
 ### Changed
 
+- **Encryption Backend**: Using `vodozemac` (Rust-based) for superior features
+  - vodozemac provides cross-device verification capabilities needed for robust encrypted communication
+  - More features and better performance than python-olm
+  - matrix-nio properly supports vodozemac through its established cryptography integration
+  - Updated AsyncClient initialization with `AsyncClientConfig(encryption_enabled=True)` for explicit encryption support
+- **Bot Initialization**: AsyncClient now initialized with proper encryption configuration to ensure E2E encryption is available when dependencies are present
+
 ### Fixed
+
+- Fixed encryption store loading when using access token authentication - removed incorrect conditional checks that prevented `load_store()` from initializing encryption properly (3 locations in bot.py)
+- Fixed AttributeError in command handler: `MatrixUser.displayname` should be `display_name` (typo causing bot crashes when processing commands)
+- Fixed encryption dependency detection and error handling for missing encryption libraries
 
 ## [2025.12.14.7.0.0] - 2025-12-14
 

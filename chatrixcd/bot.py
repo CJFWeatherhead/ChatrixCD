@@ -80,16 +80,66 @@ class ChatrixBot:
         # Create store directory if it doesn't exist
         os.makedirs(self.store_path, exist_ok=True)
 
+        # Setup encryption support with AsyncClientConfig
+        # This ensures encryption is enabled if dependencies are available
+        from nio import AsyncClientConfig
+        encryption_available = False
+        
+        # Check for encryption dependencies (vodozemac preferred, olm fallback)
+        try:
+            # Try vodozemac first (better features including cross-device verification)
+            import vodozemac  # type: ignore  # noqa: F401
+            logger.info("Encryption enabled with vodozemac-python")
+            encryption_available = True
+        except ImportError:
+            try:
+                # Fallback to python-olm
+                import olm  # type: ignore  # noqa: F401
+                logger.info("Encryption enabled with python-olm")
+                encryption_available = True
+            except ImportError:
+                logger.warning(
+                    "Encryption dependencies not found. "
+                    "Bot cannot participate in encrypted rooms. "
+                    "Install with: pip install vodozemac-python>=0.1.0"
+                )
+        
+        # Create AsyncClient with encryption only if dependencies are available
+        # This prevents ImportWarning when encryption is configured but not installed
+        try:
+            config_obj = AsyncClientConfig(
+                encryption_enabled=encryption_available
+            )
+        except ImportWarning:
+            # matrix-nio raises ImportWarning if encryption_enabled=True
+            # but dependencies aren't available. Fall back to no encryption.
+            logger.warning(
+                "AsyncClient could not enable encryption despite dependencies "
+                "being available. Proceeding with encryption disabled."
+            )
+            config_obj = AsyncClientConfig(encryption_enabled=False)
+
         self.client = AsyncClient(
             homeserver=self.homeserver,
             user=self.user_id,
             device_id=self.device_id,
             store_path=self.store_path,
+            config=config_obj,
         )
 
         # Explicitly set user_id on the client to ensure it's available for load_store()
         # In matrix-nio 0.25.x, user_id is not automatically populated from the user parameter
         self.client.user_id = self.user_id
+
+        # Log encryption availability
+        if self.client.olm:
+            logger.info("Encryption support is available (olm initialized)")
+        else:
+            logger.warning(
+                "Encryption support is NOT available - olm not initialized. "
+                "This may be due to missing encryption dependencies (python-olm). "
+                "The bot will not be able to participate in encrypted rooms."
+            )
 
         # Initialize authentication handler
         self.auth = MatrixAuth(matrix_config)
@@ -314,19 +364,18 @@ class ChatrixBot:
                 if hasattr(sync_response, "rooms"):
                     logger.info("Successfully authenticated with access token")
                     # Load encryption store after restoring session
-                    if self.client.olm:
-                        try:
-                            logger.info(
-                                "Loading encryption store after token authentication..."
-                            )
-                            self.client.load_store()
-                            logger.info(
-                                "Encryption store loaded successfully after token auth"
-                            )
-                        except Exception as e:
-                            logger.warning(
-                                f"Could not load encryption store after token auth (this is normal on first run): {e}"
-                            )
+                    try:
+                        logger.info(
+                            "Loading encryption store after token authentication..."
+                        )
+                        self.client.load_store()
+                        logger.info(
+                            "Encryption store loaded successfully after token auth"
+                        )
+                    except Exception as e:
+                        logger.warning(
+                            f"Could not load encryption store after token auth (this is normal on first run): {e}"
+                        )
                     # Setup encryption keys after successful authentication
                     await self.setup_encryption()
                     return True
@@ -339,15 +388,14 @@ class ChatrixBot:
 
         # Load existing encryption store if it exists
         # This must be done before login to restore device keys
-        if self.client.olm:
-            try:
-                logger.info("Loading encryption store...")
-                self.client.load_store()
-                logger.info("Encryption store loaded successfully")
-            except Exception as e:
-                logger.warning(
-                    f"Could not load encryption store (this is normal on first run): {e}"
-                )
+        try:
+            logger.info("Loading encryption store...")
+            self.client.load_store()
+            logger.info("Encryption store loaded successfully")
+        except Exception as e:
+            logger.warning(
+                f"Could not load encryption store (this is normal on first run): {e}"
+            )
 
         # Validate authentication configuration
         is_valid, error_msg = self.auth.validate_config()
@@ -393,19 +441,18 @@ class ChatrixBot:
                         )
 
                         # Load encryption store after restoring session
-                        if self.client.olm:
-                            try:
-                                logger.info(
-                                    "Loading encryption store after session restore..."
-                                )
-                                self.client.load_store()
-                                logger.info(
-                                    "Encryption store loaded successfully after restore"
-                                )
-                            except Exception as e:
-                                logger.warning(
-                                    f"Could not load encryption store after restore (this is normal on first run): {e}"
-                                )
+                        try:
+                            logger.info(
+                                "Loading encryption store after session restore..."
+                            )
+                            self.client.load_store()
+                            logger.info(
+                                "Encryption store loaded successfully after restore"
+                            )
+                        except Exception as e:
+                            logger.warning(
+                                f"Could not load encryption store after restore (this is normal on first run): {e}"
+                            )
 
                         # Test the restored session with a sync
                         sync_response = await self.client.sync(timeout=5000)

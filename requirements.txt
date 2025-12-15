@@ -1,9 +1,14 @@
-# Matrix client library (vodozemac-based E2E encryption)
-matrix-nio>=0.24.0
+# Matrix client library with E2E encryption support
+# Using vodozemac (Rust-based) for superior features and performance
+matrix-nio>=0.25.0
+
+# E2E encryption using vodozemac
+# Provides features including cross-device verification and better performance
+# Note: Requires Rust toolchain to build from source
 vodozemac>=0.9.0
 
 # HTTP client for REST API calls
-aiohttp>=3.9.0
+aiohttp>=3.10.0
 
 # Human JSON (JSON with comments) for configuration files
 hjson>=3.1.0
