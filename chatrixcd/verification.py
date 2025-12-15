@@ -6,6 +6,7 @@ It handles SAS (emoji) verification following the Matrix specification for devic
 
 import asyncio
 import logging
+import time
 from typing import Any, Dict, List, Optional, Callable, Tuple
 from nio import AsyncClient, ToDeviceError
 
@@ -40,6 +41,8 @@ class DeviceVerificationManager:
             client: Matrix client instance with encryption enabled
         """
         self.client = client
+        # Track cancelled/failed verifications to show manual verification message
+        self.cancelled_verifications: Dict[str, Dict[str, str]] = {}
 
     async def get_verified_devices(self) -> List[Dict[str, Any]]:
         """Get list of verified devices.
@@ -89,6 +92,67 @@ class DeviceVerificationManager:
             logger.error(f"Error getting verified devices: {e}")
 
         return verified_devices
+
+    async def handle_verification_cancellation(
+        self,
+        transaction_id: str,
+        user_id: str,
+        reason: Optional[str] = None,
+        code: Optional[str] = None,
+    ) -> None:
+        """Handle verification cancellation events.
+
+        This method is called when a verification request is cancelled by either party.
+        It tracks the cancellation and can be used to display manual verification messages.
+
+        Args:
+            transaction_id: Transaction ID of the cancelled verification
+            user_id: User ID who cancelled or whose verification was cancelled
+            reason: Optional reason for cancellation
+            code: Optional cancellation code (e.g., 'm.user', 'm.timeout')
+        """
+        self.cancelled_verifications[transaction_id] = {
+            "user_id": user_id,
+            "reason": reason or "Unknown",
+            "code": code or "Unknown",
+            "timestamp": time.time(),
+        }
+        logger.info(
+            f"Verification {transaction_id} cancelled by {user_id} "
+            f"(code: {code}, reason: {reason})"
+        )
+
+    def should_show_manual_verification_message(
+        self, transaction_id: str
+    ) -> bool:
+        """Check if manual verification message should be shown.
+
+        Args:
+            transaction_id: Transaction ID to check
+
+        Returns:
+            True if manual verification message should be shown
+        """
+        return transaction_id in self.cancelled_verifications
+
+    def get_cancellation_info(self, transaction_id: str) -> Optional[Dict[str, str]]:
+        """Get cancellation information for a transaction.
+
+        Args:
+            transaction_id: Transaction ID to check
+
+        Returns:
+            Dict with user_id, reason, code, timestamp if cancelled, None otherwise
+        """
+        return self.cancelled_verifications.get(transaction_id)
+
+    def clear_cancelled_verification(self, transaction_id: str) -> None:
+        """Clear a cancelled verification from tracking.
+
+        Args:
+            transaction_id: Transaction ID to clear
+        """
+        self.cancelled_verifications.pop(transaction_id, None)
 
     async def is_device_verified(self, user_id: str, device_id: str) -> bool:
         """Check if a specific device is verified.
@@ -288,7 +352,7 @@ class DeviceVerificationManager:
             return False
 
     async def wait_for_key_exchange(
-        self, sas: Sas, max_wait: int = 10
+        self, sas: Any, max_wait: int = 10
     ) -> bool:
         """Wait for key exchange to complete.
 
@@ -468,6 +532,13 @@ class DeviceVerificationManager:
             retry_interval = 0.5
             
             while waited < max_wait:
+                # Check if verification was cancelled while we were waiting
+                if transaction_id in self.cancelled_verifications:
+                    logger.info(
+                        f"Verification {transaction_id} was cancelled before we could accept it"
+                    )
+                    return False
+                
                 if (
                     hasattr(self.client, "key_verifications")
                     and transaction_id in self.client.key_verifications
@@ -484,10 +555,18 @@ class DeviceVerificationManager:
                 waited += retry_interval
             
             if not sas:
-                logger.warning(
-                    f"Cannot auto-verify: verification {transaction_id} not found "
-                    f"after waiting {max_wait}s"
-                )
+                # Check if it was cancelled during our wait
+                if transaction_id in self.cancelled_verifications:
+                    cancel_info = self.cancelled_verifications[transaction_id]
+                    logger.info(
+                        f"Verification {transaction_id} was cancelled "
+                        f"(reason: {cancel_info['reason']})"
+                    )
+                else:
+                    logger.warning(
+                        f"Cannot auto-verify: verification {transaction_id} not found "
+                        f"after waiting {max_wait}s (may have timed out)"
+                    )
                 return False
 
             if not (Sas and isinstance(sas, Sas)):
@@ -505,6 +584,15 @@ class DeviceVerificationManager:
 
             # Wait for key exchange
             await asyncio.sleep(1)
+
+            # Check if verification was cancelled during key exchange
+            if transaction_id in self.cancelled_verifications:
+                cancel_info = self.cancelled_verifications[transaction_id]
+                logger.warning(
+                    f"Verification {transaction_id} was cancelled during key exchange "
+                    f"(reason: {cancel_info['reason']})"
+                )
+                return False
 
             # Automatically accept the SAS (trust without emoji comparison)
             if sas.other_key_set:
@@ -527,6 +615,9 @@ class DeviceVerificationManager:
                     logger.info(
                         f"Auto-verified device in transaction {transaction_id}"
                     )
+                
+                # Clear from cancelled tracking if it was there
+                self.clear_cancelled_verification(transaction_id)
                 return True
             else:
                 logger.warning(
@@ -710,7 +801,8 @@ class DeviceVerificationManager:
                 if sas:
                     started_count += 1
                     logger.info(
-                        f"Started cross-verification with {device_info['user_id']}'s device {device_info['device_id']}"
+                        f"Started cross-verification with {device_info['user_id']}'s "
+                        f"device {device_info['device_id']}"
                     )
             except Exception as e:
                 logger.error(
