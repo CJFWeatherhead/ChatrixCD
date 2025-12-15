@@ -1419,6 +1419,73 @@ class TestChatrixBot(unittest.TestCase):
         self.assertTrue(result)
         mock_plugin.login_oidc.assert_called_once_with(bot)
 
+    def test_verification_auto_mode_daemon(self):
+        """Test that daemon mode auto-verifies incoming verification requests."""
+        bot = ChatrixBot(self.config, mode="daemon")
+
+        # Mock verification manager's auto_verify_pending method
+        bot.verification_manager.auto_verify_pending = AsyncMock(return_value=True)
+
+        # Create mock KeyVerificationStart event
+        from nio import KeyVerificationStart
+
+        mock_event = MagicMock(spec=KeyVerificationStart)
+        mock_event.sender = "@user:example.com"
+        mock_event.from_device = "USERDEVICE"
+        mock_event.transaction_id = "test_txn_123"
+
+        # Call the callback
+        self.loop.run_until_complete(bot.key_verification_start_callback(mock_event))
+
+        # Verify auto_verify_pending was called in daemon mode
+        bot.verification_manager.auto_verify_pending.assert_called_once_with(
+            "test_txn_123"
+        )
+
+    def test_verification_auto_mode_log(self):
+        """Test that log mode auto-verifies incoming verification requests."""
+        bot = ChatrixBot(self.config, mode="log")
+
+        # Mock verification manager's auto_verify_pending method
+        bot.verification_manager.auto_verify_pending = AsyncMock(return_value=True)
+
+        # Create mock KeyVerificationStart event
+        from nio import KeyVerificationStart
+
+        mock_event = MagicMock(spec=KeyVerificationStart)
+        mock_event.sender = "@user:example.com"
+        mock_event.from_device = "USERDEVICE"
+        mock_event.transaction_id = "test_txn_456"
+
+        # Call the callback
+        self.loop.run_until_complete(bot.key_verification_start_callback(mock_event))
+
+        # Verify auto_verify_pending was called in log mode
+        bot.verification_manager.auto_verify_pending.assert_called_once_with(
+            "test_txn_456"
+        )
+
+    def test_verification_manual_mode_tui(self):
+        """Test that TUI mode does not auto-verify verification requests."""
+        bot = ChatrixBot(self.config, mode="tui")
+
+        # Mock verification manager's auto_verify_pending method
+        bot.verification_manager.auto_verify_pending = AsyncMock(return_value=True)
+
+        # Create mock KeyVerificationStart event
+        from nio import KeyVerificationStart
+
+        mock_event = MagicMock(spec=KeyVerificationStart)
+        mock_event.sender = "@user:example.com"
+        mock_event.from_device = "USERDEVICE"
+        mock_event.transaction_id = "test_txn_789"
+
+        # Call the callback
+        self.loop.run_until_complete(bot.key_verification_start_callback(mock_event))
+
+        # Verify auto_verify_pending was NOT called in TUI mode
+        bot.verification_manager.auto_verify_pending.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

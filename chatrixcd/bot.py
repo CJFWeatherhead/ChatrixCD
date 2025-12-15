@@ -1517,7 +1517,7 @@ class ChatrixBot:
         This callback is triggered when another device initiates verification with the bot.
         Behavior depends on the bot's operating mode:
         - daemon mode: Automatically accept and verify (no user interaction)
-        - log mode: Interactive command-line verification
+        - log mode: Automatically accept and verify (autonomous operation)
         - tui mode: Notification shown in TUI for manual verification
 
         Args:
@@ -1528,18 +1528,15 @@ class ChatrixBot:
             f"Transaction ID: {event.transaction_id}"
         )
 
-        if self.mode == "daemon":
-            # In daemon mode, automatically accept and verify all requests
+        if self.mode in ("daemon", "log"):
+            # In daemon/log modes, automatically accept and verify all requests
+            # Both modes operate autonomously without user interaction
             await self._auto_verify_device(event.transaction_id)
-        elif self.mode == "log":
-            # In log-only mode, handle verification interactively on command line
-            await self._interactive_cli_verification(
-                event.transaction_id, event.sender, event.from_device
-            )
         else:
             # In TUI mode, just notify (TUI will handle the verification)
             logger.info(
-                "To complete this verification, use the TUI (Sessions menu > View Pending Verification Requests)"
+                "To complete this verification, use the TUI "
+                "(Sessions menu > View Pending Verification Requests)"
             )
 
     async def _auto_verify_device(self, transaction_id: str):

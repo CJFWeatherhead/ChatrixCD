@@ -31,8 +31,13 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 - **Encryption Backend**: Using `vodozemac` (Rust-based) for superior features
 - **Alpine Deployment**: Now uses system `py3-matrix-nio` package instead of venv package to ensure encryption works correctly
+- **Device Verification**: Log-only mode (`-L`) now automatically verifies incoming device verification requests, matching daemon mode behavior for autonomous operation
+- **Verification Timing**: Added retry logic with up to 5 seconds wait time for matrix-nio to process verification events before attempting auto-verification
 
 ### Fixed
+
+- Device verification hanging in log-only mode (`-L`) when initiated from Element or other Matrix clients - now auto-verifies as intended
+- "Unknown transaction id" errors during device verification due to timing issues - added retry logic to wait for matrix-nio to process verification events
 
 - **Alpine Linux Encryption**: Fixed "Encryption not enabled" errors on Alpine Linux by using system `py3-matrix-nio` and `py3-olm` packages
 - **matrix-nio ENCRYPTION_ENABLED Flag**: Resolved issue where matrix-nio 0.25.2 requires `python-olm` package for encryption detection even when using vodozemac

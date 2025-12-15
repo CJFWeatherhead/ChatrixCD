@@ -84,8 +84,12 @@ class TestDeviceVerificationManager(unittest.IsolatedAsyncioTestCase):
 
     async def test_auto_verify_pending_no_sas(self):
         """Test auto_verify_pending when SAS is not available."""
+        # Mock key_verifications as a dict to avoid the TypeError
+        self.mock_client.key_verifications = {}
+        
         with patch("chatrixcd.verification.SAS_AVAILABLE", False):
-            result = await self.manager.auto_verify_pending("txn1")
+            # Use max_wait=0 to skip retry loop in test
+            result = await self.manager.auto_verify_pending("txn1", max_wait=0)
             self.assertFalse(result)
 
     @unittest.skipIf(

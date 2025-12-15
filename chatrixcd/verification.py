@@ -447,33 +447,53 @@ class DeviceVerificationManager:
             logger.error(f"Error rejecting verification: {e}")
             return False
 
-    async def auto_verify_pending(self, transaction_id: str) -> bool:
+    async def auto_verify_pending(self, transaction_id: str, max_wait: int = 5) -> bool:
         """Automatically verify a pending verification request (daemon mode).
 
         This method auto-verifies devices and shares room keys with them.
+        Includes retry logic to wait for matrix-nio to process the verification event.
 
         Args:
             transaction_id: Transaction ID of the verification request
+            max_wait: Maximum seconds to wait for verification object (default: 5)
 
         Returns:
             True if auto-verified successfully, False otherwise
         """
         try:
-            # Get the SAS verification object
-            if (
-                not hasattr(self.client, "key_verifications")
-                or transaction_id not in self.client.key_verifications
-            ):
+            # Wait for the SAS verification object to be available
+            # matrix-nio needs time to process the KeyVerificationStart event
+            sas = None
+            waited = 0.0
+            retry_interval = 0.5
+            
+            while waited < max_wait:
+                if (
+                    hasattr(self.client, "key_verifications")
+                    and transaction_id in self.client.key_verifications
+                ):
+                    sas = self.client.key_verifications[transaction_id]
+                    if Sas and isinstance(sas, Sas):
+                        logger.debug(
+                            f"Found SAS verification object for {transaction_id} "
+                            f"after {waited:.1f}s"
+                        )
+                        break
+                
+                await asyncio.sleep(retry_interval)
+                waited += retry_interval
+            
+            if not sas:
                 logger.warning(
-                    f"Cannot auto-verify: verification {transaction_id} not found"
+                    f"Cannot auto-verify: verification {transaction_id} not found "
+                    f"after waiting {max_wait}s"
                 )
                 return False
 
-            sas = self.client.key_verifications[transaction_id]
-
             if not (Sas and isinstance(sas, Sas)):
                 logger.warning(
-                    f"Cannot auto-verify: {transaction_id} is not a SAS verification or SAS not available"
+                    f"Cannot auto-verify: {transaction_id} is not a SAS verification "
+                    f"or SAS not available"
                 )
                 return False
 
@@ -515,7 +535,7 @@ class DeviceVerificationManager:
                 return False
 
         except Exception as e:
-            logger.error(f"Error during auto-verification: {e}")
+            logger.error(f"Error during auto-verification: {e}", exc_info=True)
             return False
 
     async def verify_device_interactive(
