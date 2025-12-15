@@ -332,6 +332,7 @@ For complete branding guidelines, see [BRANDING.md](BRANDING.md).
 3. **Developer Documentation**: ARCHITECTURE.md, this file
 4. **API Documentation**: Docstrings in source code
 5. **Brand Documentation**: BRANDING.md for visual identity
+6. **AI/LLM Context Documentation**: dev/ai/docs/ for context, audits, and development notes
 
 ### Documentation Updates
 
@@ -343,6 +344,23 @@ When making changes, consider updating:
 - **ARCHITECTURE.md**: Technical architecture details
 - **CHANGELOG.md**: Record of changes
 - **BRANDING.md**: Branding and visual identity guidelines
+
+### AI/LLM Generated Documentation
+
+Context documentation, audit trails, and non-critical project documentation should be placed in `dev/ai/docs/`:
+
+- **Implementation Plans**: Detailed plans for features or migrations
+- **Audit Trails**: Records of significant changes, fixes, or integrations
+- **Evaluation Documents**: Test results, compliance checks, assessments
+- **Migration Notes**: Notes from version migrations or refactoring
+- **Context Documents**: Supporting documentation that provides background
+
+**Naming Convention**: Use underscores and block capitals (e.g., `ENCRYPTION_FIXES_SUMMARY.md`)
+
+**What NOT to put here**:
+- User-facing documentation (goes in `/docs` for GitHub Pages)
+- Core project documentation (README, CONTRIBUTING, etc. stay in root)
+- Code documentation (use docstrings and inline comments)
 
 ## Project Structure
 
