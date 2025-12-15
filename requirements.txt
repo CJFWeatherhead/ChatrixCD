@@ -1,10 +1,10 @@
 # Matrix client library with E2E encryption support
-# Using vodozemac (Rust-based) for superior features and performance
 matrix-nio>=0.25.0
 
-# E2E encryption using vodozemac
-# Provides features including cross-device verification and better performance
-# Note: Requires Rust toolchain to build from source
+# E2E encryption dependencies
+# matrix-nio 0.25.2 requires python-olm to enable ENCRYPTION_ENABLED flag
+# but uses vodozemac for actual encryption when available (better performance)
+python-olm>=3.2.0
 vodozemac>=0.9.0
 
 # HTTP client for REST API calls

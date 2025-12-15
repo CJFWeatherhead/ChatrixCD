@@ -24,10 +24,20 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - INTEGRATION_TEST_ENCRYPTION_SETUP.md guide documenting encryption setup for remote integration tests
 - **Integration Test Automation**: Automatic cache clearing and process cleanup before bot startup in integration test suite
 - **Integration Test Documentation**: Comprehensive debugging guide in Copilot instructions for troubleshooting integration test failures
+- **Alpine Linux Encryption Fix**: Complete documentation and deployment script for Alpine Linux encryption initialization (`docs/ALPINE_ENCRYPTION_FIX.md`)
+- **Alpine Deployment Script**: `scripts/alpine_encryption_fix.sh` for automated Alpine Linux encryption fix deployment
 
 ### Changed
 
 - **Encryption Backend**: Using `vodozemac` (Rust-based) for superior features
+- **Alpine Deployment**: Now uses system `py3-matrix-nio` package instead of venv package to ensure encryption works correctly
+
+### Fixed
+
+- **Alpine Linux Encryption**: Fixed "Encryption not enabled" errors on Alpine Linux by using system `py3-matrix-nio` and `py3-olm` packages
+- **matrix-nio ENCRYPTION_ENABLED Flag**: Resolved issue where matrix-nio 0.25.2 requires `python-olm` package for encryption detection even when using vodozemac
+- **System Site Packages**: Enabled system-site-packages in Alpine venvs to access system Python packages
+- **Package Conflicts**: Removed venv's matrix-nio to prevent conflicts with system package on Alpine deployments
   - **Documentation Organization**: Moved AI/LLM generated documentation to `dev/ai/docs/` directory for better organization
     - Implementation plans, migration notes, and audit trails now in `dev/ai/docs/`
     - Updated Copilot instructions and CONTRIBUTING.md to reference new structure

@@ -422,6 +422,19 @@ class ChatrixBot:
                     logger.info(f"Successfully logged in as {self.user_id}")
                     # Save session for future use
                     self._save_session(response.access_token, response.device_id)
+                    # Load encryption store after successful login
+                    try:
+                        logger.info("Loading encryption store after password login...")
+                        self.client.load_store()
+                        logger.info(
+                            "Encryption store loaded successfully after password login"
+                        )
+                    except Exception as e:
+                        msg = (
+                            "Could not load encryption store after password login "
+                            "(this can be normal on first run): %s"
+                        )
+                        logger.warning(msg, e)
                     # Setup encryption keys after successful login
                     await self.setup_encryption()
                     return True
@@ -677,6 +690,17 @@ class ChatrixBot:
             if isinstance(response, LoginResponse):
                 logger.info(f"Successfully logged in as {self.user_id} via OIDC")
                 self._save_session(response.access_token, response.device_id)
+                # Load encryption store after successful OIDC login
+                try:
+                    logger.info("Loading encryption store after OIDC login...")
+                    self.client.load_store()
+                    logger.info("Encryption store loaded successfully after OIDC login")
+                except Exception as e:
+                    msg = (
+                        "Could not load encryption store after OIDC login "
+                        "(this can be normal on first run): %s"
+                    )
+                    logger.warning(msg, e)
                 await self.setup_encryption()
                 return True
             else:

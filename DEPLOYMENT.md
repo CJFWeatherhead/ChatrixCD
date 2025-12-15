@@ -133,9 +133,32 @@ All deployment methods include security best practices:
 5. **No New Privileges**: Security flags prevent privilege escalation
 6. **Private Temp**: Isolated temporary directories
 
+## Alpine Linux Encryption Fix
+
+**Important for Alpine Linux deployments**: If you're running ChatrixCD on Alpine Linux and seeing "Encryption not enabled" errors, you need to apply a special fix. This is required because matrix-nio 0.25.2 needs the `python-olm` package to enable encryption, even though `vodozemac` provides the actual encryption.
+
+**Quick Fix:**
+```bash
+# Run as root on the Alpine server
+curl -O https://raw.githubusercontent.com/CJFWeatherhead/ChatrixCD/main/scripts/alpine_encryption_fix.sh
+chmod +x alpine_encryption_fix.sh
+./alpine_encryption_fix.sh
+```
+
+**Manual Fix:**
+See [docs/ALPINE_ENCRYPTION_FIX.md](docs/ALPINE_ENCRYPTION_FIX.md) for detailed explanation and manual steps.
+
+**Symptoms:**
+- Bot logs show "Encryption not enabled, skipping encryption setup"
+- Bot cannot decrypt messages in encrypted rooms
+- `client.olm` is `None` in logs
+
+**This only affects Alpine Linux**. Other distributions work fine with standard pip installation.
+
 ## Support
 
 For issues or questions:
 - Check [INSTALL.md](INSTALL.md) for detailed instructions
 - Check [TROUBLESHOOTING.md](INSTALL.md#troubleshooting) section
+- For Alpine encryption issues, see [docs/ALPINE_ENCRYPTION_FIX.md](docs/ALPINE_ENCRYPTION_FIX.md)
 - Open an issue on GitHub
