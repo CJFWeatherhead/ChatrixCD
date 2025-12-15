@@ -16,6 +16,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ## [Unreleased]
 
+## [2025.12.15.6.1.0] - 2025-12-15
+
 ### Added
 
 - Support for access token authentication in configuration (`matrix.access_token`) for integration testing and pre-authenticated scenarios
@@ -1500,6 +1502,8 @@ ChatrixCD/
 
 ## Version History
 
+
+- **2025.12.15.6.1.0** (2025-12-15)
 - **2025.11.25.6.0.0** (2025-11-25)
 - **2025.11.15.5.2.0** (2025-11-15)
 - **2025.11.09.5.1.0** (2025-11-09)
