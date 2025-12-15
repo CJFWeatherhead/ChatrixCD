@@ -169,6 +169,7 @@ class PluginManager:
         self.plugins_dir = Path(plugins_dir)
         self.loaded_plugins: Dict[str, Plugin] = {}
         self.plugin_metadata: Dict[str, PluginMetadata] = {}
+        self.disabled_plugins: Dict[str, PluginMetadata] = {}
         self.task_monitor: Optional[TaskMonitorPlugin] = None
 
     def discover_plugins(self) -> List[Path]:
@@ -333,23 +334,6 @@ class PluginManager:
         if metadata is None:
             return False
 
-        # Check if plugin is enabled
-        if not metadata.enabled:
-            logger.info(f"Plugin '{metadata.name}' is disabled, skipping")
-            return False
-
-        # Check for conflicting plugins
-        if (
-            metadata.plugin_type == "task_monitor"
-            and self.task_monitor is not None
-        ):
-            logger.error(
-                f"Cannot load task monitor plugin '{metadata.name}': "
-                f"another task monitor '{self.task_monitor.metadata.name}' is already loaded. "
-                "Only one task monitor plugin can be active at a time."
-            )
-            return False
-
         # Load the plugin module
         plugin_class = self.load_plugin_module(plugin_dir, metadata)
         if plugin_class is None:
@@ -406,8 +390,29 @@ class PluginManager:
 
         loaded_count = 0
         for plugin_dir in plugins:
-            if await self.load_plugin(plugin_dir):
-                loaded_count += 1
+            metadata = self.load_plugin_metadata(plugin_dir)
+            if metadata is None:
+                continue
+
+            # Load config to check enabled
+            plugin_config = self.load_plugin_config(plugin_dir, metadata)
+            enabled = plugin_config.get("enabled", metadata.enabled)
+
+            if enabled:
+                # Enforce mutual exclusion: only one TaskMonitorPlugin may be loaded
+                if metadata.plugin_type == "task_monitor" and self.task_monitor is not None:
+                    logger.info(
+                        f"Skipping task monitor plugin '{metadata.name}' because '{self.task_monitor.metadata.name}' is already active"
+                    )
+                    # Track as disabled due to mutual exclusion
+                    self.disabled_plugins[metadata.name] = metadata
+                    continue
+
+                if await self.load_plugin(plugin_dir):
+                    loaded_count += 1
+            else:
+                self.disabled_plugins[metadata.name] = metadata
+                logger.info(f"Plugin '{metadata.name}' is disabled")
 
         logger.info(f"Loaded {loaded_count}/{len(plugins)} plugins")
 

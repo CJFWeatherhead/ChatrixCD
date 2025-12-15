@@ -87,8 +87,13 @@ class OIDCAuthPlugin(Plugin):
             Dictionary with status information
         """
         return {
+            "name": self.metadata.name,
+            "description": self.metadata.description,
+            "version": self.metadata.version,
+            "type": self.metadata.plugin_type,
+            "category": self.metadata.category,
+            "enabled": self.metadata.enabled,
             "active": True,
-            "description": "OIDC/SSO authentication enabled",
             "callback_registered": self.token_callback is not None,
         }
 

@@ -18,6 +18,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ### Added
 
+- **Aliases Management**: New commands `aliases add <alias> <command>` and `aliases remove <alias>` to manage command aliases via chat. Supports prefixed (`!cd`) or unprefixed commands and preserves extra arguments.
 - Support for access token authentication in configuration (`matrix.access_token`) for integration testing and pre-authenticated scenarios
 - Logging for encryption availability during bot initialization to help diagnose encryption issues
 - Encryption diagnostics logging to validate encryption library installation and AsyncClient configuration
@@ -33,6 +34,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ### Changed
 
+- **Help/Usage**: Updated help and usage text to document alias management commands.
 - **Encryption Backend**: Using `vodozemac` (Rust-based) for superior features
 - **Alpine Deployment**: Now uses system `py3-matrix-nio` package instead of venv package to ensure encryption works correctly
 - **Device Verification**: Log-only mode (`-L`) now automatically verifies incoming device verification requests, matching daemon mode behavior for autonomous operation

@@ -474,7 +474,11 @@ class CommandHandler:
             ],
             ["ping", "Ping Semaphore server", "🏓"],
             ["info", "Get Semaphore server and bot info", "ℹ️"],
-            ["aliases", "List command aliases", "🔖"],
+            [
+                "aliases [add <alias> <command>|remove <alias>]",
+                "Manage command aliases (list/add/remove)",
+                "🔖",
+            ],
             [
                 "verify [list|start|pending|auto|cross]",
                 "Device verification commands",
@@ -2241,6 +2245,17 @@ class CommandHandler:
         plugin_manager = self.bot.plugin_manager
         plugins_status = plugin_manager.get_all_plugins_status()
 
+        # Add disabled plugins
+        if hasattr(plugin_manager, "disabled_plugins"):
+            for name, metadata in plugin_manager.disabled_plugins.items():
+                plugins_status.append({
+                    "name": metadata.name,
+                    "description": metadata.description,
+                    "version": metadata.version,
+                    "type": metadata.plugin_type,
+                    "enabled": False,
+                })
+
         if not plugins_status:
             lines.append("• No plugins loaded")
             return lines, info_list
@@ -3126,7 +3141,7 @@ Session management commands:
             await self.bot.send_message(
                 room_id,
                 "Usage:\n"
-                "• `!cd aliases` - List aliases\n"
-                "• `!cd aliases add <alias> <command>` - Add alias\n"
-                "• `!cd aliases remove <alias>` - Remove alias",
+                f"• `{self.command_prefix} aliases` - List aliases\n"
+                f"• `{self.command_prefix} aliases add <alias> <command>` - Add alias (accepts prefixed or unprefixed commands; extra args supported)\n"
+                f"• `{self.command_prefix} aliases remove <alias>` - Remove alias",
             )

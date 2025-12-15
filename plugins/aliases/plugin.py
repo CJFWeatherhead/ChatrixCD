@@ -17,6 +17,8 @@ class AliasesPlugin(Plugin):
         super().__init__(bot, config, metadata)
         self.aliases_file = config.get("aliases_file", "aliases.json")
         self.auto_reload = config.get("auto_reload", True)
+        # Use the bot's command prefix if provided; default to !cd
+        self.command_prefix = config.get("command_prefix", "!cd")
         self.reserved_commands = config.get("reserved_commands", [])
         self.aliases: Dict[str, str] = {}
         self._file_watcher: Optional[FileWatcher] = None
@@ -100,8 +102,24 @@ class AliasesPlugin(Plugin):
             return False
 
     def resolve_alias(self, command: str) -> str:
-        """Resolve a command alias."""
-        return self.aliases.get(command, command)
+        """Resolve a command alias, preserving additional arguments.
+
+        If the first token of the provided command matches an alias, the
+        alias will be expanded and any subsequent arguments will be
+        appended to the expanded command.
+        """
+        parts = command.strip().split(maxsplit=1)
+        if not parts:
+            return command
+
+        alias_key = parts[0]
+        remainder = parts[1] if len(parts) > 1 else ""
+
+        mapped = self.aliases.get(alias_key)
+        if mapped:
+            return f"{mapped} {remainder}".strip() if remainder else mapped
+
+        return command
 
     def add_alias(self, alias: str, command: str) -> bool:
         """Add or update an alias."""
@@ -111,7 +129,28 @@ class AliasesPlugin(Plugin):
             )
             return False
 
-        self.aliases[alias] = command
+        # Normalize command: accept prefixed or unprefixed input.
+        normalized = command.strip()
+        if normalized.startswith(self.command_prefix + " "):
+            normalized = normalized[len(self.command_prefix) :].strip()
+
+        # Validate that the base command (first token) is reserved/known.
+        # Allow arbitrary additional switches/args after the command.
+        base_parts = normalized.split()
+        if not base_parts:
+            self.logger.warning(
+                f"Cannot create alias '{alias}': empty command provided"
+            )
+            return False
+
+        base_cmd = base_parts[0].lower()
+        if base_cmd not in self.reserved_commands:
+            self.logger.warning(
+                f"Cannot create alias '{alias}': unknown command '{base_cmd}'"
+            )
+            return False
+
+        self.aliases[alias] = normalized
         return self.save_aliases()
 
     def remove_alias(self, alias: str) -> bool:
@@ -127,10 +166,12 @@ class AliasesPlugin(Plugin):
 
     def get_status(self) -> Dict[str, Any]:
         """Get plugin status."""
-        # Plugin base class doesn't have get_status, so we create a dict directly
         status = {
             "name": self.metadata.name,
+            "description": self.metadata.description,
             "version": self.metadata.version,
+            "type": self.metadata.plugin_type,
+            "category": self.metadata.category,
             "enabled": self.metadata.enabled,
             "aliases_count": len(self.aliases),
             "aliases_file": self.aliases_file,

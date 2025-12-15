@@ -171,6 +171,25 @@ class TestAliasesPlugin(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(result)
         self.assertEqual(plugin.aliases["deploy"], "run 1 5")
 
+    def test_add_alias_accepts_prefixed(self):
+        """Test adding an alias with a prefixed command normalizes correctly."""
+        cfg = dict(self.config)
+        cfg["command_prefix"] = "!cd"
+        plugin = AliasesPlugin(self.mock_bot, cfg, self.mock_metadata)
+
+        result = plugin.add_alias("petme", "!cd pet")
+        self.assertTrue(result)
+        # Stored without prefix
+        self.assertEqual(plugin.aliases["petme"], "pet")
+
+    def test_resolve_alias_appends_args(self):
+        """Test resolving alias keeps extra arguments appended."""
+        plugin = AliasesPlugin(self.mock_bot, self.config, self.mock_metadata)
+        plugin.aliases = {"deploy": "run 4 5"}
+
+        resolved = plugin.resolve_alias("deploy --tags=something --arg=\"--dry-run\"")
+        self.assertEqual(resolved, "run 4 5 --tags=something --arg=\"--dry-run\"")
+
     def test_add_alias_reserved_command(self):
         """Test adding an alias with a reserved command name."""
         plugin = AliasesPlugin(self.mock_bot, self.config, self.mock_metadata)
