@@ -1683,11 +1683,33 @@ class ChatrixBot:
         Args:
             event: Key verification cancel event
         """
-        logger.info(
-            f"Key verification cancelled by {event.sender}\n"
-            f"Reason: {event.reason}\n"
-            f"This is normal if the verification timed out or was explicitly cancelled."
+        # Track cancellation in verification manager
+        reason = getattr(event, 'reason', None)
+        code = getattr(event, 'code', None)
+        await self.verification_manager.handle_verification_cancellation(
+            event.transaction_id,
+            event.sender,
+            reason if reason is not None else "Unknown",
+            code if code is not None else "Unknown"
         )
+        
+        # In daemon/log modes, show manual verification info if needed
+        if self.mode in ("daemon", "log"):
+            logger.warning(
+                f"⚠️  Verification with {event.sender} was cancelled\n"
+                f"   Transaction: {event.transaction_id}\n"
+                f"   Reason: {getattr(event, 'reason', 'Unknown')}\n"
+                f"   Code: {getattr(event, 'code', 'Unknown')}"
+            )
+            # Log manual verification instructions
+            await self._log_manual_verification_info(event.transaction_id)
+        else:
+            # In TUI mode, just log the cancellation
+            logger.info(
+                f"Key verification cancelled by {event.sender}\n"
+                f"Reason: {getattr(event, 'reason', 'Unknown')}\n"
+                f"This is normal if the verification timed out or was explicitly cancelled."
+            )
 
     async def key_verification_key_callback(self, event: KeyVerificationKey):
         """Handle key verification key exchange events.
