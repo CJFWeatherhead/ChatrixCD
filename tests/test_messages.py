@@ -25,9 +25,7 @@ class TestMessageManager(unittest.TestCase):
 
     def test_init_with_nonexistent_file(self):
         """Test initialization with nonexistent file uses defaults."""
-        manager = MessageManager(
-            messages_file=self.messages_file, auto_reload=False
-        )
+        manager = MessageManager(messages_file=self.messages_file, auto_reload=False)
         self.assertEqual(manager.messages, DEFAULT_MESSAGES)
 
     def test_load_messages_from_file(self):
@@ -41,30 +39,22 @@ class TestMessageManager(unittest.TestCase):
         with open(self.messages_file, "w") as f:
             json.dump(test_messages, f)
 
-        manager = MessageManager(
-            messages_file=self.messages_file, auto_reload=False
-        )
+        manager = MessageManager(messages_file=self.messages_file, auto_reload=False)
 
         # Should have merged with defaults
         self.assertIn("greetings", manager.messages)
         self.assertIn("cancel", manager.messages)
         # Custom greetings should override defaults
-        self.assertEqual(
-            manager.messages["greetings"], test_messages["greetings"]
-        )
+        self.assertEqual(manager.messages["greetings"], test_messages["greetings"])
         # Default categories should still be present
         self.assertIn("brush_off", manager.messages)
 
     def test_get_random_message(self):
         """Test getting a random message from a category."""
-        manager = MessageManager(
-            messages_file=self.messages_file, auto_reload=False
-        )
+        manager = MessageManager(messages_file=self.messages_file, auto_reload=False)
 
         # Get a greeting
-        greeting = manager.get_random_message(
-            "greetings", name="@user:example.com"
-        )
+        greeting = manager.get_random_message("greetings", name="@user:example.com")
 
         # Should be a non-empty string
         self.assertIsInstance(greeting, str)
@@ -74,9 +64,7 @@ class TestMessageManager(unittest.TestCase):
 
     def test_get_random_message_from_nonexistent_category(self):
         """Test getting message from nonexistent category."""
-        manager = MessageManager(
-            messages_file=self.messages_file, auto_reload=False
-        )
+        manager = MessageManager(messages_file=self.messages_file, auto_reload=False)
 
         message = manager.get_random_message("nonexistent_category")
 
@@ -85,9 +73,7 @@ class TestMessageManager(unittest.TestCase):
 
     def test_get_all_messages(self):
         """Test getting all messages from a category."""
-        manager = MessageManager(
-            messages_file=self.messages_file, auto_reload=False
-        )
+        manager = MessageManager(messages_file=self.messages_file, auto_reload=False)
 
         greetings = manager.get_all_messages("greetings")
 
@@ -107,9 +93,7 @@ class TestMessageManager(unittest.TestCase):
         with open(self.messages_file, "w") as f:
             json.dump(test_messages, f)
 
-        manager = MessageManager(
-            messages_file=self.messages_file, auto_reload=False
-        )
+        manager = MessageManager(messages_file=self.messages_file, auto_reload=False)
 
         # No changes yet (if auto_reload was True, FileWatcher would track this)
         # Without auto_reload, there's no file watcher
@@ -129,9 +113,7 @@ class TestMessageManager(unittest.TestCase):
 
     def test_message_formatting(self):
         """Test that messages are properly formatted with kwargs."""
-        manager = MessageManager(
-            messages_file=self.messages_file, auto_reload=False
-        )
+        manager = MessageManager(messages_file=self.messages_file, auto_reload=False)
 
         # Get a message that uses formatting
         message = manager.get_random_message("pet")

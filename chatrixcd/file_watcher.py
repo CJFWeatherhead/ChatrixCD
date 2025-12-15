@@ -54,9 +54,7 @@ class FileWatcher:
                 self._last_mtime = current_mtime
                 return True
         except Exception as e:
-            logger.warning(
-                f"Failed to check file modification time for {self.file_path}: {e}"
-            )
+            logger.warning(f"Failed to check file modification time for {self.file_path}: {e}")
 
         return False
 
@@ -85,15 +83,11 @@ class FileWatcher:
                 await asyncio.sleep(self.check_interval)
 
                 if self.check_for_changes():
-                    logger.info(
-                        f"File {self.file_path} has been modified, reloading..."
-                    )
+                    logger.info(f"File {self.file_path} has been modified, reloading...")
                     try:
                         self.reload_callback()
                     except Exception as e:
-                        logger.error(
-                            f"Error in reload callback for {self.file_path}: {e}"
-                        )
+                        logger.error(f"Error in reload callback for {self.file_path}: {e}")
 
         except asyncio.CancelledError:
             logger.debug(f"File watcher task cancelled for {self.file_path}")

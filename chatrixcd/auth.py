@@ -61,9 +61,7 @@ class MatrixAuth:
         Returns:
             Redirect URL string (never None)
         """
-        return self.config.get(
-            "oidc_redirect_url", "http://localhost:8080/callback"
-        )
+        return self.config.get("oidc_redirect_url", "http://localhost:8080/callback")
 
     def validate_config(self) -> tuple[bool, Optional[str]]:
         """Validate authentication configuration.

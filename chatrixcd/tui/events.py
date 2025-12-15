@@ -19,9 +19,7 @@ class TUIEvent(Message):
 class ScreenChangeEvent(TUIEvent):
     """Event fired when screen changes."""
 
-    def __init__(
-        self, screen_name: str, previous_screen: Optional[str] = None
-    ):
+    def __init__(self, screen_name: str, previous_screen: Optional[str] = None):
         super().__init__(source="screen_manager")
         self.screen_name = screen_name
         self.previous_screen = previous_screen
@@ -96,6 +94,4 @@ class NotificationEvent(TUIEvent):
     def __init__(self, message: str, severity: str = "information"):
         super().__init__(source="notification_manager")
         self.message = message
-        self.severity = (
-            severity  # "information", "warning", "error", "success"
-        )
+        self.severity = severity  # "information", "warning", "error", "success"

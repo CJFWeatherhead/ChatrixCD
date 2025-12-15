@@ -107,8 +107,7 @@ class MainMenuScreen(BaseScreen):
         with Container(classes="main-container"):
             # Welcome message
             yield Static(
-                "[bold cyan]ChatrixCD[/bold cyan]\n"
-                "Matrix CI/CD Bot - Interactive Interface",
+                "[bold cyan]ChatrixCD[/bold cyan]\n" "Matrix CI/CD Bot - Interactive Interface",
                 classes="title-banner",
             )
 
@@ -126,13 +125,9 @@ class MainMenuScreen(BaseScreen):
                     with Vertical(classes="metrics-section"):
                         yield Static("[bold]Metrics[/bold]", classes="section-header")
                         yield MetricDisplay(label="Uptime", id="uptime-metric")
-                        yield MetricDisplay(
-                            label="Messages", id="messages-metric", icon="📨"
-                        )
+                        yield MetricDisplay(label="Messages", id="messages-metric", icon="📨")
                         yield MetricDisplay(label="Tasks", id="tasks-metric", icon="🔧")
-                        yield MetricDisplay(
-                            label="Errors", id="errors-metric", icon="❌"
-                        )
+                        yield MetricDisplay(label="Errors", id="errors-metric", icon="❌")
                         # Expose ActiveTasksWidget for tests that query '#active_tasks'
                         from .. import ActiveTasksWidget
 
@@ -241,9 +236,7 @@ class MainMenuScreen(BaseScreen):
                 messages_metric.value = metrics.get("messages_sent", 0)
 
                 tasks_metric = self.query_one("#tasks-metric", MetricDisplay)
-                active_tasks = getattr(
-                    self.tui_app.bot.command_handler, "active_tasks", {}
-                )
+                active_tasks = getattr(self.tui_app.bot.command_handler, "active_tasks", {})
                 tasks_metric.value = len(active_tasks)
 
                 # Update ActiveTasksWidget if present

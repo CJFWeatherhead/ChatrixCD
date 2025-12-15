@@ -12,16 +12,17 @@ class TestRunMappedSwitches(unittest.TestCase):
         asyncio.set_event_loop(self.loop)
 
         # Patch create_task to run inline
-        self.create_task_patcher = patch('asyncio.create_task')
+        self.create_task_patcher = patch("asyncio.create_task")
         self.mock_create_task = self.create_task_patcher.start()
 
         async def run_inline(coro, *args, **kwargs):
             return await coro
+
         self.mock_create_task.side_effect = run_inline
 
         # Mock bot
         self.mock_bot = MagicMock()
-        self.mock_bot.send_message = AsyncMock(return_value='evt1')
+        self.mock_bot.send_message = AsyncMock(return_value="evt1")
         self.mock_bot.plugin_manager = MagicMock()
         self.mock_bot.plugin_manager.get_task_monitor.return_value = None
         # Configure aliases plugin to return identity mapping

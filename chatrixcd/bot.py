@@ -162,9 +162,7 @@ class ChatrixBot:
         )
 
         # Initialize plugin manager
-        self.plugin_manager = PluginManager(
-            bot=self, config=config.config, plugins_dir="plugins"
-        )
+        self.plugin_manager = PluginManager(bot=self, config=config.config, plugins_dir="plugins")
 
         # Initialize verification manager
         self.verification_manager = DeviceVerificationManager(self.client)
@@ -195,18 +193,10 @@ class ChatrixBot:
         self.client.add_event_callback(self.reaction_callback, Event)
 
         # Setup key verification callbacks for interactive emoji verification
-        self.client.add_event_callback(
-            self.key_verification_start_callback, KeyVerificationStart
-        )
-        self.client.add_event_callback(
-            self.key_verification_cancel_callback, KeyVerificationCancel
-        )
-        self.client.add_event_callback(
-            self.key_verification_key_callback, KeyVerificationKey
-        )
-        self.client.add_event_callback(
-            self.key_verification_mac_callback, KeyVerificationMac
-        )
+        self.client.add_event_callback(self.key_verification_start_callback, KeyVerificationStart)
+        self.client.add_event_callback(self.key_verification_cancel_callback, KeyVerificationCancel)
+        self.client.add_event_callback(self.key_verification_key_callback, KeyVerificationKey)
+        self.client.add_event_callback(self.key_verification_mac_callback, KeyVerificationMac)
 
     async def setup_encryption(self) -> bool:
         """Setup encryption keys after successful login.
@@ -320,9 +310,7 @@ class ChatrixBot:
                     logger.info("Found saved session, attempting to restore")
                     return session_data
                 else:
-                    logger.info(
-                        "Saved session is for different user/homeserver, ignoring"
-                    )
+                    logger.info("Saved session is for different user/homeserver, ignoring")
                     return None
             else:
                 logger.warning("Saved session data is invalid")
@@ -348,9 +336,7 @@ class ChatrixBot:
         """
         # Validate that user_id is set for all authentication types
         if not self.user_id:
-            logger.error(
-                "user_id is not set in configuration. Please add 'user_id' to config.json"
-            )
+            logger.error("user_id is not set in configuration. Please add 'user_id' to config.json")
             return False
 
         # Check if access_token is provided for direct token authentication
@@ -370,13 +356,9 @@ class ChatrixBot:
                     logger.info("Successfully authenticated with access token")
                     # Load encryption store after restoring session
                     try:
-                        logger.info(
-                            "Loading encryption store after token authentication..."
-                        )
+                        logger.info("Loading encryption store after token authentication...")
                         self.client.load_store()
-                        logger.info(
-                            "Encryption store loaded successfully after token auth"
-                        )
+                        logger.info("Encryption store loaded successfully after token auth")
                     except Exception as e:
                         logger.warning(
                             f"Could not load encryption store after token auth (this is normal on first run): {e}"
@@ -398,9 +380,7 @@ class ChatrixBot:
             self.client.load_store()
             logger.info("Encryption store loaded successfully")
         except Exception as e:
-            logger.warning(
-                f"Could not load encryption store (this is normal on first run): {e}"
-            )
+            logger.warning(f"Could not load encryption store (this is normal on first run): {e}")
 
         # Validate authentication configuration
         is_valid, error_msg = self.auth.validate_config()
@@ -415,12 +395,8 @@ class ChatrixBot:
                 # Password authentication using matrix-nio
                 password = self.auth.get_password()
 
-                logger.info(
-                    f"Logging in with password authentication as {self.user_id}"
-                )
-                response = await self.client.login(
-                    password=password, device_name=self.device_name
-                )
+                logger.info(f"Logging in with password authentication as {self.user_id}")
+                response = await self.client.login(password=password, device_name=self.device_name)
 
                 if isinstance(response, LoginResponse):
                     logger.info(f"Successfully logged in as {self.user_id}")
@@ -430,9 +406,7 @@ class ChatrixBot:
                     try:
                         logger.info("Loading encryption store after password login...")
                         self.client.load_store()
-                        logger.info(
-                            "Encryption store loaded successfully after password login"
-                        )
+                        logger.info("Encryption store loaded successfully after password login")
                     except Exception as e:
                         msg = (
                             "Could not load encryption store after password login "
@@ -460,13 +434,9 @@ class ChatrixBot:
 
                         # Load encryption store after restoring session
                         try:
-                            logger.info(
-                                "Loading encryption store after session restore..."
-                            )
+                            logger.info("Loading encryption store after session restore...")
                             self.client.load_store()
-                            logger.info(
-                                "Encryption store loaded successfully after restore"
-                            )
+                            logger.info("Encryption store loaded successfully after restore")
                         except Exception as e:
                             logger.warning(
                                 f"Could not load encryption store after restore (this is normal on first run): {e}"
@@ -479,9 +449,7 @@ class ChatrixBot:
                             await self.setup_encryption()
                             return True
                         else:
-                            logger.warning(
-                                f"Restored session test failed: {sync_response}"
-                            )
+                            logger.warning(f"Restored session test failed: {sync_response}")
                             # Fall through to interactive OIDC login
 
                     except Exception as e:
@@ -516,9 +484,7 @@ class ChatrixBot:
         identity_providers = []
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"{self.homeserver}/_matrix/client/v3/login"
-                ) as resp:
+                async with session.get(f"{self.homeserver}/_matrix/client/v3/login") as resp:
                     if resp.status == 200:
                         response_data = await resp.json()
                         flows = response_data.get("flows", [])
@@ -528,9 +494,7 @@ class ChatrixBot:
                                 identity_providers = flow.get("identity_providers", [])
                                 break
 
-                        logger.debug(
-                            f"Found {len(identity_providers)} identity providers"
-                        )
+                        logger.debug(f"Found {len(identity_providers)} identity providers")
                     else:
                         logger.warning(f"Failed to get login flows: HTTP {resp.status}")
         except Exception as e:
@@ -567,9 +531,7 @@ class ChatrixBot:
             )
 
             if identity_providers and len(identity_providers) > 1:
-                logger.info(
-                    f"Multiple identity providers available ({len(identity_providers)})"
-                )
+                logger.info(f"Multiple identity providers available ({len(identity_providers)})")
 
         logger.debug(f"SSO redirect URL: {sso_redirect_url}")
         return sso_redirect_url, redirect_url
@@ -656,10 +618,7 @@ class ChatrixBot:
                 return False
 
             # Check if SSO login is supported
-            if (
-                "m.login.sso" not in login_info.flows
-                and "m.login.token" not in login_info.flows
-            ):
+            if "m.login.sso" not in login_info.flows and "m.login.token" not in login_info.flows:
                 logger.error(
                     "Server does not support SSO/OIDC login. "
                     f"Available flows: {login_info.flows}"
@@ -670,9 +629,7 @@ class ChatrixBot:
 
             # Step 2: Get identity providers and build redirect URL
             identity_providers = await self._get_oidc_identity_providers()
-            sso_redirect_url, redirect_url = await self._build_oidc_redirect_url(
-                identity_providers
-            )
+            sso_redirect_url, redirect_url = await self._build_oidc_redirect_url(identity_providers)
 
             # Step 3: Get login token from user
             login_token = await self._get_oidc_token_from_user(
@@ -687,9 +644,7 @@ class ChatrixBot:
 
             # Step 4: Complete login with token
             logger.info("Attempting login with provided token...")
-            response = await self.client.login(
-                token=login_token, device_name=self.device_name
-            )
+            response = await self.client.login(token=login_token, device_name=self.device_name)
 
             if isinstance(response, LoginResponse):
                 logger.info(f"Successfully logged in as {self.user_id} via OIDC")
@@ -827,9 +782,7 @@ class ChatrixBot:
 
         # Step 1: Query device keys for the sender to ensure we have up-to-date device information
         try:
-            logger.info(
-                f"Querying device keys for {event.sender} to establish encryption"
-            )
+            logger.info(f"Querying device keys for {event.sender} to establish encryption")
             if self.client.olm:
                 self.client.olm.users_for_key_query.add(event.sender)
             await self.client.keys_query()
@@ -855,9 +808,7 @@ class ChatrixBot:
 
                     # Claim keys if needed
                     if devices_to_claim:
-                        logger.info(
-                            "Claiming one-time keys to establish encryption sessions"
-                        )
+                        logger.info("Claiming one-time keys to establish encryption sessions")
                         response = await self.client.keys_claim(devices_to_claim)
                         if hasattr(response, "one_time_keys"):
                             logger.info(
@@ -865,9 +816,7 @@ class ChatrixBot:
                                 f"with {len(response.one_time_keys)} device(s)"
                             )
                         else:
-                            logger.warning(
-                                f"Keys claim returned unexpected response: {response}"
-                            )
+                            logger.warning(f"Keys claim returned unexpected response: {response}")
         except Exception as e:
             logger.error(f"Failed to claim one-time keys for {event.sender}: {e}")
 
@@ -894,9 +843,7 @@ class ChatrixBot:
             self.requested_session_ids.add(session_key)
 
             # Request the room key from other devices
-            logger.info(
-                f"Requesting room key for session {event.session_id} from {event.sender}"
-            )
+            logger.info(f"Requesting room key for session {event.session_id} from {event.sender}")
             await self.client.request_room_key(event)
 
             # Send the to-device messages to actually deliver the request
@@ -933,8 +880,8 @@ class ChatrixBot:
             # Get the Ed25519 fingerprint from the olm account's identity keys
             # The device_store contains other users' devices, not our own
             fingerprint = "unavailable"
-            if hasattr(self.client.olm, 'account') and self.client.olm.account:
-                identity_keys = getattr(self.client.olm.account, 'identity_keys', {})
+            if hasattr(self.client.olm, "account") and self.client.olm.account:
+                identity_keys = getattr(self.client.olm.account, "identity_keys", {})
                 fingerprint = identity_keys.get("ed25519", "unavailable")
 
             device_name = self.device_name
@@ -999,14 +946,10 @@ class ChatrixBot:
                 # or when explicitly requested. For historical messages, the device
                 # will request keys as needed when it encounters encrypted messages
                 # it cannot decrypt.
-                logger.debug(
-                    f"Device {device.id} verified - room keys will be shared as needed"
-                )
+                logger.debug(f"Device {device.id} verified - room keys will be shared as needed")
 
             except Exception as e:
-                logger.error(
-                    f"Failed to auto-verify device {device.id} for {sender}: {e}"
-                )
+                logger.error(f"Failed to auto-verify device {device.id} for {sender}: {e}")
 
     async def reaction_callback(self, room: MatrixRoom, event: Event):
         """Handle incoming reactions.
@@ -1041,9 +984,7 @@ class ChatrixBot:
         if not reaction_key or not reacted_event_id:
             return
 
-        logger.info(
-            f"Reaction {reaction_key} from {event.sender} on event {reacted_event_id}"
-        )
+        logger.info(f"Reaction {reaction_key} from {event.sender} on event {reacted_event_id}")
 
         # Pass the reaction to the command handler
         await self.command_handler.handle_reaction(
@@ -1322,9 +1263,7 @@ class ChatrixBot:
             status["matrix_user_id"] = self.client.user_id
             if hasattr(self.client, "device_id"):
                 status["matrix_device_id"] = self.client.device_id
-            status["matrix_encrypted"] = (
-                hasattr(self.client, "olm") and self.client.olm is not None
-            )
+            status["matrix_encrypted"] = hasattr(self.client, "olm") and self.client.olm is not None
         else:
             status["matrix_status"] = "Not initialized"
 
@@ -1382,24 +1321,15 @@ class ChatrixBot:
                                 f"Initial encryption setup: Found {encrypted_rooms_count} encrypted room(s) "
                                 f"with {len(users_to_query)} unique user(s)"
                             )
-                            logger.info(
-                                "Querying device keys for all users in encrypted rooms..."
-                            )
+                            logger.info("Querying device keys for all users in encrypted rooms...")
                             if self.client.olm:
-                                self.client.olm.users_for_key_query.update(
-                                    users_to_query
-                                )
+                                self.client.olm.users_for_key_query.update(users_to_query)
                             await self.client.keys_query()
 
                             # Claim one-time keys to establish Olm sessions with all devices
-                            logger.info(
-                                "Claiming one-time keys to establish Olm sessions..."
-                            )
+                            logger.info("Claiming one-time keys to establish Olm sessions...")
                             devices_to_claim = {}
-                            if (
-                                hasattr(self.client, "device_store")
-                                and self.client.device_store
-                            ):
+                            if hasattr(self.client, "device_store") and self.client.device_store:
                                 for user_id in users_to_query:
                                     if user_id in self.client.device_store.users:
                                         user_devices = self.client.device_store[user_id]
@@ -1422,9 +1352,7 @@ class ChatrixBot:
                                     f"Claiming keys for {sum(len(d) for d in devices_to_claim.values())} device(s) "
                                     f"across {len(devices_to_claim)} user(s)"
                                 )
-                                response = await self.client.keys_claim(
-                                    devices_to_claim
-                                )
+                                response = await self.client.keys_claim(devices_to_claim)
                                 if hasattr(response, "one_time_keys"):
                                     logger.info(
                                         f"Successfully established Olm sessions with "
@@ -1440,9 +1368,7 @@ class ChatrixBot:
                                 f"user(s) in encrypted rooms"
                             )
                             if self.client.olm:
-                                self.client.olm.users_for_key_query.update(
-                                    users_to_query
-                                )
+                                self.client.olm.users_for_key_query.update(users_to_query)
                             await self.client.keys_query()
             except Exception as e:
                 logger.debug(f"Error during proactive device key query: {e}")
@@ -1590,13 +1516,9 @@ class ChatrixBot:
         """
         success = await self.verification_manager.auto_verify_pending(transaction_id)
         if success:
-            logger.info(
-                f"Successfully auto-verified device in transaction {transaction_id}"
-            )
+            logger.info(f"Successfully auto-verified device in transaction {transaction_id}")
         else:
-            logger.warning(
-                f"Failed to auto-verify device in transaction {transaction_id}"
-            )
+            logger.warning(f"Failed to auto-verify device in transaction {transaction_id}")
             # Log device info for manual verification via Element
             await self._log_manual_verification_info(transaction_id)
 
@@ -1612,25 +1534,22 @@ class ChatrixBot:
         try:
             # Get pending verifications to find device info
             pending = await self.verification_manager.get_pending_verifications()
-            
+
             for pending_item in pending:
                 if pending_item["transaction_id"] == transaction_id:
                     user_id = pending_item.get("user_id", "unknown")
                     device_id = pending_item.get("device_id", "unknown")
-                    
+
                     # Try to get device fingerprint/key
                     fingerprint = "(fingerprint unavailable)"
-                    if (
-                        hasattr(self.client, "device_store")
-                        and self.client.device_store
-                    ):
+                    if hasattr(self.client, "device_store") and self.client.device_store:
                         user_devices = self.client.device_store.get(user_id)
                         if user_devices and device_id in user_devices:
                             device = user_devices[device_id]
                             # Get the Ed25519 key (fingerprint)
                             if hasattr(device, "ed25519"):
                                 fingerprint = device.ed25519
-                    
+
                     logger.warning(
                         f"\n"
                         f"═══════════════════════════════════════════════════════════════\n"
@@ -1648,18 +1567,14 @@ class ChatrixBot:
                         f"═══════════════════════════════════════════════════════════════\n"
                     )
                     return
-            
+
             # If we couldn't find the transaction
-            logger.warning(
-                f"Could not find device information for transaction {transaction_id}"
-            )
-            
+            logger.warning(f"Could not find device information for transaction {transaction_id}")
+
         except Exception as e:
             logger.error(f"Error logging manual verification info: {e}")
 
-    async def _interactive_cli_verification(
-        self, transaction_id: str, sender: str, device_id: str
-    ):
+    async def _interactive_cli_verification(self, transaction_id: str, sender: str, device_id: str):
         """Handle verification interactively on command line in log-only mode.
 
         Uses the verification manager to handle interactive verification.
@@ -1725,15 +1640,15 @@ class ChatrixBot:
             event: Key verification cancel event
         """
         # Track cancellation in verification manager
-        reason = getattr(event, 'reason', None)
-        code = getattr(event, 'code', None)
+        reason = getattr(event, "reason", None)
+        code = getattr(event, "code", None)
         await self.verification_manager.handle_verification_cancellation(
             event.transaction_id,
             event.sender,
             reason if reason is not None else "Unknown",
-            code if code is not None else "Unknown"
+            code if code is not None else "Unknown",
         )
-        
+
         # In daemon/log modes, show manual verification info if needed
         if self.mode in ("daemon", "log"):
             logger.warning(

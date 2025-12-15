@@ -82,9 +82,7 @@ class StatusScreen(BaseScreen):
             # Metrics display
             with Vertical(classes="metrics-container"):
                 yield MetricDisplay(label="Uptime", id="uptime", icon="⏱️")
-                yield MetricDisplay(
-                    label="Messages Sent", id="messages_sent", icon="📨"
-                )
+                yield MetricDisplay(label="Messages Sent", id="messages_sent", icon="📨")
                 yield MetricDisplay(
                     label="Requests Received",
                     id="requests_received",
@@ -95,15 +93,11 @@ class StatusScreen(BaseScreen):
                 yield MetricDisplay(label="Emojis Used", id="emojis_used", icon="😊")
 
             # Plugins section
-            yield Static(
-                "[bold cyan]Loaded Plugins[/bold cyan]", classes="section-header"
-            )
+            yield Static("[bold cyan]Loaded Plugins[/bold cyan]", classes="section-header")
             yield Static(id="plugins-list", classes="plugins-list")
 
             # Active tasks section
-            yield Static(
-                "[bold cyan]Active Tasks[/bold cyan]", classes="section-header"
-            )
+            yield Static("[bold cyan]Active Tasks[/bold cyan]", classes="section-header")
             yield Static(id="active-tasks-list", classes="tasks-list")
 
     async def on_screen_mount(self):
@@ -140,16 +134,10 @@ class StatusScreen(BaseScreen):
                     try:
                         from ...verification import DeviceVerificationManager
 
-                        verification_manager = DeviceVerificationManager(
-                            self.tui_app.bot.client
-                        )
-                        verified_devices = (
-                            await verification_manager.get_verified_devices()
-                        )
+                        verification_manager = DeviceVerificationManager(self.tui_app.bot.client)
+                        verified_devices = await verification_manager.get_verified_devices()
                         if verified_devices:
-                            encryption_status.status = (
-                                f"E2E ({len(verified_devices)} verified)"
-                            )
+                            encryption_status.status = f"E2E ({len(verified_devices)} verified)"
                         else:
                             encryption_status.status = "E2E (unverified)"
                     except Exception:
@@ -172,18 +160,12 @@ class StatusScreen(BaseScreen):
                 self.query_one("#requests_received", MetricDisplay).value = metrics.get(
                     "requests_received", 0
                 )
-                self.query_one("#errors", MetricDisplay).value = metrics.get(
-                    "errors", 0
-                )
-                self.query_one("#emojis_used", MetricDisplay).value = metrics.get(
-                    "emojis_used", 0
-                )
+                self.query_one("#errors", MetricDisplay).value = metrics.get("errors", 0)
+                self.query_one("#emojis_used", MetricDisplay).value = metrics.get("emojis_used", 0)
 
             # Update active tasks
             if hasattr(self.tui_app.bot, "command_handler"):
-                active_tasks = getattr(
-                    self.tui_app.bot.command_handler, "active_tasks", {}
-                )
+                active_tasks = getattr(self.tui_app.bot.command_handler, "active_tasks", {})
                 self.query_one("#active_tasks", MetricDisplay).value = len(active_tasks)
 
                 # Format active tasks list
@@ -240,7 +222,9 @@ class StatusScreen(BaseScreen):
                                 color = "red"
                                 icon = "❌"
 
-                            plugin_line = f"[{color}]{icon} {name} v{version}[/{color}] ({plugin_type})"
+                            plugin_line = (
+                                f"[{color}]{icon} {name} v{version}[/{color}] ({plugin_type})"
+                            )
                             if description:
                                 plugin_line += f" - {description}"
                             plugins_text.append(plugin_line)

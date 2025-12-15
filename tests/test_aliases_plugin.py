@@ -187,8 +187,8 @@ class TestAliasesPlugin(unittest.IsolatedAsyncioTestCase):
         plugin = AliasesPlugin(self.mock_bot, self.config, self.mock_metadata)
         plugin.aliases = {"deploy": "run 4 5"}
 
-        resolved = plugin.resolve_alias("deploy --tags=something --arg=\"--dry-run\"")
-        self.assertEqual(resolved, "run 4 5 --tags=something --arg=\"--dry-run\"")
+        resolved = plugin.resolve_alias('deploy --tags=something --arg="--dry-run"')
+        self.assertEqual(resolved, 'run 4 5 --tags=something --arg="--dry-run"')
 
     def test_add_alias_reserved_command(self):
         """Test adding an alias with a reserved command name."""

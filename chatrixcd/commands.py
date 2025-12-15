@@ -213,10 +213,18 @@ class CommandHandler:
 
         if room_id and room_id in self.bot.client.rooms:
             room = self.bot.client.rooms[room_id]
-            if user_id in room.users:
-                user = room.users[user_id]
-                if user.display_name:
+            users = room.users
+            # Support both dict and list for room.users
+            if isinstance(users, dict):
+                user = users.get(user_id)
+                if user and getattr(user, "display_name", None):
                     return user.display_name
+            elif isinstance(users, list):
+                for user in users:
+                    if getattr(user, "user_id", None) == user_id:
+                        if getattr(user, "display_name", None):
+                            return user.display_name
+                        break
 
         # Fall back to full Matrix ID for proper mentions
         return user_id
@@ -281,9 +289,7 @@ class CommandHandler:
         negative_reactions = ["👎", "❌", "✖", "⛔", "🚫", "no", "n"]
 
         # Strip variation selectors and zero-width characters that might be in emoji
-        reaction_clean = "".join(
-            c for c in reaction_key if ord(c) < 0xFE00 or ord(c) > 0xFE0F
-        )
+        reaction_clean = "".join(c for c in reaction_key if ord(c) < 0xFE00 or ord(c) > 0xFE0F)
         reaction_lower = reaction_clean.lower()
 
         if reaction_clean in positive_reactions or reaction_lower in positive_reactions:
@@ -302,9 +308,7 @@ class CommandHandler:
                 # Task execution
                 await self._execute_task(room.room_id, confirmation)
 
-        elif (
-            reaction_clean in negative_reactions or reaction_lower in negative_reactions
-        ):
+        elif reaction_clean in negative_reactions or reaction_lower in negative_reactions:
             # Negative confirmation
             del self.pending_confirmations[confirmation_key]
             del self.confirmation_message_ids[confirmation_key]
@@ -325,9 +329,7 @@ class CommandHandler:
         # Check for pending confirmations first
         confirmation_key = f"{room.room_id}:{event.sender}"
         if confirmation_key in self.pending_confirmations:
-            logger.info(
-                f"Processing confirmation response from {event.sender}: {message}"
-            )
+            logger.info(f"Processing confirmation response from {event.sender}: {message}")
             await self.handle_confirmation(room.room_id, event.sender, message)
             return
 
@@ -346,9 +348,7 @@ class CommandHandler:
         if not self.is_admin(event.sender):
             # Send fun brush-off message
             response = self.message_manager.get_random_message("brush_off")
-            logger.info(
-                f"Non-admin user {event.sender} attempted command, sending: {response}"
-            )
+            logger.info(f"Non-admin user {event.sender} attempted command, sending: {response}")
             await self.bot.send_message(room.room_id, response)
             return
 
@@ -370,9 +370,7 @@ class CommandHandler:
         command = parts[0].lower()
         args = parts[1:]
 
-        logger.info(
-            f"Executing command '{command}' with args {args} from {event.sender}"
-        )
+        logger.info(f"Executing command '{command}' with args {args} from {event.sender}")
 
         # Route to appropriate handler
         if command == "help":
@@ -412,9 +410,7 @@ class CommandHandler:
         else:
             greeting = self._get_greeting(event.sender, room.room_id)
             response = f"{greeting} - Unknown command: {command}. Type '{self.command_prefix} help' for available commands."
-            logger.info(
-                f"Unknown command '{command}' from {event.sender}, sending: {response}"
-            )
+            logger.info(f"Unknown command '{command}' from {event.sender}, sending: {response}")
             await self.bot.send_message(room.room_id, response)
 
     async def send_help(self, room_id: str, sender: str | None):
@@ -540,9 +536,7 @@ class CommandHandler:
             html_message = (
                 f"{greeting_html} Here's the admin roster! 👑<br/><br/>"
                 + "<strong>Admin Users</strong><br/><br/>"
-                + self._color_info(
-                    "ℹ️ No admin users configured. All users have admin access."
-                )
+                + self._color_info("ℹ️ No admin users configured. All users have admin access.")
             )
         else:
             # Create table for admins
@@ -565,9 +559,7 @@ class CommandHandler:
         if not rooms:
             plain_msg = f"{greeting} Not currently in any rooms. 🏠"
             html_msg = self.markdown_to_html(plain_msg)
-            await self.bot.send_message(
-                room_id, plain_msg, html_msg, msgtype="m.notice"
-            )
+            await self.bot.send_message(room_id, plain_msg, html_msg, msgtype="m.notice")
             return
 
         # Check if redaction is enabled
@@ -594,9 +586,7 @@ class CommandHandler:
         if not room_list:
             plain_msg = f"{greeting} No rooms to display (all rooms filtered). 🏠"
             html_msg = self.markdown_to_html(plain_msg)
-            await self.bot.send_message(
-                room_id, plain_msg, html_msg, msgtype="m.notice"
-            )
+            await self.bot.send_message(room_id, plain_msg, html_msg, msgtype="m.notice")
             return
 
         # Plain text version
@@ -649,14 +639,10 @@ class CommandHandler:
         """
         try:
             await self.bot.client.join(target_room_id)
-            await self.bot.send_message(
-                room_id, f"{greeting} ✅ Joined room: {target_room_id}"
-            )
+            await self.bot.send_message(room_id, f"{greeting} ✅ Joined room: {target_room_id}")
         except Exception as e:
             logger.error(f"Failed to join room {target_room_id}: {e}")
-            await self.bot.send_message(
-                room_id, f"{greeting} ❌ Failed to join room: {e}"
-            )
+            await self.bot.send_message(room_id, f"{greeting} ❌ Failed to join room: {e}")
 
     async def _leave_room(self, room_id: str, greeting: str, target_room_id: str):
         """Leave a room.
@@ -668,14 +654,10 @@ class CommandHandler:
         """
         try:
             await self.bot.client.room_leave(target_room_id)
-            await self.bot.send_message(
-                room_id, f"{greeting} 👋 Left room: {target_room_id}"
-            )
+            await self.bot.send_message(room_id, f"{greeting} 👋 Left room: {target_room_id}")
         except Exception as e:
             logger.error(f"Failed to leave room {target_room_id}: {e}")
-            await self.bot.send_message(
-                room_id, f"{greeting} ❌ Failed to leave room: {e}"
-            )
+            await self.bot.send_message(room_id, f"{greeting} ❌ Failed to leave room: {e}")
 
     async def manage_rooms(self, room_id: str, args: list, sender: str | None):
         """Manage bot rooms (list, join, part).
@@ -758,11 +740,11 @@ class CommandHandler:
             message += f"Reply with `{self.command_prefix} exit` again to confirm.\n"
             message += "Or react with 👍 to confirm or 👎 to cancel!"
 
-            html_message = (
-                f"{user_name} 👋 - ⚠️ <strong>Confirm Bot Shutdown</strong><br/><br/>"
-            )
+            html_message = f"{user_name} 👋 - ⚠️ <strong>Confirm Bot Shutdown</strong><br/><br/>"
             html_message += "Are you sure you want to shut down the bot?<br/><br/>"
-            html_message += f"Reply with <code>{self.command_prefix} exit</code> again to confirm.<br/>"
+            html_message += (
+                f"Reply with <code>{self.command_prefix} exit</code> again to confirm.<br/>"
+            )
             html_message += "Or react with 👍 to confirm or 👎 to cancel!"
 
             logger.info(f"Exit requested by {sender}, requesting confirmation")
@@ -773,9 +755,7 @@ class CommandHandler:
                 self.confirmation_message_ids[confirmation_key] = event_id
 
             # Set timeout to clear confirmation after 30 seconds
-            asyncio.create_task(
-                self._clear_confirmation_timeout(confirmation_key, 30, room_id)
-            )
+            asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 30, room_id))
 
     async def list_projects(self, room_id: str, sender: str | None = None):
         """List available Semaphore projects.
@@ -790,11 +770,11 @@ class CommandHandler:
         if not projects:
             # Check if this is an empty list (successful connection) or an error
             # Empty list means successful connection but no projects
-            plain_msg = f"{user_name} 👋 - No projects found. Create a project in Semaphore UI first! 📋"
-            html_msg = self.markdown_to_html(plain_msg)
-            await self.bot.send_message(
-                room_id, plain_msg, html_msg, msgtype="m.notice"
+            plain_msg = (
+                f"{user_name} 👋 - No projects found. Create a project in Semaphore UI first! 📋"
             )
+            html_msg = self.markdown_to_html(plain_msg)
+            await self.bot.send_message(room_id, plain_msg, html_msg, msgtype="m.notice")
             return
 
         # Plain text version
@@ -807,9 +787,7 @@ class CommandHandler:
 
         # HTML version with table
         greeting_html = self.markdown_to_html(user_name)
-        table_html = (
-            "<table><thead><tr><th>Project Name</th><th>ID</th></tr></thead><tbody>"
-        )
+        table_html = "<table><thead><tr><th>Project Name</th><th>ID</th></tr></thead><tbody>"
         for project in projects:
             name = html.escape(project.get("name", ""))
             proj_id = project.get("id", "")
@@ -864,29 +842,19 @@ class CommandHandler:
             try:
                 project_id = int(args[0])
             except ValueError:
-                await self.bot.send_message(
-                    room_id, f"{user_name} 👋 - Invalid project ID ❌"
-                )
+                await self.bot.send_message(room_id, f"{user_name} 👋 - Invalid project ID ❌")
                 return
 
         templates = await self.semaphore.get_project_templates(project_id)
 
         if not templates:
-            plain_msg = (
-                f"{user_name} 👋 - No templates found for project {project_id} ❌"
-            )
-            html_msg = self.markdown_to_html(
-                plain_msg.replace("❌", self._color_error("❌"))
-            )
-            await self.bot.send_message(
-                room_id, plain_msg, html_msg, msgtype="m.notice"
-            )
+            plain_msg = f"{user_name} 👋 - No templates found for project {project_id} ❌"
+            html_msg = self.markdown_to_html(plain_msg.replace("❌", self._color_error("❌")))
+            await self.bot.send_message(room_id, plain_msg, html_msg, msgtype="m.notice")
             return
 
         # Plain text version
-        message = (
-            f"{user_name} 👋 Here are the templates for project {project_id}! 📝\n\n"
-        )
+        message = f"{user_name} 👋 Here are the templates for project {project_id}! 📝\n\n"
         message += "**Templates:**\n\n"
         for template in templates:
             message += f"• **{template.get('name')}** (ID: {template.get('id')})\n"
@@ -903,16 +871,16 @@ class CommandHandler:
             desc = html.escape(
                 self._format_description(template.get("description", "No description"))
             )
-            table_html += f"<tr><td><strong>{name}</strong></td><td>{temp_id}</td><td>{desc}</td></tr>"
+            table_html += (
+                f"<tr><td><strong>{name}</strong></td><td>{temp_id}</td><td>{desc}</td></tr>"
+            )
         table_html += "</tbody></table>"
 
         html_message = f"{greeting_html} 👋 Here are the templates for project {project_id}! 📝<br/><br/><strong>Templates:</strong><br/><br/>{table_html}"
 
         await self.bot.send_message(room_id, message, html_message, msgtype="m.notice")
 
-    async def _resolve_run_task_params(
-        self, room_id: str, sender: str, args: list
-    ) -> tuple:
+    async def _resolve_run_task_params(self, room_id: str, sender: str, args: list) -> tuple:
         """Resolve project_id and template_id from args with smart auto-selection.
 
         Returns:
@@ -951,9 +919,7 @@ class CommandHandler:
                 return None, None
 
             template_id = templates[0].get("id")
-            logger.info(
-                f"Auto-selected project {project_id} and template {template_id}"
-            )
+            logger.info(f"Auto-selected project {project_id} and template {template_id}")
             return project_id, template_id
 
         # Only project_id provided
@@ -961,9 +927,7 @@ class CommandHandler:
             try:
                 project_id = int(args[0])
             except ValueError:
-                await self.bot.send_message(
-                    room_id, f"{user_name} 👋 - Invalid project ID ❌"
-                )
+                await self.bot.send_message(room_id, f"{user_name} 👋 - Invalid project ID ❌")
                 return None, None
 
             templates = await self.semaphore.get_project_templates(project_id)
@@ -1031,9 +995,7 @@ class CommandHandler:
             elif token == "--args" and i + 1 < len(remaining):
                 extra_args = remaining[i + 1]
                 i += 1
-            elif not token.startswith("-") and tags is None and (
-                "," in token or token.isalpha()
-            ):
+            elif not token.startswith("-") and tags is None and ("," in token or token.isalpha()):
                 # Third positional token treated as tags (mapped switches)
                 tags = token
             i += 1
@@ -1051,9 +1013,7 @@ class CommandHandler:
         greeting = self._get_greeting(sender, room_id)
 
         # Resolve parameters with smart auto-selection
-        project_id, template_id = await self._resolve_run_task_params(
-            room_id, sender, args
-        )
+        project_id, template_id = await self._resolve_run_task_params(room_id, sender, args)
         if project_id is None:
             return
 
@@ -1070,9 +1030,7 @@ class CommandHandler:
             return
 
         template_name = template.get("name", f"Template {template_id}")
-        template_desc = self._format_description(
-            template.get("description", "No description")
-        )
+        template_desc = self._format_description(template.get("description", "No description"))
 
         # Parse optional options (mapped switches)
         tags, extra_args = self._parse_run_options(args)
@@ -1120,9 +1078,7 @@ class CommandHandler:
         if event_id:
             self.confirmation_message_ids[confirmation_key] = event_id
 
-        asyncio.create_task(
-            self._clear_confirmation_timeout(confirmation_key, 300, room_id)
-        )
+        asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 300, room_id))
 
     async def _clear_confirmation_timeout(
         self, confirmation_key: str, timeout: int, room_id: str | None
@@ -1152,9 +1108,7 @@ class CommandHandler:
             room_id: Room ID
             sender: User ID
         """
-        await self.bot.send_message(
-            room_id, "👋 Shutting down bot as requested. Goodbye!"
-        )
+        await self.bot.send_message(room_id, "👋 Shutting down bot as requested. Goodbye!")
 
         # Give time for message to send
         await asyncio.sleep(1)
@@ -1183,9 +1137,7 @@ class CommandHandler:
 
         logger.info(f"Global log tailing enabled in room {room_id} by {sender}")
         message = f"{user_name} 👋 - ✅ **Global log tailing enabled!**\n\n"
-        message += (
-            "Logs will be automatically streamed for all tasks that run in this room.\n"
-        )
+        message += "Logs will be automatically streamed for all tasks that run in this room.\n"
         message += f"Use `{self.command_prefix} log off` to disable."
 
         html_message = self.markdown_to_html(message)
@@ -1197,9 +1149,7 @@ class CommandHandler:
             project_id = task_info["project_id"]
             task_name = task_info.get("template_name")
             task_display = (
-                f"{task_name} ({self.last_task_id})"
-                if task_name
-                else str(self.last_task_id)
+                f"{task_name} ({self.last_task_id})" if task_name else str(self.last_task_id)
             )
 
             # Start tailing the current task
@@ -1274,15 +1224,11 @@ class CommandHandler:
         task = await self.semaphore.start_task(project_id, template_id, **kwargs)
 
         if not task:
-            logger.error(
-                f"Failed to start task for project {project_id}, template {template_id}"
-            )
+            logger.error(f"Failed to start task for project {project_id}, template {template_id}")
             # Provide clearer messaging if options were supplied
             if kwargs:
                 err_msg = "Failed to start task ❌\n"
-                err_msg += (
-                    "This template may not support the provided options.\n"
-                )
+                err_msg += "This template may not support the provided options.\n"
                 if kwargs.get("tags"):
                     err_msg += f"- Tags: {kwargs.get('tags')}\n"
                 if kwargs.get("arguments"):
@@ -1290,9 +1236,7 @@ class CommandHandler:
                 err_msg += (
                     "Try running without these options or check the template settings in Semaphore."
                 )
-                await self.bot.send_message(
-                    room_id, err_msg, self.markdown_to_html(err_msg)
-                )
+                await self.bot.send_message(room_id, err_msg, self.markdown_to_html(err_msg))
             else:
                 await self.bot.send_message(room_id, "Failed to start task ❌")
             return
@@ -1310,20 +1254,14 @@ class CommandHandler:
         self.last_task_id = task_id
         self.last_project_id = project_id
 
-        message_text = (
-            f"✅ Task **{template_name} ({task_id})** started successfully!\n"
-        )
+        message_text = f"✅ Task **{template_name} ({task_id})** started successfully!\n"
         message_text += f"Use `{self.command_prefix} status` to check progress."
         html_message = self.markdown_to_html(message_text)
-        logger.info(
-            f"Task started successfully: task_id={task_id}, sending: {message_text}"
-        )
+        logger.info(f"Task started successfully: task_id={task_id}, sending: {message_text}")
         await self.bot.send_message(room_id, message_text, html_message)
 
         # Start monitoring the task via plugin (pass sender for personalized notifications)
-        asyncio.create_task(
-            self.monitor_task(project_id, task_id, room_id, template_name, sender)
-        )
+        asyncio.create_task(self.monitor_task(project_id, task_id, room_id, template_name, sender))
 
     async def handle_confirmation(self, room_id: str, sender: str, message: str):
         """Handle confirmation response for task execution.
@@ -1363,9 +1301,7 @@ class CommandHandler:
         is_cancelled = message_lower in cancel_words
 
         if is_cancelled:
-            await self.bot.send_message(
-                room_id, self.message_manager.get_random_message("cancel")
-            )
+            await self.bot.send_message(room_id, self.message_manager.get_random_message("cancel"))
             return
 
         if not is_confirmed:
@@ -1409,12 +1345,8 @@ class CommandHandler:
         if hasattr(self.bot, "plugin_manager"):
             task_monitor = self.bot.plugin_manager.get_task_monitor()
             if task_monitor:
-                logger.info(
-                    f"Delegating task monitoring to plugin: {task_monitor.metadata.name}"
-                )
-                await task_monitor.monitor_task(
-                    project_id, task_id, room_id, task_name, sender
-                )
+                logger.info(f"Delegating task monitoring to plugin: {task_monitor.metadata.name}")
+                await task_monitor.monitor_task(project_id, task_id, room_id, task_name, sender)
                 return
 
         # Fallback: Log warning if no task monitor plugin is available
@@ -1425,9 +1357,7 @@ class CommandHandler:
 
         # Send notification to room
         task_display = f"{task_name} ({task_id})" if task_name else str(task_id)
-        message = (
-            f"⚠️ Task **{task_display}** started, but monitoring is not available.\n"
-        )
+        message = f"⚠️ Task **{task_display}** started, but monitoring is not available.\n"
         message += (
             "No task monitor plugin is loaded. Please enable either 'semaphore_poll' or "
             "'semaphore_webhook' plugin in config.json under the 'plugins' section."
@@ -1543,15 +1473,13 @@ class CommandHandler:
         status_colored = self._color_status(status, status_emoji)
 
         html_message = f"{greeting_html} Here's the scoop!<br/><br/>"
-        html_message += f"<strong>Task {html.escape(task_display)} Status:</strong> {status_colored}<br/><br/>"
+        html_message += (
+            f"<strong>Task {html.escape(task_display)} Status:</strong> {status_colored}<br/><br/>"
+        )
         if task.get("start"):
-            html_message += (
-                f"<strong>Started:</strong> {html.escape(str(task.get('start')))}<br/>"
-            )
+            html_message += f"<strong>Started:</strong> {html.escape(str(task.get('start')))}<br/>"
         if task.get("end"):
-            html_message += (
-                f"<strong>Ended:</strong> {html.escape(str(task.get('end')))}<br/>"
-            )
+            html_message += f"<strong>Ended:</strong> {html.escape(str(task.get('end')))}<br/>"
 
         await self.bot.send_message(room_id, message, html_message, msgtype="m.notice")
 
@@ -1637,26 +1565,20 @@ class CommandHandler:
             }
 
             message = f"{user_name} 👋 - ⚠️ **Enable Global Log Tailing**\n\n"
-            message += (
-                "This will enable automatic log tailing for all tasks in this room.\n"
-            )
+            message += "This will enable automatic log tailing for all tasks in this room.\n"
             message += "Logs will be streamed in real-time as tasks run.\n\n"
             message += f"Reply with `{self.command_prefix} log on` again to confirm.\n"
             message += "Or react with 👍 to confirm or 👎 to cancel!"
 
             html_message = self.markdown_to_html(message)
 
-            logger.info(
-                f"Log tailing 'on' requested by {sender}, requesting confirmation"
-            )
+            logger.info(f"Log tailing 'on' requested by {sender}, requesting confirmation")
             event_id = await self.bot.send_message(room_id, message, html_message)
 
             if event_id:
                 self.confirmation_message_ids[confirmation_key] = event_id
 
-            asyncio.create_task(
-                self._clear_confirmation_timeout(confirmation_key, 30, room_id)
-            )
+            asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 30, room_id))
             return True
 
     async def _handle_log_tailing_off(self, room_id: str, sender: str) -> bool:
@@ -1688,9 +1610,7 @@ class CommandHandler:
         else:
             # Check if log tailing is even enabled
             if not self.global_log_tailing_enabled.get(room_id, False):
-                logger.info(
-                    f"Log tailing 'off' requested but not enabled in room {room_id}"
-                )
+                logger.info(f"Log tailing 'off' requested but not enabled in room {room_id}")
                 await self.bot.send_message(
                     room_id,
                     f"{user_name} 👋 - Global log tailing is not currently enabled.",
@@ -1706,9 +1626,7 @@ class CommandHandler:
             }
 
             message = f"{user_name} 👋 - ⚠️ **Disable Global Log Tailing**\n\n"
-            message += (
-                "This will disable automatic log tailing for all tasks in this room.\n"
-            )
+            message += "This will disable automatic log tailing for all tasks in this room.\n"
             message += "You will stop receiving real-time log updates.\n\n"
             message += f"Reply with `{self.command_prefix} log off` again to confirm.\n"
             message += "Or react with 👍 to confirm or 👎 to cancel!"
@@ -1724,9 +1642,7 @@ class CommandHandler:
             if event_id:
                 self.confirmation_message_ids[confirmation_key] = event_id
 
-            asyncio.create_task(
-                self._clear_confirmation_timeout(confirmation_key, 30, room_id)
-            )
+            asyncio.create_task(self._clear_confirmation_timeout(confirmation_key, 30, room_id))
             return True
 
     async def _retrieve_task_logs(self, room_id: str, args: list, sender: str | None):
@@ -1860,9 +1776,7 @@ class CommandHandler:
                 # Get current task status
                 task = await self.semaphore.get_task_status(project_id, task_id)
                 if not task:
-                    logger.warning(
-                        f"Could not get status for task {task_id}, retrying..."
-                    )
+                    logger.warning(f"Could not get status for task {task_id}, retrying...")
                     await asyncio.sleep(poll_interval)
                     continue
 
@@ -1879,13 +1793,9 @@ class CommandHandler:
 
                     # Send new log chunk asynchronously
                     is_final = status in ("success", "error", "stopped")
-                    await self._send_log_chunk(
-                        room_id, task_id, new_logs, final=is_final
-                    )
+                    await self._send_log_chunk(room_id, task_id, new_logs, final=is_final)
 
-                    logger.debug(
-                        f"Sent {len(new_logs)} bytes of new logs for task {task_id}"
-                    )
+                    logger.debug(f"Sent {len(new_logs)} bytes of new logs for task {task_id}")
 
                 # If task is finished, stop tailing
                 if status in ("success", "error", "stopped"):
@@ -2149,25 +2059,15 @@ class CommandHandler:
         success = await self.semaphore.ping()
 
         if success:
-            plain_msg = (
-                f"{greeting} {self.message_manager.get_random_message('ping_success')}"
-            )
+            plain_msg = f"{greeting} {self.message_manager.get_random_message('ping_success')}"
             # Add color to success message
-            html_msg = self.markdown_to_html(
-                plain_msg.replace("✅", self._color_success("✅"))
-            )
-            await self.bot.send_message(
-                room_id, plain_msg, html_msg, msgtype="m.notice"
-            )
+            html_msg = self.markdown_to_html(plain_msg.replace("✅", self._color_success("✅")))
+            await self.bot.send_message(room_id, plain_msg, html_msg, msgtype="m.notice")
         else:
             plain_msg = f"{greeting} ❌ Uh oh! Failed to ping Semaphore server 😟"
             # Add color to error message
-            html_msg = self.markdown_to_html(
-                plain_msg.replace("❌", self._color_error("❌"))
-            )
-            await self.bot.send_message(
-                room_id, plain_msg, html_msg, msgtype="m.notice"
-            )
+            html_msg = self.markdown_to_html(plain_msg.replace("❌", self._color_error("❌")))
+            await self.bot.send_message(room_id, plain_msg, html_msg, msgtype="m.notice")
 
     def _gather_bot_system_info(self) -> tuple:
         """Gather bot and system information.
@@ -2235,9 +2135,8 @@ class CommandHandler:
                     addrs = psutil.net_if_addrs()
                     for interface, addr_list in addrs.items():
                         for addr in addr_list:
-                            if (
-                                addr.family == socket.AF_INET
-                                and not addr.address.startswith("127.")
+                            if addr.family == socket.AF_INET and not addr.address.startswith(
+                                "127."
                             ):
                                 ipv4_addrs.append(addr.address)
                             elif addr.family == socket.AF_INET6:
@@ -2321,13 +2220,15 @@ class CommandHandler:
         # Add disabled plugins
         if hasattr(plugin_manager, "disabled_plugins"):
             for name, metadata in plugin_manager.disabled_plugins.items():
-                plugins_status.append({
-                    "name": metadata.name,
-                    "description": metadata.description,
-                    "version": metadata.version,
-                    "type": metadata.plugin_type,
-                    "enabled": False,
-                })
+                plugins_status.append(
+                    {
+                        "name": metadata.name,
+                        "description": metadata.description,
+                        "version": metadata.version,
+                        "type": metadata.plugin_type,
+                        "enabled": False,
+                    }
+                )
 
         if not plugins_status:
             lines.append("• No plugins loaded")
@@ -2376,9 +2277,7 @@ class CommandHandler:
         if not plugin_info:
             return ""
 
-        table_html = (
-            '<br/><table><thead><tr><th colspan="5">Loaded Plugins 🔌</th></tr>'
-        )
+        table_html = '<br/><table><thead><tr><th colspan="5">Loaded Plugins 🔌</th></tr>'
         table_html += "<tr><th>Name</th><th>Description</th><th>Version</th><th>Type</th><th>Status</th></tr></thead><tbody>"
 
         for info in plugin_info:
@@ -2474,9 +2373,7 @@ class CommandHandler:
             bot_rows.append(["IPv6", ", ".join(bot_info["ipv6"])])
 
         bot_table_html = (
-            "<table><thead><tr>"
-            '<th colspan="2">ChatrixCD Bot 🤖</th>'
-            "</tr></thead><tbody>"
+            "<table><thead><tr>" '<th colspan="2">ChatrixCD Bot 🤖</th>' "</tr></thead><tbody>"
         )
         for key, value in bot_rows:
             bot_table_html += (
@@ -2489,9 +2386,7 @@ class CommandHandler:
 
         # Matrix info table
         matrix_table_html = (
-            "<table><thead><tr>"
-            '<th colspan="2">Matrix Server 🌐</th>'
-            "</tr></thead><tbody>"
+            "<table><thead><tr>" '<th colspan="2">Matrix Server 🌐</th>' "</tr></thead><tbody>"
         )
         if matrix_info:
             for key in ["homeserver", "user_id", "device_id"]:
@@ -2516,7 +2411,9 @@ class CommandHandler:
 
             # Encryption
             if matrix_encrypted:
-                matrix_table_html += "<tr><td><strong>E2E Encryption</strong></td><td>Enabled 🔒</td></tr>"
+                matrix_table_html += (
+                    "<tr><td><strong>E2E Encryption</strong></td><td>Enabled 🔒</td></tr>"
+                )
             else:
                 matrix_table_html += (
                     "<tr><td><strong>E2E Encryption</strong></td><td>Disabled</td></tr>"
@@ -2524,7 +2421,9 @@ class CommandHandler:
         matrix_table_html += "</tbody></table>"
 
         # Semaphore info table
-        semaphore_table_html = '<table><thead><tr><th colspan="2">Semaphore Server 🔧</th></tr></thead><tbody>'
+        semaphore_table_html = (
+            '<table><thead><tr><th colspan="2">Semaphore Server 🔧</th></tr></thead><tbody>'
+        )
         if semaphore_info:
             if "version" in semaphore_info:
                 semaphore_table_html += f'<tr><td><strong>Version</strong></td><td>{html.escape(str(semaphore_info.get("version")))}</td></tr>'
@@ -2551,9 +2450,7 @@ class CommandHandler:
 
         # Gather information
         bot_lines, bot_info = self._gather_bot_system_info()
-        matrix_lines, matrix_info, matrix_connected, matrix_encrypted = (
-            self._gather_matrix_info()
-        )
+        matrix_lines, matrix_info, matrix_connected, matrix_encrypted = self._gather_matrix_info()
 
         # Get plugin information
         plugin_lines, plugin_info = self._gather_plugin_info()
@@ -2585,14 +2482,12 @@ class CommandHandler:
 
         # Build HTML message
         greeting_html = self.markdown_to_html(greeting)
-        bot_table_html, matrix_table_html, semaphore_table_html = (
-            self._build_info_html_tables(
-                bot_info,
-                matrix_info,
-                matrix_connected,
-                matrix_encrypted,
-                semaphore_info,
-            )
+        bot_table_html, matrix_table_html, semaphore_table_html = self._build_info_html_tables(
+            bot_info,
+            matrix_info,
+            matrix_connected,
+            matrix_encrypted,
+            semaphore_info,
         )
 
         # Build plugin table
@@ -2628,9 +2523,7 @@ class CommandHandler:
                 plain_msg += " (Plugin not loaded)"
 
             html_msg = self.markdown_to_html(plain_msg)
-            await self.bot.send_message(
-                room_id, plain_msg, html_msg, msgtype="m.notice"
-            )
+            await self.bot.send_message(room_id, plain_msg, html_msg, msgtype="m.notice")
             return
 
         # Plain text version
@@ -2641,9 +2534,7 @@ class CommandHandler:
 
         # HTML version with table
         greeting_html = self.markdown_to_html(greeting)
-        table_html = (
-            "<table><thead><tr><th>Alias</th><th>Command</th></tr></thead><tbody>"
-        )
+        table_html = "<table><thead><tr><th>Alias</th><th>Command</th></tr></thead><tbody>"
         for alias, command in aliases.items():
             table_html += f"<tr><td><strong>{html.escape(alias)}</strong></td><td><code>{html.escape(command)}</code></td></tr>"
         table_html += "</tbody></table>"
@@ -2798,7 +2689,9 @@ Session management commands:
         if len(unverified) > 10:
             response += f"... and {len(unverified) - 10} more devices\n\n"
 
-        response += f"Use `{self.command_prefix} verify start <user_id> <device_id>` to verify a device."
+        response += (
+            f"Use `{self.command_prefix} verify start <user_id> <device_id>` to verify a device."
+        )
 
         await self.bot.send_message(room_id, response)
 
@@ -2833,9 +2726,7 @@ Session management commands:
         sas = await self.bot.verification_manager.start_verification(target_device)
 
         if not sas:
-            response = (
-                f"{greeting} - Failed to start verification with device `{device_id}`."
-            )
+            response = f"{greeting} - Failed to start verification with device `{device_id}`."
             await self.bot.send_message(room_id, response)
             return
 
@@ -2893,7 +2784,9 @@ Session management commands:
             if success:
                 verified_count += 1
 
-        response = f"{greeting} - Auto-verified {verified_count}/{len(pending)} pending requests. ✅"
+        response = (
+            f"{greeting} - Auto-verified {verified_count}/{len(pending)} pending requests. ✅"
+        )
         await self.bot.send_message(room_id, response)
 
     async def _cross_verify_bots(self, room_id: str, sender: str):
@@ -2913,9 +2806,7 @@ Session management commands:
             return
 
         # Use the verification manager's cross-verification method
-        started_count = await self.bot.verification_manager.cross_verify_with_bots(
-            list(room.users)
-        )
+        started_count = await self.bot.verification_manager.cross_verify_with_bots(list(room.users))
 
         if started_count > 0:
             response = f"{greeting} - Started verification with {started_count} bot device(s). Check the other bots for verification requests! 🔐🤖🤝🤖"
@@ -2957,9 +2848,7 @@ Session management commands:
 
         await self.bot.send_message(room_id, response)
 
-    async def _reset_session(
-        self, room_id: str, sender: str, user_id: str, device_id: str
-    ):
+    async def _reset_session(self, room_id: str, sender: str, user_id: str, device_id: str):
         """Reset encryption session with a device.
 
         Args:
@@ -2984,27 +2873,21 @@ Session management commands:
                     break
 
             if not target_device:
-                response = (
-                    f"{greeting} - Device `{device_id}` for user `{user_id}` not found."
-                )
+                response = f"{greeting} - Device `{device_id}` for user `{user_id}` not found."
                 await self.bot.send_message(room_id, response)
                 return
 
             # Reset the session by invalidating it in the encryption machine
             if hasattr(self.bot.client, "invalidate_session") and self.bot.client.olm:
                 # This will force a new session to be established on next message
-                self.bot.client.invalidate_session(
-                    target_device.curve25519, target_device.ed25519
-                )
+                self.bot.client.invalidate_session(target_device.curve25519, target_device.ed25519)
                 response = f"{greeting} - Reset encryption session with **{user_id}** device `{device_id}`. 🔄"
             else:
                 response = f"{greeting} - Session reset not available (encryption not enabled)."
 
         except Exception as e:
             logger.error(f"Error resetting session: {e}")
-            response = (
-                f"{greeting} - Failed to reset session with device `{device_id}`."
-            )
+            response = f"{greeting} - Failed to reset session with device `{device_id}`."
 
         await self.bot.send_message(room_id, response)
 
@@ -3026,14 +2909,9 @@ Session management commands:
                 return
 
             cleared_count = 0
-            if (
-                hasattr(self.bot.client, "device_store")
-                and self.bot.client.device_store
-            ):
+            if hasattr(self.bot.client, "device_store") and self.bot.client.device_store:
                 for device_info in unverified:
-                    user_devices = self.bot.client.device_store.get(
-                        device_info["user_id"]
-                    )
+                    user_devices = self.bot.client.device_store.get(device_info["user_id"])
                     if user_devices and device_info["device_id"] in user_devices:
                         del user_devices[device_info["device_id"]]
                         cleared_count += 1
@@ -3067,7 +2945,9 @@ Session management commands:
             if hasattr(self.bot.client.olm, "account"):
                 account = self.bot.client.olm.account
                 response += "**Encryption Account:**\n"
-                response += f"• Identity Keys: `{account.identity_keys.get('ed25519', 'N/A')[:8]}...`\n"
+                response += (
+                    f"• Identity Keys: `{account.identity_keys.get('ed25519', 'N/A')[:8]}...`\n"
+                )
                 response += f"• One-Time Keys: {len(account.one_time_keys) if hasattr(account, 'one_time_keys') else 'N/A'}\n\n"
 
             # Show device counts
@@ -3185,9 +3065,7 @@ Session management commands:
 
         # Check admin permissions for modification
         if not self.is_admin(sender):
-            await self.bot.send_message(
-                room_id, "🚫 You don't have permission to manage aliases."
-            )
+            await self.bot.send_message(room_id, "🚫 You don't have permission to manage aliases.")
             return
 
         subcommand = args[0].lower()
@@ -3196,9 +3074,7 @@ Session management commands:
             alias = args[1]
             command = " ".join(args[2:])
             if alias_plugin.add_alias(alias, command):
-                await self.bot.send_message(
-                    room_id, f"✅ Alias added: **{alias}** → `{command}`"
-                )
+                await self.bot.send_message(room_id, f"✅ Alias added: **{alias}** → `{command}`")
             else:
                 await self.bot.send_message(
                     room_id,

@@ -102,9 +102,7 @@ class BaseScreen(Screen):
         self.logger.debug(f"Going back from: {self.SCREEN_TITLE}")
         self.app.pop_screen()
 
-    async def show_notification(
-        self, message: str, severity: str = "information"
-    ):
+    async def show_notification(self, message: str, severity: str = "information"):
         """Show a notification to the user.
 
         Args:

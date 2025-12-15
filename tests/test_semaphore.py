@@ -13,9 +13,7 @@ class TestSemaphoreClient(unittest.TestCase):
         """Set up test fixtures."""
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
-        self.client = SemaphoreClient(
-            "https://semaphore.example.test", "test_token"
-        )
+        self.client = SemaphoreClient("https://semaphore.example.test", "test_token")
 
     def tearDown(self):
         """Clean up after tests."""
@@ -25,9 +23,7 @@ class TestSemaphoreClient(unittest.TestCase):
 
     def test_init(self):
         """Test client initialization."""
-        self.assertEqual(
-            self.client.base_url, "https://semaphore.example.test"
-        )
+        self.assertEqual(self.client.base_url, "https://semaphore.example.test")
         self.assertEqual(self.client.api_token, "test_token")
         self.assertTrue(self.client.ssl_verify)
         self.assertIsNone(self.client.ssl_ca_cert)
@@ -81,9 +77,7 @@ class TestSemaphoreClient(unittest.TestCase):
         mock_session = MagicMock()
         mock_session.closed = False
         mock_session.get = MagicMock(
-            return_value=AsyncMock(
-                __aenter__=AsyncMock(return_value=mock_response)
-            )
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
         mock_session.close = AsyncMock()
 
@@ -103,9 +97,7 @@ class TestSemaphoreClient(unittest.TestCase):
         mock_session = MagicMock()
         mock_session.closed = False
         mock_session.get = MagicMock(
-            return_value=AsyncMock(
-                __aenter__=AsyncMock(return_value=mock_response)
-            )
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
         mock_session.close = AsyncMock()
 
@@ -144,16 +136,12 @@ class TestSemaphoreClient(unittest.TestCase):
         mock_session = MagicMock()
         mock_session.closed = False
         mock_session.get = MagicMock(
-            return_value=AsyncMock(
-                __aenter__=AsyncMock(return_value=mock_response)
-            )
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
         mock_session.close = AsyncMock()
 
         self.client.session = mock_session
-        result = self.loop.run_until_complete(
-            self.client.get_project_templates(1)
-        )
+        result = self.loop.run_until_complete(self.client.get_project_templates(1))
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0]["name"], "Template 1")
@@ -167,16 +155,12 @@ class TestSemaphoreClient(unittest.TestCase):
         mock_session = MagicMock()
         mock_session.closed = False
         mock_session.get = MagicMock(
-            return_value=AsyncMock(
-                __aenter__=AsyncMock(return_value=mock_response)
-            )
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
         mock_session.close = AsyncMock()
 
         self.client.session = mock_session
-        result = self.loop.run_until_complete(
-            self.client.get_project_templates(999)
-        )
+        result = self.loop.run_until_complete(self.client.get_project_templates(999))
 
         self.assertEqual(result, [])
 
@@ -193,9 +177,7 @@ class TestSemaphoreClient(unittest.TestCase):
         mock_session = MagicMock()
         mock_session.closed = False
         mock_session.post = MagicMock(
-            return_value=AsyncMock(
-                __aenter__=AsyncMock(return_value=mock_response)
-            )
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
         mock_session.close = AsyncMock()
 
@@ -219,9 +201,7 @@ class TestSemaphoreClient(unittest.TestCase):
         mock_session = MagicMock()
         mock_session.closed = False
         mock_session.post = MagicMock(
-            return_value=AsyncMock(
-                __aenter__=AsyncMock(return_value=mock_response)
-            )
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
         mock_session.close = AsyncMock()
 
@@ -246,9 +226,7 @@ class TestSemaphoreClient(unittest.TestCase):
         mock_session = MagicMock()
         mock_session.closed = False
         mock_session.post = MagicMock(
-            return_value=AsyncMock(
-                __aenter__=AsyncMock(return_value=mock_response)
-            )
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
         mock_session.close = AsyncMock()
 
@@ -274,16 +252,12 @@ class TestSemaphoreClient(unittest.TestCase):
         mock_session = MagicMock()
         mock_session.closed = False
         mock_session.get = MagicMock(
-            return_value=AsyncMock(
-                __aenter__=AsyncMock(return_value=mock_response)
-            )
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
         mock_session.close = AsyncMock()
 
         self.client.session = mock_session
-        result = self.loop.run_until_complete(
-            self.client.get_task_status(1, 123)
-        )
+        result = self.loop.run_until_complete(self.client.get_task_status(1, 123))
 
         self.assertIsNotNone(result)
         self.assertEqual(result["status"], "running")
@@ -296,16 +270,12 @@ class TestSemaphoreClient(unittest.TestCase):
         mock_session = MagicMock()
         mock_session.closed = False
         mock_session.get = MagicMock(
-            return_value=AsyncMock(
-                __aenter__=AsyncMock(return_value=mock_response)
-            )
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
         mock_session.close = AsyncMock()
 
         self.client.session = mock_session
-        result = self.loop.run_until_complete(
-            self.client.get_task_status(1, 999)
-        )
+        result = self.loop.run_until_complete(self.client.get_task_status(1, 999))
 
         self.assertIsNone(result)
 
@@ -325,7 +295,10 @@ class TestSemaphoreClient(unittest.TestCase):
                     "id": 1,
                     "task_id": 123,
                     "time": "2025-11-06T17:35:21.360797727Z",
-                    "output": "PLAY [Set global variables] ****************************************************",
+                    "output": (
+                        "PLAY [Set global variables] "
+                        "****************************************************"
+                    ),
                 },
                 {
                     "id": 2,
@@ -337,7 +310,10 @@ class TestSemaphoreClient(unittest.TestCase):
                     "id": 3,
                     "task_id": 123,
                     "time": "2025-11-06T17:35:21.366763205Z",
-                    "output": "TASK [Add sync service host to inventory] **************************************",
+                    "output": (
+                        "TASK [Add sync service host to inventory] "
+                        "**************************************"
+                    ),
                 },
                 {
                     "id": 4,
@@ -354,16 +330,12 @@ class TestSemaphoreClient(unittest.TestCase):
         mock_session = MagicMock()
         mock_session.closed = False
         mock_session.get = MagicMock(
-            return_value=AsyncMock(
-                __aenter__=AsyncMock(return_value=mock_response)
-            )
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
         mock_session.close = AsyncMock()
 
         self.client.session = mock_session
-        result = self.loop.run_until_complete(
-            self.client.get_task_output(1, 123)
-        )
+        result = self.loop.run_until_complete(self.client.get_task_output(1, 123))
 
         # Verify the output field from each log entry is extracted and joined
         # Expected format: empty line, PLAY line, empty line, TASK line, colored changed line
@@ -384,16 +356,12 @@ class TestSemaphoreClient(unittest.TestCase):
         mock_session = MagicMock()
         mock_session.closed = False
         mock_session.get = MagicMock(
-            return_value=AsyncMock(
-                __aenter__=AsyncMock(return_value=mock_response)
-            )
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
         mock_session.close = AsyncMock()
 
         self.client.session = mock_session
-        result = self.loop.run_until_complete(
-            self.client.get_task_output(1, 999)
-        )
+        result = self.loop.run_until_complete(self.client.get_task_output(1, 999))
 
         self.assertIsNone(result)
 
@@ -411,16 +379,12 @@ class TestSemaphoreClient(unittest.TestCase):
         mock_session = MagicMock()
         mock_session.closed = False
         mock_session.get = MagicMock(
-            return_value=AsyncMock(
-                __aenter__=AsyncMock(return_value=mock_response)
-            )
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
         mock_session.close = AsyncMock()
 
         self.client.session = mock_session
-        result = self.loop.run_until_complete(
-            self.client.get_task_output(1, 123)
-        )
+        result = self.loop.run_until_complete(self.client.get_task_output(1, 123))
 
         self.assertEqual(result, "Plain text output")
 
@@ -432,9 +396,7 @@ class TestSemaphoreClient(unittest.TestCase):
         mock_session = MagicMock()
         mock_session.closed = False
         mock_session.post = MagicMock(
-            return_value=AsyncMock(
-                __aenter__=AsyncMock(return_value=mock_response)
-            )
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
         mock_session.close = AsyncMock()
 
@@ -451,9 +413,7 @@ class TestSemaphoreClient(unittest.TestCase):
         mock_session = MagicMock()
         mock_session.closed = False
         mock_session.post = MagicMock(
-            return_value=AsyncMock(
-                __aenter__=AsyncMock(return_value=mock_response)
-            )
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
         mock_session.close = AsyncMock()
 
@@ -474,9 +434,7 @@ class TestSemaphoreClient(unittest.TestCase):
 
     def test_ssl_verify_disabled(self):
         """Test client initialization with SSL verification disabled."""
-        client = SemaphoreClient(
-            "https://semaphore.example.test", "token", ssl_verify=False
-        )
+        client = SemaphoreClient("https://semaphore.example.test", "token", ssl_verify=False)
         self.assertFalse(client.ssl_verify)
         ssl_context = client._create_ssl_context()
         self.assertFalse(ssl_context)
@@ -509,14 +467,13 @@ class TestSemaphoreClient(unittest.TestCase):
 
     def test_create_ssl_context_no_verify(self):
         """Test SSL context creation with verification disabled."""
-        client = SemaphoreClient(
-            "https://semaphore.example.test", "token", ssl_verify=False
-        )
+        client = SemaphoreClient("https://semaphore.example.test", "token", ssl_verify=False)
         ssl_context = client._create_ssl_context()
         self.assertFalse(ssl_context)
 
     def test_start_task_with_tags_and_arguments_payload(self):
         """Ensure tags/arguments are forwarded in the POST payload when provided."""
+
         async def mock_json():
             return {"id": 125}
 

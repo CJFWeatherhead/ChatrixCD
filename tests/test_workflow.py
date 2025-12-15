@@ -11,9 +11,7 @@ class TestWorkflowConfiguration(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Load workflow files for testing."""
-        cls.workflow_dir = (
-            Path(__file__).parent.parent / ".github" / "workflows"
-        )
+        cls.workflow_dir = Path(__file__).parent.parent / ".github" / "workflows"
         cls.build_workflow_path = cls.workflow_dir / "build.yml"
 
         # Load build workflow
@@ -30,9 +28,7 @@ class TestWorkflowConfiguration(unittest.TestCase):
     @classmethod
     def has_dockerfile_build(cls):
         """Check if Dockerfile.build exists and has content."""
-        return cls.dockerfile_path.exists() and bool(
-            cls.dockerfile_content.strip()
-        )
+        return cls.dockerfile_path.exists() and bool(cls.dockerfile_content.strip())
 
     def test_build_workflow_exists(self):
         """Test that build.yml workflow exists."""
@@ -43,9 +39,7 @@ class TestWorkflowConfiguration(unittest.TestCase):
 
     def test_build_workflow_valid_yaml(self):
         """Test that build.yml is valid YAML."""
-        self.assertIsNotNone(
-            self.build_workflow, "build.yml should be valid YAML"
-        )
+        self.assertIsNotNone(self.build_workflow, "build.yml should be valid YAML")
 
     def test_build_workflow_has_required_triggers(self):
         """Test that build workflow has correct triggers."""
@@ -110,11 +104,7 @@ class TestWorkflowConfiguration(unittest.TestCase):
             steps = job["steps"]
 
             # Find Nuitka build steps (now run via Docker buildx or docker run)
-            nuitka_steps = [
-                step
-                for step in steps
-                if "Build with Nuitka" in step.get("name", "")
-            ]
+            nuitka_steps = [step for step in steps if "Build with Nuitka" in step.get("name", "")]
 
             # Should have build steps for all architectures
             self.assertGreater(
@@ -131,10 +121,7 @@ class TestWorkflowConfiguration(unittest.TestCase):
                 with_params = nuitka_step.get("with", {})
 
                 # If using docker buildx action, check Dockerfile.build
-                if (
-                    "docker/build-push-action" in uses_action
-                    and self.has_dockerfile_build()
-                ):
+                if "docker/build-push-action" in uses_action and self.has_dockerfile_build():
                     # Verify the step references Dockerfile.build
                     dockerfile_file = with_params.get("file", "")
                     self.assertIn(
@@ -267,15 +254,9 @@ class TestWorkflowConfiguration(unittest.TestCase):
             job = jobs[job_name]
             steps = job["steps"]
 
-            version_steps = [
-                step
-                for step in steps
-                if "Calculate version" in step.get("name", "")
-            ]
+            version_steps = [step for step in steps if "Calculate version" in step.get("name", "")]
 
-            self.assertGreater(
-                len(version_steps), 0, f"{job_name} should calculate version"
-            )
+            self.assertGreater(len(version_steps), 0, f"{job_name} should calculate version")
 
     def test_build_workflow_has_release_job(self):
         """Test that build workflow has a release job."""
@@ -294,20 +275,12 @@ class TestWorkflowConfiguration(unittest.TestCase):
 
         # Should download artifacts
         steps = release_job["steps"]
-        download_steps = [
-            step
-            for step in steps
-            if "download" in step.get("name", "").lower()
-        ]
-        self.assertGreater(
-            len(download_steps), 0, "Release job should download artifacts"
-        )
+        download_steps = [step for step in steps if "download" in step.get("name", "").lower()]
+        self.assertGreater(len(download_steps), 0, "Release job should download artifacts")
 
         # Should create GitHub release
         gh_release_steps = [
-            step
-            for step in steps
-            if "uses" in step and "action-gh-release" in step["uses"]
+            step for step in steps if "uses" in step and "action-gh-release" in step["uses"]
         ]
         self.assertGreater(
             len(gh_release_steps),
@@ -319,9 +292,7 @@ class TestWorkflowConfiguration(unittest.TestCase):
         """Test that build workflow includes appropriate metadata (Windows build removed)."""
         # Windows and macOS builds removed due to python-olm build issues
         # This test is kept for potential future re-enablement but currently skipped
-        self.skipTest(
-            "Windows and macOS builds removed - test no longer applicable"
-        )
+        self.skipTest("Windows and macOS builds removed - test no longer applicable")
 
     def test_build_workflow_includes_assets(self):
         """Test that build workflow includes assets directory (Docker-based builds)."""
@@ -333,11 +304,7 @@ class TestWorkflowConfiguration(unittest.TestCase):
             steps = job["steps"]
 
             # Find build steps (now Docker-based with buildx or run commands)
-            nuitka_steps = [
-                step
-                for step in steps
-                if "Build with Nuitka" in step.get("name", "")
-            ]
+            nuitka_steps = [step for step in steps if "Build with Nuitka" in step.get("name", "")]
 
             self.assertGreater(
                 len(nuitka_steps),
@@ -352,10 +319,7 @@ class TestWorkflowConfiguration(unittest.TestCase):
                 step_name = nuitka_step.get("name", "")
 
                 # If using docker buildx action, check Dockerfile.build
-                if (
-                    "docker/build-push-action" in uses_action
-                    and self.has_dockerfile_build()
-                ):
+                if "docker/build-push-action" in uses_action and self.has_dockerfile_build():
                     # Verify that assets are included in Dockerfile.build
                     self.assertIn(
                         "--include-data-dir=assets=assets",
@@ -372,7 +336,10 @@ class TestWorkflowConfiguration(unittest.TestCase):
                     )
 
     def test_build_workflow_moves_x86_64_artifact(self):
-        """Test that build workflow creates artifacts correctly (Docker builds directly in source)."""
+        """
+        Test that build workflow creates artifacts correctly
+        (Docker builds directly in source).
+        """
         jobs = self.build_workflow["jobs"]
         linux_job = jobs["build-linux"]
         steps = linux_job["steps"]
@@ -381,15 +348,9 @@ class TestWorkflowConfiguration(unittest.TestCase):
         # Standalone mode creates a directory, not a single file
 
         # Find build steps
-        build_steps = [
-            step
-            for step in steps
-            if "Build with Nuitka" in step.get("name", "")
-        ]
+        build_steps = [step for step in steps if "Build with Nuitka" in step.get("name", "")]
 
-        self.assertGreater(
-            len(build_steps), 0, "Linux build should have Nuitka build steps"
-        )
+        self.assertGreater(len(build_steps), 0, "Linux build should have Nuitka build steps")
 
         # Verify that build steps use standalone mode
         for build_step in build_steps:
@@ -398,10 +359,7 @@ class TestWorkflowConfiguration(unittest.TestCase):
             step_name = build_step.get("name", "")
 
             # If using docker buildx action, check Dockerfile.build
-            if (
-                "docker/build-push-action" in uses_action
-                and self.has_dockerfile_build()
-            ):
+            if "docker/build-push-action" in uses_action and self.has_dockerfile_build():
                 # Check that standalone mode creates directories
                 self.assertIn(
                     "--output-dir=",
@@ -418,8 +376,7 @@ class TestWorkflowConfiguration(unittest.TestCase):
             elif run_command:
                 # Check that output is specified in Nuitka command
                 self.assertTrue(
-                    "--output-filename=" in run_command
-                    or "--output-dir=" in run_command,
+                    "--output-filename=" in run_command or "--output-dir=" in run_command,
                     f"{step_name} should specify output",
                 )
                 self.assertIn(
@@ -461,12 +418,8 @@ class TestIconFiles(unittest.TestCase):
         with open(self.icon_ico_path, "rb") as f:
             # ICO files start with 0x00 0x00 0x01 0x00
             header = f.read(4)
-            self.assertEqual(
-                header[:2], b"\x00\x00", "ICO file should start with 0x00 0x00"
-            )
-            self.assertEqual(
-                header[2:4], b"\x01\x00", "ICO file should have type 0x01 0x00"
-            )
+            self.assertEqual(header[:2], b"\x00\x00", "ICO file should start with 0x00 0x00")
+            self.assertEqual(header[2:4], b"\x01\x00", "ICO file should have type 0x01 0x00")
 
     def test_icon_png_is_valid(self):
         """Test that icon.png is a valid PNG file."""

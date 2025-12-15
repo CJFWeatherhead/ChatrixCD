@@ -588,8 +588,7 @@ class ChatrixTUI(App):
             iterable = loaded_plugins.items()
         else:
             logger.debug(
-                "plugin_manager.loaded_plugins is not a mapping; "
-                "skipping plugin screen loading"
+                "plugin_manager.loaded_plugins is not a mapping; " "skipping plugin screen loading"
             )
             return
 
@@ -600,9 +599,7 @@ class ChatrixTUI(App):
                     await plugin.register_tui_screens(self.screen_registry, self)
                     logger.info(f"Loaded TUI extension from plugin: {plugin_name}")
                 except Exception as e:
-                    logger.error(
-                        f"Failed to load TUI extension from {plugin_name}: {e}"
-                    )
+                    logger.error(f"Failed to load TUI extension from {plugin_name}: {e}")
 
     async def on_plugin_loaded_event(self, event: PluginLoadedEvent):
         """Handle plugin loaded event.
@@ -657,9 +654,7 @@ class ChatrixTUI(App):
                     # when the underlying framework also triggers actions).
                     try:
                         current = getattr(self, "screen", None)
-                        if current is not None and isinstance(
-                            current, registration.screen_class
-                        ):
+                        if current is not None and isinstance(current, registration.screen_class):
                             return
                     except Exception:
                         pass
@@ -696,11 +691,7 @@ class ChatrixTUI(App):
         # If no matches at app-level, try the active screen's DOM.
         try:
             # Convert to list to check emptiness safely
-            if (
-                len(list(result)) == 0
-                and hasattr(self, "screen")
-                and self.screen is not None
-            ):
+            if len(list(result)) == 0 and hasattr(self, "screen") and self.screen is not None:
                 return self.screen.query(selector, *args, **kwargs)
         except Exception:
             # If introspecting result fails, fall back to returning it.

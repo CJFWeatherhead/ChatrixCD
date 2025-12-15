@@ -17,9 +17,7 @@ class TestVersionDetection(unittest.TestCase):
 
         self.assertIsInstance(__version__, str)
         parts = __version__.split(".")
-        self.assertGreaterEqual(
-            len(parts), 5, "Version should have at least 5 parts"
-        )
+        self.assertGreaterEqual(len(parts), 5, "Version should have at least 5 parts")
 
     def test_full_version_with_commit(self):
         """Test that full version includes git commit when in git repo."""
@@ -28,15 +26,12 @@ class TestVersionDetection(unittest.TestCase):
         self.assertIsInstance(__version_full__, str)
         # Should either be same as version or have -c prefix
         self.assertTrue(
-            __version_full__ == __version__
-            or __version_full__.startswith(__version__ + "-c"),
+            __version_full__ == __version__ or __version_full__.startswith(__version__ + "-c"),
             "Full version should be base version or base version with commit",
         )
 
         # If we're in a git repo, should have commit
-        git_dir = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), ".git"
-        )
+        git_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".git")
         if os.path.exists(git_dir):
             self.assertIn(
                 "-c",
@@ -135,9 +130,7 @@ class TestEmojiCounting(unittest.TestCase):
         if matches:
             # Each match is a string of consecutive emojis
             total_emojis = sum(len(match) for match in matches)
-            self.assertEqual(
-                total_emojis, 3, "Should count 3 individual emojis"
-            )
+            self.assertEqual(total_emojis, 3, "Should count 3 individual emojis")
 
 
 if __name__ == "__main__":

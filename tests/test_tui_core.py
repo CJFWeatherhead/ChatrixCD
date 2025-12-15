@@ -244,9 +244,7 @@ class TestEvents(unittest.TestCase):
 
     def test_screen_change_event(self):
         """Test screen change event."""
-        event = ScreenChangeEvent(
-            screen_name="new_screen", previous_screen="old_screen"
-        )
+        event = ScreenChangeEvent(screen_name="new_screen", previous_screen="old_screen")
         self.assertEqual(event.screen_name, "new_screen")
         self.assertEqual(event.previous_screen, "old_screen")
 
@@ -259,17 +257,13 @@ class TestEvents(unittest.TestCase):
 
     def test_plugin_loaded_event(self):
         """Test plugin loaded event."""
-        event = PluginLoadedEvent(
-            plugin_name="test_plugin", plugin_type="generic"
-        )
+        event = PluginLoadedEvent(plugin_name="test_plugin", plugin_type="generic")
         self.assertEqual(event.plugin_name, "test_plugin")
         self.assertEqual(event.plugin_type, "generic")
 
     def test_notification_event(self):
         """Test notification event."""
-        event = NotificationEvent(
-            message="Test notification", severity="warning"
-        )
+        event = NotificationEvent(message="Test notification", severity="warning")
         self.assertEqual(event.message, "Test notification")
         self.assertEqual(event.severity, "warning")
 

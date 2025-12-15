@@ -32,9 +32,7 @@ class TestVerificationCancellation(unittest.TestCase):
         )
 
         # Verify it's tracked
-        self.assertTrue(
-            self.manager.should_show_manual_verification_message("test_tx_id")
-        )
+        self.assertTrue(self.manager.should_show_manual_verification_message("test_tx_id"))
 
         # Verify we can get the info
         info = self.manager.get_cancellation_info("test_tx_id")
@@ -48,26 +46,20 @@ class TestVerificationCancellation(unittest.TestCase):
         """Test that cancelled verifications can be cleared."""
         # Track a cancellation
         asyncio.run(
-            self.manager.handle_verification_cancellation(
-                "test_tx_id", "@user:example.com"
-            )
+            self.manager.handle_verification_cancellation("test_tx_id", "@user:example.com")
         )
 
         # Clear it
         self.manager.clear_cancelled_verification("test_tx_id")
 
         # Verify it's cleared
-        self.assertFalse(
-            self.manager.should_show_manual_verification_message("test_tx_id")
-        )
+        self.assertFalse(self.manager.should_show_manual_verification_message("test_tx_id"))
 
     def test_cancelled_verification_not_found(self):
         """Test checking for non-existent cancelled verification."""
         # Should return False for unknown transaction
-        self.assertFalse(
-            self.manager.should_show_manual_verification_message("unknown_tx")
-        )
-        
+        self.assertFalse(self.manager.should_show_manual_verification_message("unknown_tx"))
+
         # Should return None for unknown transaction info
         self.assertIsNone(self.manager.get_cancellation_info("unknown_tx"))
 

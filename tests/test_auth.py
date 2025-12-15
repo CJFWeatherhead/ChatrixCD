@@ -57,9 +57,7 @@ class TestMatrixAuth(unittest.TestCase):
         }
         auth = MatrixAuth(config)
 
-        self.assertEqual(
-            auth.get_oidc_redirect_url(), "http://localhost:8080/callback"
-        )
+        self.assertEqual(auth.get_oidc_redirect_url(), "http://localhost:8080/callback")
 
     def test_get_oidc_redirect_url_default(self):
         """Test getting OIDC redirect URL with default value when not configured."""
@@ -67,9 +65,7 @@ class TestMatrixAuth(unittest.TestCase):
         auth = MatrixAuth(config)
 
         # Should return default value, not None
-        self.assertEqual(
-            auth.get_oidc_redirect_url(), "http://localhost:8080/callback"
-        )
+        self.assertEqual(auth.get_oidc_redirect_url(), "http://localhost:8080/callback")
 
     def test_validate_config_password_valid(self):
         """Test validation of valid password configuration."""

@@ -52,26 +52,18 @@ class DeviceVerificationManager:
             device_name, trust_state, and device object
         """
         if not self.client.olm:
-            logger.warning(
-                "Encryption not enabled, cannot get verified devices"
-            )
+            logger.warning("Encryption not enabled, cannot get verified devices")
             return []
 
         verified_devices = []
 
         try:
-            if (
-                hasattr(self.client, "device_store")
-                and self.client.device_store
-            ):
+            if hasattr(self.client, "device_store") and self.client.device_store:
                 for user_id in self.client.device_store.users:
                     user_devices = self.client.device_store[user_id]
                     for device_id, device in user_devices.items():
                         # Skip our own device
-                        if (
-                            user_id == self.client.user_id
-                            and device_id == self.client.device_id
-                        ):
+                        if user_id == self.client.user_id and device_id == self.client.device_id:
                             continue
                         # Only include verified devices
                         if getattr(device, "verified", False):
@@ -79,12 +71,8 @@ class DeviceVerificationManager:
                                 {
                                     "user_id": user_id,
                                     "device_id": device_id,
-                                    "device_name": getattr(
-                                        device, "display_name", "Unknown"
-                                    ),
-                                    "trust_state": getattr(
-                                        device, "trust_state", None
-                                    ),
+                                    "device_name": getattr(device, "display_name", "Unknown"),
+                                    "trust_state": getattr(device, "trust_state", None),
                                     "device": device,
                                 }
                             )
@@ -122,9 +110,7 @@ class DeviceVerificationManager:
             f"(code: {code}, reason: {reason})"
         )
 
-    def should_show_manual_verification_message(
-        self, transaction_id: str
-    ) -> bool:
+    def should_show_manual_verification_message(self, transaction_id: str) -> bool:
         """Check if manual verification message should be shown.
 
         Args:
@@ -168,10 +154,7 @@ class DeviceVerificationManager:
             return False
 
         try:
-            if (
-                hasattr(self.client, "device_store")
-                and self.client.device_store
-            ):
+            if hasattr(self.client, "device_store") and self.client.device_store:
                 if user_id in self.client.device_store.users:
                     user_devices = self.client.device_store[user_id]
                     if device_id in user_devices:
@@ -190,26 +173,18 @@ class DeviceVerificationManager:
             device_name, and device object
         """
         if not self.client.olm:
-            logger.warning(
-                "Encryption not enabled, cannot get unverified devices"
-            )
+            logger.warning("Encryption not enabled, cannot get unverified devices")
             return []
 
         unverified_devices = []
 
         try:
-            if (
-                hasattr(self.client, "device_store")
-                and self.client.device_store
-            ):
+            if hasattr(self.client, "device_store") and self.client.device_store:
                 for user_id in self.client.device_store.users:
                     user_devices = self.client.device_store[user_id]
                     for device_id, device in user_devices.items():
                         # Skip our own device
-                        if (
-                            user_id == self.client.user_id
-                            and device_id == self.client.device_id
-                        ):
+                        if user_id == self.client.user_id and device_id == self.client.device_id:
                             continue
                         # Only include unverified devices
                         if not getattr(device, "verified", False):
@@ -217,9 +192,7 @@ class DeviceVerificationManager:
                                 {
                                     "user_id": user_id,
                                     "device_id": device_id,
-                                    "device_name": getattr(
-                                        device, "display_name", "Unknown"
-                                    ),
+                                    "device_name": getattr(device, "display_name", "Unknown"),
                                     "device": device,
                                 }
                             )
@@ -237,19 +210,14 @@ class DeviceVerificationManager:
         """
         pending = []
 
-        if (
-            hasattr(self.client, "key_verifications")
-            and self.client.key_verifications
-        ):
+        if hasattr(self.client, "key_verifications") and self.client.key_verifications:
             for (
                 transaction_id,
                 verification,
             ) in self.client.key_verifications.items():
                 # For Sas verifications, user_id and device_id are in other_olm_device
                 if Sas and isinstance(verification, Sas):
-                    other_device = getattr(
-                        verification, "other_olm_device", None
-                    )
+                    other_device = getattr(verification, "other_olm_device", None)
                     if other_device:
                         user_id = getattr(other_device, "user_id", "Unknown")
                         device_id = getattr(other_device, "id", "Unknown")
@@ -282,9 +250,7 @@ class DeviceVerificationManager:
             SAS verification object if successful, None otherwise
         """
         if not SAS_AVAILABLE:
-            logger.warning(
-                "SAS verification not available in this version of matrix-nio"
-            )
+            logger.warning("SAS verification not available in this version of matrix-nio")
             return None
 
         try:
@@ -311,9 +277,7 @@ class DeviceVerificationManager:
                         if verification.other_olm_device == device:
                             return verification
 
-            logger.warning(
-                "Verification started, but could not retrieve SAS object"
-            )
+            logger.warning("Verification started, but could not retrieve SAS object")
             return None
 
         except Exception as e:
@@ -330,17 +294,11 @@ class DeviceVerificationManager:
             True if accepted successfully, False otherwise
         """
         if not SAS_AVAILABLE:
-            logger.warning(
-                "SAS verification not available in this version of matrix-nio"
-            )
+            logger.warning("SAS verification not available in this version of matrix-nio")
             return False
 
         try:
-            if (
-                not sas.we_started_it
-                and SasState
-                and sas.state == SasState.created
-            ):
+            if not sas.we_started_it and SasState and sas.state == SasState.created:
                 await self.client.accept_key_verification(sas.transaction_id)
                 # Send the accept message to the other device
                 await self.client.send_to_device_messages()
@@ -351,9 +309,7 @@ class DeviceVerificationManager:
             logger.error(f"Error accepting verification: {e}")
             return False
 
-    async def wait_for_key_exchange(
-        self, sas: Any, max_wait: int = 10
-    ) -> bool:
+    async def wait_for_key_exchange(self, sas: Any, max_wait: int = 10) -> bool:
         """Wait for key exchange to complete.
 
         Args:
@@ -370,9 +326,7 @@ class DeviceVerificationManager:
 
         return sas.other_key_set
 
-    async def get_emoji_list(
-        self, sas: Any
-    ) -> Optional[List[Tuple[str, str]]]:
+    async def get_emoji_list(self, sas: Any) -> Optional[List[Tuple[str, str]]]:
         """Get emoji list from SAS verification.
 
         Args:
@@ -402,9 +356,7 @@ class DeviceVerificationManager:
         """
         try:
             if not sas.other_key_set:
-                logger.error(
-                    "Cannot confirm verification: Key exchange not complete"
-                )
+                logger.error("Cannot confirm verification: Key exchange not complete")
                 return False
 
             sas.accept_sas()
@@ -449,8 +401,7 @@ class DeviceVerificationManager:
 
             if not shared_rooms:
                 logger.debug(
-                    f"No encrypted rooms shared with {device.user_id}, "
-                    "skipping room key sharing"
+                    f"No encrypted rooms shared with {device.user_id}, " "skipping room key sharing"
                 )
                 return
 
@@ -468,20 +419,14 @@ class DeviceVerificationManager:
                         users=[device.user_id],
                         ignore_unverified_devices=False,
                     )
-                    logger.debug(
-                        f"Shared room key for room {room_id} with {device.user_id}"
-                    )
+                    logger.debug(f"Shared room key for room {room_id} with {device.user_id}")
                 except Exception as e:
-                    logger.warning(
-                        f"Failed to share room key for room {room_id}: {e}"
-                    )
+                    logger.warning(f"Failed to share room key for room {room_id}: {e}")
 
             # Send the to-device messages to actually deliver the keys
             await self.client.send_to_device_messages()
 
-            logger.info(
-                f"Successfully shared room keys with {device.user_id}'s device {device.id}"
-            )
+            logger.info(f"Successfully shared room keys with {device.user_id}'s device {device.id}")
 
         except Exception as e:
             logger.error(f"Error sharing room keys with device: {e}")
@@ -497,9 +442,7 @@ class DeviceVerificationManager:
         """
         try:
             if not sas.other_key_set:
-                logger.error(
-                    "Cannot reject verification: Key exchange not complete"
-                )
+                logger.error("Cannot reject verification: Key exchange not complete")
                 return False
 
             sas.reject_sas()
@@ -530,7 +473,7 @@ class DeviceVerificationManager:
             sas = None
             waited = 0.0
             retry_interval = 0.5
-            
+
             while waited < max_wait:
                 # Check if verification was cancelled while we were waiting
                 if transaction_id in self.cancelled_verifications:
@@ -538,7 +481,7 @@ class DeviceVerificationManager:
                         f"Verification {transaction_id} was cancelled before we could accept it"
                     )
                     return False
-                
+
                 if (
                     hasattr(self.client, "key_verifications")
                     and transaction_id in self.client.key_verifications
@@ -550,10 +493,10 @@ class DeviceVerificationManager:
                             f"after {waited:.1f}s"
                         )
                         break
-                
+
                 await asyncio.sleep(retry_interval)
                 waited += retry_interval
-            
+
             if not sas:
                 # Check if it was cancelled during our wait
                 if transaction_id in self.cancelled_verifications:
@@ -608,14 +551,10 @@ class DeviceVerificationManager:
                     )
 
                     # Share room keys with the newly verified device
-                    await self._share_room_keys_with_device(
-                        sas.other_olm_device
-                    )
+                    await self._share_room_keys_with_device(sas.other_olm_device)
                 else:
-                    logger.info(
-                        f"Auto-verified device in transaction {transaction_id}"
-                    )
-                
+                    logger.info(f"Auto-verified device in transaction {transaction_id}")
+
                 # Clear from cancelled tracking if it was there
                 self.clear_cancelled_verification(transaction_id)
                 return True
@@ -665,9 +604,7 @@ class DeviceVerificationManager:
 
         # Wait for key exchange
         if not await self.wait_for_key_exchange(sas):
-            logger.error(
-                "Verification timeout: Did not receive other device's key"
-            )
+            logger.error("Verification timeout: Did not receive other device's key")
             return False
 
         # Get emoji list
@@ -720,9 +657,7 @@ class DeviceVerificationManager:
 
         # Wait for key exchange
         if not await self.wait_for_key_exchange(sas):
-            logger.error(
-                "Verification timeout: Did not receive other device's key"
-            )
+            logger.error("Verification timeout: Did not receive other device's key")
             return False
 
         # Get emoji list
@@ -757,9 +692,7 @@ class DeviceVerificationManager:
             Number of verification requests started
         """
         if not SAS_AVAILABLE:
-            logger.warning(
-                "SAS verification not available, cannot cross-verify"
-            )
+            logger.warning("SAS verification not available, cannot cross-verify")
             return 0
 
         # Find potential bot users
@@ -774,20 +707,14 @@ class DeviceVerificationManager:
                 potential_bots.append(user_id)
 
         if len(potential_bots) <= 1:
-            logger.debug(
-                "No other potential bots found for cross-verification"
-            )
+            logger.debug("No other potential bots found for cross-verification")
             return 0
 
-        logger.info(
-            f"Found {len(potential_bots)} potential bots for cross-verification"
-        )
+        logger.info(f"Found {len(potential_bots)} potential bots for cross-verification")
 
         # Get unverified devices for these users
         unverified_devices = await self.get_unverified_devices()
-        bot_devices = [
-            d for d in unverified_devices if d["user_id"] in potential_bots
-        ]
+        bot_devices = [d for d in unverified_devices if d["user_id"] in potential_bots]
 
         if not bot_devices:
             logger.debug("All potential bot devices are already verified")
@@ -824,9 +751,7 @@ class DeviceVerificationManager:
         """
         try:
             if not self.client.olm:
-                logger.warning(
-                    "Encryption not enabled, cannot save session state"
-                )
+                logger.warning("Encryption not enabled, cannot save session state")
                 return False
 
             session_data = {
@@ -837,10 +762,7 @@ class DeviceVerificationManager:
             }
 
             # Save device keys
-            if (
-                hasattr(self.client, "device_store")
-                and self.client.device_store
-            ):
+            if hasattr(self.client, "device_store") and self.client.device_store:
                 for user_id in self.client.device_store.users:
                     user_devices = self.client.device_store[user_id]
                     session_data["device_keys"][user_id] = {}
@@ -849,30 +771,23 @@ class DeviceVerificationManager:
                             "ed25519": getattr(device, "ed25519", None),
                             "curve25519": getattr(device, "curve25519", None),
                             "verified": getattr(device, "verified", False),
-                            "display_name": getattr(
-                                device, "display_name", None
-                            ),
+                            "display_name": getattr(device, "display_name", None),
                         }
 
             # Save encryption sessions
             if hasattr(self.client.olm, "session_store"):
                 # This is a simplified representation - actual Olm sessions are complex
-                session_data["olm_sessions"] = (
-                    "Olm sessions stored in client store"
-                )
+                session_data["olm_sessions"] = "Olm sessions stored in client store"
 
             # Save verified devices list
             verified_devices = await self.get_verified_devices()
             session_data["verified_devices"] = [
-                {"user_id": d["user_id"], "device_id": d["device_id"]}
-                for d in verified_devices
+                {"user_id": d["user_id"], "device_id": d["device_id"]} for d in verified_devices
             ]
 
             # Save room sessions (room keys)
             if hasattr(self.client, "store") and self.client.store:
-                session_data["megolm_sessions"] = (
-                    "Megolm sessions stored in client store"
-                )
+                session_data["megolm_sessions"] = "Megolm sessions stored in client store"
 
             import json
 
@@ -921,9 +836,7 @@ class DeviceVerificationManager:
                             device = user_devices[device_id]
                             # Mark as verified
                             self.client.verify_device(device)
-                            logger.info(
-                                f"Restored verification for {user_id} device {device_id}"
-                            )
+                            logger.info(f"Restored verification for {user_id} device {device_id}")
 
             logger.info(f"Session state loaded from {filepath}")
             return True

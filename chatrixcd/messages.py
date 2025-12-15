@@ -110,9 +110,7 @@ DEFAULT_MESSAGES = {
 class MessageManager:
     """Manages bot response messages with support for customization and hot-reloading."""
 
-    def __init__(
-        self, messages_file: str = "messages.json", auto_reload: bool = False
-    ):
+    def __init__(self, messages_file: str = "messages.json", auto_reload: bool = False):
         """Initialize the message manager.
 
         Args:
@@ -139,9 +137,7 @@ class MessageManager:
             True if messages were loaded from file, False if using defaults
         """
         if not os.path.exists(self.messages_file):
-            logger.info(
-                f"Messages file '{self.messages_file}' not found, using default messages"
-            )
+            logger.info(f"Messages file '{self.messages_file}' not found, using default messages")
             self.messages = DEFAULT_MESSAGES.copy()
             return False
 

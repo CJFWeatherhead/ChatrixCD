@@ -35,9 +35,7 @@ class TestChatrixBot(unittest.TestCase):
 
         # Add get method to config for plugin manager
         self.config.get = MagicMock(
-            side_effect=lambda key, default=None: {"bot.load_plugins": False}.get(
-                key, default
-            )
+            side_effect=lambda key, default=None: {"bot.load_plugins": False}.get(key, default)
         )
 
         self.config.get_matrix_config.return_value = {
@@ -114,9 +112,7 @@ class TestChatrixBot(unittest.TestCase):
         has_megolm_callback = any(cb.filter == MegolmEvent for cb in callbacks)
 
         self.assertTrue(has_message_callback, "RoomMessageText callback not registered")
-        self.assertTrue(
-            has_invite_callback, "InviteMemberEvent callback not registered"
-        )
+        self.assertTrue(has_invite_callback, "InviteMemberEvent callback not registered")
         self.assertTrue(has_megolm_callback, "MegolmEvent callback not registered")
 
     def test_decryption_failure_callback(self):
@@ -222,9 +218,7 @@ class TestChatrixBot(unittest.TestCase):
         event = MagicMock(spec=RoomMessageText)
         event.sender = "@other:example.com"  # Different user
         event.body = "!cd help"
-        event.server_timestamp = (
-            bot.start_time - 10000
-        )  # Message sent before bot started
+        event.server_timestamp = bot.start_time - 10000  # Message sent before bot started
 
         # Call the callback
         self.loop.run_until_complete(bot.message_callback(room, event))
@@ -244,9 +238,7 @@ class TestChatrixBot(unittest.TestCase):
         event = MagicMock(spec=RoomMessageText)
         event.sender = "@other:example.com"  # Different user
         event.body = "!cd help"
-        event.server_timestamp = (
-            bot.start_time
-        )  # Message sent exactly at bot start time
+        event.server_timestamp = bot.start_time  # Message sent exactly at bot start time
 
         # Call the callback
         self.loop.run_until_complete(bot.message_callback(room, event))
@@ -279,9 +271,7 @@ class TestChatrixBot(unittest.TestCase):
 
         # Verify validation passes
         is_valid, error_msg = bot.auth.validate_config()
-        self.assertTrue(
-            is_valid, "OIDC validation should pass with default redirect URL"
-        )
+        self.assertTrue(is_valid, "OIDC validation should pass with default redirect URL")
         self.assertIsNone(error_msg)
 
     def test_login_fails_with_empty_user_id(self):
@@ -530,9 +520,7 @@ class TestChatrixBot(unittest.TestCase):
         bot = ChatrixBot(self.config)
         bot.client.room_send = AsyncMock()
 
-        self.loop.run_until_complete(
-            bot.send_message("!test:example.com", "Hello world")
-        )
+        self.loop.run_until_complete(bot.send_message("!test:example.com", "Hello world"))
 
         # Verify message was sent
         bot.client.room_send.assert_called_once()
@@ -566,9 +554,7 @@ class TestChatrixBot(unittest.TestCase):
         bot = ChatrixBot(self.config)
         bot.client.room_send = AsyncMock()
 
-        self.loop.run_until_complete(
-            bot.send_message("!test:example.com", "Hello world")
-        )
+        self.loop.run_until_complete(bot.send_message("!test:example.com", "Hello world"))
 
         # Verify that ignore_unverified_devices is set to True
         bot.client.room_send.assert_called_once()
@@ -598,12 +584,8 @@ class TestChatrixBot(unittest.TestCase):
         # Mock encryption support
         bot.client.olm = MagicMock()
         # Use PropertyMock for read-only properties
-        type(bot.client).should_upload_keys = unittest.mock.PropertyMock(
-            return_value=True
-        )
-        type(bot.client).should_query_keys = unittest.mock.PropertyMock(
-            return_value=False
-        )
+        type(bot.client).should_upload_keys = unittest.mock.PropertyMock(return_value=True)
+        type(bot.client).should_query_keys = unittest.mock.PropertyMock(return_value=False)
         bot.client.keys_upload = AsyncMock()
 
         # Setup encryption
@@ -620,12 +602,8 @@ class TestChatrixBot(unittest.TestCase):
         # Mock encryption support
         bot.client.olm = MagicMock()
         # Use PropertyMock for read-only properties
-        type(bot.client).should_upload_keys = unittest.mock.PropertyMock(
-            return_value=False
-        )
-        type(bot.client).should_query_keys = unittest.mock.PropertyMock(
-            return_value=True
-        )
+        type(bot.client).should_upload_keys = unittest.mock.PropertyMock(return_value=False)
+        type(bot.client).should_query_keys = unittest.mock.PropertyMock(return_value=True)
         bot.client.keys_query = AsyncMock()
 
         # Setup encryption
@@ -883,12 +861,8 @@ class TestChatrixBot(unittest.TestCase):
         # Mock encryption support
         bot.client.olm = MagicMock()
         # Use PropertyMock for read-only properties
-        type(bot.client).should_upload_keys = unittest.mock.PropertyMock(
-            return_value=True
-        )
-        type(bot.client).should_query_keys = unittest.mock.PropertyMock(
-            return_value=False
-        )
+        type(bot.client).should_upload_keys = unittest.mock.PropertyMock(return_value=True)
+        type(bot.client).should_query_keys = unittest.mock.PropertyMock(return_value=False)
         bot.client.keys_upload = AsyncMock()
 
         # Create mock sync response
@@ -914,12 +888,8 @@ class TestChatrixBot(unittest.TestCase):
         # Mock encryption support
         bot.client.olm = MagicMock()
         # Use PropertyMock for read-only properties
-        type(bot.client).should_upload_keys = unittest.mock.PropertyMock(
-            return_value=False
-        )
-        type(bot.client).should_query_keys = unittest.mock.PropertyMock(
-            return_value=True
-        )
+        type(bot.client).should_upload_keys = unittest.mock.PropertyMock(return_value=False)
+        type(bot.client).should_query_keys = unittest.mock.PropertyMock(return_value=True)
         bot.client.keys_query = AsyncMock()
 
         # Create mock sync response
@@ -967,9 +937,7 @@ class TestChatrixBot(unittest.TestCase):
         bot = ChatrixBot(self.config)
 
         # Mock the login method to return an error
-        error_response = LoginError(
-            message="Invalid credentials", status_code="M_FORBIDDEN"
-        )
+        error_response = LoginError(message="Invalid credentials", status_code="M_FORBIDDEN")
         bot.client.login = AsyncMock(return_value=error_response)
 
         # Call login - should handle error gracefully
@@ -985,15 +953,11 @@ class TestChatrixBot(unittest.TestCase):
         bot = ChatrixBot(self.config)
 
         # Mock room_send to return an error response
-        error_response = RoomSendError(
-            message="Room not found", status_code="M_NOT_FOUND"
-        )
+        error_response = RoomSendError(message="Room not found", status_code="M_NOT_FOUND")
         bot.client.room_send = AsyncMock(return_value=error_response)
 
         # Call send_message - should not raise exception
-        self.loop.run_until_complete(
-            bot.send_message("!nonexistent:example.com", "Test message")
-        )
+        self.loop.run_until_complete(bot.send_message("!nonexistent:example.com", "Test message"))
 
         # Verify the send was attempted
         bot.client.room_send.assert_called_once()
@@ -1029,18 +993,12 @@ class TestChatrixBot(unittest.TestCase):
 
         # Mock encryption support
         bot.client.olm = MagicMock()
-        type(bot.client).should_upload_keys = unittest.mock.PropertyMock(
-            return_value=True
-        )
-        type(bot.client).should_query_keys = unittest.mock.PropertyMock(
-            return_value=False
-        )
+        type(bot.client).should_upload_keys = unittest.mock.PropertyMock(return_value=True)
+        type(bot.client).should_query_keys = unittest.mock.PropertyMock(return_value=False)
 
         # Mock keys_upload to return a real response with proper signature
         # KeysUploadResponse(curve25519_count, signed_curve25519_count)
-        keys_response = KeysUploadResponse(
-            curve25519_count=10, signed_curve25519_count=50
-        )
+        keys_response = KeysUploadResponse(curve25519_count=10, signed_curve25519_count=50)
         bot.client.keys_upload = AsyncMock(return_value=keys_response)
 
         # Setup encryption
@@ -1438,9 +1396,7 @@ class TestChatrixBot(unittest.TestCase):
         self.loop.run_until_complete(bot.key_verification_start_callback(mock_event))
 
         # Verify auto_verify_pending was called in daemon mode
-        bot.verification_manager.auto_verify_pending.assert_called_once_with(
-            "test_txn_123"
-        )
+        bot.verification_manager.auto_verify_pending.assert_called_once_with("test_txn_123")
 
     def test_verification_auto_mode_log(self):
         """Test that log mode auto-verifies incoming verification requests."""
@@ -1461,9 +1417,7 @@ class TestChatrixBot(unittest.TestCase):
         self.loop.run_until_complete(bot.key_verification_start_callback(mock_event))
 
         # Verify auto_verify_pending was called in log mode
-        bot.verification_manager.auto_verify_pending.assert_called_once_with(
-            "test_txn_456"
-        )
+        bot.verification_manager.auto_verify_pending.assert_called_once_with("test_txn_456")
 
     def test_verification_manual_mode_tui(self):
         """Test that TUI mode does not auto-verify verification requests."""
@@ -1492,7 +1446,7 @@ class TestChatrixBot(unittest.TestCase):
 
         # Mock verification manager methods
         bot.verification_manager.auto_verify_pending = AsyncMock(return_value=False)
-        
+
         # Mock _log_manual_verification_info to verify it gets called
         bot._log_manual_verification_info = AsyncMock()
 
@@ -1505,9 +1459,7 @@ class TestChatrixBot(unittest.TestCase):
         mock_event.transaction_id = "test_txn_fail"
 
         # Call the callback
-        self.loop.run_until_complete(
-            bot.key_verification_start_callback(mock_event)
-        )
+        self.loop.run_until_complete(bot.key_verification_start_callback(mock_event))
 
         # Verify _log_manual_verification_info was called when verification failed
         bot._log_manual_verification_info.assert_called_once_with("test_txn_fail")

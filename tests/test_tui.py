@@ -182,7 +182,10 @@ class TestOIDCAuthScreen(unittest.TestCase):
         from chatrixcd.tui import OIDCAuthScreen
 
         # URL with characters that would cause markup errors
-        sso_url = "https://chat.example.org/_matrix/client/v3/login/sso/redirect/oidc?redirectUrl=http://localhost:8080/callback"
+        sso_url = (
+            "https://chat.example.org/_matrix/client/v3/login/sso/redirect/oidc?redirectUrl="
+            "http://localhost:8080/callback"
+        )
         redirect_url = "http://localhost:8080/callback"
         identity_providers = [{"id": "oidc", "name": "OIDC Provider"}]
 
@@ -213,7 +216,10 @@ class TestOIDCAuthScreen(unittest.TestCase):
         """Test that OIDCAuthScreen.compose() doesn't crash."""
         from chatrixcd.tui import OIDCAuthScreen
 
-        sso_url = "https://chat.example.org/_matrix/client/v3/login/sso/redirect/oidc?redirectUrl=http://localhost:8080/callback"
+        sso_url = (
+            "https://chat.example.org/_matrix/client/v3/login/sso/redirect/oidc?redirectUrl="
+            "http://localhost:8080/callback"
+        )
         redirect_url = "http://localhost:8080/callback"
         identity_providers = []
 
@@ -269,7 +275,10 @@ class TestCSSCompatibility(unittest.TestCase):
         self.assertEqual(
             len(css_vars),
             self.EXPECTED_CSS_VARIABLE_COUNT,
-            f"Should have {self.EXPECTED_CSS_VARIABLE_COUNT} CSS variables from ColorSystem.generate()",
+            (
+                f"Should have {self.EXPECTED_CSS_VARIABLE_COUNT} "
+                "CSS variables from ColorSystem.generate()"
+            ),
         )
 
         # Verify critical scrollbar variables are present
@@ -310,7 +319,10 @@ class TestCSSCompatibility(unittest.TestCase):
                 self.assertEqual(
                     len(css_vars),
                     self.EXPECTED_CSS_VARIABLE_COUNT,
-                    f"Theme '{theme_name}' should have {self.EXPECTED_CSS_VARIABLE_COUNT} CSS variables",
+                    (
+                        f"Theme '{theme_name}' should have "
+                        f"{self.EXPECTED_CSS_VARIABLE_COUNT} CSS variables"
+                    ),
                 )
 
                 # Each theme should have scrollbar variables

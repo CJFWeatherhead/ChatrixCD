@@ -22,9 +22,7 @@ class ScreenRegistration:
     category: str = "general"
     icon: str = "•"
     plugin_name: Optional[str] = None
-    condition: Optional[Callable[[], bool]] = (
-        None  # Function to check if screen should be shown
-    )
+    condition: Optional[Callable[[], bool]] = None  # Function to check if screen should be shown
 
 
 class ScreenRegistry:
@@ -72,9 +70,7 @@ class ScreenRegistry:
             return False
 
         if key_binding and key_binding in self._key_bindings:
-            logger.warning(
-                f"Key binding '{key_binding}' already in use, removing it"
-            )
+            logger.warning(f"Key binding '{key_binding}' already in use, removing it")
             key_binding = None
 
         registration = ScreenRegistration(
@@ -146,9 +142,7 @@ class ScreenRegistry:
             return self._screens.get(screen_name)
         return None
 
-    def get_all(
-        self, category: Optional[str] = None
-    ) -> list[ScreenRegistration]:
+    def get_all(self, category: Optional[str] = None) -> list[ScreenRegistration]:
         """Get all registered screens, optionally filtered by category.
 
         Args:
@@ -188,11 +182,7 @@ class ScreenRegistry:
         Returns:
             Number of screens removed
         """
-        to_remove = [
-            name
-            for name, reg in self._screens.items()
-            if reg.plugin_name == plugin_name
-        ]
+        to_remove = [name for name, reg in self._screens.items() if reg.plugin_name == plugin_name]
 
         for name in to_remove:
             self.unregister(name)

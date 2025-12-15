@@ -113,9 +113,7 @@ class VerificationScreen(BaseScreen):
     def compose_content(self):
         """Compose verification screen content."""
         with Container(classes="verification-container"):
-            yield Static(
-                "[bold cyan]Device Verification[/bold cyan]", classes="section-header"
-            )
+            yield Static("[bold cyan]Device Verification[/bold cyan]", classes="section-header")
 
             # Verified devices section
             with Vertical(classes="devices-section"):
@@ -124,9 +122,7 @@ class VerificationScreen(BaseScreen):
 
             # Unverified devices section
             with Vertical(classes="devices-section"):
-                yield Static(
-                    "[bold]Unverified Devices[/bold]", classes="section-header"
-                )
+                yield Static("[bold]Unverified Devices[/bold]", classes="section-header")
                 yield DataTable(id="unverified-devices-table", classes="device-table")
 
             # Pending verifications section
@@ -147,27 +143,17 @@ class VerificationScreen(BaseScreen):
                         id="start-verification-btn",
                         variant="primary",
                     )
-                    yield Button(
-                        "Accept Pending", id="accept-pending-btn", variant="success"
-                    )
-                    yield Button(
-                        "Reject Pending", id="reject-pending-btn", variant="error"
-                    )
-                    yield Button(
-                        "Cross-Verify Bots", id="cross-verify-btn", variant="warning"
-                    )
+                    yield Button("Accept Pending", id="accept-pending-btn", variant="success")
+                    yield Button("Reject Pending", id="reject-pending-btn", variant="error")
+                    yield Button("Cross-Verify Bots", id="cross-verify-btn", variant="warning")
 
                 # Emoji verification display (shown during active verification)
                 with Vertical(id="emoji-container", classes="emoji-display"):
                     yield Static("", id="emoji-status", classes="verification-status")
                     yield Static("", id="emoji-list-display", classes="emoji-list")
                     with Horizontal(classes="verification-buttons"):
-                        yield Button(
-                            "✅ Match", id="confirm-match-btn", variant="success"
-                        )
-                        yield Button(
-                            "❌ Don't Match", id="confirm-no-match-btn", variant="error"
-                        )
+                        yield Button("✅ Match", id="confirm-match-btn", variant="success")
+                        yield Button("❌ Don't Match", id="confirm-no-match-btn", variant="error")
 
     async def on_screen_mount(self):
         """Initialize verification screen."""
@@ -175,9 +161,7 @@ class VerificationScreen(BaseScreen):
         if self.tui_app.bot and self.tui_app.bot.client:
             from ...verification import DeviceVerificationManager
 
-            self.verification_manager = DeviceVerificationManager(
-                self.tui_app.bot.client
-            )
+            self.verification_manager = DeviceVerificationManager(self.tui_app.bot.client)
 
         await self.refresh_data()
         self.set_interval(5.0, self.refresh_data)
@@ -216,9 +200,7 @@ class VerificationScreen(BaseScreen):
             self.logger.error(f"Error refreshing verification data: {e}")
             await self.show_error(f"Failed to refresh verification data: {e}")
 
-    async def _populate_devices_table(
-        self, table: DataTable, devices: List[Dict[str, Any]]
-    ):
+    async def _populate_devices_table(self, table: DataTable, devices: List[Dict[str, Any]]):
         """Populate a devices table."""
         # Clear existing data
         table.clear()
@@ -243,9 +225,7 @@ class VerificationScreen(BaseScreen):
 
             table.add_row(user_display, device_display, device_name, trust_state)
 
-    async def _populate_pending_table(
-        self, table: DataTable, pending: List[Dict[str, Any]]
-    ):
+    async def _populate_pending_table(self, table: DataTable, pending: List[Dict[str, Any]]):
         """Populate pending verifications table."""
         # Clear existing data
         table.clear()
@@ -296,9 +276,7 @@ class VerificationScreen(BaseScreen):
 
             # For now, start with the first unverified device
             # TODO: Add device selection UI
-            unverified_devices = (
-                await self.verification_manager.get_unverified_devices()
-            )
+            unverified_devices = await self.verification_manager.get_unverified_devices()
             if not unverified_devices:
                 await self.show_error("No unverified devices found")
                 return
@@ -311,9 +289,7 @@ class VerificationScreen(BaseScreen):
             )
 
             if success:
-                await self.show_success(
-                    f"Successfully verified device {device_info['device_id']}"
-                )
+                await self.show_success(f"Successfully verified device {device_info['device_id']}")
                 await self.refresh_data()
             else:
                 await self.show_error("Verification failed or was cancelled")
@@ -375,19 +351,13 @@ class VerificationScreen(BaseScreen):
             # Get current room members (this is a simplified approach)
             # In a real implementation, you'd get this from the current room context
             room_members = []
-            if (
-                self.tui_app.bot
-                and self.tui_app.bot.client
-                and self.tui_app.bot.client.rooms
-            ):
+            if self.tui_app.bot and self.tui_app.bot.client and self.tui_app.bot.client.rooms:
                 # Get members from the first room (simplified)
                 for room in self.tui_app.bot.client.rooms.values():
                     room_members = list(room.users.keys())
                     break
 
-            started_count = await self.verification_manager.cross_verify_with_bots(
-                room_members
-            )
+            started_count = await self.verification_manager.cross_verify_with_bots(room_members)
 
             if started_count > 0:
                 await self.show_success(

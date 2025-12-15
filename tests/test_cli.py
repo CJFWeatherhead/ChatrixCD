@@ -53,9 +53,7 @@ class TestCLI(unittest.TestCase):
         import argparse
 
         parser = argparse.ArgumentParser(prog="chatrixcd")
-        parser.add_argument(
-            "-v", "--verbose", action="count", default=0, dest="verbosity"
-        )
+        parser.add_argument("-v", "--verbose", action="count", default=0, dest="verbosity")
 
         # No verbose flag
         args = parser.parse_args([])
@@ -135,9 +133,7 @@ class TestCLI(unittest.TestCase):
         import argparse
 
         parser = argparse.ArgumentParser(prog="chatrixcd")
-        parser.add_argument(
-            "-s", "--show-config", action="store_true", dest="show_config"
-        )
+        parser.add_argument("-s", "--show-config", action="store_true", dest="show_config")
 
         # Default (no show config)
         args = parser.parse_args([])
@@ -156,9 +152,7 @@ class TestCLI(unittest.TestCase):
         import argparse
 
         parser = argparse.ArgumentParser(prog="chatrixcd")
-        parser.add_argument(
-            "-a", "--admin", action="append", dest="admin_users"
-        )
+        parser.add_argument("-a", "--admin", action="append", dest="admin_users")
 
         # No admins
         args = parser.parse_args([])
@@ -169,21 +163,15 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(args.admin_users, ["@user1:matrix.org"])
 
         # Multiple admins
-        args = parser.parse_args(
-            ["-a", "@user1:matrix.org", "-a", "@user2:matrix.org"]
-        )
-        self.assertEqual(
-            args.admin_users, ["@user1:matrix.org", "@user2:matrix.org"]
-        )
+        args = parser.parse_args(["-a", "@user1:matrix.org", "-a", "@user2:matrix.org"])
+        self.assertEqual(args.admin_users, ["@user1:matrix.org", "@user2:matrix.org"])
 
     def test_allowed_rooms_flag(self):
         """Test --room flag."""
         import argparse
 
         parser = argparse.ArgumentParser(prog="chatrixcd")
-        parser.add_argument(
-            "-r", "--room", action="append", dest="allowed_rooms"
-        )
+        parser.add_argument("-r", "--room", action="append", dest="allowed_rooms")
 
         # No rooms
         args = parser.parse_args([])
@@ -194,12 +182,8 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(args.allowed_rooms, ["!room1:matrix.org"])
 
         # Multiple rooms
-        args = parser.parse_args(
-            ["-r", "!room1:matrix.org", "-r", "!room2:matrix.org"]
-        )
-        self.assertEqual(
-            args.allowed_rooms, ["!room1:matrix.org", "!room2:matrix.org"]
-        )
+        args = parser.parse_args(["-r", "!room1:matrix.org", "-r", "!room2:matrix.org"])
+        self.assertEqual(args.allowed_rooms, ["!room1:matrix.org", "!room2:matrix.org"])
 
     def test_redact_flag(self):
         """Test --redact flag."""
@@ -225,9 +209,7 @@ class TestCLI(unittest.TestCase):
         import argparse
 
         parser = argparse.ArgumentParser(prog="chatrixcd")
-        parser.add_argument(
-            "-L", "--log-only", action="store_true", dest="log_only"
-        )
+        parser.add_argument("-L", "--log-only", action="store_true", dest="log_only")
 
         # Default (no log-only)
         args = parser.parse_args([])
@@ -265,18 +247,12 @@ class TestCLI(unittest.TestCase):
         import argparse
 
         parser = argparse.ArgumentParser(prog="chatrixcd")
-        parser.add_argument(
-            "-v", "--verbose", action="count", default=0, dest="verbosity"
-        )
+        parser.add_argument("-v", "--verbose", action="count", default=0, dest="verbosity")
         parser.add_argument("-c", "--config", type=str, default="config.json")
         parser.add_argument("-C", "--color", action="store_true")
         parser.add_argument("-R", "--redact", action="store_true")
-        parser.add_argument(
-            "-a", "--admin", action="append", dest="admin_users"
-        )
-        parser.add_argument(
-            "-r", "--room", action="append", dest="allowed_rooms"
-        )
+        parser.add_argument("-a", "--admin", action="append", dest="admin_users")
+        parser.add_argument("-r", "--room", action="append", dest="allowed_rooms")
 
         args = parser.parse_args(
             [
@@ -298,9 +274,7 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(args.config, "custom.json")
         self.assertTrue(args.color)
         self.assertTrue(args.redact)
-        self.assertEqual(
-            args.admin_users, ["@admin1:matrix.org", "@admin2:matrix.org"]
-        )
+        self.assertEqual(args.admin_users, ["@admin1:matrix.org", "@admin2:matrix.org"])
         self.assertEqual(args.allowed_rooms, ["!room1:matrix.org"])
 
     def test_config_validation_on_startup(self):
@@ -308,9 +282,7 @@ class TestCLI(unittest.TestCase):
         import json
 
         # Create a config file with missing required fields
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(
                 {
                     "matrix": {"homeserver": "", "user_id": ""},
@@ -337,9 +309,7 @@ class TestCLI(unittest.TestCase):
 
                     # Check error message mentions validation
                     error_output = mock_stderr.getvalue()
-                    self.assertIn(
-                        "Configuration validation failed", error_output
-                    )
+                    self.assertIn("Configuration validation failed", error_output)
                     self.assertIn("user_id is required", error_output)
         finally:
             os.unlink(temp_config)

@@ -187,9 +187,7 @@ class TestTaskMonitorPlugin(unittest.TestCase):
         """Test task monitor plugin initialization."""
         bot = Mock()
         config = {}
-        metadata = PluginMetadata(
-            {"name": "test", "type": "task_monitor"}, Path("/tmp")
-        )
+        metadata = PluginMetadata({"name": "test", "type": "task_monitor"}, Path("/tmp"))
 
         monitor = MockTaskMonitor(bot, config, metadata)
 
@@ -200,9 +198,7 @@ class TestTaskMonitorPlugin(unittest.TestCase):
         """Test task monitor lifecycle."""
         bot = Mock()
         config = {}
-        metadata = PluginMetadata(
-            {"name": "test", "type": "task_monitor"}, Path("/tmp")
-        )
+        metadata = PluginMetadata({"name": "test", "type": "task_monitor"}, Path("/tmp"))
 
         monitor = MockTaskMonitor(bot, config, metadata)
 
@@ -218,9 +214,7 @@ class TestTaskMonitorPlugin(unittest.TestCase):
         """Test task monitor status includes monitoring_active."""
         bot = Mock()
         config = {}
-        metadata = PluginMetadata(
-            {"name": "test", "type": "task_monitor"}, Path("/tmp")
-        )
+        metadata = PluginMetadata({"name": "test", "type": "task_monitor"}, Path("/tmp"))
 
         monitor = MockTaskMonitor(bot, config, metadata)
         status = monitor.get_status()
@@ -247,9 +241,7 @@ class TestPluginManager(unittest.TestCase):
 
         shutil.rmtree(self.temp_dir)
 
-    def _create_test_plugin(
-        self, name: str, plugin_type: str = "generic", enabled: bool = True
-    ):
+    def _create_test_plugin(self, name: str, plugin_type: str = "generic", enabled: bool = True):
         """Helper to create a test plugin."""
         plugin_dir = self.plugins_dir / name
         plugin_dir.mkdir()

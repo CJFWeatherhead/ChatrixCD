@@ -132,9 +132,7 @@ class OIDCAuthScreen(ModalScreen):
             if self.identity_providers and len(self.identity_providers) > 1:
                 providers_text = "Available Identity Providers:\n"
                 for i, idp in enumerate(self.identity_providers, 1):
-                    providers_text += (
-                        f"  {i}. {idp.get('name', idp.get('id', 'Unknown'))}\n"
-                    )
+                    providers_text += f"  {i}. {idp.get('name', idp.get('id', 'Unknown'))}\n"
                 yield Static(providers_text, classes="provider-list")
 
             yield Static(
@@ -229,9 +227,7 @@ class OIDCAuthPluginTUI(PluginTUIExtension):
 
         if not tui_app:
             # TUI not available, fall back to console
-            self.plugin.logger.warning(
-                "TUI not available for OIDC callback, using console input"
-            )
+            self.plugin.logger.warning("TUI not available for OIDC callback, using console input")
             return None
 
         # Push screen and wait for result

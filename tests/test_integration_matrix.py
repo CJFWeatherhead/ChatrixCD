@@ -38,9 +38,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
         """Set up test fixtures for the entire test class."""
         config_env = os.getenv("INTEGRATION_CONFIG")
         if not config_env:
-            raise RuntimeError(
-                "INTEGRATION_CONFIG environment variable not set"
-            )
+            raise RuntimeError("INTEGRATION_CONFIG environment variable not set")
 
         try:
             cls.config = json.loads(config_env)
@@ -54,9 +52,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
             cls.all_bots = [host["matrix"] for host in cls.config["hosts"]]
             cls.room_id = cls.config["test_room"]
         except json.JSONDecodeError as e:
-            raise RuntimeError(
-                f"Failed to parse INTEGRATION_CONFIG: {e}"
-            ) from None
+            raise RuntimeError(f"Failed to parse INTEGRATION_CONFIG: {e}") from None
         except KeyError as e:
             raise RuntimeError(f"Missing required config key: {e}") from None
 
@@ -76,8 +72,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
         tester_bot = None
         for bot_config in self.all_bots:
             if (
-                bot_config.get("bot_user_id")
-                != self.matrix_config.get("bot_user_id")
+                bot_config.get("bot_user_id") != self.matrix_config.get("bot_user_id")
                 and "access_token" in bot_config
                 and bot_config["access_token"]
             ):
@@ -85,9 +80,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
                 break
 
         if not tester_bot:
-            print(
-                "DEBUG: No other bot with access token available for testing"
-            )
+            print("DEBUG: No other bot with access token available for testing")
             self.authenticated = False
             self.client = None
             self.received_messages = []
@@ -122,9 +115,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
         try:
             if "access_token" in tester_bot and "device_id" in tester_bot:
 
-                logger.info(
-                    f"Restoring tester bot's session ({tester_bot['bot_user_id']})..."
-                )
+                logger.info(f"Restoring tester bot's session ({tester_bot['bot_user_id']})...")
                 self.client.restore_login(
                     user_id=tester_bot["bot_user_id"],
                     device_id=tester_bot["device_id"],
@@ -141,25 +132,17 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
                         self.client.load_store()
                         print("DEBUG: Test client encryption store loaded")
                     except Exception as e:
-                        print(
-                            f"DEBUG: Could not load test client store (normal on first run): {e}"
-                        )
+                        print(f"DEBUG: Could not load test client store (normal on first run): {e}")
 
                 # Test the restored session with a sync
-                print(
-                    f"DEBUG: Testing session with sync for {tester_bot['bot_user_id']}"
-                )
+                print(f"DEBUG: Testing session with sync for {tester_bot['bot_user_id']}")
                 sync_response = await self.client.sync(timeout=5000)
                 print(f"DEBUG: Sync response type: {type(sync_response)}")
                 if hasattr(sync_response, "rooms"):
-                    print(
-                        "DEBUG: Successfully restored tester bot's session for testing"
-                    )
+                    print("DEBUG: Successfully restored tester bot's session for testing")
                     self.authenticated = True
                 else:
-                    print(
-                        f"DEBUG: Session restoration test failed: {sync_response}"
-                    )
+                    print(f"DEBUG: Session restoration test failed: {sync_response}")
             else:
                 logger.warning("No session data available for tester bot")
 
@@ -182,12 +165,8 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
 
             # Set up event callbacks
             self.received_messages = []
-            self.client.add_event_callback(
-                self._on_room_message, RoomMessageText
-            )
-            self.client.add_event_callback(
-                self._on_encrypted_message, MegolmEvent
-            )
+            self.client.add_event_callback(self._on_room_message, RoomMessageText)
+            self.client.add_event_callback(self._on_encrypted_message, MegolmEvent)
         else:
             print("DEBUG: Not authenticated, skipping room join")
             self.received_messages = []
@@ -203,9 +182,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
 
             try:
                 shutil.rmtree(self.test_store_dir)
-                print(
-                    f"DEBUG: Cleaned up test store directory: {self.test_store_dir}"
-                )
+                print(f"DEBUG: Cleaned up test store directory: {self.test_store_dir}")
             except Exception as e:
                 print(f"DEBUG: Failed to clean up test store directory: {e}")
 
@@ -230,19 +207,11 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
         """
         try:
             # If it's already a decrypted message
-            if (
-                hasattr(event, "body")
-                and event.body
-                and not isinstance(event, MegolmEvent)
-            ):
+            if hasattr(event, "body") and event.body and not isinstance(event, MegolmEvent):
                 return event.body
 
             # If it's an encrypted message, try to decrypt it
-            if (
-                isinstance(event, MegolmEvent)
-                and self.client
-                and self.client.olm
-            ):
+            if isinstance(event, MegolmEvent) and self.client and self.client.olm:
                 # Decrypt the message
                 decrypted = await self.client.decrypt_megolm_event(event)
                 if decrypted and hasattr(decrypted, "body"):
@@ -262,9 +231,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
 
         # Check if encryption is available
         if not self.client.olm:
-            print(
-                "DEBUG: Encryption not available on test client - skipping cross-verification"
-            )
+            print("DEBUG: Encryption not available on test client - skipping cross-verification")
             print(
                 "DEBUG: This is expected in integration tests as we can't access remote encryption stores"
             )
@@ -275,24 +242,17 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
             target_device_id = bot_config.get("device_id")
 
             if not target_device_id:
-                print(
-                    f"DEBUG: No device ID available for {target_user_id}, skipping"
-                )
+                print(f"DEBUG: No device ID available for {target_user_id}, skipping")
                 continue
 
-            print(
-                f"DEBUG: Attempting verification with {target_user_id} device {target_device_id}"
-            )
+            print(f"DEBUG: Attempting verification with {target_user_id} device {target_device_id}")
 
             try:
                 # Sync to get latest device information
                 await self.client.sync(timeout=5000)
 
                 # Check if device is already verified
-                if (
-                    hasattr(self.client, "device_store")
-                    and self.client.device_store
-                ):
+                if hasattr(self.client, "device_store") and self.client.device_store:
                     user_devices = self.client.device_store.get(target_user_id)
                     if user_devices and target_device_id in user_devices:
                         device = user_devices[target_device_id]
@@ -308,9 +268,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
                 )
 
                 # Send a verification request
-                resp = await self.client.start_key_verification(
-                    target_device_id, target_user_id
-                )
+                resp = await self.client.start_key_verification(target_device_id, target_user_id)
                 print(f"DEBUG: Verification start response: {resp}")
 
                 # Wait a bit for the verification to be established
@@ -323,17 +281,13 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
                         verification,
                     ) in self.client.key_verifications.items():
                         if Sas and isinstance(verification, Sas):
-                            print(
-                                f"DEBUG: Found SAS verification {transaction_id}"
-                            )
+                            print(f"DEBUG: Found SAS verification {transaction_id}")
 
                             # For testing, we'll try to confirm the verification
                             # In a real scenario, you'd compare emojis or use QR codes
                             try:
                                 await verification.confirm()
-                                print(
-                                    f"DEBUG: Confirmed verification {transaction_id}"
-                                )
+                                print(f"DEBUG: Confirmed verification {transaction_id}")
                             except Exception as e:
                                 print(
                                     f"DEBUG: Failed to confirm verification {transaction_id}: {e}"
@@ -343,10 +297,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
                 await asyncio.sleep(3)
 
                 # Check if verification succeeded
-                if (
-                    hasattr(self.client, "device_store")
-                    and self.client.device_store
-                ):
+                if hasattr(self.client, "device_store") and self.client.device_store:
                     user_devices = self.client.device_store.get(target_user_id)
                     if user_devices and target_device_id in user_devices:
                         device = user_devices[target_device_id]
@@ -372,15 +323,11 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
                 users=[device.user_id],
                 ignore_unverified_devices=False,
             )
-            print(
-                f"DEBUG: Shared room keys for {self.room_id} with {device.user_id}"
-            )
+            print(f"DEBUG: Shared room keys for {self.room_id} with {device.user_id}")
         except Exception as e:
             print(f"DEBUG: Failed to share room keys: {e}")
 
-    async def _send_command_and_wait(
-        self, command_suffix: str, timeout: int = 10
-    ) -> Optional[str]:
+    async def _send_command_and_wait(self, command_suffix: str, timeout: int = 10) -> Optional[str]:
         """Send a command to the bot and wait for a response."""
         if not self.authenticated or not self.client:
             # Cannot send commands without authentication
@@ -416,9 +363,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
 
             # Debug: print all received messages
             if self.received_messages:
-                print(
-                    f"DEBUG: Received {len(self.received_messages)} messages:"
-                )
+                print(f"DEBUG: Received {len(self.received_messages)} messages:")
                 for i, event in enumerate(self.received_messages):
                     body = getattr(event, "body", "[ENCRYPTED]")
                     print(
@@ -436,9 +381,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
                         )
                         return decrypted_body
                     elif hasattr(event, "body") and event.body:
-                        print(
-                            f"DEBUG: Found text response from bot {event.sender}: '{event.body}'"
-                        )
+                        print(f"DEBUG: Found text response from bot {event.sender}: '{event.body}'")
                         return event.body
                     else:
                         # This is likely an encrypted message we can't decrypt yet
@@ -447,17 +390,13 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
                         )
                         return "[ENCRYPTED_RESPONSE]"
 
-        print(
-            f"DEBUG: Timeout waiting for response from {self.matrix_config['bot_user_id']}"
-        )
+        print(f"DEBUG: Timeout waiting for response from {self.matrix_config['bot_user_id']}")
         return None
 
     async def test_bot_responds_to_help(self):
         """Test that the bot responds to the help command."""
         if not self.authenticated:
-            self.skipTest(
-                "Test client not authenticated - cannot test bot responses"
-            )
+            self.skipTest("Test client not authenticated - cannot test bot responses")
 
         response = await self._send_command_and_wait("help")
 
@@ -468,23 +407,17 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
     async def test_bot_responds_to_invalid_command(self):
         """Test that the bot responds to invalid commands."""
         if not self.authenticated:
-            self.skipTest(
-                "Test client not authenticated - cannot test bot responses"
-            )
+            self.skipTest("Test client not authenticated - cannot test bot responses")
 
         response = await self._send_command_and_wait("nonexistentcommand")
 
-        self.assertIsNotNone(
-            response, "Bot did not respond to invalid command"
-        )
+        self.assertIsNotNone(response, "Bot did not respond to invalid command")
         # Bot should respond with an error or help message - we can't validate content for encrypted responses
 
     async def test_bot_responds_to_pet_command(self):
         """Test the hidden pet command."""
         if not self.authenticated:
-            self.skipTest(
-                "Test client not authenticated - cannot test bot responses"
-            )
+            self.skipTest("Test client not authenticated - cannot test bot responses")
 
         response = await self._send_command_and_wait("pet")
 
@@ -494,9 +427,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
     async def test_bot_responds_to_scold_command(self):
         """Test the hidden scold command."""
         if not self.authenticated:
-            self.skipTest(
-                "Test client not authenticated - cannot test bot responses"
-            )
+            self.skipTest("Test client not authenticated - cannot test bot responses")
 
         response = await self._send_command_and_wait("scold")
 
@@ -506,9 +437,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
     async def test_bot_status_command(self):
         """Test the status command if available."""
         if not self.authenticated:
-            self.skipTest(
-                "Test client not authenticated - cannot test bot responses"
-            )
+            self.skipTest("Test client not authenticated - cannot test bot responses")
 
         # This might require a running task, so we'll just check it doesn't crash
         response = await self._send_command_and_wait("status nonexistent")
@@ -519,15 +448,11 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
     async def test_bot_projects_command(self):
         """Test that the bot can list projects (requires authentication)."""
         if not self.authenticated:
-            self.skipTest(
-                "Test client not authenticated - cannot test bot responses"
-            )
+            self.skipTest("Test client not authenticated - cannot test bot responses")
 
         response = await self._send_command_and_wait("projects")
 
-        self.assertIsNotNone(
-            response, "Bot did not respond to projects command"
-        )
+        self.assertIsNotNone(response, "Bot did not respond to projects command")
         # Should list projects or indicate no projects
 
     async def test_bot_config_valid(self):
@@ -535,9 +460,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
         # This test can run without authentication
         # Use the first bot config for validation
         bot_config = self.all_bots[0]
-        self.assertIn(
-            "homeserver", bot_config, "Matrix config should contain homeserver"
-        )
+        self.assertIn("homeserver", bot_config, "Matrix config should contain homeserver")
         self.assertIn(
             "bot_user_id",
             bot_config,
@@ -548,9 +471,7 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
             self.matrix_config,
             "Matrix config should contain homeserver",
         )
-        self.assertIn(
-            "test_room", self.config, "Config should contain test_room"
-        )
+        self.assertIn("test_room", self.config, "Config should contain test_room")
 
         # Verify homeserver URL format
         self.assertTrue(
@@ -571,96 +492,87 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_cross_verification_between_bots(self):
         """Test device verification between bots.
-        
+
         This test verifies that bots can verify each other's devices,
         which is essential for encrypted room communication.
         """
         if not self.authenticated:
-            self.skipTest(
-                "Test client not authenticated - cannot test verification"
-            )
-        
+            self.skipTest("Test client not authenticated - cannot test verification")
+
         if not self.client.olm:
-            self.skipTest(
-                "Encryption not available - cannot test verification"
-            )
-        
+            self.skipTest("Encryption not available - cannot test verification")
+
         print("\nDEBUG: Testing cross-verification between bots...")
-        
+
         # Find another bot to verify with
         target_bot = None
         for bot_config in self.all_bots:
             if bot_config["bot_user_id"] != self.matrix_config["bot_user_id"]:
                 target_bot = bot_config
                 break
-        
+
         if not target_bot:
             self.skipTest("No other bot available for verification testing")
-        
+
         target_user_id = target_bot["bot_user_id"]
         target_device_id = target_bot.get("device_id")
-        
+
         if not target_device_id:
             self.skipTest(f"No device ID available for {target_user_id}")
-        
+
         print(f"DEBUG: Verifying with {target_user_id} device {target_device_id}")
-        
+
         # Sync to get latest device information
         await self.client.sync(timeout=5000)
-        
+
         # Check if device exists in device store
         if not hasattr(self.client, "device_store") or not self.client.device_store:
             self.skipTest("Device store not available")
-        
+
         user_devices = self.client.device_store.get(target_user_id)
         if not user_devices or target_device_id not in user_devices:
-            self.skipTest(
-                f"Target device {target_device_id} not found in device store"
-            )
-        
+            self.skipTest(f"Target device {target_device_id} not found in device store")
+
         target_device = user_devices[target_device_id]
-        
+
         # Check current verification status
         was_verified = getattr(target_device, "verified", False)
         print(f"DEBUG: Device initially verified: {was_verified}")
-        
+
         if was_verified:
             # Unverify the device first to test re-verification
             print("DEBUG: Unverifying device to test re-verification...")
             self.client.unverify_device(target_device)
             await self.client.sync(timeout=1000)  # Short sync to update state
-            
+
             # Verify it's now unverified
             user_devices = self.client.device_store.get(target_user_id)
             target_device = user_devices[target_device_id]
             is_verified = getattr(target_device, "verified", False)
             print(f"DEBUG: Device after unverify: verified={is_verified}")
-        
+
         # Now verify the device
         print("DEBUG: Verifying device...")
         self.client.verify_device(target_device)
-        
+
         # Sync to update state
         await self.client.sync(timeout=1000)
-        
+
         # Check verification succeeded
         user_devices = self.client.device_store.get(target_user_id)
         target_device = user_devices[target_device_id]
         is_now_verified = getattr(target_device, "verified", False)
-        
+
         print(f"DEBUG: Device after verify: verified={is_now_verified}")
-        
+
         self.assertTrue(
-            is_now_verified,
-            f"Device {target_device_id} should be verified after verification"
+            is_now_verified, f"Device {target_device_id} should be verified after verification"
         )
 
 
 if __name__ == "__main__":
     # Load config for manual testing
-    config_path = os.getenv(
-        "INTEGRATION_CONFIG", "tests/integration_config.json"
-    )
+    config_path = os.getenv("INTEGRATION_CONFIG", "tests/integration_config.json")
     if not Path(config_path).exists():
         print(f"Config file not found: {config_path}")
         print(

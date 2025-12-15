@@ -60,9 +60,7 @@ class Config:
     Environment variables are no longer supported to simplify configuration management.
     """
 
-    def __init__(
-        self, config_file: str = "config.json", auto_reload: bool = False
-    ):
+    def __init__(self, config_file: str = "config.json", auto_reload: bool = False):
         """Initialize configuration from file.
 
         Supports JSON and HJSON (Human JSON with comments) configuration files.
@@ -75,9 +73,7 @@ class Config:
         self.config: Dict[str, Any] = {}
         self.auto_reload = auto_reload
         self._last_mtime: Optional[float] = None
-        self._reload_task: Optional[Any] = (
-            None  # asyncio.Task, but avoid import
-        )
+        self._reload_task: Optional[Any] = None  # asyncio.Task, but avoid import
 
         self.load_config()
 
@@ -105,12 +101,8 @@ class Config:
                     config_version,
                     CURRENT_CONFIG_VERSION,
                 )
-                logger.info(
-                    "Automatically migrating configuration to new version..."
-                )
-                file_config = ConfigMigrator.migrate(
-                    file_config, config_version
-                )
+                logger.info("Automatically migrating configuration to new version...")
+                file_config = ConfigMigrator.migrate(file_config, config_version)
                 self._save_migrated_config(file_config)
                 logger.info(
                     "Configuration migrated and saved. You may want to run 'chatrixcd --init' to review new settings."
@@ -195,9 +187,7 @@ class Config:
                 try:
                     # Use hjson which supports both JSON and HJSON (JSON with comments)
                     config = hjson.loads(content)
-                    logger.debug(
-                        f"Loaded configuration from '{self.config_file}'"
-                    )
+                    logger.debug(f"Loaded configuration from '{self.config_file}'")
                     return dict(config) if config else {}
                 except hjson.HjsonDecodeError as e:
                     error_msg = f"Failed to parse configuration file '{self.config_file}'"
@@ -217,9 +207,7 @@ class Config:
             print(f"\nERROR: {error_msg}\n", file=sys.stderr)
             sys.exit(1)
         except Exception as e:
-            error_msg = (
-                f"Failed to read configuration file '{self.config_file}': {e}"
-            )
+            error_msg = f"Failed to read configuration file '{self.config_file}': {e}"
             logger.error(error_msg)
             print(f"\nERROR: {error_msg}\n", file=sys.stderr)
             sys.exit(1)
@@ -248,24 +236,18 @@ class Config:
             import shutil
 
             shutil.copy2(self.config_file, backup_path)
-            logger.info(
-                f"Created backup of original configuration at '{backup_path}'"
-            )
+            logger.info(f"Created backup of original configuration at '{backup_path}'")
 
             # Save migrated config as HJSON (more human-readable with comments support)
             with open(self.config_file, "w", encoding="utf-8") as f:
                 f.write(hjson.dumps(config, indent=2))
 
-            logger.info(
-                f"Saved migrated configuration to '{self.config_file}'"
-            )
+            logger.info(f"Saved migrated configuration to '{self.config_file}'")
         except Exception as e:
             logger.warning(f"Failed to save migrated configuration: {e}")
             # Non-fatal - we can continue with the in-memory migrated config
 
-    def _deep_merge(
-        self, base: Dict[str, Any], override: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _deep_merge(self, base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
         """Deep merge two dictionaries, with override values taking precedence.
 
         Args:
@@ -284,11 +266,7 @@ class Config:
                 # Skip None values - keep base value
                 continue
 
-            if (
-                key in result
-                and isinstance(result[key], dict)
-                and isinstance(value, dict)
-            ):
+            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
                 # Recursively merge nested dictionaries
                 result[key] = self._deep_merge(result[key], value)
             else:
@@ -338,17 +316,13 @@ class Config:
         # Check authentication configuration
         auth_type = matrix_config.get("auth_type", "password")
         if auth_type == "password" and not matrix_config.get("password"):
-            errors.append(
-                "matrix.password is required when auth_type is 'password'"
-            )
+            errors.append("matrix.password is required when auth_type is 'password'")
         elif auth_type == "oidc":
             # OIDC only requires auth_type to be set to 'oidc'
             # oidc_redirect_url is optional with a sensible default
             pass
         elif auth_type not in ["password", "oidc"]:
-            errors.append(
-                f"matrix.auth_type must be 'password' or 'oidc', got '{auth_type}'"
-            )
+            errors.append(f"matrix.auth_type must be 'password' or 'oidc', got '{auth_type}'")
 
         # Check required semaphore fields
         semaphore_config = self.get_semaphore_config()
@@ -398,15 +372,11 @@ class Config:
             # Only start if we have a running event loop
             asyncio.get_running_loop()
             if self._reload_task is None or self._reload_task.done():
-                self._reload_task = asyncio.create_task(
-                    self._auto_reload_loop()
-                )
+                self._reload_task = asyncio.create_task(self._auto_reload_loop())
                 logger.info("Started auto-reload for config file")
         except RuntimeError:
             # No event loop running, will start later when needed
-            logger.debug(
-                "No event loop available yet, auto-reload will start when bot runs"
-            )
+            logger.debug("No event loop available yet, auto-reload will start when bot runs")
 
     def stop_auto_reload(self):
         """Stop automatic reloading."""
@@ -420,14 +390,10 @@ class Config:
         logger = logging.getLogger(__name__)
         try:
             while True:
-                await asyncio.sleep(
-                    10
-                )  # Check every 10 seconds (less frequent for config)
+                await asyncio.sleep(10)  # Check every 10 seconds (less frequent for config)
 
                 if self.check_for_changes():
-                    logger.info(
-                        f"Config file '{self.config_file}' has been modified, reloading..."
-                    )
+                    logger.info(f"Config file '{self.config_file}' has been modified, reloading...")
                     self.load_config()
                     logger.info("Configuration reloaded successfully")
 

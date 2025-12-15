@@ -59,9 +59,7 @@ class TestDeviceVerificationManager(unittest.IsolatedAsyncioTestCase):
         """Test get_pending_verifications."""
         # Mock key verifications
         mock_sas = Mock()
-        mock_sas.other_olm_device = Mock(
-            user_id="@user:example.com", id="DEVICE1"
-        )
+        mock_sas.other_olm_device = Mock(user_id="@user:example.com", id="DEVICE1")
         # Also set on the verification object for non-SAS case
         mock_sas.user_id = "@user:example.com"
         mock_sas.device_id = "DEVICE1"
@@ -86,15 +84,13 @@ class TestDeviceVerificationManager(unittest.IsolatedAsyncioTestCase):
         """Test auto_verify_pending when SAS is not available."""
         # Mock key_verifications as a dict to avoid the TypeError
         self.mock_client.key_verifications = {}
-        
+
         with patch("chatrixcd.verification.SAS_AVAILABLE", False):
             # Use max_wait=0 to skip retry loop in test
             result = await self.manager.auto_verify_pending("txn1", max_wait=0)
             self.assertFalse(result)
 
-    @unittest.skipIf(
-        not SAS_AVAILABLE, "Sas not available in this nio version"
-    )
+    @unittest.skipIf(not SAS_AVAILABLE, "Sas not available in this nio version")
     async def test_cross_verify_with_bots(self):
         """Test cross_verify_with_bots."""
         room_members = [
@@ -125,16 +121,12 @@ class TestDeviceVerificationManager(unittest.IsolatedAsyncioTestCase):
                 "get_unverified_devices",
                 return_value=mock_devices,
             ),
-            patch.object(
-                self.manager, "start_verification", return_value=mock_sas
-            ) as mock_start,
+            patch.object(self.manager, "start_verification", return_value=mock_sas) as mock_start,
         ):
             count = await self.manager.cross_verify_with_bots(room_members)
 
             # Should have called start_verification for the bot users
-            self.assertEqual(
-                mock_start.call_count, 2
-            )  # chatrixbot and otherbot
+            self.assertEqual(mock_start.call_count, 2)  # chatrixbot and otherbot
             self.assertEqual(count, 2)
 
     async def test_save_session_state(self):
@@ -175,9 +167,7 @@ class TestDeviceVerificationManager(unittest.IsolatedAsyncioTestCase):
     async def test_load_session_state(self):
         """Test load_session_state."""
         session_data = {
-            "verified_devices": [
-                {"user_id": "@user1:example.com", "device_id": "DEVICE1"}
-            ]
+            "verified_devices": [{"user_id": "@user1:example.com", "device_id": "DEVICE1"}]
         }
 
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
@@ -231,9 +221,7 @@ class TestDeviceVerificationManager(unittest.IsolatedAsyncioTestCase):
                 f"Manager missing method: {method_name}",
             )
             method = getattr(self.manager, method_name)
-            self.assertTrue(
-                callable(method), f"Manager method not callable: {method_name}"
-            )
+            self.assertTrue(callable(method), f"Manager method not callable: {method_name}")
 
 
 class TestVerificationModuleImport(unittest.TestCase):

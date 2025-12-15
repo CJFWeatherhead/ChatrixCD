@@ -44,9 +44,7 @@ class RoomsScreen(BaseScreen):
     def compose_content(self):
         """Compose rooms screen content."""
         with Container(classes="rooms-container"):
-            yield Static(
-                "[bold cyan]Matrix Rooms[/bold cyan]", classes="section-header"
-            )
+            yield Static("[bold cyan]Matrix Rooms[/bold cyan]", classes="section-header")
             yield Static("Rooms the bot has joined:", classes="description")
 
             yield DataTable(

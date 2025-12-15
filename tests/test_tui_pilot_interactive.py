@@ -37,9 +37,7 @@ class TestAliasManagementWorkflow(unittest.IsolatedAsyncioTestCase):
         self.mock_alias_plugin.validate_command.return_value = True
         self.mock_alias_plugin.add_alias.return_value = True
         self.mock_alias_plugin.remove_alias.return_value = True
-        self.mock_bot.command_handler._get_alias_plugin.return_value = (
-            self.mock_alias_plugin
-        )
+        self.mock_bot.command_handler._get_alias_plugin.return_value = self.mock_alias_plugin
 
         self.mock_config = Mock()
         self.mock_config.get_bot_config.return_value = {
@@ -281,9 +279,7 @@ class TestWidgetUpdates(unittest.IsolatedAsyncioTestCase):
         self.mock_bot.client.rooms = {}
         self.mock_bot.client.olm = None
         self.mock_bot.semaphore = Mock()
-        self.mock_bot.semaphore.get_task_status = AsyncMock(
-            return_value={"status": "running"}
-        )
+        self.mock_bot.semaphore.get_task_status = AsyncMock(return_value={"status": "running"})
         self.mock_bot.command_handler = Mock()
         self.mock_bot.command_handler.active_tasks = {}
 
@@ -337,9 +333,7 @@ class TestWidgetUpdates(unittest.IsolatedAsyncioTestCase):
 
             # Wait for update interval (set_interval in TUI is 5 seconds)
             UPDATE_INTERVAL = 5  # Seconds - matches set_interval in ChatrixTUI
-            await asyncio.sleep(
-                UPDATE_INTERVAL + 1
-            )  # Wait slightly longer than interval
+            await asyncio.sleep(UPDATE_INTERVAL + 1)  # Wait slightly longer than interval
 
             # Widget should have been updated
             # Note: Actual update happens asynchronously
@@ -453,9 +447,7 @@ class TestKeyboardShortcuts(unittest.IsolatedAsyncioTestCase):
         # Mock the new plugin interface
         self.mock_alias_plugin = Mock()
         self.mock_alias_plugin.list_aliases.return_value = {}
-        self.mock_bot.command_handler._get_alias_plugin.return_value = (
-            self.mock_alias_plugin
-        )
+        self.mock_bot.command_handler._get_alias_plugin.return_value = self.mock_alias_plugin
 
         # Mock get_status_info() method
         self.mock_bot.get_status_info = Mock(

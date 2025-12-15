@@ -47,9 +47,7 @@ class Plugin(ABC):
     Plugins should inherit from this class and implement the required methods.
     """
 
-    def __init__(
-        self, bot: Any, config: Dict[str, Any], metadata: PluginMetadata
-    ):
+    def __init__(self, bot: Any, config: Dict[str, Any], metadata: PluginMetadata):
         """Initialize the plugin.
 
         Args:
@@ -119,9 +117,7 @@ class TaskMonitorPlugin(Plugin):
     (polling, webhooks, etc.). Only one task monitor plugin can be active at a time.
     """
 
-    def __init__(
-        self, bot: Any, config: Dict[str, Any], metadata: PluginMetadata
-    ):
+    def __init__(self, bot: Any, config: Dict[str, Any], metadata: PluginMetadata):
         super().__init__(bot, config, metadata)
         self.monitoring_active = False
 
@@ -154,9 +150,7 @@ class TaskMonitorPlugin(Plugin):
 class PluginManager:
     """Manages loading, initialization, and lifecycle of plugins."""
 
-    def __init__(
-        self, bot: Any, config: Dict[str, Any], plugins_dir: str = "plugins"
-    ):
+    def __init__(self, bot: Any, config: Dict[str, Any], plugins_dir: str = "plugins"):
         """Initialize plugin manager.
 
         Args:
@@ -187,14 +181,10 @@ class PluginManager:
             if item.is_dir() and (item / "meta.json").exists():
                 plugins.append(item)
 
-        logger.info(
-            f"Discovered {len(plugins)} plugins: {[p.name for p in plugins]}"
-        )
+        logger.info(f"Discovered {len(plugins)} plugins: {[p.name for p in plugins]}")
         return plugins
 
-    def load_plugin_metadata(
-        self, plugin_dir: Path
-    ) -> Optional[PluginMetadata]:
+    def load_plugin_metadata(self, plugin_dir: Path) -> Optional[PluginMetadata]:
         """Load plugin metadata from meta.json.
 
         Args:
@@ -209,9 +199,7 @@ class PluginManager:
                 data = json.load(f)
 
             metadata = PluginMetadata(data, plugin_dir)
-            logger.debug(
-                f"Loaded metadata for plugin: {metadata.name} v{metadata.version}"
-            )
+            logger.debug(f"Loaded metadata for plugin: {metadata.name} v{metadata.version}")
             return metadata
 
         except json.JSONDecodeError as e:
@@ -221,9 +209,7 @@ class PluginManager:
             logger.error(f"Error loading metadata from {meta_file}: {e}")
             return None
 
-    def load_plugin_config(
-        self, plugin_dir: Path, metadata: PluginMetadata
-    ) -> Dict[str, Any]:
+    def load_plugin_config(self, plugin_dir: Path, metadata: PluginMetadata) -> Dict[str, Any]:
         """Load plugin configuration from plugin.json file.
 
         Args:
@@ -247,14 +233,10 @@ class PluginManager:
                     f"Loaded configuration for plugin '{metadata.name}' from {config_file}"
                 )
             except Exception as e:
-                logger.warning(
-                    f"Failed to load configuration from {config_file}: {e}"
-                )
+                logger.warning(f"Failed to load configuration from {config_file}: {e}")
 
         # Override with config from main config.json if present (for backwards compatibility)
-        main_config_override = self.config.get("plugins", {}).get(
-            metadata.name, {}
-        )
+        main_config_override = self.config.get("plugins", {}).get(metadata.name, {})
         if main_config_override:
             logger.debug(
                 f"Applying configuration overrides for plugin '{metadata.name}' from main config"
@@ -358,13 +340,9 @@ class PluginManager:
             # Track task monitor plugins separately
             if isinstance(plugin, TaskMonitorPlugin):
                 self.task_monitor = plugin
-                logger.info(
-                    f"Loaded task monitor plugin: {metadata.name} v{metadata.version}"
-                )
+                logger.info(f"Loaded task monitor plugin: {metadata.name} v{metadata.version}")
             else:
-                logger.info(
-                    f"Loaded plugin: {metadata.name} v{metadata.version}"
-                )
+                logger.info(f"Loaded plugin: {metadata.name} v{metadata.version}")
 
             return True
 
@@ -436,9 +414,7 @@ class PluginManager:
                 else:
                     logger.error(f"Failed to start plugin: {name}")
             except Exception as e:
-                logger.error(
-                    f"Error starting plugin '{name}': {e}", exc_info=True
-                )
+                logger.error(f"Error starting plugin '{name}': {e}", exc_info=True)
 
     async def stop_plugins(self):
         """Stop all loaded plugins."""
@@ -449,9 +425,7 @@ class PluginManager:
                 await plugin.stop()
                 logger.info(f"Stopped plugin: {name}")
             except Exception as e:
-                logger.error(
-                    f"Error stopping plugin '{name}': {e}", exc_info=True
-                )
+                logger.error(f"Error stopping plugin '{name}': {e}", exc_info=True)
 
     async def cleanup_plugins(self):
         """Clean up all loaded plugins."""
@@ -462,9 +436,7 @@ class PluginManager:
                 await plugin.cleanup()
                 logger.debug(f"Cleaned up plugin: {name}")
             except Exception as e:
-                logger.error(
-                    f"Error cleaning up plugin '{name}': {e}", exc_info=True
-                )
+                logger.error(f"Error cleaning up plugin '{name}': {e}", exc_info=True)
 
         self.loaded_plugins.clear()
         self.plugin_metadata.clear()

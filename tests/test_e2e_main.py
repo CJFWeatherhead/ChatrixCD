@@ -28,9 +28,7 @@ class TestMainEntryPointE2E(unittest.TestCase):
         cls.chatrixcd_main = cls.project_root / "chatrixcd" / "main.py"
 
         # Ensure the main file exists
-        assert (
-            cls.chatrixcd_main.exists()
-        ), f"Main file not found: {cls.chatrixcd_main}"
+        assert cls.chatrixcd_main.exists(), f"Main file not found: {cls.chatrixcd_main}"
 
     def test_version_flag_output(self):
         """Test --version flag produces expected output format."""
@@ -68,9 +66,7 @@ class TestMainEntryPointE2E(unittest.TestCase):
         output = result.stdout + result.stderr
         self.assertIn("chatrixcd", output.lower())
         self.assertIn("usage", output.lower())
-        self.assertIn(
-            "options", output.lower() or "arguments" in output.lower()
-        )
+        self.assertIn("options", output.lower() or "arguments" in output.lower())
 
         # Should mention key flags
         self.assertIn("--config", output)
@@ -111,9 +107,7 @@ class TestMainEntryPointE2E(unittest.TestCase):
 
     def test_invalid_config_validation(self):
         """Test that invalid configuration is validated and rejected."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             # Write invalid config (missing required fields)
             json.dump(
                 {
@@ -155,9 +149,7 @@ class TestMainEntryPointE2E(unittest.TestCase):
 
     def test_show_config_flag(self):
         """Test --show-config flag displays configuration."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             # Write valid config
             json.dump(
                 {
@@ -201,8 +193,7 @@ class TestMainEntryPointE2E(unittest.TestCase):
             # Output should contain configuration (but with redacted credentials)
             output = result.stdout + result.stderr
             self.assertTrue(
-                "matrix" in output.lower()
-                or "configuration" in output.lower(),
+                "matrix" in output.lower() or "configuration" in output.lower(),
                 "Config output should contain 'matrix' or 'configuration'",
             )
 
@@ -216,9 +207,7 @@ class TestMainEntryPointE2E(unittest.TestCase):
 
     def test_verbose_flags(self):
         """Test verbose flags increase verbosity correctly."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             # Write minimal valid config
             json.dump(
                 {
@@ -264,9 +253,7 @@ class TestMainEntryPointE2E(unittest.TestCase):
 
     def test_log_only_mode_flag(self):
         """Test -L/--log-only flag for non-interactive mode."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(
                 {
                     "matrix": {
@@ -311,9 +298,7 @@ class TestMainEntryPointE2E(unittest.TestCase):
 
     def test_color_flag(self):
         """Test -C/--color flag for colored output."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(
                 {
                     "matrix": {
@@ -358,9 +343,7 @@ class TestMainEntryPointE2E(unittest.TestCase):
 
     def test_redact_flag(self):
         """Test -R/--redact flag for sensitive information redaction."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(
                 {
                     "matrix": {
@@ -406,9 +389,7 @@ class TestMainEntryPointE2E(unittest.TestCase):
             if "REDACTED" in output or "Configuration" in output:
                 # Sensitive data should be redacted
                 self.assertTrue(
-                    "REDACTED" in output
-                    or "***" in output
-                    or "[redacted]" in output.lower(),
+                    "REDACTED" in output or "***" in output or "[redacted]" in output.lower(),
                     "Expected redaction markers in output",
                 )
         finally:
@@ -416,9 +397,7 @@ class TestMainEntryPointE2E(unittest.TestCase):
 
     def test_combined_flags(self):
         """Test multiple flags combined."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(
                 {
                     "matrix": {
@@ -465,9 +444,7 @@ class TestMainEntryPointE2E(unittest.TestCase):
 
     def test_admin_users_flag(self):
         """Test -a/--admin flag for adding admin users."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(
                 {
                     "matrix": {
@@ -515,9 +492,7 @@ class TestMainEntryPointE2E(unittest.TestCase):
 
     def test_allowed_rooms_flag(self):
         """Test -r/--room flag for adding allowed rooms."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(
                 {
                     "matrix": {
@@ -565,9 +540,7 @@ class TestMainEntryPointE2E(unittest.TestCase):
 
     def test_no_greetings_flag(self):
         """Test -N/--no-greetings flag disables greeting messages."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(
                 {
                     "matrix": {
@@ -620,9 +593,7 @@ class TestConfigurationFlow(unittest.TestCase):
 
     def test_valid_password_auth_config(self):
         """Test that valid password authentication config passes validation."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(
                 {
                     "matrix": {
@@ -670,9 +641,7 @@ class TestConfigurationFlow(unittest.TestCase):
 
     def test_valid_oidc_auth_config(self):
         """Test that valid OIDC authentication config passes validation."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(
                 {
                     "matrix": {
@@ -714,9 +683,7 @@ class TestConfigurationFlow(unittest.TestCase):
 
     def test_missing_homeserver_uses_default(self):
         """Test that missing homeserver uses default value."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(
                 {
                     "matrix": {
@@ -762,9 +729,7 @@ class TestConfigurationFlow(unittest.TestCase):
 
     def test_missing_user_id_validation(self):
         """Test that missing user_id fails validation."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(
                 {
                     "matrix": {
@@ -808,9 +773,7 @@ class TestConfigurationFlow(unittest.TestCase):
 
     def test_invalid_json_config(self):
         """Test that invalid JSON is handled gracefully."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             f.write("{ invalid json content }")
             temp_config = f.name
 
@@ -837,9 +800,7 @@ class TestConfigurationFlow(unittest.TestCase):
             output = result.stdout + result.stderr
             # Should mention parsing or JSON error
             self.assertTrue(
-                "json" in output.lower()
-                or "parse" in output.lower()
-                or "error" in output.lower()
+                "json" in output.lower() or "parse" in output.lower() or "error" in output.lower()
             )
         finally:
             os.unlink(temp_config)
@@ -885,9 +846,7 @@ class TestErrorHandling(unittest.TestCase):
     def test_permission_denied_config(self):
         """Test handling of config file with no read permissions."""
         # Create a temporary config file
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(
                 {
                     "matrix": {

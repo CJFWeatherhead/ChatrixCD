@@ -53,9 +53,7 @@ class TestConfig(unittest.TestCase):
 
     def test_unreadable_config_file(self):
         """Test graceful handling of unreadable config file."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump({"matrix": {"homeserver": "test"}}, f)
             temp_file = f.name
 
@@ -100,9 +98,7 @@ class TestConfig(unittest.TestCase):
                 "shutdown_message": "Custom shutdown message",
             }
         }
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(json_content, f)
             temp_file = f.name
 
@@ -114,21 +110,15 @@ class TestConfig(unittest.TestCase):
                 config.get("bot.greeting_rooms"),
                 ["!room1:example.com", "!room2:example.com"],
             )
-            self.assertEqual(
-                config.get("bot.startup_message"), "Custom startup message"
-            )
-            self.assertEqual(
-                config.get("bot.shutdown_message"), "Custom shutdown message"
-            )
+            self.assertEqual(config.get("bot.startup_message"), "Custom startup message")
+            self.assertEqual(config.get("bot.shutdown_message"), "Custom shutdown message")
         finally:
             os.unlink(temp_file)
 
     def test_greeting_config_from_env_ignored(self):
         """Test that greeting configuration from environment variables is ignored."""
         os.environ["BOT_GREETINGS_ENABLED"] = "false"
-        os.environ["BOT_GREETING_ROOMS"] = (
-            "!room1:example.com,!room2:example.com"
-        )
+        os.environ["BOT_GREETING_ROOMS"] = "!room1:example.com,!room2:example.com"
         os.environ["BOT_STARTUP_MESSAGE"] = "Env startup message"
         os.environ["BOT_SHUTDOWN_MESSAGE"] = "Env shutdown message"
 
@@ -161,9 +151,7 @@ class TestConfig(unittest.TestCase):
                 "access_token": "test_token",
             }
         }
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(json_content, f)
             temp_file = f.name
 
@@ -172,9 +160,7 @@ class TestConfig(unittest.TestCase):
             matrix_config = config.get_matrix_config()
 
             # JSON values should be present
-            self.assertEqual(
-                matrix_config.get("homeserver"), "https://matrix.example.test"
-            )
+            self.assertEqual(matrix_config.get("homeserver"), "https://matrix.example.test")
             self.assertEqual(matrix_config.get("user_id"), "@bot:example.com")
             self.assertEqual(matrix_config.get("access_token"), "test_token")
 
@@ -202,9 +188,7 @@ class TestConfig(unittest.TestCase):
                 "oidc_redirect_url": "http://localhost:8080/callback",
             }
         }
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(json_content, f)
             temp_file = f.name
 
@@ -213,12 +197,8 @@ class TestConfig(unittest.TestCase):
             matrix_config = config.get_matrix_config()
 
             # User specified values
-            self.assertEqual(
-                matrix_config.get("homeserver"), "https://mymatrixserver.com"
-            )
-            self.assertEqual(
-                matrix_config.get("user_id"), "@auser:mymatrixserver"
-            )
+            self.assertEqual(matrix_config.get("homeserver"), "https://mymatrixserver.com")
+            self.assertEqual(matrix_config.get("user_id"), "@auser:mymatrixserver")
             self.assertEqual(matrix_config.get("auth_type"), "oidc")
             self.assertEqual(
                 matrix_config.get("oidc_redirect_url"),
@@ -252,26 +232,18 @@ class TestConfig(unittest.TestCase):
             "bot": {"command_prefix": "!json"},
         }
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(json_content, f)
             temp_file = f.name
 
         try:
             config = Config(temp_file)
 
-            self.assertEqual(
-                config.get("matrix.homeserver"), "https://json.matrix.org"
-            )
-            self.assertEqual(
-                config.get("matrix.user_id"), "@jsonbot:json.matrix.org"
-            )
+            self.assertEqual(config.get("matrix.homeserver"), "https://json.matrix.org")
+            self.assertEqual(config.get("matrix.user_id"), "@jsonbot:json.matrix.org")
             self.assertEqual(config.get("matrix.auth_type"), "password")
             self.assertEqual(config.get("matrix.password"), "jsonpassword")
-            self.assertEqual(
-                config.get("semaphore.url"), "https://json.semaphore.com"
-            )
+            self.assertEqual(config.get("semaphore.url"), "https://json.semaphore.com")
             self.assertEqual(config.get("bot.command_prefix"), "!json")
 
             # Check that defaults are still applied
@@ -283,9 +255,7 @@ class TestConfig(unittest.TestCase):
         """Test graceful handling of malformed JSON."""
         json_content = '{"matrix": {"homeserver": "test", "unclosed": }'
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             f.write(json_content)
             temp_file = f.name
 
@@ -316,9 +286,7 @@ class TestConfig(unittest.TestCase):
                 "user_id": "@bot:matrix.org",
             },
         }
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(json_content, f)
             temp_file = f.name
 
@@ -343,9 +311,7 @@ class TestConfig(unittest.TestCase):
                 "api_token": "token",
             },
         }
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(json_content, f)
             temp_file = f.name
 
@@ -353,14 +319,10 @@ class TestConfig(unittest.TestCase):
             config = Config(temp_file)
 
             # Should have been migrated to current version
-            self.assertEqual(
-                config.get_config_version(), CURRENT_CONFIG_VERSION
-            )
+            self.assertEqual(config.get_config_version(), CURRENT_CONFIG_VERSION)
 
             # Original data should be preserved
-            self.assertEqual(
-                config.get("matrix.homeserver"), "https://matrix.org"
-            )
+            self.assertEqual(config.get("matrix.homeserver"), "https://matrix.org")
             self.assertEqual(config.get("matrix.user_id"), "@bot:matrix.org")
 
             # v2 fields should have defaults
@@ -389,9 +351,7 @@ class TestConfig(unittest.TestCase):
             },
             "bot": {"command_prefix": "!cd"},
         }
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(json_content, f)
             temp_file = f.name
 
@@ -408,9 +368,7 @@ class TestConfig(unittest.TestCase):
             "matrix": {"homeserver": "", "user_id": ""},
             "semaphore": {"url": "", "api_token": ""},
         }
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(json_content, f)
             temp_file = f.name
 
@@ -440,9 +398,7 @@ class TestConfig(unittest.TestCase):
                 "api_token": "token",
             },
         }
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(json_content, f)
             temp_file = f.name
 
@@ -451,9 +407,7 @@ class TestConfig(unittest.TestCase):
             errors = config.validate_schema()
 
             # Should fail because token auth is no longer supported
-            self.assertTrue(
-                any("auth_type" in e and "token" in e for e in errors)
-            )
+            self.assertTrue(any("auth_type" in e and "token" in e for e in errors))
         finally:
             os.unlink(temp_file)
 
@@ -470,9 +424,7 @@ class TestConfig(unittest.TestCase):
                 "api_token": "token",
             },
         }
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(json_content, f)
             temp_file = f.name
 
@@ -498,9 +450,7 @@ class TestConfig(unittest.TestCase):
                 "api_token": "token",
             },
         }
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(json_content, f)
             temp_file = f.name
 
@@ -508,9 +458,7 @@ class TestConfig(unittest.TestCase):
             config = Config(temp_file)
             errors = config.validate_schema()
 
-            self.assertTrue(
-                any("auth_type" in e and "invalid" in e for e in errors)
-            )
+            self.assertTrue(any("auth_type" in e and "invalid" in e for e in errors))
         finally:
             os.unlink(temp_file)
 
@@ -529,9 +477,7 @@ class TestConfig(unittest.TestCase):
             },
         }
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(json_content, f)
             temp_file = f.name
 
@@ -539,9 +485,7 @@ class TestConfig(unittest.TestCase):
             config = Config(temp_file)
             # v3 config should be migrated to v5 (current version)
             self.assertEqual(config.get_config_version(), 5)
-            self.assertEqual(
-                config.get("matrix.homeserver"), "https://matrix.org"
-            )
+            self.assertEqual(config.get("matrix.homeserver"), "https://matrix.org")
         finally:
             os.unlink(temp_file)
 
@@ -569,9 +513,7 @@ class TestConfig(unittest.TestCase):
         }
         """
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             f.write(hjson_content)
             temp_file = f.name
 
@@ -579,19 +521,11 @@ class TestConfig(unittest.TestCase):
             config = Config(temp_file)
 
             # Verify values were parsed correctly despite comments
-            self.assertEqual(
-                config.get("matrix.homeserver"), "https://hjson.matrix.org"
-            )
-            self.assertEqual(
-                config.get("matrix.user_id"), "@hjsonbot:hjson.matrix.org"
-            )
+            self.assertEqual(config.get("matrix.homeserver"), "https://hjson.matrix.org")
+            self.assertEqual(config.get("matrix.user_id"), "@hjsonbot:hjson.matrix.org")
             self.assertEqual(config.get("matrix.auth_type"), "token")
-            self.assertEqual(
-                config.get("matrix.access_token"), "hjson_token_123"
-            )
-            self.assertEqual(
-                config.get("semaphore.url"), "https://hjson.semaphore.com"
-            )
+            self.assertEqual(config.get("matrix.access_token"), "hjson_token_123")
+            self.assertEqual(config.get("semaphore.url"), "https://hjson.semaphore.com")
             self.assertEqual(config.get("bot.command_prefix"), "!hjson")
 
             # Check that defaults are still applied
@@ -615,9 +549,7 @@ class TestConfig(unittest.TestCase):
         }
         """
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             f.write(hjson_content)
             temp_file = f.name
 
@@ -625,13 +557,9 @@ class TestConfig(unittest.TestCase):
             config = Config(temp_file)
 
             # Verify values were parsed correctly despite trailing commas
-            self.assertEqual(
-                config.get("matrix.homeserver"), "https://matrix.org"
-            )
+            self.assertEqual(config.get("matrix.homeserver"), "https://matrix.org")
             self.assertEqual(config.get("matrix.user_id"), "@bot:matrix.org")
-            self.assertEqual(
-                config.get("semaphore.url"), "https://semaphore.test"
-            )
+            self.assertEqual(config.get("semaphore.url"), "https://semaphore.test")
         finally:
             os.unlink(temp_file)
 

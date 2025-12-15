@@ -46,9 +46,7 @@ class SemaphoreClient:
         """
         if not self.ssl_verify:
             # Disable SSL verification
-            logger.warning(
-                "SSL certificate verification is disabled for Semaphore connection"
-            )
+            logger.warning("SSL certificate verification is disabled for Semaphore connection")
             return False
 
         # Create SSL context for custom certificate configuration
@@ -63,18 +61,14 @@ class SemaphoreClient:
             # Load client certificate and key
             if self.ssl_client_cert:
                 if self.ssl_client_key:
-                    logger.info(
-                        f"Using client certificate: {self.ssl_client_cert}"
-                    )
+                    logger.info(f"Using client certificate: {self.ssl_client_cert}")
                     ssl_context.load_cert_chain(
                         certfile=self.ssl_client_cert,
                         keyfile=self.ssl_client_key,
                     )
                 else:
                     # Assume key is in the same file as certificate
-                    logger.info(
-                        f"Using client certificate: {self.ssl_client_cert}"
-                    )
+                    logger.info(f"Using client certificate: {self.ssl_client_cert}")
                     ssl_context.load_cert_chain(certfile=self.ssl_client_cert)
 
             return ssl_context
@@ -96,9 +90,7 @@ class SemaphoreClient:
             # Create connector with SSL context
             connector = aiohttp.TCPConnector(ssl=ssl_context)
 
-            self.session = aiohttp.ClientSession(
-                headers=headers, connector=connector
-            )
+            self.session = aiohttp.ClientSession(headers=headers, connector=connector)
 
     async def close(self):
         """Close the aiohttp session."""
@@ -127,9 +119,7 @@ class SemaphoreClient:
             logger.error(f"Error getting projects: {e}")
             return []
 
-    async def get_project_templates(
-        self, project_id: int
-    ) -> List[Dict[str, Any]]:
+    async def get_project_templates(self, project_id: int) -> List[Dict[str, Any]]:
         """Get templates for a specific project.
 
         Args:
@@ -142,14 +132,10 @@ class SemaphoreClient:
         session = cast(aiohttp.ClientSession, self.session)
 
         try:
-            async with session.get(
-                f"{self.base_url}/api/project/{project_id}/templates"
-            ) as resp:
+            async with session.get(f"{self.base_url}/api/project/{project_id}/templates") as resp:
                 if resp.status == 200:
                     templates = await resp.json()
-                    logger.info(
-                        f"Retrieved {len(templates)} templates for project {project_id}"
-                    )
+                    logger.info(f"Retrieved {len(templates)} templates for project {project_id}")
                     return templates
                 else:
                     logger.error(f"Failed to get templates: {resp.status}")
@@ -199,9 +185,7 @@ class SemaphoreClient:
             ) as resp:
                 if resp.status in (200, 201):
                     task = await resp.json()
-                    logger.info(
-                        f"Started task {task.get('id')} from template {template_id}"
-                    )
+                    logger.info(f"Started task {task.get('id')} from template {template_id}")
                     return task
                 else:
                     logger.error(f"Failed to start task: {resp.status}")
@@ -225,9 +209,7 @@ class SemaphoreClient:
         session = cast(aiohttp.ClientSession, self.session)
 
         try:
-            async with session.get(
-                f"{self.base_url}/api/task/{task_id}"
-            ) as resp:
+            async with session.get(f"{self.base_url}/api/task/{task_id}") as resp:
                 if resp.status == 200:
                     task = await resp.json()
                     return task
@@ -238,9 +220,7 @@ class SemaphoreClient:
             logger.error(f"Error getting task: {e}")
             return None
 
-    async def get_task_status(
-        self, project_id: int, task_id: int
-    ) -> Optional[Dict[str, Any]]:
+    async def get_task_status(self, project_id: int, task_id: int) -> Optional[Dict[str, Any]]:
         """Get status of a specific task.
 
         Args:
@@ -267,9 +247,7 @@ class SemaphoreClient:
             logger.error(f"Error getting task status: {e}")
             return None
 
-    async def get_task_output(
-        self, project_id: int, task_id: int
-    ) -> Optional[str]:
+    async def get_task_output(self, project_id: int, task_id: int) -> Optional[str]:
         """Get output logs for a specific task.
 
         Semaphore returns task output as a JSON array of log entries with structure:
@@ -298,16 +276,12 @@ class SemaphoreClient:
 
                     # Extract "output" field from each log entry and join with newlines
                     if isinstance(log_entries, list):
-                        log_lines = [
-                            entry.get("output", "") for entry in log_entries
-                        ]
+                        log_lines = [entry.get("output", "") for entry in log_entries]
                         output = "\n".join(log_lines)
                         return output
                     else:
                         # Fallback: if response is not a list, treat as plain text
-                        logger.warning(
-                            "Task output is not a JSON array, treating as plain text"
-                        )
+                        logger.warning("Task output is not a JSON array, treating as plain text")
                         return str(log_entries)
                 else:
                     logger.error(f"Failed to get task output: {resp.status}")

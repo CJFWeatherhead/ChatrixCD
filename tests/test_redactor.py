@@ -11,12 +11,8 @@ class TestSensitiveInfoRedactor(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.redactor = SensitiveInfoRedactor(enabled=True, colorize=False)
-        self.redactor_colored = SensitiveInfoRedactor(
-            enabled=True, colorize=True
-        )
-        self.redactor_disabled = SensitiveInfoRedactor(
-            enabled=False, colorize=False
-        )
+        self.redactor_colored = SensitiveInfoRedactor(enabled=True, colorize=True)
+        self.redactor_disabled = SensitiveInfoRedactor(enabled=False, colorize=False)
 
     def test_redact_disabled(self):
         """Test that redaction can be disabled."""
@@ -107,7 +103,9 @@ class TestSensitiveInfoRedactor(unittest.TestCase):
 
     def test_multiple_redactions(self):
         """Test multiple redactions in a single message."""
-        message = "@alice:matrix.org connected from 192.168.1.1 to !room:server.com with token abc123"
+        message = (
+            "@alice:matrix.org connected from 192.168.1.1 to !room:server.com with token abc123"
+        )
         result = self.redactor.redact(message)
         self.assertIn("@[USER]:", result)
         self.assertIn("![ROOM_ID]:", result)
@@ -146,9 +144,7 @@ class TestSensitiveInfoRedactor(unittest.TestCase):
 
     def test_redact_session_id_with_dots(self):
         """Test redaction of session IDs followed by dots."""
-        message = (
-            "'session_id': 'pMqd8VKtcXc4wwthMHQb2VNjOATOXnPrkvvbgio.....'"
-        )
+        message = "'session_id': 'pMqd8VKtcXc4wwthMHQb2VNjOATOXnPrkvvbgio.....'"
         result = self.redactor.redact(message)
         self.assertIn("[SESSION_ID_REDACTED]", result)
         self.assertNotIn("pMqd8VKtcXc4wwth", result)

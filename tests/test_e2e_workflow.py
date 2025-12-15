@@ -56,9 +56,7 @@ class TestConfigurationWizardWorkflow(unittest.TestCase):
 
     def test_config_validation_error_messages(self):
         """Test that configuration validation provides clear error messages."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             # Write config with multiple validation errors
             json.dump(
                 {
@@ -117,9 +115,7 @@ class TestCommandLineWorkflows(unittest.TestCase):
 
     def test_show_config_after_validation_failure(self):
         """Test that show-config works even with invalid config."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(
                 {
                     "matrix": {
@@ -169,9 +165,7 @@ class TestCommandLineWorkflows(unittest.TestCase):
 
     def test_verbose_redact_combination(self):
         """Test verbose logging with redaction enabled."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(
                 {
                     "matrix": {
@@ -222,9 +216,7 @@ class TestCommandLineWorkflows(unittest.TestCase):
 
     def test_admin_and_room_flags_override(self):
         """Test that CLI flags override config file values."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(
                 {
                     "matrix": {
@@ -328,9 +320,7 @@ class TestCommandLineWorkflows(unittest.TestCase):
                 )
 
                 # Should succeed
-                self.assertEqual(
-                    result.returncode, 0, f"Failed for config{i}.json"
-                )
+                self.assertEqual(result.returncode, 0, f"Failed for config{i}.json")
 
                 # Should show correct config
                 output = result.stdout + result.stderr
@@ -392,9 +382,7 @@ class TestOutputVerification(unittest.TestCase):
 
     def test_config_output_json_structure(self):
         """Test that config output has valid JSON structure."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(
                 {
                     "matrix": {
@@ -443,9 +431,7 @@ class TestOutputVerification(unittest.TestCase):
     def test_error_output_clarity(self):
         """Test that error messages are clear and helpful."""
         # Test with invalid JSON
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             f.write("{ invalid json }")
             temp_config = f.name
 
@@ -488,9 +474,7 @@ class TestOutputVerification(unittest.TestCase):
 
     def test_validation_error_list(self):
         """Test that validation errors are listed clearly."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             # Config with multiple validation errors
             json.dump(
                 {
@@ -532,9 +516,7 @@ class TestOutputVerification(unittest.TestCase):
 
             # Should mention required fields
             # At least user_id should be mentioned
-            self.assertTrue(
-                "user_id" in output.lower() or "required" in output.lower()
-            )
+            self.assertTrue("user_id" in output.lower() or "required" in output.lower())
         finally:
             os.unlink(temp_config)
 
@@ -582,9 +564,7 @@ class TestIntegrationScenarios(unittest.TestCase):
 
     def test_config_migration_scenario(self):
         """Test configuration migration scenario."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             # Write old config without version
             json.dump(
                 {
@@ -636,9 +616,7 @@ class TestIntegrationScenarios(unittest.TestCase):
 
     def test_update_config_with_cli_flags(self):
         """Test updating configuration with CLI flags."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             # Write basic config
             json.dump(
                 {

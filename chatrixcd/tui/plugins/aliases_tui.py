@@ -103,9 +103,7 @@ class AliasesScreen(BaseScreen, PluginScreenMixin):
                 classes="description",
             )
 
-            yield DataGrid(
-                columns=["Alias", "Command", "Actions"], id="aliases-table"
-            )
+            yield DataGrid(columns=["Alias", "Command", "Actions"], id="aliases-table")
 
             with Horizontal(classes="action-buttons"):
                 yield Button(
@@ -192,9 +190,7 @@ class AliasesScreen(BaseScreen, PluginScreenMixin):
                     await self.show_success(f"Alias '{alias_name}' created")
                     await self.refresh_data()
                 else:
-                    await self.show_error(
-                        f"Failed to create alias '{alias_name}'"
-                    )
+                    await self.show_error(f"Failed to create alias '{alias_name}'")
 
             except Exception as e:
                 self.logger.error(f"Error adding alias: {e}")
@@ -215,15 +211,11 @@ class AliasesScreen(BaseScreen, PluginScreenMixin):
                 return
 
             if plugin.remove_alias(self.selected_alias):
-                await self.show_success(
-                    f"Alias '{self.selected_alias}' deleted"
-                )
+                await self.show_success(f"Alias '{self.selected_alias}' deleted")
                 self.selected_alias = None
                 await self.refresh_data()
             else:
-                await self.show_error(
-                    f"Failed to delete alias '{self.selected_alias}'"
-                )
+                await self.show_error(f"Failed to delete alias '{self.selected_alias}'")
 
         except Exception as e:
             self.logger.error(f"Error deleting alias: {e}")

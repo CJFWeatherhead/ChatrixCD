@@ -36,11 +36,7 @@ def parse_config_example() -> Dict[str, Any]:
                 comment = stripped[2:].strip()
                 current_comment.append(comment)
             # When we hit a key-value pair, associate the comments with it
-            elif (
-                ":" in stripped
-                and not stripped.startswith("{")
-                and not stripped.startswith("}")
-            ):
+            elif ":" in stripped and not stripped.startswith("{") and not stripped.startswith("}"):
                 # Extract key
                 key = stripped.split(":")[0].strip().strip('"')
 
@@ -69,9 +65,7 @@ def parse_config_example() -> Dict[str, Any]:
     return field_info
 
 
-def get_console_input(
-    prompt: str, default: str = "", is_password: bool = False
-) -> str:
+def get_console_input(prompt: str, default: str = "", is_password: bool = False) -> str:
     """Get input from console with optional default.
 
     Args:
@@ -152,9 +146,7 @@ def get_choice(prompt: str, choices: List[str], default: str = "") -> str:
             if value in choices:
                 return value
 
-            print(
-                f"Invalid choice. Please enter 1-{len(choices)} or one of: {', '.join(choices)}"
-            )
+            print(f"Invalid choice. Please enter 1-{len(choices)} or one of: {', '.join(choices)}")
         except (EOFError, KeyboardInterrupt):
             print("\nConfiguration cancelled.")
             sys.exit(0)
@@ -247,9 +239,7 @@ def run_console_config_wizard(
     else:  # oidc
         config["matrix"]["oidc_redirect_url"] = get_console_input(
             "OIDC redirect URL",
-            config.get("matrix", {}).get(
-                "oidc_redirect_url", "http://localhost:8080/callback"
-            ),
+            config.get("matrix", {}).get("oidc_redirect_url", "http://localhost:8080/callback"),
         )
 
     config["matrix"]["store_path"] = get_console_input(
@@ -291,18 +281,14 @@ def run_console_config_wizard(
             config.get("semaphore", {}).get("ssl_client_key", ""),
         )
     else:
-        config["semaphore"]["ssl_verify"] = config.get("semaphore", {}).get(
-            "ssl_verify", True
+        config["semaphore"]["ssl_verify"] = config.get("semaphore", {}).get("ssl_verify", True)
+        config["semaphore"]["ssl_ca_cert"] = config.get("semaphore", {}).get("ssl_ca_cert", "")
+        config["semaphore"]["ssl_client_cert"] = config.get("semaphore", {}).get(
+            "ssl_client_cert", ""
         )
-        config["semaphore"]["ssl_ca_cert"] = config.get("semaphore", {}).get(
-            "ssl_ca_cert", ""
+        config["semaphore"]["ssl_client_key"] = config.get("semaphore", {}).get(
+            "ssl_client_key", ""
         )
-        config["semaphore"]["ssl_client_cert"] = config.get(
-            "semaphore", {}
-        ).get("ssl_client_cert", "")
-        config["semaphore"]["ssl_client_key"] = config.get(
-            "semaphore", {}
-        ).get("ssl_client_key", "")
 
     # Bot Configuration
     print("\n" + "=" * 70)
@@ -388,9 +374,7 @@ def run_console_config_wizard(
     return config
 
 
-def save_config(
-    config: Dict[str, Any], config_file: str = "config.json"
-) -> bool:
+def save_config(config: Dict[str, Any], config_file: str = "config.json") -> bool:
     """Save configuration to file.
 
     Args:

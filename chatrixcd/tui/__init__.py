@@ -50,9 +50,7 @@ class AdminsScreen(BaseScreen):
 
     SCREEN_TITLE = "Admins"
 
-    def __init__(
-        self, admins: Optional[Iterable[Any]] = None, *args: Any, **kwargs: Any
-    ) -> None:
+    def __init__(self, admins: Optional[Iterable[Any]] = None, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.admins: List[str] = list(map(str, admins or []))
 

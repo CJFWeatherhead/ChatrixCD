@@ -101,9 +101,7 @@ class TestDeviceVerificationE2E(unittest.IsolatedAsyncioTestCase):
 
         # Verify the result
         self.assertTrue(result)
-        self.client_alice.accept_key_verification.assert_called_once_with(
-            "test_transaction_456"
-        )
+        self.client_alice.accept_key_verification.assert_called_once_with("test_transaction_456")
         self.client_alice.send_to_device_messages.assert_called_once()
 
     async def test_start_verification_sends_to_device_messages(self):
@@ -130,9 +128,7 @@ class TestDeviceVerificationE2E(unittest.IsolatedAsyncioTestCase):
 
         # Verify the result
         self.assertIsNotNone(result)
-        self.client_alice.start_key_verification.assert_called_once_with(
-            bob_device
-        )
+        self.client_alice.start_key_verification.assert_called_once_with(bob_device)
         self.client_alice.send_to_device_messages.assert_called_once()
 
     async def test_full_verification_flow_mock(self):
@@ -155,9 +151,7 @@ class TestDeviceVerificationE2E(unittest.IsolatedAsyncioTestCase):
         sas_alice.state = SasState.created
         sas_alice.we_started_it = True
         sas_alice.other_key_set = True
-        sas_alice.get_emoji = Mock(
-            return_value=[("🐶", "Dog"), ("🎉", "Party"), ("🌟", "Star")]
-        )
+        sas_alice.get_emoji = Mock(return_value=[("🐶", "Dog"), ("🎉", "Party"), ("🌟", "Star")])
         sas_alice.accept_sas = Mock()
 
         sas_bob = Mock(spec=Sas)
@@ -166,9 +160,7 @@ class TestDeviceVerificationE2E(unittest.IsolatedAsyncioTestCase):
         sas_bob.state = SasState.created
         sas_bob.we_started_it = False
         sas_bob.other_key_set = True
-        sas_bob.get_emoji = Mock(
-            return_value=[("🐶", "Dog"), ("🎉", "Party"), ("🌟", "Star")]
-        )
+        sas_bob.get_emoji = Mock(return_value=[("🐶", "Dog"), ("🎉", "Party"), ("🌟", "Star")])
         sas_bob.accept_sas = Mock()
 
         # Setup mock client methods
@@ -185,9 +177,7 @@ class TestDeviceVerificationE2E(unittest.IsolatedAsyncioTestCase):
         self.client_bob.key_verifications = {"shared_transaction": sas_bob}
 
         # Step 1: Alice starts verification with Bob
-        sas_result_alice = await self.manager_alice.start_verification(
-            bob_device
-        )
+        sas_result_alice = await self.manager_alice.start_verification(bob_device)
         self.assertIsNotNone(sas_result_alice)
         self.client_alice.start_key_verification.assert_called_once()
         self.client_alice.send_to_device_messages.assert_called()
@@ -199,12 +189,8 @@ class TestDeviceVerificationE2E(unittest.IsolatedAsyncioTestCase):
         self.client_bob.send_to_device_messages.assert_called()
 
         # Step 3: Both wait for key exchange (simulated by setting other_key_set=True above)
-        alice_key_ready = await self.manager_alice.wait_for_key_exchange(
-            sas_alice, max_wait=1
-        )
-        bob_key_ready = await self.manager_bob.wait_for_key_exchange(
-            sas_bob, max_wait=1
-        )
+        alice_key_ready = await self.manager_alice.wait_for_key_exchange(sas_alice, max_wait=1)
+        bob_key_ready = await self.manager_bob.wait_for_key_exchange(sas_bob, max_wait=1)
         self.assertTrue(alice_key_ready)
         self.assertTrue(bob_key_ready)
 
@@ -215,9 +201,7 @@ class TestDeviceVerificationE2E(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(alice_emojis), 3)
 
         # Step 5: Both confirm the verification
-        alice_confirm = await self.manager_alice.confirm_verification(
-            sas_alice
-        )
+        alice_confirm = await self.manager_alice.confirm_verification(sas_alice)
         bob_confirm = await self.manager_bob.confirm_verification(sas_bob)
         self.assertTrue(alice_confirm)
         self.assertTrue(bob_confirm)
@@ -228,12 +212,8 @@ class TestDeviceVerificationE2E(unittest.IsolatedAsyncioTestCase):
 
         # Verify that send_to_device_messages was called multiple times
         # (start, accept, confirm)
-        self.assertGreaterEqual(
-            self.client_alice.send_to_device_messages.call_count, 2
-        )
-        self.assertGreaterEqual(
-            self.client_bob.send_to_device_messages.call_count, 2
-        )
+        self.assertGreaterEqual(self.client_alice.send_to_device_messages.call_count, 2)
+        self.assertGreaterEqual(self.client_bob.send_to_device_messages.call_count, 2)
 
     async def test_auto_verify_pending_sends_messages(self):
         """Test that auto-verification sends to-device messages."""
@@ -258,19 +238,13 @@ class TestDeviceVerificationE2E(unittest.IsolatedAsyncioTestCase):
         self.client_alice.send_to_device_messages = AsyncMock()
 
         # Auto-verify
-        result = await self.manager_alice.auto_verify_pending(
-            "auto_verify_transaction"
-        )
+        result = await self.manager_alice.auto_verify_pending("auto_verify_transaction")
 
         # Verify the result
         self.assertTrue(result)
-        self.client_alice.accept_key_verification.assert_called_once_with(
-            "auto_verify_transaction"
-        )
+        self.client_alice.accept_key_verification.assert_called_once_with("auto_verify_transaction")
         # Should be called twice: once for accept, once for confirm
-        self.assertEqual(
-            self.client_alice.send_to_device_messages.call_count, 2
-        )
+        self.assertEqual(self.client_alice.send_to_device_messages.call_count, 2)
         sas.accept_sas.assert_called_once()
 
     async def test_verification_with_wrong_emojis_rejection(self):
@@ -300,9 +274,7 @@ class TestDeviceVerificationE2E(unittest.IsolatedAsyncioTestCase):
         sas.other_key_set = False  # Key never set
 
         # Wait for key exchange with short timeout
-        result = await self.manager_alice.wait_for_key_exchange(
-            sas, max_wait=1
-        )
+        result = await self.manager_alice.wait_for_key_exchange(sas, max_wait=1)
 
         # Verify it timed out
         self.assertFalse(result)
@@ -317,9 +289,7 @@ class TestDeviceVerificationE2E(unittest.IsolatedAsyncioTestCase):
         del mock_verification.user_id
         del mock_verification.device_id
 
-        self.client_alice.key_verifications = {
-            "unknown_transaction": mock_verification
-        }
+        self.client_alice.key_verifications = {"unknown_transaction": mock_verification}
 
         # Get pending verifications
         pending = await self.manager_alice.get_pending_verifications()
@@ -373,16 +343,12 @@ class TestVerificationInteractiveFlow(unittest.IsolatedAsyncioTestCase):
 
         # Verify device interactively
         device_info = {"device": device}
-        result = await self.manager.verify_device_interactive(
-            device_info, emoji_callback
-        )
+        result = await self.manager.verify_device_interactive(device_info, emoji_callback)
 
         # Verify success
         self.assertTrue(result)
         sas.accept_sas.assert_called_once()
-        self.assertGreaterEqual(
-            self.client.send_to_device_messages.call_count, 2
-        )
+        self.assertGreaterEqual(self.client.send_to_device_messages.call_count, 2)
 
     async def test_verify_device_interactive_rejection(self):
         """Test interactive device verification with user rejection."""
@@ -413,9 +379,7 @@ class TestVerificationInteractiveFlow(unittest.IsolatedAsyncioTestCase):
 
         # Verify device interactively
         device_info = {"device": device}
-        result = await self.manager.verify_device_interactive(
-            device_info, emoji_callback
-        )
+        result = await self.manager.verify_device_interactive(device_info, emoji_callback)
 
         # Verify rejection
         self.assertTrue(result)
@@ -485,14 +449,10 @@ class TestVerificationPersistence(unittest.IsolatedAsyncioTestCase):
 
         # Setup device store
         self.client.device_store.users = ["@bob:example.com"]
-        self.client.device_store.__getitem__ = Mock(
-            return_value={"BOB_DEVICE": verified_device}
-        )
+        self.client.device_store.__getitem__ = Mock(return_value={"BOB_DEVICE": verified_device})
 
         # Check if device is verified
-        result = await self.manager.is_device_verified(
-            "@bob:example.com", "BOB_DEVICE"
-        )
+        result = await self.manager.is_device_verified("@bob:example.com", "BOB_DEVICE")
 
         self.assertTrue(result)
 
@@ -504,14 +464,10 @@ class TestVerificationPersistence(unittest.IsolatedAsyncioTestCase):
 
         # Setup device store
         self.client.device_store.users = ["@bob:example.com"]
-        self.client.device_store.__getitem__ = Mock(
-            return_value={"BOB_DEVICE": unverified_device}
-        )
+        self.client.device_store.__getitem__ = Mock(return_value={"BOB_DEVICE": unverified_device})
 
         # Check if device is verified
-        result = await self.manager.is_device_verified(
-            "@bob:example.com", "BOB_DEVICE"
-        )
+        result = await self.manager.is_device_verified("@bob:example.com", "BOB_DEVICE")
 
         self.assertFalse(result)
 
@@ -521,9 +477,7 @@ class TestVerificationPersistence(unittest.IsolatedAsyncioTestCase):
         self.client.device_store.users = []
 
         # Check if device is verified
-        result = await self.manager.is_device_verified(
-            "@bob:example.com", "BOB_DEVICE"
-        )
+        result = await self.manager.is_device_verified("@bob:example.com", "BOB_DEVICE")
 
         self.assertFalse(result)
 
@@ -576,9 +530,7 @@ class TestVerificationPersistence(unittest.IsolatedAsyncioTestCase):
         self.client.send_to_device_messages = AsyncMock()
 
         # Auto-verify
-        result = await self.manager.auto_verify_pending(
-            "auto_persist_transaction"
-        )
+        result = await self.manager.auto_verify_pending("auto_persist_transaction")
 
         # Verify success
         self.assertTrue(result)
@@ -598,9 +550,7 @@ class TestVerificationPersistence(unittest.IsolatedAsyncioTestCase):
         """Test checking device verification when encryption is disabled."""
         self.client.olm = None
 
-        result = await self.manager.is_device_verified(
-            "@bob:example.com", "BOB_DEVICE"
-        )
+        result = await self.manager.is_device_verified("@bob:example.com", "BOB_DEVICE")
 
         self.assertFalse(result)
 
@@ -615,9 +565,7 @@ class TestVerificationPersistence(unittest.IsolatedAsyncioTestCase):
 
         # Setup device store with only own device
         self.client.device_store.users = ["@alice:example.com"]
-        self.client.device_store.__getitem__ = Mock(
-            return_value={"ALICE_DEVICE": own_device}
-        )
+        self.client.device_store.__getitem__ = Mock(return_value={"ALICE_DEVICE": own_device})
 
         # Get verified devices
         verified = await self.manager.get_verified_devices()

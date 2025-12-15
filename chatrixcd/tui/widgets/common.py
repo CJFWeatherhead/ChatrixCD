@@ -48,10 +48,7 @@ class StatusIndicator(Static):
         }
 
         color = color_map.get(self._status.lower(), "white")
-        return (
-            f"[bold]{self.service_name}:[/bold] [{color}]●[/{color}] "
-            f"{self._status}"
-        )
+        return f"[bold]{self.service_name}:[/bold] [{color}]●[/{color}] " f"{self._status}"
 
     def on_mount(self):
         """Update display when mounted."""
@@ -154,9 +151,7 @@ class ConfirmDialog(Container):
         with Vertical(classes="dialog-container"):
             yield Static(self.message, classes="dialog-message")
             with Horizontal(classes="dialog-buttons"):
-                yield Button(
-                    self.confirm_text, variant="primary", id="confirm"
-                )
+                yield Button(self.confirm_text, variant="primary", id="confirm")
                 yield Button(self.cancel_text, variant="default", id="cancel")
 
     async def on_button_pressed(self, event: Button.Pressed):

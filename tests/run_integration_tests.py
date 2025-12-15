@@ -47,9 +47,7 @@ class IntegrationTestRunner:
 
     def _get_remote_config(self) -> dict:
         """Read and parse the config.json from the remote server."""
-        print(
-            f"Reading configuration from remote server {self.current_host['remote_host']}..."
-        )
+        print(f"Reading configuration from remote server {self.current_host['remote_host']}...")
 
         # Read the config file from remote server (using root to access chatrix directory)
         cat_cmd = f"cat {self.current_host['chatrix_dir']}/config.json"
@@ -96,13 +94,9 @@ class IntegrationTestRunner:
                     matrix_config["access_token"] = session_data["access_token"]
                     logger.info("Retrieved access token from remote session file")
                 else:
-                    logger.warning(
-                        f"No access token found in session data: {session_data}"
-                    )
+                    logger.warning(f"No access token found in session data: {session_data}")
             except Exception as e:
-                logger.warning(
-                    f"Could not retrieve access token from session file: {e}"
-                )
+                logger.warning(f"Could not retrieve access token from session file: {e}")
 
         # Extract allowed rooms (use first one as test room)
         if (
@@ -130,9 +124,7 @@ class IntegrationTestRunner:
             session_output = self._run_ssh_command(session_cmd, user="root")
 
             if session_output.strip():
-                logger.info(
-                    f"Raw session file content: {session_output.strip()[:200]}..."
-                )
+                logger.info(f"Raw session file content: {session_output.strip()[:200]}...")
                 session_data = json.loads(session_output.strip())
                 keys = list(session_data.keys()) if session_data else "None"
                 logger.info(f"Parsed session data keys: {keys}")
@@ -168,9 +160,7 @@ class IntegrationTestRunner:
         for attempt in range(max_retries):
             try:
                 print(f"SSH attempt {attempt + 1}/{max_retries}: {command[:50]}...")
-                result = subprocess.run(
-                    ssh_cmd, capture_output=True, text=True, timeout=timeout
-                )
+                result = subprocess.run(ssh_cmd, capture_output=True, text=True, timeout=timeout)
 
                 if result.returncode == 0:
                     return result.stdout.strip()
@@ -190,9 +180,7 @@ class IntegrationTestRunner:
 
     def start_bot(self) -> None:
         """Start ChatrixCD on the remote machine."""
-        print(
-            f"Updating ChatrixCD on remote machine {self.current_host['remote_host']}..."
-        )
+        print(f"Updating ChatrixCD on remote machine {self.current_host['remote_host']}...")
 
         chatrix_dir = self.current_host["chatrix_dir"]
         chatrix_user = self.current_host["chatrix_user"]
@@ -233,7 +221,7 @@ class IntegrationTestRunner:
             f"uv venv --python python3.12 .venv'"
         )
         self._run_ssh_command(venv_cmd, timeout=60)
-        
+
         # Install dependencies using uv pip with explicit python path
         deps_cmd = (
             f"su - {chatrix_user} -c '"
@@ -241,7 +229,7 @@ class IntegrationTestRunner:
             f"uv pip install --python {chatrix_dir}/.venv/bin/python -r requirements.txt'"
         )
         self._run_ssh_command(deps_cmd, timeout=180)  # Give it 3 minutes for wheel downloads
-        
+
         # Install package in editable mode
         editable_cmd = (
             f"su - {chatrix_user} -c '"
@@ -378,9 +366,7 @@ class IntegrationTestRunner:
             # Check for potential sensitive data leaks (basic check)
             for pattern in sensitive_patterns:
                 if pattern.lower() in line.lower() and ("redacted" not in line.lower()):
-                    print(
-                        f"⚠️  Potential sensitive data in log for {bot_user_id}: {line[:200]}..."
-                    )
+                    print(f"⚠️  Potential sensitive data in log for {bot_user_id}: {line[:200]}...")
 
         if errors:
             print(f"❌ Errors found in logs for {bot_user_id}:")
@@ -446,16 +432,12 @@ class IntegrationTestRunner:
                     }
                 )
             except Exception as e:
-                print(
-                    f"Failed to get config for host {host_config['remote_host']}: {e}"
-                )
+                print(f"Failed to get config for host {host_config['remote_host']}: {e}")
                 overall_success = False
                 continue
 
         if len(all_bot_configs) < 2:
-            print(
-                "Warning: Need at least 2 bots for cross-testing. Running basic tests only."
-            )
+            print("Warning: Need at least 2 bots for cross-testing. Running basic tests only.")
 
         # Start all bots simultaneously
         running_bots = []
@@ -470,9 +452,7 @@ class IntegrationTestRunner:
                 running_bots.append(bot_config)
                 print(f"✅ Started bot {bot_config['matrix_config']['bot_user_id']}")
             except Exception as e:
-                print(
-                    f"❌ Failed to start bot {bot_config['matrix_config']['bot_user_id']}: {e}"
-                )
+                print(f"❌ Failed to start bot {bot_config['matrix_config']['bot_user_id']}: {e}")
                 overall_success = False
 
         if not running_bots:
@@ -490,9 +470,7 @@ class IntegrationTestRunner:
             try:
                 store_path = self.copy_store_from_remote(bot_config["host_config"])
                 store_paths[bot_config["matrix_config"]["bot_user_id"]] = store_path
-                print(
-                    f"✅ Copied store for {bot_config['matrix_config']['bot_user_id']}"
-                )
+                print(f"✅ Copied store for {bot_config['matrix_config']['bot_user_id']}")
             except Exception as e:
                 print(
                     f"❌ Failed to copy store for {bot_config['matrix_config']['bot_user_id']}: {e}"
@@ -504,19 +482,14 @@ class IntegrationTestRunner:
             print(f"\n{'='*50}")
             bot_user_id = bot_config["matrix_config"]["bot_user_id"]
             bot_host = bot_config["host"]
-            print(
-                f"Testing bot {i+1}/{len(running_bots)}: "
-                f"{bot_user_id} on {bot_host}"
-            )
+            print(f"Testing bot {i+1}/{len(running_bots)}: " f"{bot_user_id} on {bot_host}")
             print(f"{'='*50}")
 
             try:
                 # Prepare test config with information about all bots
                 test_config = self.config.copy()
                 test_config["matrix"] = bot_config["matrix_config"]
-                test_config["all_bots"] = [
-                    config["matrix_config"] for config in running_bots
-                ]
+                test_config["all_bots"] = [config["matrix_config"] for config in running_bots]
 
                 # Add test configuration
                 test_config["test_room"] = self.config.get("test_room")
@@ -532,18 +505,12 @@ class IntegrationTestRunner:
                 success = self.run_tests()
                 if not success:
                     overall_success = False
-                    print(
-                        f"❌ Tests failed for bot {bot_config['matrix_config']['bot_user_id']}"
-                    )
+                    print(f"❌ Tests failed for bot {bot_config['matrix_config']['bot_user_id']}")
                 else:
-                    print(
-                        f"✅ Tests passed for bot {bot_config['matrix_config']['bot_user_id']}"
-                    )
+                    print(f"✅ Tests passed for bot {bot_config['matrix_config']['bot_user_id']}")
 
             except Exception as e:
-                print(
-                    f"❌ Error testing bot {bot_config['matrix_config']['bot_user_id']}: {e}"
-                )
+                print(f"❌ Error testing bot {bot_config['matrix_config']['bot_user_id']}: {e}")
                 overall_success = False
 
         # Stop all bots

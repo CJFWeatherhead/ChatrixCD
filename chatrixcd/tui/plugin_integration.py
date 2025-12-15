@@ -31,9 +31,7 @@ class PluginTUIExtension:
         self._registered_screens = []
 
     @abstractmethod
-    async def register_tui_screens(
-        self, registry: "ScreenRegistry", tui_app: "ChatrixTUI"
-    ):
+    async def register_tui_screens(self, registry: "ScreenRegistry", tui_app: "ChatrixTUI"):
         """Register TUI screens with the registry.
 
         Args:

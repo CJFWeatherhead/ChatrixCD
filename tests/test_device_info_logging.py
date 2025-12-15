@@ -40,15 +40,15 @@ class TestDeviceInfoLogging(unittest.TestCase):
         # Mock encryption being enabled
         mock_olm = MagicMock()
         mock_account = MagicMock()
-        mock_account.identity_keys = {
-            "ed25519": "ABCD1234EFGH5678IJKL9012MNOP3456"
-        }
+        mock_account.identity_keys = {"ed25519": "ABCD1234EFGH5678IJKL9012MNOP3456"}
         mock_olm.account = mock_account
 
         # Patch bot.client.olm
-        with patch.object(bot.client, "olm", mock_olm), \
-             patch("chatrixcd.bot.logger") as mock_logger:
-            
+        with (
+            patch.object(bot.client, "olm", mock_olm),
+            patch("chatrixcd.bot.logger") as mock_logger,
+        ):
+
             asyncio.run(bot._log_device_info())
 
             # Verify logger.info was called with device information
@@ -70,15 +70,15 @@ class TestDeviceInfoLogging(unittest.TestCase):
         # Mock encryption being enabled
         mock_olm = MagicMock()
         mock_account = MagicMock()
-        mock_account.identity_keys = {
-            "ed25519": "TEST_FINGERPRINT_12345"
-        }
+        mock_account.identity_keys = {"ed25519": "TEST_FINGERPRINT_12345"}
         mock_olm.account = mock_account
 
         # Patch bot.client.olm
-        with patch.object(bot.client, "olm", mock_olm), \
-             patch("chatrixcd.bot.logger") as mock_logger:
-            
+        with (
+            patch.object(bot.client, "olm", mock_olm),
+            patch("chatrixcd.bot.logger") as mock_logger,
+        ):
+
             asyncio.run(bot._log_device_info())
 
             # Verify logger.info was called

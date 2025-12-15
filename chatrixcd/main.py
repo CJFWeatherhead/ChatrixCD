@@ -295,14 +295,10 @@ def print_config(config: Config, redact_identifiers: bool = False):
                 elif redact_identifiers and key in identifier_fields and value:
                     if isinstance(value, str):
                         # Use redactor for proper redaction
-                        redactor = SensitiveInfoRedactor(
-                            enabled=True, colorize=False
-                        )
+                        redactor = SensitiveInfoRedactor(enabled=True, colorize=False)
                         obj[key] = redactor.redact(value)
                     elif isinstance(value, list):
-                        redactor = SensitiveInfoRedactor(
-                            enabled=True, colorize=False
-                        )
+                        redactor = SensitiveInfoRedactor(enabled=True, colorize=False)
                         obj[key] = [redactor.redact(str(v)) for v in value]
                 else:
                     redact_sensitive(value, f"{path}.{key}" if path else key)
@@ -358,9 +354,7 @@ def main():
             print("\n" + "=" * 70)
             print("Configuration complete!")
             print("=" * 70)
-            print(
-                f"\nYou can now start ChatrixCD with: chatrixcd -c {args.config}"
-            )
+            print(f"\nYou can now start ChatrixCD with: chatrixcd -c {args.config}")
             sys.exit(0)
         else:
             sys.exit(1)
@@ -398,9 +392,7 @@ def main():
     config_verbosity = config.get("bot.verbosity", "info")
     verbosity_map = {"silent": 0, "error": 0, "info": 0, "debug": 1}
     config_verbosity_level = verbosity_map.get(config_verbosity, 0)
-    verbosity = (
-        args.verbosity if args.verbosity > 0 else config_verbosity_level
-    )
+    verbosity = args.verbosity if args.verbosity > 0 else config_verbosity_level
 
     # Color: command-line -C flag overrides config
     color_enabled = args.color or config.get("bot.color_enabled", False)
@@ -606,9 +598,7 @@ async def run_tui_with_bot(
         bot.client.add_response_callback(bot.sync_callback, SyncResponse)
 
         # Start bot sync in background
-        bot_task = asyncio.create_task(
-            bot.client.sync_forever(timeout=30000, full_state=True)
-        )
+        bot_task = asyncio.create_task(bot.client.sync_forever(timeout=30000, full_state=True))
 
         # Store the task so we can cancel it later
         tui_app.bot_task = bot_task
@@ -629,13 +619,9 @@ async def run_tui_with_bot(
             # Show error to user in TUI
             from chatrixcd.tui import MessageScreen
 
-            error_msg = (
-                f"[bold red]Error during login/sync:[/bold red]\n\n{str(e)}"
-            )
+            error_msg = f"[bold red]Error during login/sync:[/bold red]\n\n{str(e)}"
             if not logger.isEnabledFor(logging.DEBUG):
-                error_msg += (
-                    "\n\n[dim]Run with -v or -vv for more details[/dim]"
-                )
+                error_msg += "\n\n[dim]Run with -v or -vv for more details[/dim]"
             tui_app.push_screen(MessageScreen(error_msg))
 
     # Override the login task with error-handling version
@@ -646,9 +632,7 @@ async def run_tui_with_bot(
         await tui_app.run_async(mouse=mouse)
     except Exception as e:
         # Catch any unhandled TUI exceptions
-        logger.error(
-            f"TUI error: {e}", exc_info=logger.isEnabledFor(logging.DEBUG)
-        )
+        logger.error(f"TUI error: {e}", exc_info=logger.isEnabledFor(logging.DEBUG))
         if logger.isEnabledFor(logging.DEBUG):
             # Only show stacktrace in debug mode (-v, -vv, -vvv)
             raise

@@ -30,14 +30,10 @@ class SensitiveInfoRedactor:
         self.room_id_pattern = re.compile(r"![a-zA-Z0-9]+:[a-zA-Z0-9\.\-]+")
 
         # Matrix user IDs: @username:server.com (including URL-encoded characters like =40 for @)
-        self.user_id_pattern = re.compile(
-            r"@[a-zA-Z0-9\-_\.=]+:[a-zA-Z0-9\.\-]+"
-        )
+        self.user_id_pattern = re.compile(r"@[a-zA-Z0-9\-_\.=]+:[a-zA-Z0-9\.\-]+")
 
         # IPv4 addresses - mask last 2 octets
-        self.ipv4_pattern = re.compile(
-            r"\b(\d{1,3}\.\d{1,3}\.)\d{1,3}\.\d{1,3}\b"
-        )
+        self.ipv4_pattern = re.compile(r"\b(\d{1,3}\.\d{1,3}\.)\d{1,3}\.\d{1,3}\b")
 
         # IPv6 addresses - mask last 4 groups
         # More specific pattern to avoid matching timestamps
@@ -53,8 +49,7 @@ class SensitiveInfoRedactor:
 
         # Access tokens (Bearer tokens, API tokens)
         self.token_pattern = re.compile(
-            r"\b(token[=:\s]+|bearer\s+|authorization[=:\s]+bearer\s+)"
-            r"[a-zA-Z0-9_\-\.]+",
+            r"\b(token[=:\s]+|bearer\s+|authorization[=:\s]+bearer\s+)" r"[a-zA-Z0-9_\-\.]+",
             re.IGNORECASE,
         )
 
@@ -74,14 +69,11 @@ class SensitiveInfoRedactor:
 
         # SSH/TLS host keys and fingerprints
         self.hostkey_pattern = re.compile(
-            r"\b(ssh-[a-z0-9]+\s+[A-Za-z0-9+/=]+|"
-            r"[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){15,})\b"
+            r"\b(ssh-[a-z0-9]+\s+[A-Za-z0-9+/=]+|" r"[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){15,})\b"
         )
 
         # Passwords in URLs or parameters
-        self.password_pattern = re.compile(
-            r"(password[=:\s]+)[^\s&]+", re.IGNORECASE
-        )
+        self.password_pattern = re.compile(r"(password[=:\s]+)[^\s&]+", re.IGNORECASE)
 
         # Cryptographic keys (ed25519, curve25519, etc.)
         self.crypto_key_pattern = re.compile(
@@ -159,14 +151,11 @@ class SensitiveInfoRedactor:
         )
 
         # Redact hostkeys and fingerprints
-        message = self.hostkey_pattern.sub(
-            self._wrap_redacted("[HOSTKEY_REDACTED]"), message
-        )
+        message = self.hostkey_pattern.sub(self._wrap_redacted("[HOSTKEY_REDACTED]"), message)
 
         # Redact sender keys (before session IDs to be more specific)
         message = self.sender_key_pattern.sub(
-            lambda m: m.group(1)
-            + self._wrap_redacted("[SENDER_KEY_REDACTED]"),
+            lambda m: m.group(1) + self._wrap_redacted("[SENDER_KEY_REDACTED]"),
             message,
         )
 
@@ -178,21 +167,16 @@ class SensitiveInfoRedactor:
         )
 
         # Redact session IDs (after more specific patterns)
-        message = self.session_id_pattern.sub(
-            self._wrap_redacted("[SESSION_ID_REDACTED]"), message
-        )
+        message = self.session_id_pattern.sub(self._wrap_redacted("[SESSION_ID_REDACTED]"), message)
 
         # Redact cryptographic keys
         message = self.crypto_key_pattern.sub(
-            lambda m: m.group(1)
-            + self._wrap_redacted("[CRYPTO_KEY_REDACTED]"),
+            lambda m: m.group(1) + self._wrap_redacted("[CRYPTO_KEY_REDACTED]"),
             message,
         )
 
         # Redact event IDs
-        message = self.event_id_pattern.sub(
-            self._wrap_redacted("[EVENT_ID_REDACTED]"), message
-        )
+        message = self.event_id_pattern.sub(self._wrap_redacted("[EVENT_ID_REDACTED]"), message)
 
         # Redact transaction IDs
         message = self.transaction_id_pattern.sub(
@@ -207,22 +191,18 @@ class SensitiveInfoRedactor:
 
         # Redact one-time keys
         message = self.one_time_key_pattern.sub(
-            lambda m: m.group(1)
-            + self._wrap_redacted("[ONE_TIME_KEY_REDACTED]"),
+            lambda m: m.group(1) + self._wrap_redacted("[ONE_TIME_KEY_REDACTED]"),
             message,
         )
 
         # Redact fingerprints
         message = self.fingerprint_pattern.sub(
-            lambda m: m.group(1)
-            + self._wrap_redacted("[FINGERPRINT_REDACTED]"),
+            lambda m: m.group(1) + self._wrap_redacted("[FINGERPRINT_REDACTED]"),
             message,
         )
 
         # Redact sync tokens
-        message = self.sync_token_pattern.sub(
-            self._wrap_redacted("[SYNC_TOKEN_REDACTED]"), message
-        )
+        message = self.sync_token_pattern.sub(self._wrap_redacted("[SYNC_TOKEN_REDACTED]"), message)
 
         # Redact long base64 data (be careful not to redact legitimate short strings)
         message = self.base64_data_pattern.sub(
@@ -231,17 +211,13 @@ class SensitiveInfoRedactor:
 
         # Redact Matrix room IDs (before hostname pattern)
         message = self.room_id_pattern.sub(
-            lambda m: self._wrap_redacted(
-                f"![ROOM_ID]:{self._extract_domain(m.group())}"
-            ),
+            lambda m: self._wrap_redacted(f"![ROOM_ID]:{self._extract_domain(m.group())}"),
             message,
         )
 
         # Redact Matrix user IDs (before hostname pattern)
         message = self.user_id_pattern.sub(
-            lambda m: self._wrap_redacted(
-                f"@[USER]:{self._extract_domain(m.group())}"
-            ),
+            lambda m: self._wrap_redacted(f"@[USER]:{self._extract_domain(m.group())}"),
             message,
         )
 
@@ -263,12 +239,7 @@ class SensitiveInfoRedactor:
             # Don't redact if it's already been processed (contains REDACTED markers)
             if "REDACTED" in full_match or "[" in full_match:
                 return full_match
-            return (
-                match.group(1)
-                + self._wrap_redacted("[DOMAIN]")
-                + "."
-                + match.group(3)
-            )
+            return match.group(1) + self._wrap_redacted("[DOMAIN]") + "." + match.group(3)
 
         message = self.hostname_pattern.sub(redact_hostname_if_needed, message)
 
@@ -294,13 +265,7 @@ class SensitiveInfoRedactor:
                     return domain
                 else:
                     # For longer domains, redact middle parts
-                    return (
-                        parts[0]
-                        + "."
-                        + self._wrap_redacted("[DOMAIN]")
-                        + "."
-                        + parts[-1]
-                    )
+                    return parts[0] + "." + self._wrap_redacted("[DOMAIN]") + "." + parts[-1]
             return domain
         return self._wrap_redacted("[SERVER]")
 
@@ -334,20 +299,12 @@ class RedactingFilter(logging.Filter):
             if record.args:
                 if isinstance(record.args, dict):
                     record.args = {
-                        k: (
-                            self.redactor.redact(str(v))
-                            if isinstance(v, str)
-                            else v
-                        )
+                        k: (self.redactor.redact(str(v)) if isinstance(v, str) else v)
                         for k, v in record.args.items()
                     }
                 elif isinstance(record.args, tuple):
                     record.args = tuple(
-                        (
-                            self.redactor.redact(str(arg))
-                            if isinstance(arg, str)
-                            else arg
-                        )
+                        (self.redactor.redact(str(arg)) if isinstance(arg, str) else arg)
                         for arg in record.args
                     )
 

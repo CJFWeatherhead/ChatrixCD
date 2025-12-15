@@ -13,9 +13,7 @@ class TestPetScoldAliases(unittest.TestCase):
         import os
 
         # Create a temporary file for aliases
-        temp_file = tempfile.NamedTemporaryFile(
-            mode="w", delete=False, suffix=".json"
-        )
+        temp_file = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json")
         temp_file.close()
 
         try:
@@ -40,9 +38,7 @@ class TestPetScoldAliases(unittest.TestCase):
         import os
 
         # Create a temporary file for aliases
-        temp_file = tempfile.NamedTemporaryFile(
-            mode="w", delete=False, suffix=".json"
-        )
+        temp_file = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json")
         temp_file.close()
 
         try:

@@ -12,9 +12,7 @@ class TestAliasManager(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         # Create a temporary file for aliases
-        self.temp_file = tempfile.NamedTemporaryFile(
-            mode="w", delete=False, suffix=".json"
-        )
+        self.temp_file = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json")
         self.temp_file.close()
         self.alias_manager = AliasManager(self.temp_file.name)
 
