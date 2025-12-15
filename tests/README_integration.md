@@ -91,9 +91,14 @@ This enables comprehensive testing of bot-to-bot interactions in encrypted rooms
 
 4. **Install dependencies**:
    ```bash
-   uv pip install -r requirements.txt
-   uv pip install -e .
-   uv pip install pytest pytest-asyncio
+   # Use explicit Python path to ensure packages install into venv
+   uv pip install --python .venv/bin/python -r requirements.txt
+   uv pip install --python .venv/bin/python -e .
+   uv pip install --python .venv/bin/python pytest pytest-asyncio
+   
+   # Or use pip directly (after activating venv)
+   # pip install -r requirements.txt pytest pytest-asyncio
+   # pip install -e .
    ```
 
 5. **Verify installation**:

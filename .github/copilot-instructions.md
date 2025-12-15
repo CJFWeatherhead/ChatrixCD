@@ -621,12 +621,16 @@ uv venv
 # Activate environment
 source .venv/bin/activate  # Linux/macOS
 
-# Install dependencies
-uv pip install -r requirements.txt
-uv pip install -e .  # Install in development mode
+# Install dependencies with explicit Python path (recommended)
+uv pip install --python .venv/bin/python -r requirements.txt
+uv pip install --python .venv/bin/python -e .  # Install in development mode
 
 # Install dev dependencies
-uv pip install -e .[dev]
+uv pip install --python .venv/bin/python -e .[dev]
+
+# Or use pip directly after activating venv
+# pip install -r requirements.txt
+# pip install -e .
 ```
 
 ### Testing Commands

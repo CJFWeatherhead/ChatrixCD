@@ -133,7 +133,7 @@ For security vulnerabilities:
 **Solutions**:
 - Check bot logs for error messages
 - Verify Python version is 3.12 or higher (3.12, 3.13, 3.14 supported)
-- Ensure all dependencies are installed: `uv pip install -r requirements.txt`
+- Ensure all dependencies are installed: `uv pip install --python .venv/bin/python -r requirements.txt`
 - Check system resources (memory, disk space)
 - Review systemd journal if using systemd: `journalctl -u chatrixcd -n 100`
 

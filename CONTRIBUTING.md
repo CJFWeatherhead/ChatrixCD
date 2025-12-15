@@ -104,8 +104,13 @@ We actively welcome your pull requests:
 3. **Install dependencies**
 
    ```bash
-   uv pip install -r requirements.txt
-   uv pip install -e .
+   # Use explicit Python path to ensure packages install into venv
+   uv pip install --python .venv/bin/python -r requirements.txt
+   uv pip install --python .venv/bin/python -e .
+   
+   # Or use activated venv with pip directly
+   # pip install -r requirements.txt
+   # pip install -e .
    ```
 
 4. **Set up test configuration**

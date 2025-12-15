@@ -81,7 +81,11 @@ When deploying ChatrixCD, follow these security best practices:
 
 1. **Regular updates**: Keep dependencies updated to receive security patches
    ```bash
-   uv pip install -r requirements.txt --upgrade
+   # Ensure dependencies are up to date
+   uv pip install --python .venv/bin/python -r requirements.txt --upgrade
+   
+   # Or use pip directly (with activated venv)
+   # pip install -r requirements.txt --upgrade
    ```
 2. **Monitor logs**: Set up logging and regularly review logs for suspicious activity
 3. **Security scanning**: Regularly scan for vulnerabilities in dependencies

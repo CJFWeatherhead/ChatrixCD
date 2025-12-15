@@ -225,16 +225,30 @@ class IntegrationTestRunner:
 
         # Step 3: Update dependencies using uv with explicit Python path
         print("Installing dependencies...")
+        # Remove old venv and create fresh one to avoid conflicts
+        venv_cmd = (
+            f"su - {chatrix_user} -c '"
+            f"cd {chatrix_dir} && "
+            f"rm -rf .venv && "
+            f"uv venv --python python3.12 .venv'"
+        )
+        self._run_ssh_command(venv_cmd, timeout=60)
+        
+        # Install dependencies using uv pip with explicit python path
         deps_cmd = (
             f"su - {chatrix_user} -c '"
             f"cd {chatrix_dir} && "
-            f"uv venv .venv && "
-            f"uv pip install --python .venv/bin/python -r requirements.txt && "
-            f"uv pip install --python .venv/bin/python -e .'"
+            f"uv pip install --python {chatrix_dir}/.venv/bin/python -r requirements.txt'"
         )
-        self._run_ssh_command(
-            deps_cmd, timeout=180
-        )  # Give it 3 minutes for wheel downloads
+        self._run_ssh_command(deps_cmd, timeout=180)  # Give it 3 minutes for wheel downloads
+        
+        # Install package in editable mode
+        editable_cmd = (
+            f"su - {chatrix_user} -c '"
+            f"cd {chatrix_dir} && "
+            f"uv pip install --python {chatrix_dir}/.venv/bin/python -e .'"
+        )
+        self._run_ssh_command(editable_cmd, timeout=60)
         print("Dependencies installed")
 
         print("Starting ChatrixCD on remote machine...")
