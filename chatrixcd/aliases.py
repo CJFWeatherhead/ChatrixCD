@@ -32,9 +32,7 @@ RESERVED_COMMANDS = [
 class AliasManager:
     """Manage command aliases for the bot."""
 
-    def __init__(
-        self, aliases_file: str = "aliases.json", auto_reload: bool = False
-    ):
+    def __init__(self, aliases_file: str = "aliases.json", auto_reload: bool = False):
         """Initialize alias manager.
 
         Args:
@@ -74,9 +72,7 @@ class AliasManager:
 
             with open(self.aliases_file, "r", encoding="utf-8") as f:
                 self.aliases = json.load(f)
-            logger.info(
-                f"Loaded {len(self.aliases)} aliases from {self.aliases_file}"
-            )
+            logger.info(f"Loaded {len(self.aliases)} aliases from {self.aliases_file}")
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse aliases file: {e}")
             self.aliases = {}
@@ -93,9 +89,7 @@ class AliasManager:
         try:
             with open(self.aliases_file, "w", encoding="utf-8") as f:
                 json.dump(self.aliases, f, indent=2)
-            logger.info(
-                f"Saved {len(self.aliases)} aliases to {self.aliases_file}"
-            )
+            logger.info(f"Saved {len(self.aliases)} aliases to {self.aliases_file}")
             return True
         except Exception as e:
             logger.error(f"Failed to save aliases: {e}")
@@ -112,9 +106,7 @@ class AliasManager:
             True if added successfully, False otherwise
         """
         if alias.lower() in RESERVED_COMMANDS:
-            logger.warning(
-                f"Cannot create alias '{alias}': conflicts with built-in command"
-            )
+            logger.warning(f"Cannot create alias '{alias}': conflicts with built-in command")
             return False
 
         self.aliases[alias] = command
