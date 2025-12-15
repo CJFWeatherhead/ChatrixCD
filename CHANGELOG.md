@@ -42,6 +42,7 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 - Device verification hanging in log-only mode (`-L`) when initiated from Element or other Matrix clients - now auto-verifies as intended
 - "Unknown transaction id" errors during device verification due to timing issues - added retry logic to wait for matrix-nio to process verification events
+- **Device Fingerprint Logging**: Fixed "Could not find own device" warning by correctly retrieving Ed25519 fingerprint from olm account instead of device store
 
 - **Alpine Linux Encryption**: Fixed "Encryption not enabled" errors on Alpine Linux by using system `py3-matrix-nio` and `py3-olm` packages
 - **matrix-nio ENCRYPTION_ENABLED Flag**: Resolved issue where matrix-nio 0.25.2 requires `python-olm` package for encryption detection even when using vodozemac

@@ -2,7 +2,7 @@
 
 import asyncio
 import unittest
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
 from chatrixcd.bot import ChatrixBot
 from chatrixcd.config import Config
@@ -39,25 +39,15 @@ class TestDeviceInfoLogging(unittest.TestCase):
 
         # Mock encryption being enabled
         mock_olm = MagicMock()
-        mock_device_store = MagicMock()
-        
-        # Create mock device
-        mock_device = MagicMock()
-        mock_device.ed25519 = "ABCD1234EFGH5678IJKL9012MNOP3456"
-        mock_device.display_name = "Test Bot"
-
-        # Mock device_store structure
-        mock_device_store.users = ["@testbot:example.com"]
-        mock_device_store.__getitem__.return_value = {
-            "TESTDEVICE": mock_device
+        mock_account = MagicMock()
+        mock_account.identity_keys = {
+            "ed25519": "ABCD1234EFGH5678IJKL9012MNOP3456"
         }
+        mock_olm.account = mock_account
 
-        # Patch bot.client.olm and device_store access
+        # Patch bot.client.olm
         with patch.object(bot.client, "olm", mock_olm), \
              patch("chatrixcd.bot.logger") as mock_logger:
-            
-            # Mock device_store as a property that returns our mock
-            type(bot.client).device_store = PropertyMock(return_value=mock_device_store)
             
             asyncio.run(bot._log_device_info())
 
@@ -79,25 +69,15 @@ class TestDeviceInfoLogging(unittest.TestCase):
 
         # Mock encryption being enabled
         mock_olm = MagicMock()
-        mock_device_store = MagicMock()
-        
-        # Create mock device
-        mock_device = MagicMock()
-        mock_device.ed25519 = "TEST_FINGERPRINT_12345"
-        mock_device.display_name = "Test Bot Log Mode"
-
-        # Mock device_store structure
-        mock_device_store.users = ["@testbot:example.com"]
-        mock_device_store.__getitem__.return_value = {
-            "TESTDEVICE": mock_device
+        mock_account = MagicMock()
+        mock_account.identity_keys = {
+            "ed25519": "TEST_FINGERPRINT_12345"
         }
+        mock_olm.account = mock_account
 
-        # Patch bot.client.olm and device_store access
+        # Patch bot.client.olm
         with patch.object(bot.client, "olm", mock_olm), \
              patch("chatrixcd.bot.logger") as mock_logger:
-            
-            # Mock device_store as a property that returns our mock
-            type(bot.client).device_store = PropertyMock(return_value=mock_device_store)
             
             asyncio.run(bot._log_device_info())
 

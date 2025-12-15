@@ -930,39 +930,29 @@ class ChatrixBot:
             return
 
         try:
-            # Get our own device from the device store
-            if (
-                hasattr(self.client, "device_store")
-                and self.client.device_store
-                and self.user_id in self.client.device_store.users
-            ):
-                user_devices = self.client.device_store[self.user_id]
-                if self.device_id in user_devices:
-                    device = user_devices[self.device_id]
-                    # Get the Ed25519 key (fingerprint)
-                    fingerprint = getattr(device, "ed25519", "unavailable")
-                    device_name = getattr(device, "display_name", self.device_name)
+            # Get the Ed25519 fingerprint from the olm account's identity keys
+            # The device_store contains other users' devices, not our own
+            fingerprint = "unavailable"
+            if hasattr(self.client.olm, 'account') and self.client.olm.account:
+                identity_keys = getattr(self.client.olm.account, 'identity_keys', {})
+                fingerprint = identity_keys.get("ed25519", "unavailable")
 
-                    logger.info(
-                        f"\n"
-                        f"═══════════════════════════════════════════════════════════════\n"
-                        f"  Bot Device Information\n"
-                        f"═══════════════════════════════════════════════════════════════\n"
-                        f"  User ID:     {self.user_id}\n"
-                        f"  Device ID:   {self.device_id}\n"
-                        f"  Device Name: {device_name}\n"
-                        f"  Fingerprint: {fingerprint}\n"
-                        f"\n"
-                        f"  To verify this device from another client:\n"
-                        f"    /verify {self.device_id} {fingerprint}\n"
-                        f"═══════════════════════════════════════════════════════════════\n"
-                    )
-                else:
-                    logger.warning(
-                        f"Could not find own device {self.device_id} in device store"
-                    )
-            else:
-                logger.warning("Device store not available for fingerprint logging")
+            device_name = self.device_name
+
+            logger.info(
+                f"\n"
+                f"═══════════════════════════════════════════════════════════════\n"
+                f"  Bot Device Information\n"
+                f"═══════════════════════════════════════════════════════════════\n"
+                f"  User ID:     {self.user_id}\n"
+                f"  Device ID:   {self.device_id}\n"
+                f"  Device Name: {device_name}\n"
+                f"  Fingerprint: {fingerprint}\n"
+                f"\n"
+                f"  To verify this device from another client:\n"
+                f"    /verify {self.device_id} {fingerprint}\n"
+                f"═══════════════════════════════════════════════════════════════\n"
+            )
 
         except Exception as e:
             logger.debug(f"Error logging device info: {e}")
