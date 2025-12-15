@@ -8,7 +8,7 @@ ChatrixCD bots couldn't communicate in encrypted Matrix rooms due to 4 critical 
 
 1. **Typo in command handler** → Fixed `user.displayname` to `user.display_name`
 2. **Wrong encryption backend** → Switched from vodozemac to python-olm
-3. **Encryption keys not loading** → Removed bad conditionals blocking `load_store()` calls  
+3. **Encryption keys not loading** → Removed bad conditionals blocking `load_store()` calls
 4. **AsyncClient not configured for encryption** → Added `AsyncClientConfig(encryption_enabled=True)`
 
 ### Test Status
@@ -29,11 +29,13 @@ ChatrixCD bots couldn't communicate in encrypted Matrix rooms due to 4 critical 
 ### What You Should Do (5 minutes)
 
 1. **Verify python-olm on remote machines** (30 seconds per machine):
+
    ```bash
    python3 -c "import olm; print(olm.__version__)"  # Should show version
    ```
 
 2. **Run integration tests** (10 minutes):
+
    ```bash
    python tests/run_integration_tests.py tests/integration_config.json
    ```
@@ -50,24 +52,26 @@ ChatrixCD bots couldn't communicate in encrypted Matrix rooms due to 4 critical 
 
 ### Files Changed
 
-| File | Changes |
-|------|---------|
-| `requirements.txt` | `python-olm>=3.2.0` (was vodozemac) |
-| `chatrixcd/bot.py` | AsyncClientConfig + fixed encryption init |
-| `chatrixcd/commands.py` | Fixed displayname typo |
-| `CHANGELOG.md` | Documented all fixes |
+| File                    | Changes                                   |
+| ----------------------- | ----------------------------------------- |
+| `requirements.txt`      | `python-olm>=3.2.0` (was vodozemac)       |
+| `chatrixcd/bot.py`      | AsyncClientConfig + fixed encryption init |
+| `chatrixcd/commands.py` | Fixed displayname typo                    |
+| `CHANGELOG.md`          | Documented all fixes                      |
 
 ---
 
 ## Technical Summary
 
 ### The Problem
+
 - Bots received encrypted messages but couldn't decrypt them
 - Even when encryption was enabled, AsyncClient wasn't configured to use it
 - Encryption keys weren't loading from disk (load_store() was being skipped)
 - Commands crashed with AttributeError
 
 ### The Solution
+
 ```
 1. Fix typo (displayname → display_name)
 2. Switch to python-olm (matrix-nio actually recognizes it)
@@ -77,6 +81,7 @@ ChatrixCD bots couldn't communicate in encrypted Matrix rooms due to 4 critical 
 ```
 
 ### Why It Works Now
+
 ```
 Bot A sends encrypted message
     ↓
@@ -96,15 +101,18 @@ Bot B decrypts and responds ✅
 ## Key Facts
 
 ### Python-olm vs Vodozemac
+
 - **python-olm**: matrix-nio recognizes it ✅ (this is what we use now)
 - **vodozemac**: matrix-nio doesn't recognize it ❌ (caused False encryption status)
 
 ### Auto-Verification
+
 - Works automatically in log mode (integration test mode)
 - No user interaction required
 - Bots can communicate end-to-end encrypted after first device verification
 
 ### Dependencies
+
 - Automatically installed when integration test runner updates remote code
 - No manual setup needed (but user should verify it worked)
 
@@ -115,6 +123,7 @@ Bot B decrypts and responds ✅
 After running integration tests, you should see:
 
 ✅ **In bot logs**:
+
 ```
 Encryption enabled and dependencies available
 Encryption store loaded successfully
@@ -122,6 +131,7 @@ Auto-verified N device(s) for @user:server
 ```
 
 ✅ **In test output**:
+
 ```
 Bot A sends command
 Bot B receives and responds with encrypted message
@@ -130,6 +140,7 @@ Test passes ✅
 ```
 
 ❌ **If you see these, something's wrong**:
+
 ```
 "Encryption dependencies not properly detected"
 "Cannot establish encryption: encryption store is not loaded"
@@ -209,13 +220,13 @@ python tests/run_integration_tests.py tests/integration_config.json
 
 ## Status
 
-| Stage | Status |
-|-------|--------|
-| Code fixes | ✅ Complete |
-| Unit tests | ✅ Pass (441/441) |
-| Documentation | ✅ Complete |
+| Stage               | Status                |
+| ------------------- | --------------------- |
+| Code fixes          | ✅ Complete           |
+| Unit tests          | ✅ Pass (441/441)     |
+| Documentation       | ✅ Complete           |
 | Remote verification | ⏳ Awaiting execution |
-| Integration tests | ⏳ Ready to run |
+| Integration tests   | ⏳ Ready to run       |
 
 **Timeline**: Changes made today, ready for testing now.
 

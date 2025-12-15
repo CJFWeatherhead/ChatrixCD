@@ -167,6 +167,149 @@ python -m unittest tests.test_config
 python tests/run_integration_tests.py tests/integration_config.json
 ```
 
+### Integration Testing Debugging Guide
+
+When integration tests fail, follow this systematic debugging approach:
+
+#### 1. Common Issues and Solutions
+
+**Python Cache Issues:**
+
+- **Symptom**: Old code running despite git pull
+- **Cause**: Python bytecode cache (`__pycache__`, `.pyc` files) not cleared
+- **Solution**: The test runner now automatically clears cache before starting bots
+- **Manual Fix**: SSH to remote and run:
+  ```bash
+  cd /home/chatrix/ChatrixCD
+  find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null
+  find . -name "*.pyc" -delete 2>/dev/null
+  ```
+
+**Git Sync Issues:**
+
+- **Symptom**: Remote machine has old commits despite `git pull`
+- **Cause**: Git thinking it's up-to-date when origin has moved forward
+- **Solution**: Test runner now uses `git fetch -f origin main && git reset --hard origin/main`
+- **Manual Fix**: SSH to remote and run:
+  ```bash
+  cd /home/chatrix/ChatrixCD
+  git fetch -f origin main
+  git reset --hard origin/main
+  git log -1 --oneline  # Verify correct commit
+  ```
+
+**Dependency Installation Issues:**
+
+- **Symptom**: Import errors or missing packages on remote
+- **Cause**: Using wrong pip/uv or not targeting virtualenv
+- **Solution**: Test runner uses `uv pip install --python .venv/bin/python`
+- **Note**: This is CRITICAL - using just `uv pip install` may not install into venv
+- **Verification**: Check remote has vodozemac (should have prebuilt wheels):
+  ```bash
+  ssh root@<remote> "su - chatrix -c '.venv/bin/python -c \"import vodozemac; print(vodozemac.__version__)\"'"
+  ```
+
+#### 2. Debugging Workflow
+
+**Step 1: Check if bots are actually running**
+
+```bash
+ssh root@<remote_host> "ps aux | grep chatrix | grep -v grep"
+```
+
+**Step 2: Check bot logs for errors**
+
+```bash
+ssh root@<remote_host> "cat /home/chatrix/ChatrixCD/chatrix.log | sed 's/\x1b\[[0-9;]*m//g' | tail -100 | grep -E '(ERROR|Traceback)'"
+```
+
+**Step 3: Verify code version on remote**
+
+```bash
+ssh root@<remote_host> "su - chatrix -c 'cd /home/chatrix/ChatrixCD && git log -1 --oneline'"
+```
+
+**Step 4: Check specific file for known bugs**
+
+```bash
+# Example: checking for the displayname bug
+ssh root@<remote_host> "grep -n 'displayname\|display_name' /home/chatrix/ChatrixCD/chatrixcd/commands.py | head -5"
+```
+
+**Step 5: Test bot manually**
+
+```bash
+# Stop old bot and start fresh
+ssh root@<remote_host> "su - chatrix -c 'cd /home/chatrix/ChatrixCD && killall -9 chatrixcd; .venv/bin/chatrixcd -vv -L' &"
+# Send test message to bot in Matrix room
+# Check if bot responds
+```
+
+#### 3. Integration Test Architecture
+
+The integration test runner (`tests/run_integration_tests.py`) performs these steps:
+
+1. **Cleanup**: Clear Python cache, stop old processes
+2. **Update**: Force fetch from origin, reset to latest commit
+3. **Dependencies**: Install using `uv pip install --python .venv/bin/python`
+4. **Start**: Launch bot in background with nohup
+5. **Copy Stores**: Copy encryption stores from remote to local
+6. **Test**: Run pytest against live bots
+7. **Collect Logs**: Gather logs from remote machines
+8. **Cleanup**: Stop bots, cleanup temp directories
+
+**Key Points:**
+
+- Uses SSH with Tailscale IPv6 addresses
+- Bots must already be configured on remote machines
+- Test client authenticates locally with stores copied from remote
+- **NO test_client section needed** in integration_config.json - uses bot stores
+
+#### 4. When Tests Timeout
+
+**Symptoms:**
+
+- Tests report "Command timed out after 20 seconds"
+- Bot not responding to commands
+
+**Possible Causes:**
+
+1. Bot crashed during startup (check logs for ERROR)
+2. Bot ignoring old messages (check "Ignoring old message" in logs)
+3. Bot not in the test room
+4. Semaphore API unreachable from bot
+5. Encryption issues preventing message decryption
+
+**Debug Steps:**
+
+1. Check if bot PID still exists: `ps | grep <pid>`
+2. Check bot logs for latest activity
+3. Manually send message to bot in Matrix
+4. Verify bot has proper permissions in room
+5. Check if encryption is working (look for "Encryption not enabled" warnings)
+
+#### 5. Quick Reference Commands
+
+```bash
+# Check bot is running
+ssh root@<host> "ps aux | grep chatrix"
+
+# View last 50 lines of bot log (with colors stripped)
+ssh root@<host> "cat /home/chatrix/ChatrixCD/chatrix.log | sed 's/\x1b\[[0-9;]*m//g' | tail -50"
+
+# Check git status on remote
+ssh root@<host> "su - chatrix -c 'cd /home/chatrix/ChatrixCD && git status'"
+
+# Force update remote to latest
+ssh root@<host> "su - chatrix -c 'cd /home/chatrix/ChatrixCD && git fetch -f origin main && git reset --hard origin/main'"
+
+# Clear cache and restart bot
+ssh root@<host> "su - chatrix -c 'cd /home/chatrix/ChatrixCD && find . -name __pycache__ -type d -exec rm -rf {} + ; killall chatrixcd; nohup .venv/bin/chatrixcd -L > chatrix.log 2>&1 &'"
+
+# Check if vodozemac is installed
+ssh root@<host> "su - chatrix -c 'cd /home/chatrix/ChatrixCD && .venv/bin/python -c \"import vodozemac; print(vodozemac)\""
+```
+
 ### Testing Guidelines
 
 Testing is crucial for ChatrixCD to ensure reliability and maintainability. Follow these guidelines when writing tests:
@@ -274,9 +417,27 @@ When adding features, update relevant documentation:
 - **README.md**: Overview, features, basic usage
 - **INSTALL.md**: Installation and configuration
 - **QUICKSTART.md**: Getting started guide
-- **ARCHITECTURE.md**: Technical architecture
+- **ARCHITECTURE.md**: Technical architecture (in docs/)
 - **CONTRIBUTING.md**: Development guidelines
 - **CHANGELOG.md**: Record of changes
+- **dev/ai/docs/**: AI/LLM generated context documentation, audits, and development notes
+
+### AI/LLM Generated Documentation
+
+Context documentation, audit trails, and non-critical project documentation should be placed in `dev/ai/docs/`:
+
+- **Implementation Plans**: Detailed plans for features or migrations
+- **Audit Trails**: Records of significant changes, fixes, or integrations
+- **Evaluation Documents**: Test results, compliance checks, assessments
+- **Migration Notes**: Notes from version migrations or refactoring
+- **Context Documents**: Supporting documentation that provides background
+
+**Naming Convention**: Use underscores and block capitals (e.g., `ENCRYPTION_FIXES_SUMMARY.md`)
+
+**What NOT to put here**:
+- User-facing documentation (goes in `/docs` for GitHub Pages)
+- Core project documentation (README, CONTRIBUTING, etc. stay in root)
+- Code documentation (use docstrings and inline comments)
 
 ### Docstring Format
 

@@ -83,18 +83,21 @@ class ChatrixBot:
         # Setup encryption support with AsyncClientConfig
         # This ensures encryption is enabled if dependencies are available
         from nio import AsyncClientConfig
+
         encryption_available = False
-        
+
         # Check for encryption dependencies (vodozemac preferred, olm fallback)
         try:
             # Try vodozemac first (better features including cross-device verification)
             import vodozemac  # type: ignore  # noqa: F401
+
             logger.info("Encryption enabled with vodozemac-python")
             encryption_available = True
         except ImportError:
             try:
                 # Fallback to python-olm
                 import olm  # type: ignore  # noqa: F401
+
                 logger.info("Encryption enabled with python-olm")
                 encryption_available = True
             except ImportError:
@@ -103,13 +106,11 @@ class ChatrixBot:
                     "Bot cannot participate in encrypted rooms. "
                     "Install with: pip install vodozemac-python>=0.1.0"
                 )
-        
+
         # Create AsyncClient with encryption only if dependencies are available
         # This prevents ImportWarning when encryption is configured but not installed
         try:
-            config_obj = AsyncClientConfig(
-                encryption_enabled=encryption_available
-            )
+            config_obj = AsyncClientConfig(encryption_enabled=encryption_available)
         except ImportWarning:
             # matrix-nio raises ImportWarning if encryption_enabled=True
             # but dependencies aren't available. Fall back to no encryption.

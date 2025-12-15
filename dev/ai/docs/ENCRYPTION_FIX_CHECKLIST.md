@@ -14,7 +14,7 @@ Three critical bugs preventing ChatrixCD bots from communicating in encrypted Ma
    - Fixed: matrix-nio now properly recognizes encryption backend
 
 3. **Encryption Initialization** (bot.py lines 81-108, 351, 373, 428)
-   - Added: `AsyncClientConfig(encryption_enabled=True)` 
+   - Added: `AsyncClientConfig(encryption_enabled=True)`
    - Removed: Bad conditionals blocking `load_store()` calls (3 locations)
    - Fixed: Encryption keys now properly loaded from disk
 
@@ -26,6 +26,7 @@ Three critical bugs preventing ChatrixCD bots from communicating in encrypted Ma
 ## For Remote Machines 🚀
 
 ### Verify Setup (< 1 min)
+
 ```bash
 # SSH to each remote machine and run:
 python3 -c "import olm; print(f'✓ python-olm: {olm.__version__}')"
@@ -33,6 +34,7 @@ python3 -c "from nio.crypto import ENCRYPTION_ENABLED; print(f'✓ Encryption: {
 ```
 
 ### Run Tests
+
 ```bash
 # From local ChatrixCD directory:
 python tests/run_integration_tests.py tests/integration_config.json
@@ -42,12 +44,12 @@ python tests/run_integration_tests.py tests/integration_config.json
 
 ## Files Changed
 
-| File | Changes |
-|------|---------|
-| [requirements.txt](requirements.txt) | Updated encryption deps: `python-olm>=3.2.0` |
-| [chatrixcd/bot.py](chatrixcd/bot.py) | AsyncClientConfig + encryption init + fixed load_store() |
-| [chatrixcd/commands.py](chatrixcd/commands.py) | Fixed displayname typo |
-| [CHANGELOG.md](CHANGELOG.md) | Documented all fixes |
+| File                                           | Changes                                                  |
+| ---------------------------------------------- | -------------------------------------------------------- |
+| [requirements.txt](requirements.txt)           | Updated encryption deps: `python-olm>=3.2.0`             |
+| [chatrixcd/bot.py](chatrixcd/bot.py)           | AsyncClientConfig + encryption init + fixed load_store() |
+| [chatrixcd/commands.py](chatrixcd/commands.py) | Fixed displayname typo                                   |
+| [CHANGELOG.md](CHANGELOG.md)                   | Documented all fixes                                     |
 
 ## New Documentation Files 📚
 
@@ -91,12 +93,14 @@ Bot B can now decrypt all messages ✅
 ## Next Steps
 
 1. **Verify** (in REMOTE_SETUP_INSTRUCTIONS.md):
+
    ```bash
    # Check python-olm is installed
    python3 -c "import olm; print(olm.__version__)"
    ```
 
 2. **Test** (run integration suite):
+
    ```bash
    python tests/run_integration_tests.py tests/integration_config.json
    ```
@@ -105,7 +109,7 @@ Bot B can now decrypt all messages ✅
    ```bash
    # Look for these messages in bot logs:
    "Encryption enabled and dependencies available"
-   "Encryption store loaded successfully"  
+   "Encryption store loaded successfully"
    "Auto-verified N device(s) for @user:server"
    ```
 

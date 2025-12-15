@@ -159,11 +159,11 @@ chatrixcd -vv -L
 ```python
 def function_name(param1: str, param2: int) -> bool:
     """Brief description of function.
-    
+
     Args:
         param1: Description of param1
         param2: Description of param2
-        
+
     Returns:
         Description of return value
     """
@@ -188,6 +188,7 @@ Write clear, concise commit messages:
 - Reference issues and pull requests liberally after the first line
 
 Examples:
+
 ```
 Add OIDC refresh token support
 
@@ -212,11 +213,13 @@ Use descriptive branch names:
 ### Before Submitting
 
 1. **Test your changes**
+
    ```bash
    python -m unittest discover
    ```
 
 2. **Check code style** (if you have tools installed)
+
    ```bash
    # Optional: Use pylint, flake8, or black
    flake8 chatrixcd/
@@ -231,6 +234,7 @@ Use descriptive branch names:
 1. **Update the CHANGELOG.md** with notes on your changes under the "Unreleased" section
 
 2. **Push to your fork**
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -269,6 +273,7 @@ Use descriptive branch names:
 - Use descriptive test method names
 
 Example:
+
 ```python
 import unittest
 from chatrixcd.config import Config
@@ -358,6 +363,7 @@ Context documentation, audit trails, and non-critical project documentation shou
 **Naming Convention**: Use underscores and block capitals (e.g., `ENCRYPTION_FIXES_SUMMARY.md`)
 
 **What NOT to put here**:
+
 - User-facing documentation (goes in `/docs` for GitHub Pages)
 - Core project documentation (README, CONTRIBUTING, etc. stay in root)
 - Code documentation (use docstrings and inline comments)

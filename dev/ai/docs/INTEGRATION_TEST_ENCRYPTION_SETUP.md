@@ -28,9 +28,11 @@ ChatrixCD integration tests verify end-to-end encrypted communication between bo
 When integration tests run on remote machines, the following must be true:
 
 1. **Python-olm Installed**
+
    ```bash
    pip install python-olm>=3.2.0
    ```
+
    - This is automatically installed when running `uv pip install -r requirements.txt`
    - Verified in `tests/run_integration_tests.py` line 227
 
@@ -48,12 +50,14 @@ When integration tests run on remote machines, the following must be true:
 ## How Encryption Works in Integration Tests
 
 ### Setup Phase
+
 1. Bot starts with `-L` flag (log mode, no TUI)
 2. Bot loads stored encryption keys from `store/` directory
 3. Bot initializes `AsyncClient` with `encryption_enabled=True`
 4. Auto-verification is enabled (mode is 'log')
 
 ### Message Exchange Phase
+
 1. **Bot A sends encrypted message to room**
    - Message encrypted with room's encryption algorithm (e.g., m.megolm.v1.aes-sha2)
    - Encrypted for all verified devices in the room
@@ -65,12 +69,12 @@ When integration tests run on remote machines, the following must be true:
      b. Claim one-time keys from Bot A
      c. **Auto-verify Bot A's devices** (because mode is 'log')
      d. Request room key from Bot A
-   
 3. **Bot A shares room key with Bot B**
    - Now Bot B can decrypt the message
    - Bot B decrypts and processes it normally
 
 ### Key Sharing
+
 - Room keys are shared automatically by matrix-nio when:
   - A message is sent to encrypted room
   - Keys are requested by other devices
@@ -82,26 +86,31 @@ When integration tests run on remote machines, the following must be true:
 ### Symptom: Bots can't decrypt messages
 
 **Check 1: Encryption enabled in AsyncClient**
+
 - Look for log: `"Encryption enabled and dependencies available"`
 - If not present, check that `python-olm` is installed: `python -c "import olm; print(olm.__version__)"`
 
 **Check 2: Encryption store loaded**
+
 - Look for logs: `"Encryption store loaded successfully"`
 - If errors appear, check file permissions on `store/` directory
 - Check that bot has logged in before first message
 
 **Check 3: Device verification working**
+
 - Look for logs: `"Auto-verified N device(s) for @user:server"`
 - If not present, auto-verification may be disabled (only works in daemon/log/tui modes)
 - Check that `load_store()` succeeded (store must exist)
 
 **Check 4: Key claiming**
+
 - Look for logs: `"Claiming one-time keys to establish encryption sessions"`
 - If this fails, the remote bot may not be running or may have disconnected
 
 ### Symptom: "Cannot establish encryption: encryption store is not loaded"
 
 **Solution:**
+
 1. Ensure bot is fully synced before sending messages
 2. Verify `user_id` is correctly set in both config and after `restore_login()`
 3. Check that bot reached login state (look for `Successfully logged in` or `Successfully restored session`)
@@ -109,6 +118,7 @@ When integration tests run on remote machines, the following must be true:
 ### Symptom: Device verification fails
 
 **Solution:**
+
 1. Check that both bots are in same room
 2. Check that room is encrypted
 3. Verify `self.client.device_store` is not None (requires successful sync)

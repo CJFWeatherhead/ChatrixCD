@@ -69,6 +69,7 @@ tail -f /home/chatrix/ChatrixCD/chatrix.log | grep -E "Encryption|python-olm|sto
 ```
 
 You should see:
+
 ```
 INFO - Encryption enabled and dependencies available
 INFO - Encryption store loaded successfully
@@ -84,6 +85,7 @@ python tests/run_integration_tests.py tests/integration_config.json
 ```
 
 Expected behavior:
+
 1. Both bots start in log mode with auto-verification enabled
 2. Test sends commands from Bot A to Bot B
 3. Bot B responds with encrypted messages
@@ -140,6 +142,7 @@ EOF
 ### Bot still can't decrypt messages
 
 Check that:
+
 1. Both bots are in the same encrypted room
 2. Room encryption is properly configured (should be m.megolm.v1.aes-sha2)
 3. Bot has fully synced before messages are sent

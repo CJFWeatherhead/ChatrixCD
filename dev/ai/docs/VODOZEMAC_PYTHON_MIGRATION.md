@@ -7,6 +7,7 @@ Switched from `python-olm` to `vodozemac-python` bindings for better features an
 ### Why vodozemac-python?
 
 **vodozemac advantages:**
+
 - ✅ Rust-based implementation (security and performance)
 - ✅ Cross-device verification support (needed for your requirements)
 - ✅ Python bindings maintained by matrix-nio team
@@ -14,6 +15,7 @@ Switched from `python-olm` to `vodozemac-python` bindings for better features an
 - ✅ Better long-term trajectory
 
 **Implementation:**
+
 - Used: [vodozemac-python](https://github.com/matrix-nio/vodozemac-python) official bindings
 - Fallback: `python-olm` if vodozemac-python not available
 - No dependencies forced on users (both optional, one required at runtime)
@@ -21,6 +23,7 @@ Switched from `python-olm` to `vodozemac-python` bindings for better features an
 ## Technical Changes
 
 ### requirements.txt
+
 ```diff
 - matrix-nio>=0.26.0
 - python-olm>=3.2.0
@@ -30,6 +33,7 @@ Switched from `python-olm` to `vodozemac-python` bindings for better features an
 ```
 
 ### chatrixcd/bot.py (lines 81-116)
+
 ```python
 # Check for encryption dependencies (vodozemac preferred, olm fallback)
 try:
@@ -68,21 +72,25 @@ except ImportWarning:
 ## Key Benefits
 
 ### 1. Cross-Device Verification
+
 - vodozemac-python provides robust cross-device verification
 - Essential for bots to establish trust with multiple user devices
 - Better support for complex device topology scenarios
 
 ### 2. Better Architecture
+
 - Rust core with Python bindings = security + usability
 - Fewer edge cases than pure-Python implementations
 - More thorough testing of cryptographic operations
 
 ### 3. Long-Term Support
+
 - vodozemac is developed and maintained by Matrix.org team
 - Part of official matrix-nio ecosystem
 - More likely to receive updates and improvements
 
 ### 4. Graceful Degradation
+
 - If vodozemac-python not installed: falls back to python-olm
 - If neither available: bot works without encryption (with warnings)
 - Users choose which backend to install
@@ -138,6 +146,7 @@ With vodozemac-python, you can now implement:
 ## Testing
 
 ✅ All 441 unit tests pass with vodozemac-python integration
+
 - No test failures introduced
 - Encryption handling verified
 - Device management tested
@@ -153,6 +162,7 @@ With vodozemac-python, you can now implement:
 ## Documentation
 
 Updated files:
+
 - [requirements.txt](requirements.txt) - New dependency
 - [chatrixcd/bot.py](chatrixcd/bot.py) - Encryption detection logic
 - [CHANGELOG.md](CHANGELOG.md) - Documented the change
@@ -170,6 +180,7 @@ A: Bot logs a warning and continues without encryption. Encrypted rooms won't wo
 
 **Q: How do I verify which backend is being used?**
 A: Check bot logs for:
+
 - `"Encryption enabled with vodozemac-python"` - Using vodozemac
 - `"Encryption enabled with python-olm"` - Using olm fallback
 - `"Encryption dependencies not found"` - Neither available

@@ -22,21 +22,34 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - Logging for encryption availability during bot initialization to help diagnose encryption issues
 - Encryption diagnostics logging to validate encryption library installation and AsyncClient configuration
 - INTEGRATION_TEST_ENCRYPTION_SETUP.md guide documenting encryption setup for remote integration tests
+- **Integration Test Automation**: Automatic cache clearing and process cleanup before bot startup in integration test suite
+- **Integration Test Documentation**: Comprehensive debugging guide in Copilot instructions for troubleshooting integration test failures
 
 ### Changed
 
 - **Encryption Backend**: Using `vodozemac` (Rust-based) for superior features
+  - **Documentation Organization**: Moved AI/LLM generated documentation to `dev/ai/docs/` directory for better organization
+    - Implementation plans, migration notes, and audit trails now in `dev/ai/docs/`
+    - Updated Copilot instructions and CONTRIBUTING.md to reference new structure
+    - User-facing documentation remains in `/docs` for GitHub Pages
   - vodozemac provides cross-device verification capabilities needed for robust encrypted communication
   - More features and better performance than python-olm
   - matrix-nio properly supports vodozemac through its established cryptography integration
   - Updated AsyncClient initialization with `AsyncClientConfig(encryption_enabled=True)` for explicit encryption support
 - **Bot Initialization**: AsyncClient now initialized with proper encryption configuration to ensure E2E encryption is available when dependencies are present
+- **Integration Test Updates**: Test runner now performs robust cleanup and update sequence:
+  - Clears Python bytecode cache (`__pycache__`, `.pyc` files) before updating code
+  - Stops any existing bot processes before starting new ones
+  - Uses `git fetch -f origin main && git reset --hard origin/main` for reliable code updates instead of just `git pull`
+  - Uses `uv pip install --python .venv/bin/python` to explicitly target virtualenv on Alpine systems
 
 ### Fixed
 
 - Fixed encryption store loading when using access token authentication - removed incorrect conditional checks that prevented `load_store()` from initializing encryption properly (3 locations in bot.py)
 - Fixed AttributeError in command handler: `MatrixUser.displayname` should be `display_name` (typo causing bot crashes when processing commands)
 - Fixed encryption dependency detection and error handling for missing encryption libraries
+- Fixed integration test dependency installation to properly target virtualenv using `uv pip install --python` on Alpine systems where global pip is not available
+- Fixed stale Python bytecode cache causing old code to run despite git updates in integration tests
 
 ## [2025.12.14.7.0.0] - 2025-12-14
 
