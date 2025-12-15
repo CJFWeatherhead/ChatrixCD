@@ -109,6 +109,22 @@ Try these commands in your Matrix room:
 
 ---
 
+## 🔖 Command Aliases
+
+Speed up common actions by creating your own shortcuts:
+
+- Add: `!cd aliases add <alias> <command>`
+  - Works with prefixed or unprefixed commands
+  - Example: `!cd aliases add deploy run 4 5 --tags=prod --arg="--dry-run"`
+- Remove: `!cd aliases remove <alias>`
+- List: `!cd aliases`
+
+Aliases expand with any extra arguments you append when using them. For example, if `deploy` maps to `run 4 5`, then typing `!cd deploy --tags=prod` runs `!cd run 4 5 --tags=prod`.
+
+> Note: The base command must be a valid bot command; extra flags are passed through unchanged.
+
+---
+
 ## 🎯 Example Workflow
 
 Here's a complete example of running a deployment:

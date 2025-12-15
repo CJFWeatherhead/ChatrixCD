@@ -121,6 +121,9 @@ cd chatrixcd-linux-x86_64.dist
 - **Real-time Updates**: Automatic status updates for running tasks
 - **Smart Parameters**: Auto-fill when only one option available
 - **Command Aliases**: Custom shortcuts for frequent commands
+  - Add: `!cd aliases add <alias> <command>` (prefixed or unprefixed)
+  - Remove: `!cd aliases remove <alias>`
+  - Aliases preserve extra flags/args when invoked
 - **Enhanced Logs**: Intelligent tailing for Ansible/Terraform
 
 ### 🖥️ Interactive TUI
