@@ -164,6 +164,8 @@ class SemaphoreClient:
         template_id: int,
         debug: bool = False,
         dry_run: bool = False,
+        tags: Optional[str] = None,
+        arguments: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         """Start a new task from a template.
 
@@ -172,6 +174,8 @@ class SemaphoreClient:
             template_id: ID of the template to run
             debug: Enable debug mode
             dry_run: Run in dry-run mode
+            tags: Optional comma-separated Ansible tags to pass to the template
+            arguments: Optional raw argument string to pass to the template
 
         Returns:
             Task dictionary or None if failed
@@ -180,11 +184,16 @@ class SemaphoreClient:
         session = cast(aiohttp.ClientSession, self.session)
 
         try:
-            payload = {
+            payload: Dict[str, Any] = {
                 "template_id": template_id,
                 "debug": debug,
                 "dry_run": dry_run,
             }
+            if tags:
+                payload["tags"] = tags
+            if arguments:
+                payload["arguments"] = arguments
+
             async with session.post(
                 f"{self.base_url}/api/project/{project_id}/tasks", json=payload
             ) as resp:

@@ -91,6 +91,14 @@ chatrixcd                # From source install
 !cd stop 123                       # Stop task 123
 ```
 
+### Advanced Run Options
+
+- Positional tags: `!cd run 4 5 update,molecule`
+- Flagged tags: `!cd run 4 5 --tags=update,molecule`
+- Raw args: `!cd run 3 1 --args="--some --args -e"`
+
+If the target template doesn’t support tags/arguments, the bot will let you know and suggest running without them.
+
 ## 🔧 Command Line Options
 
 ```bash

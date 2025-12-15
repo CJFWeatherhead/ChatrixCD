@@ -4,6 +4,7 @@ import asyncio
 import html
 import logging
 import re
+import shlex
 import socket
 from typing import Any, Dict, List, Optional
 
@@ -360,7 +361,11 @@ class CommandHandler:
 
         # Resolve aliases
         resolved_command = self._resolve_alias(command_text)
-        parts = resolved_command.split()
+        try:
+            parts = shlex.split(resolved_command)
+        except ValueError:
+            # Fallback if quotes are unbalanced
+            parts = resolved_command.split()
 
         command = parts[0].lower()
         args = parts[1:]
@@ -1002,6 +1007,39 @@ class CommandHandler:
         )
         return None, None
 
+    def _parse_run_options(self, args: list) -> tuple[Optional[str], Optional[str]]:
+        """Parse optional run options from args.
+
+        Supports positional tags (third arg), and flags:
+        --tags=<list> | --tags <list>
+        --args=<string> | --args <string>
+        """
+        tags: Optional[str] = None
+        extra_args: Optional[str] = None
+
+        remaining = args[2:] if len(args) > 2 else []
+        i = 0
+        while i < len(remaining):
+            token = remaining[i]
+            if token.startswith("--tags="):
+                tags = token.split("=", 1)[1]
+            elif token == "--tags" and i + 1 < len(remaining):
+                tags = remaining[i + 1]
+                i += 1
+            elif token.startswith("--args="):
+                extra_args = token.split("=", 1)[1]
+            elif token == "--args" and i + 1 < len(remaining):
+                extra_args = remaining[i + 1]
+                i += 1
+            elif not token.startswith("-") and tags is None and (
+                "," in token or token.isalpha()
+            ):
+                # Third positional token treated as tags (mapped switches)
+                tags = token
+            i += 1
+
+        return tags, extra_args
+
     async def run_task(self, room_id: str, sender: str, args: list):
         """Run a task from a template.
 
@@ -1036,6 +1074,9 @@ class CommandHandler:
             template.get("description", "No description")
         )
 
+        # Parse optional options (mapped switches)
+        tags, extra_args = self._parse_run_options(args)
+
         # Request confirmation
         confirmation_key = f"{room_id}:{sender}"
         self.pending_confirmations[confirmation_key] = {
@@ -1046,6 +1087,10 @@ class CommandHandler:
             "sender": sender,
             "timestamp": asyncio.get_event_loop().time(),
         }
+        if tags:
+            self.pending_confirmations[confirmation_key]["tags"] = tags
+        if extra_args:
+            self.pending_confirmations[confirmation_key]["arguments"] = extra_args
 
         logger.info(
             "Task run requested: project=%s, template=%s (%s) by %s",
@@ -1060,8 +1105,12 @@ class CommandHandler:
         message += "**Template:** {}\n".format(template_name)
         message += "**Description:** {}\n".format(template_desc)
         message += "**Project ID:** {}\n".format(project_id)
-        message += "**Template ID:** {}\n\n".format(template_id)
-        message += "Reply with **y**, **yes**, **go**, or **start** to confirm.\n"
+        message += "**Template ID:** {}\n".format(template_id)
+        if tags:
+            message += "**Tags:** {}\n".format(tags)
+        if extra_args:
+            message += "**Arguments:** {}\n".format(extra_args)
+        message += "\nReply with **y**, **yes**, **go**, or **start** to confirm.\n"
         message += "Reply with **n**, **no**, **cancel**, or **stop** to cancel.\n"
         message += "Or react with 👍 to confirm or 👎 to cancel!"
 
@@ -1215,13 +1264,37 @@ class CommandHandler:
         )
         await self.bot.send_message(room_id, start_message, html_start_message)
 
-        task = await self.semaphore.start_task(project_id, template_id)
+        # Forward optional options if present
+        kwargs: Dict[str, Any] = {}
+        if confirmation.get("tags"):
+            kwargs["tags"] = confirmation.get("tags")
+        if confirmation.get("arguments"):
+            kwargs["arguments"] = confirmation.get("arguments")
+
+        task = await self.semaphore.start_task(project_id, template_id, **kwargs)
 
         if not task:
             logger.error(
                 f"Failed to start task for project {project_id}, template {template_id}"
             )
-            await self.bot.send_message(room_id, "Failed to start task ❌")
+            # Provide clearer messaging if options were supplied
+            if kwargs:
+                err_msg = "Failed to start task ❌\n"
+                err_msg += (
+                    "This template may not support the provided options.\n"
+                )
+                if kwargs.get("tags"):
+                    err_msg += f"- Tags: {kwargs.get('tags')}\n"
+                if kwargs.get("arguments"):
+                    err_msg += f"- Arguments: {kwargs.get('arguments')}\n"
+                err_msg += (
+                    "Try running without these options or check the template settings in Semaphore."
+                )
+                await self.bot.send_message(
+                    room_id, err_msg, self.markdown_to_html(err_msg)
+                )
+            else:
+                await self.bot.send_message(room_id, "Failed to start task ❌")
             return
 
         task_id = task.get("id")

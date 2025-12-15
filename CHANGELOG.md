@@ -18,6 +18,11 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ### Added
 
+- **Run Command Mapped Switches**: `!cd run` now supports tags and raw args.
+  - Positional tags: `!cd run <project> <template> update,molecule`
+  - Flagged tags: `!cd run <project> <template> --tags=update,molecule`
+  - Raw args: `!cd run <project> <template> --args="--some --args -e"`
+  - Graceful errors when the template doesn’t support these options
 - **Aliases Management**: New commands `aliases add <alias> <command>` and `aliases remove <alias>` to manage command aliases via chat. Supports prefixed (`!cd`) or unprefixed commands and preserves extra arguments.
 - Support for access token authentication in configuration (`matrix.access_token`) for integration testing and pre-authenticated scenarios
 - Logging for encryption availability during bot initialization to help diagnose encryption issues

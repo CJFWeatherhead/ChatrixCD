@@ -515,6 +515,34 @@ class TestSemaphoreClient(unittest.TestCase):
         ssl_context = client._create_ssl_context()
         self.assertFalse(ssl_context)
 
+    def test_start_task_with_tags_and_arguments_payload(self):
+        """Ensure tags/arguments are forwarded in the POST payload when provided."""
+        async def mock_json():
+            return {"id": 125}
+
+        mock_response = MagicMock()
+        mock_response.status = 201
+        mock_response.json = mock_json
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.post = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+        mock_session.close = AsyncMock()
+
+        self.client.session = mock_session
+        result = self.loop.run_until_complete(
+            self.client.start_task(4, 5, tags="update,molecule", arguments="--limit web --check")
+        )
+        self.assertIsNotNone(result)
+        # Inspect payload passed to post
+        _, kwargs = mock_session.post.call_args
+        payload = kwargs.get("json")
+        self.assertEqual(payload.get("template_id"), 5)
+        self.assertEqual(payload.get("tags"), "update,molecule")
+        self.assertEqual(payload.get("arguments"), "--limit web --check")
+
 
 if __name__ == "__main__":
     unittest.main()

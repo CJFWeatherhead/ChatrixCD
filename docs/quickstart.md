@@ -109,6 +109,20 @@ Try these commands in your Matrix room:
 
 ---
 
+## 🧩 Advanced Run Options
+
+You can pass tags and raw arguments when running a template:
+
+- Positional tags: `!cd run 4 5 update,molecule`
+- Flagged tags: `!cd run 4 5 --tags=update,molecule`
+- Raw args: `!cd run 3 1 --args="--some --args -e"`
+
+Notes:
+- If the target template does not support tags/arguments, the bot will warn you and suggest running without them.
+- Quoted arguments are supported.
+
+---
+
 ## 🔖 Command Aliases
 
 Speed up common actions by creating your own shortcuts:
