@@ -28,4 +28,11 @@ PyYAML>=6.0
 # System and process utilities for info command
 psutil>=5.9.0
 
+# Additional dependencies
+cachetools>=5.3.0
+peewee>=3.17.0
+atomicwrites>=1.4.1
+
+
+
 
