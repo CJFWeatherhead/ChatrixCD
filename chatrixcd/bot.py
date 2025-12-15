@@ -1556,6 +1556,65 @@ class ChatrixBot:
             logger.warning(
                 f"Failed to auto-verify device in transaction {transaction_id}"
             )
+            # Log device info for manual verification via Element
+            await self._log_manual_verification_info(transaction_id)
+
+    async def _log_manual_verification_info(self, transaction_id: str):
+        """Log device information for manual verification via Element.
+
+        When auto-verification fails, this logs the device ID and fingerprint
+        so users can manually verify using Element's /verify command.
+
+        Args:
+            transaction_id: Transaction ID of the failed verification
+        """
+        try:
+            # Get pending verifications to find device info
+            pending = await self.verification_manager.get_pending_verifications()
+            
+            for pending_item in pending:
+                if pending_item["transaction_id"] == transaction_id:
+                    user_id = pending_item.get("user_id", "unknown")
+                    device_id = pending_item.get("device_id", "unknown")
+                    
+                    # Try to get device fingerprint/key
+                    fingerprint = "(fingerprint unavailable)"
+                    if (
+                        hasattr(self.client, "device_store")
+                        and self.client.device_store
+                    ):
+                        user_devices = self.client.device_store.get(user_id)
+                        if user_devices and device_id in user_devices:
+                            device = user_devices[device_id]
+                            # Get the Ed25519 key (fingerprint)
+                            if hasattr(device, "ed25519"):
+                                fingerprint = device.ed25519
+                    
+                    logger.warning(
+                        f"\n"
+                        f"═══════════════════════════════════════════════════════════════\n"
+                        f"  Manual Verification Required\n"
+                        f"═══════════════════════════════════════════════════════════════\n"
+                        f"  Auto-verification failed for transaction {transaction_id}\n"
+                        f"\n"
+                        f"  To manually verify from Element, use:\n"
+                        f"    /verify {device_id} {fingerprint}\n"
+                        f"\n"
+                        f"  Device Information:\n"
+                        f"    User:        {user_id}\n"
+                        f"    Device ID:   {device_id}\n"
+                        f"    Fingerprint: {fingerprint}\n"
+                        f"═══════════════════════════════════════════════════════════════\n"
+                    )
+                    return
+            
+            # If we couldn't find the transaction
+            logger.warning(
+                f"Could not find device information for transaction {transaction_id}"
+            )
+            
+        except Exception as e:
+            logger.error(f"Error logging manual verification info: {e}")
 
     async def _interactive_cli_verification(
         self, transaction_id: str, sender: str, device_id: str

@@ -569,6 +569,92 @@ class ChatrixCDIntegrationTest(unittest.IsolatedAsyncioTestCase):
             "Bot user ID should contain domain separator",
         )
 
+    async def test_cross_verification_between_bots(self):
+        """Test device verification between bots.
+        
+        This test verifies that bots can verify each other's devices,
+        which is essential for encrypted room communication.
+        """
+        if not self.authenticated:
+            self.skipTest(
+                "Test client not authenticated - cannot test verification"
+            )
+        
+        if not self.client.olm:
+            self.skipTest(
+                "Encryption not available - cannot test verification"
+            )
+        
+        print("\nDEBUG: Testing cross-verification between bots...")
+        
+        # Find another bot to verify with
+        target_bot = None
+        for bot_config in self.all_bots:
+            if bot_config["bot_user_id"] != self.matrix_config["bot_user_id"]:
+                target_bot = bot_config
+                break
+        
+        if not target_bot:
+            self.skipTest("No other bot available for verification testing")
+        
+        target_user_id = target_bot["bot_user_id"]
+        target_device_id = target_bot.get("device_id")
+        
+        if not target_device_id:
+            self.skipTest(f"No device ID available for {target_user_id}")
+        
+        print(f"DEBUG: Verifying with {target_user_id} device {target_device_id}")
+        
+        # Sync to get latest device information
+        await self.client.sync(timeout=5000)
+        
+        # Check if device exists in device store
+        if not hasattr(self.client, "device_store") or not self.client.device_store:
+            self.skipTest("Device store not available")
+        
+        user_devices = self.client.device_store.get(target_user_id)
+        if not user_devices or target_device_id not in user_devices:
+            self.skipTest(
+                f"Target device {target_device_id} not found in device store"
+            )
+        
+        target_device = user_devices[target_device_id]
+        
+        # Check current verification status
+        was_verified = getattr(target_device, "verified", False)
+        print(f"DEBUG: Device initially verified: {was_verified}")
+        
+        if was_verified:
+            # Unverify the device first to test re-verification
+            print("DEBUG: Unverifying device to test re-verification...")
+            self.client.unverify_device(target_device)
+            await self.client.sync(timeout=1000)  # Short sync to update state
+            
+            # Verify it's now unverified
+            user_devices = self.client.device_store.get(target_user_id)
+            target_device = user_devices[target_device_id]
+            is_verified = getattr(target_device, "verified", False)
+            print(f"DEBUG: Device after unverify: verified={is_verified}")
+        
+        # Now verify the device
+        print("DEBUG: Verifying device...")
+        self.client.verify_device(target_device)
+        
+        # Sync to update state
+        await self.client.sync(timeout=1000)
+        
+        # Check verification succeeded
+        user_devices = self.client.device_store.get(target_user_id)
+        target_device = user_devices[target_device_id]
+        is_now_verified = getattr(target_device, "verified", False)
+        
+        print(f"DEBUG: Device after verify: verified={is_now_verified}")
+        
+        self.assertTrue(
+            is_now_verified,
+            f"Device {target_device_id} should be verified after verification"
+        )
+
 
 if __name__ == "__main__":
     # Load config for manual testing

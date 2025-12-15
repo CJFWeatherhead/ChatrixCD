@@ -1486,6 +1486,32 @@ class TestChatrixBot(unittest.TestCase):
         # Verify auto_verify_pending was NOT called in TUI mode
         bot.verification_manager.auto_verify_pending.assert_not_called()
 
+    def test_verification_failure_logs_manual_info(self):
+        """Test that failed auto-verification logs device info for manual verification."""
+        bot = ChatrixBot(self.config, mode="log")
+
+        # Mock verification manager methods
+        bot.verification_manager.auto_verify_pending = AsyncMock(return_value=False)
+        
+        # Mock _log_manual_verification_info to verify it gets called
+        bot._log_manual_verification_info = AsyncMock()
+
+        # Create mock KeyVerificationStart event
+        from nio import KeyVerificationStart
+
+        mock_event = MagicMock(spec=KeyVerificationStart)
+        mock_event.sender = "@user:example.com"
+        mock_event.from_device = "USERDEVICE"
+        mock_event.transaction_id = "test_txn_fail"
+
+        # Call the callback
+        self.loop.run_until_complete(
+            bot.key_verification_start_callback(mock_event)
+        )
+
+        # Verify _log_manual_verification_info was called when verification failed
+        bot._log_manual_verification_info.assert_called_once_with("test_txn_fail")
+
 
 if __name__ == "__main__":
     unittest.main()

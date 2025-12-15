@@ -26,6 +26,8 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 - **Integration Test Documentation**: Comprehensive debugging guide in Copilot instructions for troubleshooting integration test failures
 - **Alpine Linux Encryption Fix**: Complete documentation and deployment script for Alpine Linux encryption initialization (`docs/ALPINE_ENCRYPTION_FIX.md`)
 - **Alpine Deployment Script**: `scripts/alpine_encryption_fix.sh` for automated Alpine Linux encryption fix deployment
+- **Manual Verification Helper**: When auto-verification fails in daemon/log mode, bot now logs device ID and fingerprint for manual verification via Element's `/verify` command
+- **Cross-Verification Test**: Added integration test to verify device verification between bots, including unverify/reverify cycle testing
 
 ### Changed
 
