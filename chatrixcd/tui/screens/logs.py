@@ -16,19 +16,26 @@ class LogsScreen(BaseScreen):
 
     CSS = """
     .logs-container {
-        height: auto;
+        width: 100%;
+        height: 100%;
+        layout: vertical;
     }
 
-    .log-viewer {
+    .section-header {
+        width: 100%;
         height: auto;
-        max-height: 20;
-        min-height: 10;
+        margin: 0 0 1 0;
     }
 
-    /* Responsive log viewer sizing */
-    .compact .log-viewer {
-        max-height: 12;
-        min-height: 8;
+    .description {
+        width: 100%;
+        height: auto;
+        margin: 0 0 1 0;
+    }
+
+    #log-content {
+        width: 100%;
+        height: 1fr;
     }
     """
 

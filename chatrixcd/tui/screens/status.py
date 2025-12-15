@@ -14,12 +14,21 @@ class StatusScreen(BaseScreen):
 
     CSS = """
     .status-container {
-        height: auto;
+        width: 100%;
+        height: 100%;
+        layout: vertical;
     }
 
     .status-grid {
         grid-size: 2;
+        width: 100%;
         height: auto;
+        margin: 0 0 1 0;
+    }
+
+    .status-grid > * {
+        height: auto;
+        width: 100%;
     }
 
     /* Stack status indicators vertically on small screens */
@@ -28,22 +37,32 @@ class StatusScreen(BaseScreen):
     }
 
     .metrics-container {
+        width: 100%;
         height: auto;
-        max-height: 10;
+        margin: 0 0 1 0;
     }
 
-    .compact .metrics-container {
-        max-height: 8;
+    .metrics-container > * {
+        width: 100%;
+        height: auto;
+        margin: 0 0 1 0;
     }
 
     .plugins-list {
+        width: 100%;
         height: auto;
-        max-height: 5;
+        margin: 0 0 1 0;
     }
 
     .tasks-list {
+        width: 100%;
         height: auto;
-        max-height: 5;
+    }
+
+    .section-header {
+        width: 100%;
+        height: auto;
+        margin: 0 0 1 0;
     }
     """
 

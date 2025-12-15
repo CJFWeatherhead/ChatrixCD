@@ -3,16 +3,16 @@
 Tests interactive workflows using Textual's pilot testing framework.
 """
 
-import unittest
 import asyncio
+import unittest
 from unittest.mock import Mock
 
 from chatrixcd.tui.app import ChatrixTUI
-from chatrixcd.tui.screens.main_menu import MainMenuScreen
-from chatrixcd.tui.screens.status import StatusScreen
-from chatrixcd.tui.screens.rooms import RoomsScreen
-from chatrixcd.tui.screens.logs import LogsScreen
 from chatrixcd.tui.screens.config import ConfigScreen
+from chatrixcd.tui.screens.logs import LogsScreen
+from chatrixcd.tui.screens.main_menu import MainMenuScreen
+from chatrixcd.tui.screens.rooms import RoomsScreen
+from chatrixcd.tui.screens.status import StatusScreen
 
 
 class TestTUINavigation(unittest.IsolatedAsyncioTestCase):
@@ -374,5 +374,136 @@ class TestPluginIntegration(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(registration.plugin_name, "test_plugin")
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestTUIStartupWithPilot(unittest.IsolatedAsyncioTestCase):
+    """Test TUI startup with different configurations using pilot."""
+
+    async def asyncSetUp(self):
+        """Set up test fixtures."""
+        self.mock_bot = Mock()
+        self.mock_bot.client = Mock()
+        self.mock_bot.client.logged_in = True
+        self.mock_bot.client.user_id = "@bot:example.com"
+        self.mock_bot.client.rooms = {}
+        self.mock_bot.semaphore = Mock()
+        self.mock_bot.command_handler = Mock()
+        self.mock_bot.command_handler.active_tasks = {}
+        self.mock_bot.metrics = {
+            "uptime": 3600,
+            "messages_sent": 100,
+            "requests_received": 50,
+            "errors": 0,
+            "emojis_used": 42,
+        }
+
+        self.mock_config = Mock()
+        self.mock_config.get_bot_config.return_value = {
+            "admin_users": ["@admin:example.com"],
+            "allowed_rooms": ["!room:example.com"],
+            "log_file": "test.log",
+        }
+        self.mock_config.config = {
+            "matrix": {"homeserver": "https://matrix.example.com"},
+            "semaphore": {"url": "https://semaphore.example.com"},
+        }
+
+    async def test_tui_startup_with_plugins_disabled_pilot(self):
+        """Test TUI startup with plugins disabled using pilot."""
+        # Mock plugin manager
+        self.mock_bot.plugin_manager = Mock()
+        self.mock_bot.plugin_manager.loaded_plugins = {}
+
+        app = ChatrixTUI(self.mock_bot, self.mock_config)
+
+        # App should launch and display main menu
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause()
+
+            # Verify we're on main menu
+            self.assertIsInstance(app.screen, MainMenuScreen)
+
+            # Verify core screens are still accessible
+            await pilot.press("s")  # Go to status
+            await pilot.pause()
+            self.assertIsInstance(app.screen, StatusScreen)
+
+    async def test_tui_startup_with_plugins_enabled_pilot(self):
+        """Test TUI startup with plugins enabled using pilot."""
+        # Mock plugin manager with loaded plugins
+        mock_plugin_manager = Mock()
+        mock_plugin_manager.loaded_plugins = {
+            "test_plugin": Mock(
+                name="test_plugin",
+                version="1.0.0",
+                description="Test plugin",
+            )
+        }
+        self.mock_bot.plugin_manager = mock_plugin_manager
+
+        app = ChatrixTUI(self.mock_bot, self.mock_config)
+
+        # App should launch and display main menu
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause()
+
+            # Verify we're on main menu
+            self.assertIsInstance(app.screen, MainMenuScreen)
+
+            # Verify navigation works
+            await pilot.press("r")  # Go to rooms
+            await pilot.pause()
+            self.assertIsInstance(app.screen, RoomsScreen)
+
+    async def test_tui_navigation_independent_of_plugins(self):
+        """Test that TUI navigation works regardless of plugin status."""
+        # Test with no plugins
+        self.mock_bot.plugin_manager = Mock()
+        self.mock_bot.plugin_manager.loaded_plugins = {}
+
+        app = ChatrixTUI(self.mock_bot, self.mock_config)
+
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause()
+
+            # Test navigation sequence
+            navigation_tests = [
+                ("s", StatusScreen, "Status screen"),
+                ("r", RoomsScreen, "Rooms screen"),
+                ("l", LogsScreen, "Logs screen"),
+                ("c", ConfigScreen, "Config screen"),
+            ]
+
+            for key, expected_class, description in navigation_tests:
+                await pilot.press(key)
+                await pilot.pause()
+                self.assertIsInstance(
+                    app.screen, expected_class, f"Failed to navigate to {description}"
+                )
+
+                # Navigate back to main menu
+                await pilot.press("escape")
+                await pilot.pause()
+                self.assertIsInstance(
+                    app.screen, MainMenuScreen, f"Failed to return from {description}"
+                )
+
+    async def test_tui_handles_empty_plugin_list_gracefully(self):
+        """Test TUI handles empty plugin list without errors."""
+        self.mock_bot.plugin_manager = Mock()
+        self.mock_bot.plugin_manager.loaded_plugins = {}
+
+        app = ChatrixTUI(self.mock_bot, self.mock_config)
+
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause()
+
+            # App should be fully functional
+            self.assertIsNotNone(app.screen)
+            self.assertIsInstance(app.screen, MainMenuScreen)
+
+            # All screens should be accessible
+            for key in ["s", "r", "l", "c"]:
+                await pilot.press(key)
+                await pilot.pause()
+                self.assertIsNotNone(app.screen)
+                await pilot.press("escape")
+                await pilot.pause()

@@ -33,46 +33,102 @@ class ChatrixTUI(App):
         background: {background};
     }}
 
-    /* Compact layout for smaller screens */
-    .compact .status-section, .compact .metrics-section, .compact .menu-section {{
-        margin: 0;
-        padding: 0;
-        border: none;
-    }}
-
-    .compact .menu-button {{
-        margin: 0;
+    /* Base layout */
+    Container {{
+        height: 100%;
         width: 100%;
     }}
 
-    .compact Button {{
-        margin: 0;
+    Vertical {{
+        height: auto;
+    }}
+
+    Horizontal {{
+        height: auto;
+    }}
+
+    /* Header and Footer */
+    Header {{
+        background: {primary};
+        color: {text};
+        height: 1;
+        dock: top;
+    }}
+
+    Footer {{
+        background: {surface};
+        color: {text};
+        height: auto;
+        dock: bottom;
+    }}
+
+    /* Title banner */
+    .title-banner {{
+        text-align: center;
+        padding: 1;
+        background: {surface};
+        color: {primary};
         width: 100%;
+        height: auto;
     }}
 
-    .compact .title-banner {{
-        padding: 0;
+    /* Section styling */
+    .section-header {{
+        padding: 1 0;
+        color: {accent};
+        width: 100%;
+        height: auto;
     }}
 
-    .compact .section-header {{
-        padding: 0;
+    .menu-category {{
+        padding: 1 0;
+        color: {accent};
+        width: 100%;
+        height: auto;
     }}
 
-    /* Normal layout for larger screens */
-    .status-section, .metrics-section, .menu-section {{
-        margin: 1;
+    .status-section, .metrics-section {{
         padding: 1;
         border: solid {primary};
+        width: 1fr;
+        height: auto;
+    }}
+
+    .menu-section {{
+        padding: 1;
+        border: solid {primary};
+        width: 100%;
+        height: auto;
+    }}
+
+    .main-container {{
+        height: 100%;
+        width: 100%;
+        layout: vertical;
+    }}
+
+    .main-content {{
+        height: 1fr;
+        width: 100%;
+    }}
+
+    .top-section {{
+        width: 100%;
+        height: auto;
+        layout: horizontal;
+    }}
+
+    /* Button styling */
+    Button {{
+        margin: 0 1;
+        width: auto;
+        height: auto;
     }}
 
     .menu-button {{
-        margin: 0 1;
-    }}
-
-    Button {{
-        margin: 1;
-        width: auto;
-        min-width: 20;
+        margin: 0 0 1 0;
+        width: 100%;
+        height: auto;
     }}
 
     Button.primary {{
@@ -85,88 +141,97 @@ class ChatrixTUI(App):
         color: {text};
     }}
 
-    Header {{
-        background: {primary};
-        color: {text};
-        height: 1;
-    }}
-
-    Footer {{
-        background: {surface};
-        color: {text};
-        height: 1;
-    }}
-
-    .title-banner {{
-        text-align: center;
-        padding: 1;
-        background: {surface};
-        color: {primary};
-    }}
-
-    .section-header {{
-        padding: 1 0;
-        color: {accent};
-    }}
-
-    .menu-category {{
-        padding: 1 0;
-        color: {accent};
-    }}
-
+    /* Tables and inputs */
     DataTable {{
-        height: auto;
-        max-height: 20;
+        height: 1fr;
+        width: 100%;
     }}
 
     Input {{
-        margin: 1;
+        margin: 0 0 1 0;
         width: 100%;
+        height: auto;
     }}
 
     Select {{
-        margin: 1;
+        margin: 0 0 1 0;
+        width: 100%;
+        height: auto;
+    }}
+
+    /* Form styling */
+    .field-label {{
+        color: {text};
+        padding: 0 0 0 0;
+        height: auto;
         width: 100%;
     }}
 
-    .field-label {{
-        color: {text};
-        padding: 1 0;
-    }}
-
     .field-input {{
-        margin-bottom: 1;
+        margin: 0 0 1 0;
+        width: 100%;
+        height: auto;
     }}
 
+    /* Dialogs */
     .dialog-container {{
         background: {surface};
         border: solid {primary};
         padding: 2;
-        width: 90%;
-        max-width: 80;
+        width: 80;
         height: auto;
-        max-height: 80%;
     }}
 
     .dialog-message {{
         text-align: center;
-        padding: 2;
+        padding: 1;
+        height: auto;
     }}
 
     .dialog-buttons {{
         height: auto;
-        align: center middle;
+        width: 100%;
     }}
 
-    /* Ensure proper scrolling for small screens */
+    /* Scrollable containers */
     ScrollableContainer {{
-        height: auto;
-        max-height: 15;
+        width: 100%;
+        height: 1fr;
     }}
 
-    /* Focus indicators for better navigation */
+    /* Status/Metric widgets */
+    StatusIndicator {{
+        width: 100%;
+        height: auto;
+    }}
+
+    MetricDisplay {{
+        width: 100%;
+        height: auto;
+    }}
+
+    /* Focus indicators */
     *:focus {{
         border: solid {accent};
+    }}
+
+    /* Compact mode */
+    .compact {{
+        height: 100%;
+    }}
+
+    .compact .section-header {{
+        padding: 0;
+    }}
+
+    .compact .menu-button {{
+        margin: 0;
+        width: 100%;
+    }}
+
+    .compact Button {{
+        margin: 0;
+        width: 100%;
     }}
     """
 

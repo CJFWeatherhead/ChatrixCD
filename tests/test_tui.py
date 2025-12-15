@@ -23,11 +23,11 @@ class TestTUIImport(unittest.TestCase):
         """Test that TUI screen classes can be imported and are valid."""
         from chatrixcd.tui import (
             AdminsScreen,
+            BotStatusWidget,
+            MessageScreen,
+            OIDCAuthScreen,
             RoomsScreen,
             SessionsScreen,
-            MessageScreen,
-            BotStatusWidget,
-            OIDCAuthScreen,
         )
 
         # Verify all classes are callable
@@ -199,9 +199,7 @@ class TestOIDCAuthScreen(unittest.TestCase):
         from chatrixcd.tui import OIDCAuthScreen
 
         # URL with various special characters
-        sso_url = (
-            "https://example.com/path?param1=value1&param2=value2#fragment"
-        )
+        sso_url = "https://example.com/path?param1=value1&param2=value2#fragment"
         redirect_url = "http://localhost:8080/callback?session=123&state=abc"
         identity_providers = []
 
@@ -238,8 +236,9 @@ class TestShowConfigTUI(unittest.TestCase):
 
     def test_show_config_tui_callable(self):
         """Test that show_config_tui is a coroutine function."""
-        from chatrixcd.tui import show_config_tui
         import inspect
+
+        from chatrixcd.tui import show_config_tui
 
         self.assertTrue(inspect.iscoroutinefunction(show_config_tui))
 
@@ -285,9 +284,7 @@ class TestCSSCompatibility(unittest.TestCase):
         ]
 
         for var in required_scrollbar_vars:
-            self.assertIn(
-                var, css_vars, f"Missing required CSS variable: {var}"
-            )
+            self.assertIn(var, css_vars, f"Missing required CSS variable: {var}")
 
     def test_all_themes_provide_css_variables(self):
         """Test that all themes provide complete CSS variables."""
@@ -349,5 +346,119 @@ class TestErrorHandling(unittest.TestCase):
             self.assertEqual(args.verbosity, 3)
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestTUIStartupWithPlugins(unittest.TestCase):
+    """Test TUI startup with plugins enabled and disabled."""
+
+    def test_tui_startup_with_plugins_disabled(self):
+        """Test TUI initializes correctly when plugins are disabled."""
+        from chatrixcd.tui import ChatrixTUI
+
+        # Create mock bot and config with plugins disabled
+        mock_bot = Mock()
+        mock_bot.client = Mock()
+        mock_bot.client.logged_in = True
+        mock_bot.plugin_manager = Mock()
+        mock_bot.plugin_manager.loaded_plugins = {}
+        mock_config = Mock()
+        mock_config.get_bot_config.return_value = {
+            "load_plugins": False,
+        }
+
+        # TUI should initialize successfully even without plugins
+        tui = ChatrixTUI(mock_bot, mock_config, use_color=False)
+
+        self.assertIsNotNone(tui)
+        self.assertEqual(tui.bot, mock_bot)
+        self.assertIsNotNone(tui.screen_registry)
+
+    def test_tui_startup_with_plugins_enabled(self):
+        """Test TUI initializes correctly when plugins are enabled."""
+        from chatrixcd.tui import ChatrixTUI
+
+        # Create mock bot and config with plugins enabled
+        mock_bot = Mock()
+        mock_bot.client = Mock()
+        mock_bot.client.logged_in = True
+        mock_plugin_manager = Mock()
+        mock_plugin_manager.loaded_plugins = {}
+        mock_bot.plugin_manager = mock_plugin_manager
+        mock_config = Mock()
+        mock_config.get_bot_config.return_value = {
+            "load_plugins": True,
+        }
+
+        # TUI should initialize successfully with plugins enabled
+        tui = ChatrixTUI(mock_bot, mock_config, use_color=False)
+
+        self.assertIsNotNone(tui)
+        self.assertEqual(tui.bot, mock_bot)
+        self.assertIsNotNone(tui.screen_registry)
+
+    def test_tui_startup_no_plugin_manager(self):
+        """Test TUI gracefully handles missing plugin manager."""
+        from chatrixcd.tui import ChatrixTUI
+
+        # Create mock bot without plugin manager
+        mock_bot = Mock()
+        mock_bot.client = Mock()
+        mock_bot.client.logged_in = True
+        # No plugin_manager attribute
+        delattr(mock_bot, "plugin_manager")
+        mock_config = Mock()
+        mock_config.get_bot_config.return_value = {}
+
+        # TUI should initialize successfully even without plugin manager
+        tui = ChatrixTUI(mock_bot, mock_config, use_color=False)
+
+        self.assertIsNotNone(tui)
+        self.assertEqual(tui.bot, mock_bot)
+        self.assertIsNotNone(tui.screen_registry)
+
+    def test_screen_registry_initialized(self):
+        """Test that screen registry is properly initialized."""
+        from chatrixcd.tui import ChatrixTUI
+
+        mock_bot = Mock()
+        mock_bot.client = Mock()
+        mock_bot.plugin_manager = Mock()
+        mock_bot.plugin_manager.loaded_plugins = {}
+        mock_config = Mock()
+        mock_config.get_bot_config.return_value = {}
+
+        tui = ChatrixTUI(mock_bot, mock_config)
+
+        # Screen registry should have core screens registered
+        self.assertIsNotNone(tui.screen_registry.get("status"))
+        self.assertIsNotNone(tui.screen_registry.get("rooms"))
+        self.assertIsNotNone(tui.screen_registry.get("logs"))
+        self.assertIsNotNone(tui.screen_registry.get("config"))
+        self.assertIsNotNone(tui.screen_registry.get("verification"))
+
+    def test_core_screens_accessible_without_plugins(self):
+        """Test that all core screens are accessible without plugins."""
+        from chatrixcd.tui import ChatrixTUI
+
+        mock_bot = Mock()
+        mock_bot.client = Mock()
+        mock_bot.client.logged_in = True
+        mock_bot.plugin_manager = Mock()
+        mock_bot.plugin_manager.loaded_plugins = {}
+        mock_config = Mock()
+        mock_config.get_bot_config.return_value = {"load_plugins": False}
+
+        tui = ChatrixTUI(mock_bot, mock_config)
+
+        # All core screens should be accessible via registry
+        core_screens = ["status", "rooms", "logs", "config", "verification"]
+        for screen_name in core_screens:
+            registration = tui.screen_registry.get(screen_name)
+            self.assertIsNotNone(
+                registration,
+                f"Core screen '{screen_name}' not found in registry",
+            )
+            # Should be able to instantiate the screen
+            try:
+                screen = registration.screen_class(tui)
+                self.assertIsNotNone(screen)
+            except Exception as e:
+                self.fail(f"Failed to instantiate screen '{screen_name}': {e}")

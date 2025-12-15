@@ -24,8 +24,7 @@ class OIDCAuthScreen(ModalScreen):
     }
     
     OIDCAuthScreen > Container {
-        width: 90%;
-        max-width: 80;
+        width: 80;
         height: auto;
         border: solid $accent;
         background: $surface;
@@ -34,8 +33,7 @@ class OIDCAuthScreen(ModalScreen):
     
     /* Responsive adjustments for small screens */
     .compact OIDCAuthScreen > Container {
-        width: 95%;
-        max-width: 95%;
+        width: 80;
         padding: 1;
     }
     

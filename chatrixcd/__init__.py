@@ -3,7 +3,7 @@
 import os
 import subprocess
 
-__version__ = "2025.11.25.6.0.0"
+__version__ = "2025.12.14.7.0.0"
 
 
 def _get_version_with_commit():
@@ -15,9 +15,7 @@ def _get_version_with_commit():
     """
     try:
         # Check if we're in a git repository
-        git_dir = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), ".git"
-        )
+        git_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".git")
         if os.path.exists(git_dir):
             # Get the short commit hash
             result = subprocess.run(

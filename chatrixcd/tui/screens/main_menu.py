@@ -15,49 +15,84 @@ class MainMenuScreen(BaseScreen):
 
     # Add responsive CSS
     CSS = """
-    .main-content {
-        height: auto;
-    }
-
-    .top-section {
-        height: auto;
-    }
-
-    /* Stack vertically on small screens */
-    .compact .top-section {
+    .main-container {
+        width: 100%;
+        height: 100%;
         layout: vertical;
     }
-    
-    .compact .status-section, .compact .metrics-section {
+
+    .main-content {
         width: 100%;
-        margin: 0;
-        padding: 0;
+        height: 1fr;
+        layout: vertical;
     }
 
-    /* Horizontal layout on larger screens */
     .top-section {
+        width: 100%;
+        height: auto;
         layout: horizontal;
+        margin: 0 0 1 0;
     }
-    
-    .status-section, .metrics-section {
+
+    .status-section {
         width: 50%;
+        height: auto;
+        margin: 0 1 0 0;
+        padding: 1;
+        border: solid $primary;
+    }
+
+    .metrics-section {
+        width: 50%;
+        height: auto;
+        margin: 0;
+        padding: 1;
+        border: solid $primary;
     }
 
     .menu-section {
-        height: auto;
-        max-height: 10;
-    }
-
-    .compact .menu-section {
-        max-height: 6;
-    }
-
-    .compact .menu-section {
-        max-height: 8;
+        width: 100%;
+        height: 1fr;
+        margin: 0;
+        padding: 1;
+        border: solid $primary;
     }
 
     #menu-buttons {
+        width: 100%;
+        height: 1fr;
+        layout: vertical;
+    }
+
+    .menu-button {
+        width: 100%;
         height: auto;
+        margin: 0 0 1 0;
+    }
+
+    /* Compact mode adjustments */
+    .compact .status-section {
+        width: 100%;
+        border: none;
+        padding: 0 0 1 0;
+        margin: 0;
+    }
+
+    .compact .metrics-section {
+        width: 100%;
+        border: none;
+        padding: 0 0 1 0;
+        margin: 0;
+    }
+
+    .compact .top-section {
+        layout: vertical;
+        margin: 0;
+    }
+
+    .compact .menu-section {
+        border: none;
+        padding: 0;
     }
     """
 

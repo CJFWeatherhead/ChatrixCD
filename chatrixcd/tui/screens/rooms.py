@@ -13,17 +13,26 @@ class RoomsScreen(BaseScreen):
 
     CSS = """
     .rooms-container {
+        width: 100%;
+        height: 100%;
+        layout: vertical;
+    }
+
+    .section-header {
+        width: 100%;
         height: auto;
+        margin: 0 0 1 0;
+    }
+
+    .description {
+        width: 100%;
+        height: auto;
+        margin: 0 0 1 0;
     }
 
     #rooms-table {
-        height: auto;
-        max-height: 15;
-    }
-
-    /* Responsive table sizing */
-    .compact #rooms-table {
-        max-height: 8;
+        width: 100%;
+        height: 1fr;
     }
     """
 

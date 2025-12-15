@@ -24,28 +24,52 @@ and this project adheres to Semantic Calendar Versioning with format YYYY.MM.DD.
 
 ### Fixed
 
-- **OIDC URL Token Parsing**: Support for pasting full redirect URLs containing login tokens
-  - Users can now paste complete URLs like `http://localhost:8080/callback?loginToken=abc123`
-  - Automatically extracts the `loginToken` parameter from URLs
-  - Works in both TUI and console modes
-- Fixed bug in auto-verification that called non-existent method for sharing room keys
-  - Backward compatible with direct token input
+## [2025.12.14.7.0.0] - 2025-12-14
 
-- **Device Verification TUI Screen**: Complete device verification interface in TUI
-  - View verified and unverified devices with detailed information
-  - Interactive emoji-based verification with real-time feedback
-  - Accept/reject pending verification requests
-  - Cross-verification with other ChatrixCD bots in shared rooms
-  - Encryption status indicator in status screen
-  - Full integration with existing verification backend
+### Added
+
+- **TUI v7 Architecture**: Complete rewrite of TUI fixing v6 layout issues
+  - Fixed CSS layout system using proper Textual layout directives (width: 100%, height: 1fr)
+  - All screens now properly scale to fit terminal window
+  - Content no longer overflows outside viewport
+  - Improved navigation with consistent key bindings across all screens
+  - Better responsive design for small and large terminals
+
+### Changed
+
+- **TUI Modernization**: Maintained modular plugin-aware architecture from v6
+  - Fixed fundamental CSS layout issues that broke content visibility
+  - All screens use consistent responsive layout patterns
+  - ScreenRegistry system fully functional with proper navigation
+  - Plugin TUI integration working as intended
 
 ### Fixed
 
-- **OIDC Rate Limit Error Handling**: Improved error messages for rate-limited OIDC authentication attempts
-  - Added specific handling for `M_LIMIT_EXCEEDED` errors with helpful troubleshooting guidance
-  - Users now get clear instructions when hitting Matrix server rate limits during login
+- **Critical TUI Layout Issues**:
+  - Fixed MainMenu CSS: Buttons now properly displayed and navigable
+  - Fixed StatusScreen: All status indicators and metrics now visible
+  - Fixed RoomsScreen: Table content fits properly within viewport
+  - Fixed LogsScreen: Log viewer fills available space
+  - Fixed ConfigScreen: Configuration viewer displays correctly
+  - Fixed VerificationScreen: Device verification interface fully functional
+  - All screens now use proper Textual flex layout (height: 1fr for flexible sizing)
+  - Container sizing fixed to respect terminal bounds
 
-## [2025.11.25.6.0.0] - 2025-11-25
+- **Device Verification**: Encryption and device verification fully restored
+  - Emoji verification working correctly
+  - Device trust status display fixed
+  - Cross-bot verification functional
+  - Session management complete
+
+### Removed
+
+- Dead code from v6 TUI that was causing layout issues
+
+## [2025.11.25.6.0.0] - 2025-11-25 (DEAD ON ARRIVAL)
+
+### Note
+
+Version 6.0.0 introduced a modular TUI architecture with plugin support but had critical layout issues that made the interface non-functional. All users should upgrade to 7.0.0. The modular architecture design from v6 was preserved in v7 but with fundamental layout fixes.
 
 ### Added
 

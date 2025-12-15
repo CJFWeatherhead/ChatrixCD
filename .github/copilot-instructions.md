@@ -5,6 +5,7 @@ This file provides repository-specific guidance for GitHub Copilot when working 
 ## Project Overview
 
 ChatrixCD is a Matrix bot that integrates with Semaphore UI to enable CI/CD automation through chat. The bot supports:
+
 - End-to-end encrypted Matrix rooms using matrix-nio SDK
 - Native Matrix authentication (password and OIDC/SSO)
 - Interactive Text User Interface (TUI) for bot management
@@ -55,11 +56,11 @@ ChatrixCD is a Matrix bot that integrates with Semaphore UI to enable CI/CD auto
 ```python
 def function_name(param1: str, param2: int) -> bool:
     """Brief description of function.
-    
+
     Args:
         param1: Description of param1
         param2: Description of param2
-        
+
     Returns:
         Description of return value
     """
@@ -96,6 +97,7 @@ ChatrixCD has a distinctive, engaging personality:
 #### Easter Eggs
 
 The bot includes hidden commands for fun interactions:
+
 - `!cd pet` - Positive reinforcement, the bot responds with appreciation
 - `!cd scold` - Negative feedback, the bot responds with apologetic messages
 
@@ -175,13 +177,13 @@ Testing is crucial for ChatrixCD to ensure reliability and maintainability. Foll
 - Write tests for new functionality
 - Use textual.pilot for TUI component testing
 - Use coverage tools to ensure unit test code coverage
-    - Aim for at least 90% code coverage
+  - Aim for at least 90% code coverage
 - Integrate tests into CI pipeline
 - Run tests on every pull request
 - Ensure all tests pass before merging
 - **IMPORTANT**: Tests should be meaningful, not just for coverage metrics, and should validate actual functionality.
 - Wherever possible attempt end-to-end tests that cover real-world scenarios.
-    - Use public information to build realistic test cases.
+  - Use public information to build realistic test cases.
 - **Integration Testing**: Do not add or reintroduce a `test_client` section in `integration_config.json`. Integration tests use preauthenticated bot sessions from remote machines to test each other. No separate test client authentication is needed.
 
 ## Text User Interface (TUI)
@@ -189,6 +191,7 @@ Testing is crucial for ChatrixCD to ensure reliability and maintainability. Foll
 ### TUI Overview
 
 ChatrixCD includes an interactive Text User Interface (TUI) for bot management:
+
 - **Status Monitoring**: View bot status, connections, and metrics
 - **Room Management**: View and manage joined Matrix rooms
 - **Session Management**: Manage Olm encryption sessions
@@ -282,14 +285,14 @@ Use Google or NumPy style docstrings:
 ```python
 def start_task(self, project_id: int, template_id: int) -> dict:
     """Start a new task in Semaphore.
-    
+
     Args:
         project_id: The Semaphore project ID
         template_id: The template ID to run
-        
+
     Returns:
         dict: Task information including task ID
-        
+
     Raises:
         aiohttp.ClientError: If API request fails
     """
@@ -300,13 +303,14 @@ def start_task(self, project_id: int, template_id: int) -> dict:
 ### Supported Platforms
 
 - Primary target: Alpine Linux 3.22+ with Python 3.12+
-    - Precompiled binaries avaiable for i686, AMD64, and ARM64, static musl builds
+  - Precompiled binaries avaiable for i686, AMD64, and ARM64, static musl builds
 - Other Linux distributions with Python 3.12+ may work
 - Docker images available for easy deployment (should also use Alpine base)
 
 ### Configuration for Deployment
 
 Configuration is done through `config.json` file with essential settings:
+
 - `matrix.homeserver`: Matrix homeserver URL
 - `matrix.user_id`: Bot user ID
 - `matrix.auth_type`: Authentication type ("password" or "oidc")
@@ -363,16 +367,20 @@ When making changes, add entries to the "Unreleased" section of CHANGELOG.md:
 ## [Unreleased]
 
 ### Added
+
 - New feature description
 
 ### Changed
+
 - Modified behavior description
 
 ### Fixed
+
 - Bug fix description
 ```
 
 **Checklist for every change:**
+
 1. ✅ Make code changes
 2. ✅ Update tests
 3. ✅ Run tests, iterate until all pass
@@ -395,6 +403,140 @@ When making changes, add entries to the "Unreleased" section of CHANGELOG.md:
 - Use imperative mood: "Move cursor to..." not "Moves cursor to..."
 - Limit first line to 72 characters
 - Reference issues: "Fixes #123"
+
+## Plugin System
+
+### Plugin Architecture
+
+ChatrixCD uses a plugin system for extensibility:
+
+- **Plugin Directory**: `plugins/` contains individual plugin folders
+- **Plugin Metadata**: Each plugin has `meta.json` with name, description, dependencies
+- **Plugin Base Class**: Extend `Plugin` abstract base class from `plugin_manager.py`
+- **Plugin Types**: `generic`, `task_monitor`, `command_extension`, etc.
+- **Configuration**: Plugin configs stored in separate files, loaded via plugin manager
+
+### Creating Plugins
+
+```python
+from chatrixcd.plugin_manager import Plugin, PluginMetadata
+
+class MyPlugin(Plugin):
+    async def initialize(self) -> bool:
+        # Setup code
+        return True
+
+    async def start(self) -> bool:
+        # Start functionality
+        return True
+
+    async def stop(self):
+        # Cleanup
+        pass
+
+    async def cleanup(self):
+        # Final cleanup
+        pass
+```
+
+### Plugin Loading
+
+- Plugins loaded automatically from `plugins/` directory
+- Dependencies checked before loading
+- Plugins initialized in dependency order
+- Failed plugins don't break bot startup
+
+## Development Workflows
+
+### Package Management
+
+Use `uv` for fast Python package management:
+
+```bash
+# Create virtual environment
+uv venv
+
+# Activate environment
+source .venv/bin/activate  # Linux/macOS
+
+# Install dependencies
+uv pip install -r requirements.txt
+uv pip install -e .  # Install in development mode
+
+# Install dev dependencies
+uv pip install -e .[dev]
+```
+
+### Testing Commands
+
+```bash
+# Run all tests
+python -m unittest discover
+
+# Run specific test file
+python -m unittest tests.test_config
+
+# Run with coverage (requires pytest-cov)
+pytest tests/ --cov=chatrixcd --cov-report=term-missing
+```
+
+### Code Quality
+
+```bash
+# Format code (requires black)
+black --line-length 100 chatrixcd/ tests/
+
+# Lint code (requires flake8)
+flake8 chatrixcd/ tests/
+
+# Type check (requires mypy)
+mypy chatrixcd/
+```
+
+### Running the Bot
+
+```bash
+# Interactive TUI mode (default)
+chatrixcd
+
+# Log-only mode (for servers/daemons)
+chatrixcd -L
+
+# With verbose logging
+chatrixcd -vv
+
+# Show configuration and exit
+chatrixcd -s
+
+# Initialize/reconfigure
+chatrixcd -I
+```
+
+## Integration Patterns
+
+### Matrix Protocol Integration
+
+- **Client**: Use `AsyncClient` from matrix-nio for all Matrix operations
+- **Events**: Register callbacks for `RoomMessageText`, `InviteMemberEvent`, etc.
+- **Encryption**: Automatic Olm/Megolm handling via matrix-nio
+- **Authentication**: Support both password and OIDC flows
+- **Device Verification**: Implement emoji, QR, and fingerprint verification
+
+### Semaphore API Integration
+
+- **Client**: Custom `SemaphoreClient` class with aiohttp
+- **Authentication**: Bearer token in Authorization header
+- **SSL**: Configurable certificate validation and client certs
+- **Error Handling**: Proper HTTP status code checking and retries
+- **Rate Limiting**: Respect API limits with backoff
+
+### TUI Integration
+
+- **Framework**: Textual for terminal UI
+- **Screens**: Separate screens for different functions (status, rooms, verification)
+- **Widgets**: Custom widgets for bot-specific UI elements
+- **Events**: Custom event system for inter-component communication
+- **Themes**: Support for multiple color themes
 
 ## Additional Resources
 

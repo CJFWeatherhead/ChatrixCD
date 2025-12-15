@@ -17,63 +17,84 @@ class VerificationScreen(BaseScreen):
 
     CSS = """
     .verification-container {
+        width: 100%;
+        height: 100%;
+        layout: vertical;
+    }
+
+    .section-header {
+        width: 100%;
         height: auto;
+        margin: 0 0 1 0;
     }
 
     .devices-section {
+        width: 100%;
         height: auto;
-        max-height: 15;
-        margin: 1;
+        margin: 0 0 1 0;
         padding: 1;
         border: solid $primary;
     }
 
     .pending-section {
+        width: 100%;
         height: auto;
-        max-height: 10;
-        margin: 1;
+        margin: 0 0 1 0;
         padding: 1;
         border: solid $accent;
     }
 
     .actions-section {
+        width: 100%;
         height: auto;
-        margin: 1;
+        margin: 0 0 1 0;
         padding: 1;
         border: solid $surface;
     }
 
     .device-table {
+        width: 100%;
         height: auto;
-        max-height: 12;
     }
 
     .pending-table {
+        width: 100%;
         height: auto;
-        max-height: 8;
     }
 
     .verification-buttons {
+        width: 100%;
         height: auto;
-        align: center middle;
+        layout: horizontal;
+    }
+
+    .verification-buttons > * {
+        height: auto;
+        margin: 0 1 0 0;
     }
 
     .emoji-display {
         background: $surface;
         border: solid $primary;
         padding: 1;
-        margin: 1;
+        margin: 0 0 1 0;
         text-align: center;
+        width: 100%;
+        height: auto;
     }
 
     .emoji-list {
         font-size: 1.2;
-        margin: 1 0;
+        margin: 0 0 1 0;
+        width: 100%;
+        height: auto;
     }
 
     .verification-status {
         text-align: center;
         padding: 1;
+        width: 100%;
+        height: auto;
     }
     """
 

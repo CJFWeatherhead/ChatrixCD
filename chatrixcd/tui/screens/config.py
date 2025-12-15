@@ -17,24 +17,32 @@ class ConfigScreen(BaseScreen):
 
     CSS = """
     .config-container {
-        height: auto;
+        width: 100%;
+        height: 100%;
+        layout: vertical;
     }
 
-    .config-viewer {
+    .section-header {
+        width: 100%;
         height: auto;
-        max-height: 18;
-        min-height: 10;
+        margin: 0 0 1 0;
+    }
+
+    #config-viewer {
+        width: 100%;
+        height: 1fr;
     }
 
     .config-actions {
+        width: 100%;
         height: auto;
-        margin-top: 1;
+        margin: 1 0 0 0;
+        layout: horizontal;
     }
 
-    /* Responsive config viewer sizing */
-    .compact .config-viewer {
-        max-height: 12;
-        min-height: 8;
+    .config-actions > * {
+        height: auto;
+        margin: 0 1 0 0;
     }
     """
 
