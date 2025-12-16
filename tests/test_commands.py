@@ -1,10 +1,12 @@
 """Tests for command handler module."""
 
+import asyncio
 import unittest
 import warnings
 from unittest.mock import AsyncMock, MagicMock, patch
-import asyncio
+
 from nio import MatrixRoom, RoomMessageText
+
 from chatrixcd.commands import CommandHandler
 from chatrixcd.verification import SAS_AVAILABLE
 
@@ -74,13 +76,17 @@ class TestCommandHandler(unittest.TestCase):
         self.create_task_patcher.stop()
 
         # Cancel all pending tasks to prevent "coroutine not awaited" warnings
-        pending_tasks = [task for task in asyncio.all_tasks(self.loop) if not task.done()]
+        pending_tasks = [
+            task for task in asyncio.all_tasks(self.loop) if not task.done()
+        ]
         for task in pending_tasks:
             task.cancel()
 
         # Wait for tasks to cancel
         if pending_tasks:
-            self.loop.run_until_complete(asyncio.gather(*pending_tasks, return_exceptions=True))
+            self.loop.run_until_complete(
+                asyncio.gather(*pending_tasks, return_exceptions=True)
+            )
 
         self.loop.close()
 
@@ -137,13 +143,19 @@ class TestCommandHandler(unittest.TestCase):
 
     def test_is_admin_url_encoded_in_config_decoded_in_request(self):
         """Test admin check when config has encoded username but request is decoded."""
-        self.handler.admin_users = ["@chrisw%40privacyinternational.org:privacyinternational.org"]
-        result = self.handler.is_admin("@chrisw@privacyinternational.org:privacyinternational.org")
+        self.handler.admin_users = [
+            "@chrisw%40privacyinternational.org:privacyinternational.org"
+        ]
+        result = self.handler.is_admin(
+            "@chrisw@privacyinternational.org:privacyinternational.org"
+        )
         self.assertTrue(result)
 
     def test_is_admin_decoded_in_config_encoded_in_request(self):
         """Test admin check when config has decoded username but request is encoded."""
-        self.handler.admin_users = ["@chrisw@privacyinternational.org:privacyinternational.org"]
+        self.handler.admin_users = [
+            "@chrisw@privacyinternational.org:privacyinternational.org"
+        ]
         result = self.handler.is_admin(
             "@chrisw%40privacyinternational.org:privacyinternational.org"
         )
@@ -273,7 +285,9 @@ class TestCommandHandler(unittest.TestCase):
             ]
         )
 
-        self.loop.run_until_complete(self.handler.list_templates("!test:example.com", []))
+        self.loop.run_until_complete(
+            self.handler.list_templates("!test:example.com", [])
+        )
 
         # Should send usage message
         self.mock_bot.send_message.assert_called_once()
@@ -282,7 +296,9 @@ class TestCommandHandler(unittest.TestCase):
 
     def test_list_templates_invalid_project_id(self):
         """Test list templates with invalid project ID."""
-        self.loop.run_until_complete(self.handler.list_templates("!test:example.com", ["invalid"]))
+        self.loop.run_until_complete(
+            self.handler.list_templates("!test:example.com", ["invalid"])
+        )
 
         # Should send error message
         self.mock_bot.send_message.assert_called_once()
@@ -298,7 +314,9 @@ class TestCommandHandler(unittest.TestCase):
             ]
         )
 
-        self.loop.run_until_complete(self.handler.list_templates("!test:example.com", ["1"]))
+        self.loop.run_until_complete(
+            self.handler.list_templates("!test:example.com", ["1"])
+        )
 
         # Should send templates list
         self.mock_bot.send_message.assert_called_once()
@@ -310,7 +328,9 @@ class TestCommandHandler(unittest.TestCase):
         """Test list templates with no templates."""
         self.mock_semaphore.get_project_templates = AsyncMock(return_value=[])
 
-        self.loop.run_until_complete(self.handler.list_templates("!test:example.com", ["1"]))
+        self.loop.run_until_complete(
+            self.handler.list_templates("!test:example.com", ["1"])
+        )
 
         # Should send empty message
         self.mock_bot.send_message.assert_called_once()
@@ -358,7 +378,9 @@ class TestCommandHandler(unittest.TestCase):
     def test_run_task_invalid_ids(self):
         """Test run task with invalid IDs."""
         self.loop.run_until_complete(
-            self.handler.run_task("!test:example.com", "@user:example.com", ["invalid", "ids"])
+            self.handler.run_task(
+                "!test:example.com", "@user:example.com", ["invalid", "ids"]
+            )
         )
 
         # Should send error message
@@ -371,7 +393,9 @@ class TestCommandHandler(unittest.TestCase):
         """Test successful task start - now requests confirmation."""
         # Mock template data
         self.mock_semaphore.get_project_templates = AsyncMock(
-            return_value=[{"id": 1, "name": "Template 1", "description": "Test template"}]
+            return_value=[
+                {"id": 1, "name": "Template 1", "description": "Test template"}
+            ]
         )
 
         self.loop.run_until_complete(
@@ -419,7 +443,9 @@ class TestCommandHandler(unittest.TestCase):
     def test_run_task_no_templates_no_args(self):
         """Test run task with zero templates when no args provided and one project."""
         # Mock to return one project with no templates
-        self.mock_semaphore.get_projects = AsyncMock(return_value=[{"id": 1, "name": "Project 1"}])
+        self.mock_semaphore.get_projects = AsyncMock(
+            return_value=[{"id": 1, "name": "Project 1"}]
+        )
         self.mock_semaphore.get_project_templates = AsyncMock(return_value=[])
 
         self.loop.run_until_complete(
@@ -443,7 +469,9 @@ class TestCommandHandler(unittest.TestCase):
 
     def test_check_status_invalid_task_id(self):
         """Test check status with invalid task ID."""
-        self.loop.run_until_complete(self.handler.check_status("!test:example.com", ["invalid"]))
+        self.loop.run_until_complete(
+            self.handler.check_status("!test:example.com", ["invalid"])
+        )
 
         # Should send error message
         self.mock_bot.send_message.assert_called_once()
@@ -452,7 +480,9 @@ class TestCommandHandler(unittest.TestCase):
 
     def test_check_status_task_not_found(self):
         """Test check status for task not in active tasks."""
-        self.loop.run_until_complete(self.handler.check_status("!test:example.com", ["999"]))
+        self.loop.run_until_complete(
+            self.handler.check_status("!test:example.com", ["999"])
+        )
 
         # Should send not found message
         self.mock_bot.send_message.assert_called_once()
@@ -475,7 +505,9 @@ class TestCommandHandler(unittest.TestCase):
             }
         )
 
-        self.loop.run_until_complete(self.handler.check_status("!test:example.com", ["123"]))
+        self.loop.run_until_complete(
+            self.handler.check_status("!test:example.com", ["123"])
+        )
 
         # Should send status message
         self.mock_bot.send_message.assert_called_once()
@@ -496,7 +528,9 @@ class TestCommandHandler(unittest.TestCase):
     def test_stop_task_invalid_task_id(self):
         """Test stop task with invalid task ID."""
         self.loop.run_until_complete(
-            self.handler.stop_task("!test:example.com", "@user:example.com", ["invalid"])
+            self.handler.stop_task(
+                "!test:example.com", "@user:example.com", ["invalid"]
+            )
         )
 
         # Should send error message
@@ -567,7 +601,9 @@ class TestCommandHandler(unittest.TestCase):
 
     def test_get_logs_invalid_task_id(self):
         """Test get logs with invalid task ID."""
-        self.loop.run_until_complete(self.handler.get_logs("!test:example.com", ["invalid"]))
+        self.loop.run_until_complete(
+            self.handler.get_logs("!test:example.com", ["invalid"])
+        )
 
         # Should send error message
         self.mock_bot.send_message.assert_called_once()
@@ -576,7 +612,9 @@ class TestCommandHandler(unittest.TestCase):
 
     def test_get_logs_task_not_found(self):
         """Test get logs for task not in active tasks."""
-        self.loop.run_until_complete(self.handler.get_logs("!test:example.com", ["999"]))
+        self.loop.run_until_complete(
+            self.handler.get_logs("!test:example.com", ["999"])
+        )
 
         # Should send not found message
         self.mock_bot.send_message.assert_called_once()
@@ -594,7 +632,9 @@ class TestCommandHandler(unittest.TestCase):
 
         self.mock_semaphore.get_task_output = AsyncMock(return_value="Task output logs")
 
-        self.loop.run_until_complete(self.handler.get_logs("!test:example.com", ["123"]))
+        self.loop.run_until_complete(
+            self.handler.get_logs("!test:example.com", ["123"])
+        )
 
         # Should send logs message
         self.mock_bot.send_message.assert_called_once()
@@ -612,7 +652,9 @@ class TestCommandHandler(unittest.TestCase):
 
         self.mock_semaphore.get_task_output = AsyncMock(return_value=None)
 
-        self.loop.run_until_complete(self.handler.get_logs("!test:example.com", ["123"]))
+        self.loop.run_until_complete(
+            self.handler.get_logs("!test:example.com", ["123"])
+        )
 
         # Should send no logs message
         self.mock_bot.send_message.assert_called_once()
@@ -631,7 +673,9 @@ class TestCommandHandler(unittest.TestCase):
         long_logs = "\n".join(["A" * 100 for _ in range(200)])
         self.mock_semaphore.get_task_output = AsyncMock(return_value=long_logs)
 
-        self.loop.run_until_complete(self.handler.get_logs("!test:example.com", ["123"]))
+        self.loop.run_until_complete(
+            self.handler.get_logs("!test:example.com", ["123"])
+        )
 
         # Should send logs message (truncation happens in HTML formatting)
         self.mock_bot.send_message.assert_called_once()
@@ -686,7 +730,9 @@ class TestCommandHandler(unittest.TestCase):
         # Test with ¶ symbol
         description = "First paragraph¶Second paragraph¶Third paragraph"
         result = self.handler._format_description(description)
-        self.assertEqual(result, "First paragraph\n\nSecond paragraph\n\nThird paragraph")
+        self.assertEqual(
+            result, "First paragraph\n\nSecond paragraph\n\nThird paragraph"
+        )
 
         # Test without ¶ symbol
         description = "Simple description"
@@ -1083,7 +1129,9 @@ class TestCommandHandler(unittest.TestCase):
         )
 
         self.loop.run_until_complete(
-            handler_no_redact.get_semaphore_info("!test:example.com", "@user:example.com")
+            handler_no_redact.get_semaphore_info(
+                "!test:example.com", "@user:example.com"
+            )
         )
 
         call_args1 = self.mock_bot.send_message.call_args[0]
@@ -1142,7 +1190,9 @@ class TestCommandHandler(unittest.TestCase):
         )
 
         self.loop.run_until_complete(
-            self.handler.verify_device("!room:example.com", "@user:example.com", ["list"])
+            self.handler.verify_device(
+                "!room:example.com", "@user:example.com", ["list"]
+            )
         )
 
         # Should call get_unverified_devices and send message
@@ -1162,7 +1212,9 @@ class TestCommandHandler(unittest.TestCase):
                 }
             ]
         )
-        self.mock_bot.verification_manager.start_verification = AsyncMock(return_value=MagicMock())
+        self.mock_bot.verification_manager.start_verification = AsyncMock(
+            return_value=MagicMock()
+        )
 
         self.loop.run_until_complete(
             self.handler.verify_device(
@@ -1202,10 +1254,14 @@ class TestCommandHandler(unittest.TestCase):
                 }
             ]
         )
-        self.mock_bot.verification_manager.get_unverified_devices = AsyncMock(return_value=[])
+        self.mock_bot.verification_manager.get_unverified_devices = AsyncMock(
+            return_value=[]
+        )
 
         self.loop.run_until_complete(
-            self.handler.manage_sessions("!room:example.com", "@user:example.com", ["list"])
+            self.handler.manage_sessions(
+                "!room:example.com", "@user:example.com", ["list"]
+            )
         )
 
         # Should call device listing methods and send message
@@ -1258,7 +1314,7 @@ class TestCommandHandler(unittest.TestCase):
 
         # Should attempt to start verification with bot devices
         verification_manager.start_verification.assert_called_once()
-        self.assertEqual(self.mock_bot.send_message.call_count, 2)  # Initial message + result
+        self.assertEqual(self.mock_bot.send_message.call_count, 1)  # Result message
 
 
 if __name__ == "__main__":
