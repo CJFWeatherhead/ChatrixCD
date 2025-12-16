@@ -1,10 +1,12 @@
 """Semaphore Webhook Plugin - Task monitoring via Gotify webhooks."""
 
 import asyncio
-import logging
-import aiohttp
 import json
-from typing import Optional, Dict, Any
+import logging
+from typing import Any, Dict, Optional
+
+import aiohttp
+
 from chatrixcd.plugin_manager import TaskMonitorPlugin
 
 logger = logging.getLogger(__name__)
@@ -65,9 +67,7 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
             self.logger.error("Gotify token not configured")
             return False
 
-        self.logger.info(
-            f"Gotify URL: {self.gotify_url}, Mode: {self.webhook_mode}"
-        )
+        self.logger.info(f"Gotify URL: {self.gotify_url}, Mode: {self.webhook_mode}")
         return True
 
     async def start(self) -> bool:
@@ -135,9 +135,7 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
             sender: Optional sender user ID for personalized notifications
         """
         if not self.monitoring_active:
-            self.logger.warning(
-                "Monitoring not active, ignoring task monitor request"
-            )
+            self.logger.warning("Monitoring not active, ignoring task monitor request")
             return
 
         # Store task info
@@ -194,9 +192,7 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
                     async with self.ws_session.ws_connect(ws_url) as ws:
                         self.ws_connected = True
                         self.logger.info("Connected to Gotify WebSocket")
-                        retry_delay = (
-                            5  # Reset retry delay on successful connection
-                        )
+                        retry_delay = 5  # Reset retry delay on successful connection
 
                         # Listen for messages
                         async for msg in ws:
@@ -209,9 +205,7 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
                                 break
 
                         self.ws_connected = False
-                        self.logger.warning(
-                            "Gotify WebSocket connection closed"
-                        )
+                        self.logger.warning("Gotify WebSocket connection closed")
 
                 except asyncio.CancelledError:
                     self.logger.info("Gotify WebSocket listener cancelled")
@@ -249,9 +243,7 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
             # Format: "Task #123 completed" or similar
             task_id = self._extract_task_id(title, content)
             if task_id is None:
-                self.logger.debug(
-                    f"Could not extract task ID from message: {title}"
-                )
+                self.logger.debug(f"Could not extract task ID from message: {title}")
                 return
 
             # Check if we're monitoring this task
@@ -264,9 +256,7 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
             # Parse status from message
             status = self._extract_status(title, content)
             if status is None:
-                self.logger.debug(
-                    f"Could not extract status from message: {title}"
-                )
+                self.logger.debug(f"Could not extract status from message: {title}")
                 return
 
             # Process status update
@@ -275,9 +265,7 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
         except json.JSONDecodeError as e:
             self.logger.error(f"Failed to parse Gotify message: {e}")
         except Exception as e:
-            self.logger.error(
-                f"Error handling Gotify message: {e}", exc_info=True
-            )
+            self.logger.error(f"Error handling Gotify message: {e}", exc_info=True)
 
     def _extract_task_id(self, title: str, content: str) -> Optional[int]:
         """Extract task ID from Gotify message.
@@ -349,17 +337,13 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
         if status == last_status:
             return  # No change
 
-        self.logger.info(
-            f"Task {task_id} status update: {last_status} -> {status}"
-        )
+        self.logger.info(f"Task {task_id} status update: {last_status} -> {status}")
         task_info["last_status"] = status
 
         # Send notification
         room_id = task_info["room_id"]
         task_name = task_info["task_name"]
-        task_display = (
-            f"{task_name} ({task_id})" if task_name else str(task_id)
-        )
+        task_display = f"{task_name} ({task_id})" if task_name else str(task_id)
 
         if status == "running":
             message = f"🔄 Task **{task_display}** is now running..."
@@ -369,9 +353,7 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
         elif status == "success":
             message = f"✅ Task **{task_display}** completed successfully!"
             html_message = self._markdown_to_html(message)
-            event_id = await self.bot.send_message(
-                room_id, message, html_message
-            )
+            event_id = await self.bot.send_message(room_id, message, html_message)
             if event_id:
                 await self.bot.send_reaction(room_id, event_id, "🎉")
 
@@ -379,7 +361,9 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
             del self.monitored_tasks[task_id]
 
         elif status in ("error", "stopped"):
-            message = f"❌ Task **{task_display}** failed or was stopped (status: {status})"
+            message = (
+                f"❌ Task **{task_display}** failed or was stopped (status: {status})"
+            )
             html_message = self._markdown_to_html(message)
             await self.bot.send_message(room_id, message, html_message)
 
