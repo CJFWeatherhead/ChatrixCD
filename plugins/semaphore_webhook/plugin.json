@@ -20,5 +20,9 @@
   "webhook_mode": "websocket",
   
   // Fallback polling interval in seconds when webhook connection fails (default: 60)
-  "fallback_poll_interval": 60
+  "fallback_poll_interval": 60,
+  
+  // Ignore SSL certificate verification (default: false)
+  // Set to true for self-signed certificates or testing environments
+  "ignore_ssl": false
 }

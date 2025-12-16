@@ -44,7 +44,8 @@ This plugin is configured through its `plugin.json` file located in the plugin d
   "gotify_token": "your_gotify_client_token",
   "gotify_app_token": "your_gotify_app_token",
   "webhook_mode": "websocket",
-  "fallback_poll_interval": 60
+  "fallback_poll_interval": 60,
+  "ignore_ssl": false
 }
 ```
 
@@ -56,6 +57,7 @@ This plugin is configured through its `plugin.json` file located in the plugin d
 - **`gotify_app_token`** (string, required): Gotify application token
 - **`webhook_mode`** (string, default: `"websocket"`): Connection mode (`"websocket"` or `"polling"`)
 - **`fallback_poll_interval`** (integer, default: `60`): Fallback polling interval if webhook connection fails
+- **`ignore_ssl`** (boolean, default: `false`): Ignore SSL certificate verification (useful for self-signed certificates)
 
 ### Overriding Configuration
 

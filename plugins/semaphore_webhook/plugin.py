@@ -15,6 +15,14 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
 
     This plugin receives push notifications from Gotify when Semaphore
     task status changes, providing instant notifications without polling.
+
+    Configuration options:
+    - gotify_url: Gotify server URL
+    - gotify_token: Gotify authentication token
+    - gotify_app_token: Gotify app token (optional)
+    - webhook_mode: "websocket" (default) or other modes
+    - fallback_poll_interval: Seconds between fallback polls (default: 60)
+    - ignore_ssl: Ignore SSL certificate verification (default: false)
     """
 
     def __init__(self, bot: Any, config: Dict[str, Any], metadata: Any):
@@ -31,6 +39,7 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
         self.gotify_app_token = config.get("gotify_app_token")
         self.webhook_mode = config.get("webhook_mode", "websocket")
         self.fallback_poll_interval = config.get("fallback_poll_interval", 60)
+        self.ignore_ssl = config.get("ignore_ssl", False)
 
         # Track monitored tasks
         self.monitored_tasks: Dict[int, Dict[str, Any]] = {}
@@ -175,7 +184,8 @@ class SemaphoreWebhookPlugin(TaskMonitorPlugin):
                 try:
                     # Create session if needed
                     if self.ws_session is None or self.ws_session.closed:
-                        self.ws_session = aiohttp.ClientSession()
+                        connector = aiohttp.TCPConnector(verify_ssl=not self.ignore_ssl)
+                        self.ws_session = aiohttp.ClientSession(connector=connector)
 
                     # Connect to WebSocket
                     self.logger.info(
