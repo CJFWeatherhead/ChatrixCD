@@ -5,13 +5,13 @@ through loadable modules. Plugins can provide task monitoring backends (polling,
 webhooks), custom commands, or other extensions.
 """
 
-import logging
-import json
 import importlib.util
+import json
+import logging
 import sys
-from pathlib import Path
-from typing import Dict, List, Optional, Any, Type
 from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Type
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +59,8 @@ class Plugin(ABC):
         self.config = config
         self.metadata = metadata
         self.logger = logging.getLogger(f"plugin.{metadata.name}")
+        # Track runtime enabled state (True if plugin is loaded and initialized)
+        self._enabled = True
 
     @abstractmethod
     async def initialize(self) -> bool:
@@ -106,7 +108,7 @@ class Plugin(ABC):
             "version": self.metadata.version,
             "type": self.metadata.plugin_type,
             "category": self.metadata.category,
-            "enabled": self.metadata.enabled,
+            "enabled": self._enabled,
         }
 
 
@@ -199,7 +201,9 @@ class PluginManager:
                 data = json.load(f)
 
             metadata = PluginMetadata(data, plugin_dir)
-            logger.debug(f"Loaded metadata for plugin: {metadata.name} v{metadata.version}")
+            logger.debug(
+                f"Loaded metadata for plugin: {metadata.name} v{metadata.version}"
+            )
             return metadata
 
         except json.JSONDecodeError as e:
@@ -209,7 +213,9 @@ class PluginManager:
             logger.error(f"Error loading metadata from {meta_file}: {e}")
             return None
 
-    def load_plugin_config(self, plugin_dir: Path, metadata: PluginMetadata) -> Dict[str, Any]:
+    def load_plugin_config(
+        self, plugin_dir: Path, metadata: PluginMetadata
+    ) -> Dict[str, Any]:
         """Load plugin configuration from plugin.json file.
 
         Args:
@@ -340,7 +346,9 @@ class PluginManager:
             # Track task monitor plugins separately
             if isinstance(plugin, TaskMonitorPlugin):
                 self.task_monitor = plugin
-                logger.info(f"Loaded task monitor plugin: {metadata.name} v{metadata.version}")
+                logger.info(
+                    f"Loaded task monitor plugin: {metadata.name} v{metadata.version}"
+                )
             else:
                 logger.info(f"Loaded plugin: {metadata.name} v{metadata.version}")
 
@@ -378,7 +386,10 @@ class PluginManager:
 
             if enabled:
                 # Enforce mutual exclusion: only one TaskMonitorPlugin may be loaded
-                if metadata.plugin_type == "task_monitor" and self.task_monitor is not None:
+                if (
+                    metadata.plugin_type == "task_monitor"
+                    and self.task_monitor is not None
+                ):
                     logger.info(
                         f"Skipping task monitor plugin '{metadata.name}' because '{self.task_monitor.metadata.name}' is already active"
                     )

@@ -2362,35 +2362,23 @@ class CommandHandler:
             lines.append("• No plugins loaded")
             return lines, info_list
 
-        # Separate enabled and disabled plugins
-        enabled_plugins = [p for p in plugins_status if p.get("enabled", False)]
-        disabled_plugins = [p for p in plugins_status if not p.get("enabled", False)]
-
-        # Sort each list by type, then name
-        enabled_plugins.sort(
-            key=lambda p: (p.get("type", "generic"), p.get("name", ""))
+        # Sort plugins by enabled status (enabled first), then type, then name
+        plugins_status.sort(
+            key=lambda p: (
+                not p.get(
+                    "enabled", False
+                ),  # False (enabled) sorts before True (disabled)
+                p.get("type", "generic"),
+                p.get("name", ""),
+            )
         )
-        disabled_plugins.sort(
-            key=lambda p: (p.get("type", "generic"), p.get("name", ""))
-        )
 
-        # Process enabled plugins first
-        if enabled_plugins:
-            lines.append("**Enabled:**")
-            for status in enabled_plugins:
-                line = self._format_plugin_line(status, enabled=True)
-                lines.append(line)
-                info_list.append(self._prepare_plugin_info(status))
-
-        # Then disabled plugins
-        if disabled_plugins:
-            if enabled_plugins:
-                lines.append("")  # Empty line separator
-            lines.append("**Disabled:**")
-            for status in disabled_plugins:
-                line = self._format_plugin_line(status, enabled=False)
-                lines.append(line)
-                info_list.append(self._prepare_plugin_info(status))
+        # Process all plugins
+        for status in plugins_status:
+            enabled = status.get("enabled", False)
+            line = self._format_plugin_line(status, enabled=enabled)
+            lines.append(line)
+            info_list.append(self._prepare_plugin_info(status))
 
         return lines, info_list
 
@@ -2502,27 +2490,16 @@ class CommandHandler:
         if not plugin_info:
             return ""
 
-        # Separate enabled and disabled
-        enabled_info = [p for p in plugin_info if p["enabled"]]
-        disabled_info = [p for p in plugin_info if not p["enabled"]]
-
         table_html = '<br/><table><thead><tr><th colspan="5">Plugins 🔌</th></tr>'
         table_html += (
             "<tr><th>Name</th><th>Description</th><th>Version</th>"
             "<th>Type</th><th>Status</th></tr></thead><tbody>"
         )
 
-        # Add enabled plugins first
-        if enabled_info:
-            table_html += '<tr><td colspan="5"><strong>Enabled</strong></td></tr>'
-            for info in enabled_info:
-                table_html += self._build_plugin_row(info, enabled=True)
-
-        # Add disabled plugins
-        if disabled_info:
-            table_html += '<tr><td colspan="5"><strong>Disabled</strong></td></tr>'
-            for info in disabled_info:
-                table_html += self._build_plugin_row(info, enabled=False)
+        # Add all plugins (already sorted by enabled status)
+        for info in plugin_info:
+            enabled = info["enabled"]
+            table_html += self._build_plugin_row(info, enabled=enabled)
 
         table_html += "</tbody></table>"
         return table_html
