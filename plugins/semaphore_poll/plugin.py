@@ -2,7 +2,8 @@
 
 import asyncio
 import logging
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 from chatrixcd.plugin_manager import TaskMonitorPlugin
 
 logger = logging.getLogger(__name__)
@@ -85,9 +86,7 @@ class SemaphorePollPlugin(TaskMonitorPlugin):
             sender: Optional sender user ID for personalized notifications
         """
         if not self.monitoring_active:
-            self.logger.warning(
-                "Monitoring not active, ignoring task monitor request"
-            )
+            self.logger.warning("Monitoring not active, ignoring task monitor request")
             return
 
         # Store task info
@@ -119,9 +118,7 @@ class SemaphorePollPlugin(TaskMonitorPlugin):
         room_id = task_info["room_id"]
         task_name = task_info["task_name"]
 
-        task_display = (
-            f"{task_name} ({task_id})" if task_name else str(task_id)
-        )
+        task_display = f"{task_name} ({task_id})" if task_name else str(task_id)
 
         try:
             while task_id in self.active_tasks and self.monitoring_active:
@@ -148,13 +145,9 @@ class SemaphorePollPlugin(TaskMonitorPlugin):
                     task_info["last_notification_time"] = current_time
 
                     if status == "running":
-                        message = (
-                            f"🔄 Task **{task_display}** is now running..."
-                        )
+                        message = f"🔄 Task **{task_display}** is now running..."
                         html_message = self._markdown_to_html(message)
-                        await self.bot.send_message(
-                            room_id, message, html_message
-                        )
+                        await self.bot.send_message(room_id, message, html_message)
 
                         # Start log tailing if enabled
                         await self._maybe_start_log_tailing(
@@ -198,14 +191,10 @@ class SemaphorePollPlugin(TaskMonitorPlugin):
             self.logger.info(f"Monitoring cancelled for task {task_id}")
             raise
         except Exception as e:
-            self.logger.error(
-                f"Error monitoring task {task_id}: {e}", exc_info=True
-            )
+            self.logger.error(f"Error monitoring task {task_id}: {e}", exc_info=True)
             # Send error notification
             try:
-                message = (
-                    f"❌ Error monitoring task **{task_display}**: {str(e)}"
-                )
+                message = f"❌ Error monitoring task **{task_display}**: {str(e)}"
                 html_message = self._markdown_to_html(message)
                 await self.bot.send_message(room_id, message, html_message)
             except Exception:
@@ -248,7 +237,9 @@ class SemaphorePollPlugin(TaskMonitorPlugin):
         else:
             sender_name = sender if sender else "there"
 
-        message = f"{sender_name} 👋 Your task **{task_display}** {status_text}! {emoji}"
+        message = (
+            f"{sender_name} 👋 Your task **{task_display}** {status_text}! {emoji}"
+        )
         html_message = self._markdown_to_html(message)
         event_id = await self.bot.send_message(room_id, message, html_message)
 
@@ -275,26 +266,20 @@ class SemaphorePollPlugin(TaskMonitorPlugin):
         # Check if global log tailing is enabled for this room
         if cmd_handler.global_log_tailing_enabled.get(room_id, False):
             if room_id not in cmd_handler.log_tailing_sessions:
-                self.logger.info(
-                    f"Auto-starting log tailing for task {task_id}"
-                )
+                self.logger.info(f"Auto-starting log tailing for task {task_id}")
                 cmd_handler.log_tailing_sessions[room_id] = {
                     "task_id": task_id,
                     "project_id": project_id,
                     "last_log_size": 0,
                 }
 
-                log_message = (
-                    f"📋 Starting log stream for task **{task_display}**..."
-                )
+                log_message = f"📋 Starting log stream for task **{task_display}**..."
                 await self.bot.send_message(
                     room_id, log_message, self._markdown_to_html(log_message)
                 )
 
                 # Start the tailing task
-                asyncio.create_task(
-                    cmd_handler.tail_logs(room_id, task_id, project_id)
-                )
+                asyncio.create_task(cmd_handler.tail_logs(room_id, task_id, project_id))
 
     async def _cleanup_task(self, task_id: int):
         """Clean up task monitoring.
@@ -329,7 +314,7 @@ class SemaphorePollPlugin(TaskMonitorPlugin):
         return text
 
     def get_status(self) -> Dict[str, Any]:
-        """Get plugin status."""
+        """Get plugin status with monitoring details."""
         status = super().get_status()
         status["active_tasks"] = len(self.active_tasks)
         status["poll_interval"] = self.poll_interval

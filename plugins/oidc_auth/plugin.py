@@ -81,21 +81,15 @@ class OIDCAuthPlugin(Plugin):
         self.logger.info("OIDC Authentication plugin cleaned up")
 
     def get_status(self) -> dict:
-        """Get plugin status.
+        """Get plugin status with OIDC auth details.
 
         Returns:
             Dictionary with status information
         """
-        return {
-            "name": self.metadata.name,
-            "description": self.metadata.description,
-            "version": self.metadata.version,
-            "type": self.metadata.plugin_type,
-            "category": self.metadata.category,
-            "enabled": self.metadata.enabled,
-            "active": True,
-            "callback_registered": self.token_callback is not None,
-        }
+        status = super().get_status()
+        status["active"] = True
+        status["callback_registered"] = self.token_callback is not None
+        return status
 
     def set_token_callback(self, callback):
         """Set the token callback function.

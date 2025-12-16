@@ -3,9 +3,10 @@
 import json
 import logging
 import os
-from typing import Dict, Optional, Any
-from chatrixcd.plugin_manager import Plugin
+from typing import Any, Dict, Optional
+
 from chatrixcd.file_watcher import FileWatcher
+from chatrixcd.plugin_manager import Plugin
 
 logger = logging.getLogger(__name__)
 
@@ -25,9 +26,7 @@ class AliasesPlugin(Plugin):
 
     async def initialize(self) -> bool:
         """Initialize the aliases plugin."""
-        self.logger.info(
-            f"Initializing Aliases plugin with file: {self.aliases_file}"
-        )
+        self.logger.info(f"Initializing Aliases plugin with file: {self.aliases_file}")
         self.load_aliases()
 
         if self.auto_reload:
@@ -165,18 +164,11 @@ class AliasesPlugin(Plugin):
         return self.aliases.copy()
 
     def get_status(self) -> Dict[str, Any]:
-        """Get plugin status."""
-        status = {
-            "name": self.metadata.name,
-            "description": self.metadata.description,
-            "version": self.metadata.version,
-            "type": self.metadata.plugin_type,
-            "category": self.metadata.category,
-            "enabled": self.metadata.enabled,
-            "aliases_count": len(self.aliases),
-            "aliases_file": self.aliases_file,
-            "auto_reload": self.auto_reload,
-        }
+        """Get plugin status with alias details."""
+        status = super().get_status()
+        status["aliases_count"] = len(self.aliases)
+        status["aliases_file"] = self.aliases_file
+        status["auto_reload"] = self.auto_reload
         return status
 
     def validate_command(self, command: str) -> bool:
@@ -204,6 +196,4 @@ class AliasesPlugin(Plugin):
 
             self.logger.info("Registered TUI screens for aliases plugin")
         except ImportError:
-            self.logger.debug(
-                "TUI not available, skipping screen registration"
-            )
+            self.logger.debug("TUI not available, skipping screen registration")
